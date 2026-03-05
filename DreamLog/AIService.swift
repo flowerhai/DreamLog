@@ -6,14 +6,14 @@
 //
 
 import Foundation
+import Combine
 
-@Observable
-class AIService {
-    var isAnalyzing: Bool = false
-    var isGeneratingImage: Bool = false
-    var currentAnalysis: String?
-    var generatedImageUrl: String?
-    var error: String?
+class AIService: ObservableObject {
+    @Published var isAnalyzing: Bool = false
+    @Published var isGeneratingImage: Bool = false
+    @Published var currentAnalysis: String?
+    @Published var generatedImageUrl: String?
+    @Published var error: String?
     
     // MARK: - 梦境解析
     func analyzeDream(content: String, tags: [String], emotions: [Emotion]) async -> String {
