@@ -1,0 +1,53 @@
+# Xcode
+.DS_Store
+*.xcuserstate
+*.xcuserdatad
+*.xccheckout
+*.moved-aside
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods
+Pods/
+*.xcworkspace
+!default.xcworkspace
+
+# Carthage
+Carthage/Build/
+
+# Swift Package Manager
+.swiftpm/
+.build/
+Packages/
+Package.resolved
+
+# Build
+build/
+*.o
+*.a
+*.app
+*.framework
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+
+# Secrets
+*.pem
+*.key
+*.p12
+
+# Test
+test-results/
+coverage/
+
+# Temp
+*.tmp
+*.temp
+Thumbs.db
