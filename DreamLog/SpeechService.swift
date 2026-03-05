@@ -69,19 +69,24 @@ class SpeechService: ObservableObject {
         
         // 配置音频
         let audioSession = AVAudioSession.sharedInstance()
-        try? audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-        try? audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        
-        // 开始录音
-        let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, when in
-            request.append(buffer)
+        do {
+            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+            
+            // 开始录音
+            let inputNode = audioEngine.inputNode
+            let recordingFormat = inputNode.outputFormat(forBus: 0)
+            
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, when in
+                request.append(buffer)
+            }
+            
+            audioEngine.prepare()
+            try audioEngine.start()
+        } catch {
+            self.error = "音频配置失败: \(error.localizedDescription)"
+            self.stopRecording()
         }
-        
-        audioEngine.prepare()
-        try? audioEngine.start()
     }
     
     // MARK: - 停止录音
