@@ -135,7 +135,9 @@ class DreamStore: ObservableObject {
                 emotionCount[emotion, default: 0] += 1
             }
         }
-        let topEmotions: [(Emotion, Int)] = emotionCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
+        let topEmotions: [DreamStatistics.EmotionCount] = emotionCount.sorted { $0.value > $1.value }.prefix(5).map { 
+            DreamStatistics.EmotionCount(emotion: $0.key, count: $0.value) 
+        }
         
         // 标签统计
         var tagCount: [String: Int] = [:]
@@ -144,7 +146,9 @@ class DreamStore: ObservableObject {
                 tagCount[tag, default: 0] += 1
             }
         }
-        let topTags: [(String, Int)] = tagCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
+        let topTags: [DreamStatistics.TagCount] = tagCount.sorted { $0.value > $1.value }.prefix(5).map { 
+            DreamStatistics.TagCount(tag: $0.key, count: $0.value) 
+        }
         
         // 时间段统计
         var timeCount: [TimeOfDay: Int] = [:]
@@ -276,5 +280,12 @@ extension DreamStore {
     static var preview: DreamStore {
         let store = DreamStore()
         return store
+    }
+}
+
+// MARK: - Date 扩展
+extension Date {
+    func daysFromNow(_ days: Int) -> Date {
+        Calendar.current.date(byAdding: .day, value: days, to: self) ?? self
     }
 }
