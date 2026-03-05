@@ -162,7 +162,7 @@ struct TagFilterSection: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach(tags.prefix(10), id: \.self) { tag in
+                ForEach(Array(tags.prefix(10)), id: \.self) { tag in
                     Button(action: { onTagSelected(tag) }) {
                         Text(tag)
                             .font(.caption)
@@ -220,14 +220,14 @@ struct DreamCard: View {
                 .foregroundColor(.secondary)
             
             // 内容预览
-            Text(dream.content.prefix(100))
+            Text(String(dream.content.prefix(100)))
                 .font(.body)
                 .foregroundColor(.white.opacity(0.8))
                 .lineLimit(2)
             
             // 标签
             HStack(spacing: 8) {
-                ForEach(dream.tags.prefix(3), id: \.self) { tag in
+                ForEach(Array(dream.tags.prefix(3)), id: \.self) { tag in
                     Text("#\(tag)")
                         .font(.caption2)
                         .foregroundColor(.accentColor)
@@ -237,7 +237,7 @@ struct DreamCard: View {
             // 情绪和指标
             HStack {
                 HStack(spacing: 4) {
-                    ForEach(dream.emotions.prefix(2), id: \.self) { emotion in
+                    ForEach(Array(dream.emotions.prefix(2)), id: \.self) { emotion in
                         Text(emotion.icon)
                     }
                 }

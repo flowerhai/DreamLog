@@ -69,8 +69,12 @@ class SpeechService: ObservableObject {
         
         // 配置音频
         let audioSession = AVAudioSession.sharedInstance()
-        try? audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
-        try? audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        do {
+            try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            print("音频配置失败：\(error)")
+        }
         
         // 开始录音
         let inputNode = audioEngine.inputNode
@@ -81,7 +85,11 @@ class SpeechService: ObservableObject {
         }
         
         audioEngine.prepare()
-        try? audioEngine.start()
+        do {
+            try audioEngine.start()
+        } catch {
+            print("音频引擎启动失败：\(error)")
+        }
     }
     
     // MARK: - 停止录音

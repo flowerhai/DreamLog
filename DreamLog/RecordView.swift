@@ -225,7 +225,7 @@ struct EmotionSection: View {
                 .foregroundColor(.white)
             
             HStack(spacing: 12) {
-                ForEach(Emotion.allCases.prefix(6), id: \.self) { emotion in
+                ForEach(Array(Emotion.allCases.prefix(6)), id: \.self) { emotion in
                     Button(action: {
                         if selectedEmotions.contains(emotion) {
                             selectedEmotions.removeAll { $0 == emotion }

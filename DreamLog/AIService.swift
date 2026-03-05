@@ -54,7 +54,7 @@ class AIService: ObservableObject {
             .filter { $0.count >= 2 }
             .filter { !commonWords.contains($0) }
         
-        return Array(words.prefix(5))
+        return Array(words.prefix(5)) as [String]
     }
     
     // MARK: - 检测情绪
@@ -81,7 +81,7 @@ class AIService: ObservableObject {
     
     // MARK: - 生成图像提示词
     func generateImagePrompt(from dream: Dream) -> String {
-        var prompt = "Dream scene: \(dream.content.prefix(100))"
+        var prompt = "Dream scene: \(String(dream.content.prefix(100)))"
         
         // 添加情绪色彩
         if dream.emotions.contains(.calm) {

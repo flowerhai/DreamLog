@@ -135,7 +135,7 @@ class DreamStore: ObservableObject {
                 emotionCount[emotion, default: 0] += 1
             }
         }
-        let topEmotions = emotionCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
+        let topEmotions: [(Emotion, Int)] = emotionCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
         
         // 标签统计
         var tagCount: [String: Int] = [:]
@@ -144,7 +144,7 @@ class DreamStore: ObservableObject {
                 tagCount[tag, default: 0] += 1
             }
         }
-        let topTags = tagCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
+        let topTags: [(String, Int)] = tagCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
         
         // 时间段统计
         var timeCount: [TimeOfDay: Int] = [:]

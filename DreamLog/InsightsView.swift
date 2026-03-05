@@ -116,7 +116,7 @@ struct EmotionDistributionSection: View {
                 .font(.headline)
                 .foregroundColor(.white)
             
-            ForEach(stats.topEmotions.prefix(5), id: \.emotion.self) { item in
+            ForEach(Array(stats.topEmotions.prefix(5)), id: \.emotion.self) { item in
                 HStack {
                     Text(item.emotion.icon)
                         .font(.system(size: 20))
@@ -151,7 +151,7 @@ struct TopTagsSection: View {
                 .font(.headline)
                 .foregroundColor(.white)
             
-            ForEach(stats.topTags.prefix(5), id: \.tag.self) { item in
+            ForEach(Array(stats.topTags.prefix(5)), id: \.tag.self) { item in
                 HStack {
                     Text("#\(item.tag)")
                         .font(.body)
