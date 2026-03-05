@@ -6,11 +6,26 @@
 //
 
 import Foundation
-import SwiftData
 
 /// 梦境记录模型
-@Model
-class Dream {
+class Dream: Identifiable, ObservableObject {
+    @Published var id: UUID
+    @Published var title: String
+    @Published var content: String
+    @Published var originalText: String
+    @Published var date: Date
+    @Published var timeOfDay: TimeOfDay
+    @Published var tags: [String]
+    @Published var emotions: [Emotion]
+    @Published var clarity: Int
+    @Published var intensity: Int
+    @Published var isLucid: Bool
+    @Published var aiAnalysis: String?
+    @Published var aiImageUrl: String?
+    @Published var isPublic: Bool
+    @Published var likeCount: Int
+    @Published var createdAt: Date
+    @Published var updatedAt: Date
     @Attribute(.unique) var id: UUID
     var title: String
     var content: String

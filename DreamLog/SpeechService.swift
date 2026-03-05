@@ -8,13 +8,13 @@
 import Foundation
 import Speech
 import AVFoundation
+import Combine
 
-@Observable
-class SpeechService {
-    var isRecording: Bool = false
-    var transcription: String = ""
-    var isProcessing: Bool = false
-    var error: String?
+class SpeechService: ObservableObject {
+    @Published var isRecording: Bool = false
+    @Published var transcription: String = ""
+    @Published var isProcessing: Bool = false
+    @Published var error: String?
     
     private let audioEngine = AVAudioEngine()
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?

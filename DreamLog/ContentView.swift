@@ -55,4 +55,6 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .environmentObject(DreamStore())
+        .environmentObject(SpeechService())
+        .environmentObject(AIService())
 }

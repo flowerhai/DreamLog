@@ -6,17 +6,15 @@
 //
 
 import Foundation
-import SwiftData
+import Combine
 
-@Observable
-class DreamStore {
-    var dreams: [Dream] = []
-    var filteredDreams: [Dream] = []
-    var tags: [String] = []
-    var isRecording: Bool = false
-    var isLoading: Bool = false
+class DreamStore: ObservableObject {
+    @Published var dreams: [Dream] = []
+    @Published var filteredDreams: [Dream] = []
+    @Published var tags: [String] = []
+    @Published var isRecording: Bool = false
+    @Published var isLoading: Bool = false
     
-    private var modelContext: ModelContext?
     private var searchText: String = ""
     
     init() {
@@ -25,8 +23,7 @@ class DreamStore {
     
     // MARK: - 加载梦境
     func loadDreams() {
-        // TODO: 从 SwiftData 加载
-        // 这里是示例数据
+        // 示例数据
         dreams = [
             Dream(
                 title: "海边漫步",
