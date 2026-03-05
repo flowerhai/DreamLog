@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct HomeView: View {
     @EnvironmentObject var dreamStore: DreamStore
@@ -184,13 +185,18 @@ struct DreamListSection: View {
     let dreams: [Dream]
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(dreams, id: \.id) { dream in
-                    DreamCard(dream: dream)
+        NavigationView {
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(dreams, id: \.id) { dream in
+                        NavigationLink(destination: DreamDetailView(dream: dream)) {
+                            DreamCard(dream: dream)
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
+                .padding()
             }
-            .padding()
         }
     }
 }
@@ -198,10 +204,11 @@ struct DreamListSection: View {
 // MARK: - 梦境卡片
 struct DreamCard: View {
     let dream: Dream
+    @State private var showingShareSheet = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // 标题和日期
+            // 标题和操作
             HStack {
                 Text(dream.title)
                     .font(.headline)
@@ -209,9 +216,18 @@ struct DreamCard: View {
                 
                 Spacer()
                 
-                if dream.isLucid {
-                    Image(systemName: "sparkles")
-                        .foregroundColor(.yellow)
+                HStack(spacing: 12) {
+                    if dream.isLucid {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.yellow)
+                    }
+                    
+                    // 分享按钮
+                    Button(action: { showingShareSheet = true }) {
+                        Image(systemName: "square.and.arrow.up")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.accentColor)
+                    }
                 }
             }
             
@@ -261,6 +277,166 @@ struct DreamCard: View {
                         .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(dream: dream)
+        }
+    }
+}
+
+// MARK: - 分享弹窗
+struct ShareSheet: View {
+    let dream: Dream
+    @Environment(\.dismiss) var dismiss
+    @StateObject private var shareService = ShareService()
+    @State private var selectedStyle: ShareCardStyle = .dreamy
+    @State private var generatedImage: UIImage?
+    @State private var isGenerating = false
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    // 样式选择
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("选择卡片样式")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                ForEach(ShareCardStyle.allCases, id: \.self) { style in
+                                    StyleButton(
+                                        style: style,
+                                        isSelected: selectedStyle == style
+                                    ) {
+                                        selectedStyle = style
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+                    
+                    // 卡片预览
+                    if isGenerating {
+                        ProgressView("生成分享图片...")
+                            .progressViewStyle(.circular)
+                            .tint(.accentColor)
+                            .frame(height: 300)
+                    } else if let image = generatedImage {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 375)
+                            .cornerRadius(12)
+                            .shadow(radius: 20)
+                    } else {
+                        DreamShareCard(dream: dream, style: selectedStyle)
+                            .shadow(radius: 20)
+                    }
+                    
+                    // 操作按钮
+                    HStack(spacing: 16) {
+                        Button(action: saveToPhotos) {
+                            Label("保存到相册", systemImage: "photo.on.rectangle")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.white.opacity(0.1))
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .disabled(isGenerating || generatedImage == nil)
+                        
+                        Button(action: shareImage) {
+                            Label("分享", systemImage: "square.and.arrow.up")
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.accentColor)
+                                .foregroundColor(.white)
+                                .cornerRadius(12)
+                        }
+                        .disabled(isGenerating || generatedImage == nil)
+                    }
+                    .padding(.horizontal)
+                }
+                .padding(.vertical)
+            }
+            .navigationTitle("分享梦境")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") { dismiss() }
+                }
+            }
+            .onAppear {
+                generatePreview()
+            }
+            .onChange(of: selectedStyle) { _, _ in
+                generatePreview()
+            }
+        }
+    }
+    
+    private func generatePreview() {
+        isGenerating = true
+        Task {
+            generatedImage = await shareService.generateShareImage(dream: dream, style: selectedStyle)
+            isGenerating = false
+        }
+    }
+    
+    private func saveToPhotos() {
+        guard let image = generatedImage else { return }
+        Task {
+            await shareService.saveToPhotos(image: image)
+        }
+    }
+    
+    private func shareImage() {
+        guard let image = generatedImage else { return }
+        let shareText = shareService.getShareText(dream: dream)
+        let activityVC = UIActivityViewController(
+            activityItems: [image, shareText],
+            applicationActivities: nil
+        )
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootViewController = windowScene.windows.first?.rootViewController {
+            rootViewController.present(activityVC, animated: true)
+        }
+    }
+}
+
+// MARK: - 样式按钮
+struct StyleButton: View {
+    let style: ShareCardStyle
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(
+                        LinearGradient(
+                            colors: style.backgroundColors,
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 60, height: 60)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(isSelected ? Color.accentColor : Color.clear, lineWidth: 3)
+                    )
+                    .shadow(radius: isSelected ? 8 : 4)
+                
+                Text(style.rawValue)
+                    .font(.caption2)
+                    .foregroundColor(isSelected ? .accentColor : .secondary)
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 
