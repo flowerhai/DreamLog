@@ -26,23 +26,6 @@ class Dream: Identifiable, ObservableObject {
     @Published var likeCount: Int
     @Published var createdAt: Date
     @Published var updatedAt: Date
-    @Attribute(.unique) var id: UUID
-    var title: String
-    var content: String
-    var originalText: String  // 原始语音/文字
-    var date: Date
-    var timeOfDay: TimeOfDay
-    var tags: [String]
-    var emotions: [Emotion]
-    var clarity: Int  // 1-5 清晰度
-    var intensity: Int  // 1-5 强度
-    var isLucid: Bool  // 是否清醒梦
-    var aiAnalysis: String?
-    var aiImageUrl: String?
-    var isPublic: Bool
-    var likeCount: Int
-    var createdAt: Date
-    var updatedAt: Date
     
     init(
         id: UUID = UUID(),
@@ -196,8 +179,18 @@ struct DreamStatistics: Codable {
     let lucidDreams: Int
     let averageClarity: Double
     let averageIntensity: Double
-    let topEmotions: [(emotion: Emotion, count: Int)]
-    let topTags: [(tag: String, count: Int)]
+    let topEmotions: [EmotionCount]
+    let topTags: [TagCount]
     let dreamsByTimeOfDay: [TimeOfDay: Int]
     let dreamsByWeekday: [Int: Int]  // 0=Sunday, 6=Saturday
+    
+    struct EmotionCount: Codable {
+        let emotion: Emotion
+        let count: Int
+    }
+    
+    struct TagCount: Codable {
+        let tag: String
+        let count: Int
+    }
 }

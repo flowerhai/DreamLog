@@ -9,6 +9,7 @@ import Foundation
 import Speech
 import AVFoundation
 import Combine
+import SwiftUI
 
 class SpeechService: ObservableObject {
     @Published var isRecording: Bool = false
@@ -152,8 +153,6 @@ class SpeechService: ObservableObject {
 }
 
 // MARK: - 按钮扩展 (长按录音)
-import SwiftUI
-
 extension Button {
     func longPressAction(
         onPress: @escaping () -> Void,

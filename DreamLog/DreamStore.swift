@@ -2,7 +2,7 @@
 //  DreamStore.swift
 //  DreamLog
 //
-//  数据存储：管理梦境记录
+//  数据存储：管理梦境记录 (支持持久化)
 //
 
 import Foundation
@@ -16,49 +16,84 @@ class DreamStore: ObservableObject {
     @Published var isLoading: Bool = false
     
     private var searchText: String = ""
+    private let saveKey = "dreams_data"
     
     init() {
         loadDreams()
     }
     
-    // MARK: - 加载梦境
-    func loadDreams() {
-        // 示例数据
+    // MARK: - 加载示例数据
+    private func loadSampleDreams() {
         dreams = [
             Dream(
                 title: "海边漫步",
-                content: "我梦见自己在海边散步，海浪轻轻拍打着沙滩...",
+                content: "我梦见自己在海边散步，海浪轻轻拍打着沙滩，阳光温暖地洒在身上，感觉非常平静和自由。远处有几只海鸥在飞翔，天空中飘着几朵白云。这个梦让我感到很放松。",
                 originalText: "我梦见自己在海边散步，海浪轻轻拍打着沙滩，感觉很平静",
                 date: Date(),
-                tags: ["水", "海滩", "平静"],
-                emotions: [.calm],
+                timeOfDay: .morning,
+                tags: ["水", "海滩", "平静", "自由", "海鸥"],
+                emotions: [.calm, .happy],
                 clarity: 4,
-                intensity: 2
+                intensity: 2,
+                isLucid: false,
+                aiAnalysis: "💧 水元素分析:\n水通常象征情绪和潜意识。平静的水面代表你内心平和，情绪稳定。\n\n😊 情绪分析:\n这个梦主要包含平静、快乐的情绪，反映了你近期的心理状态。\n\n💡 建议:\n1. 记录梦境时的感受\n2. 思考与现实生活的关联\n3. 关注反复出现的元素"
             ),
             Dream(
                 title: "飞行体验",
-                content: "我突然飞起来了，在城市上空自由翱翔...",
+                content: "我突然飞起来了，在城市上空自由翱翔。风在耳边呼啸，俯瞰着下方的建筑和街道。那种自由的感觉太棒了，我可以去任何想去的地方。",
                 originalText: "我突然飞起来了，在城市上空自由翱翔，风在耳边呼啸",
                 date: Date().daysFromNow(-2),
+                timeOfDay: .evening,
                 tags: ["飞行", "自由", "城市"],
                 emotions: [.excited, .happy],
                 clarity: 5,
                 intensity: 5,
-                isLucid: true
+                isLucid: true,
+                aiAnalysis: "✈️ 飞行元素分析:\n飞行梦常代表自由、解脱或对掌控的渴望。你可能在现实生活中感到束缚，渴望突破。\n\n😊 情绪分析:\n兴奋和快乐的情绪表明你对这种自由状态非常享受。\n\n💡 建议:\n1. 思考生活中哪些地方让你感到束缚\n2. 寻找更多表达自由的方式\n3. 尝试清醒梦练习"
             ),
             Dream(
                 title: "被追逐",
-                content: "有什么东西在追我，我拼命跑但跑不动...",
+                content: "有什么东西在追我，我拼命跑但跑不动。周围的环境很陌生，我想喊但发不出声音。最后躲进了一个柜子里，心跳得很快。",
                 originalText: "有什么东西在追我，我拼命跑但跑不动，很害怕",
                 date: Date().daysFromNow(-5),
-                tags: ["追逐", "恐惧", "逃跑"],
+                timeOfDay: .earlyMorning,
+                tags: ["追逐", "恐惧", "逃跑", "躲藏"],
                 emotions: [.fearful, .anxious],
                 clarity: 3,
-                intensity: 5
+                intensity: 5,
+                isLucid: false,
+                aiAnalysis: "🏃 追逐元素分析:\n被追逐的梦通常表示你在逃避某个问题或压力源。\n\n😰 情绪分析:\n恐惧和焦虑的情绪表明你可能正面临一些压力。\n\n💡 建议:\n1. 识别生活中的压力源\n2. 尝试直面而非逃避问题\n3. 练习放松技巧"
+            ),
+            Dream(
+                title: "回到学校",
+                content: "我回到了高中教室，但是找不到自己的座位。考试马上就要开始了，我还没有准备好。同学们都在认真复习，我却什么都不会。",
+                originalText: "回到学校考试，找不到座位，很焦虑",
+                date: Date().daysFromNow(-10),
+                timeOfDay: .afternoon,
+                tags: ["学校", "考试", "焦虑", "准备"],
+                emotions: [.anxious, .confused],
+                clarity: 4,
+                intensity: 4,
+                isLucid: false
+            ),
+            Dream(
+                title: "神秘花园",
+                content: "我发现了一个隐藏的花园，里面开满了从未见过的花朵。每朵花都散发着不同的光芒，空气中弥漫着奇异的香气。花园中央有一个喷泉，水柱呈现出彩虹色。",
+                originalText: "发现神秘花园，花朵发光，彩虹喷泉",
+                date: Date().daysFromNow(-15),
+                timeOfDay: .morning,
+                tags: ["花园", "花朵", "神秘", "彩虹", "自然"],
+                emotions: [.surprised, .calm, .happy],
+                clarity: 5,
+                intensity: 3,
+                isLucid: true,
+                aiAnalysis: "🌸 花园元素分析:\n花园象征内心世界和个人成长。发光的花朵可能代表潜在的才能或灵感。\n\n🌈 彩虹元素:\n彩虹通常象征希望、转变和美好前景。\n\n💡 建议:\n1. 关注内心的创造力和灵感\n2. 这是一个积极的梦，表明你正处于成长期\n3. 记录下这些美好的感受"
             ),
         ]
         filteredDreams = dreams
         extractTags()
+        // 自动保存示例数据
+        saveDreams()
     }
     
     // MARK: - 提取标签
@@ -75,6 +110,7 @@ class DreamStore: ObservableObject {
         dreams.insert(dream, at: 0)
         extractTags()
         filterDreams(searchText: searchText)
+        saveDreams()
     }
     
     // MARK: - 更新梦境
@@ -82,6 +118,7 @@ class DreamStore: ObservableObject {
         if let index = dreams.firstIndex(where: { $0.id == dream.id }) {
             dreams[index] = dream
             extractTags()
+            saveDreams()
         }
     }
     
@@ -89,6 +126,16 @@ class DreamStore: ObservableObject {
     func deleteDream(_ dream: Dream) {
         dreams.removeAll { $0.id == dream.id }
         extractTags()
+        saveDreams()
+    }
+    
+    // MARK: - 删除所有梦境
+    func deleteAllDreams() {
+        dreams.removeAll()
+        filteredDreams.removeAll()
+        tags.removeAll()
+        UserDefaults.standard.removeObject(forKey: saveKey)
+        print("✅ 已删除所有梦境记录")
     }
     
     // MARK: - 搜索梦境
@@ -123,10 +170,23 @@ class DreamStore: ObservableObject {
     
     // MARK: - 获取统计数据
     func getStatistics() -> DreamStatistics {
+        guard !dreams.isEmpty else {
+            return DreamStatistics(
+                totalDreams: 0,
+                lucidDreams: 0,
+                averageClarity: 0,
+                averageIntensity: 0,
+                topEmotions: [],
+                topTags: [],
+                dreamsByTimeOfDay: [:],
+                dreamsByWeekday: [:]
+            )
+        }
+        
         let total = dreams.count
         let lucid = dreams.filter { $0.isLucid }.count
-        let avgClarity = dreams.isEmpty ? 0 : Double(dreams.reduce(0) { $0 + $1.clarity }) / Double(total)
-        let avgIntensity = dreams.isEmpty ? 0 : Double(dreams.reduce(0) { $0 + $1.intensity }) / Double(total)
+        let avgClarity = Double(dreams.reduce(0) { $0 + $1.clarity }) / Double(total)
+        let avgIntensity = Double(dreams.reduce(0) { $0 + $1.intensity }) / Double(total)
         
         // 情绪统计
         var emotionCount: [Emotion: Int] = [:]
@@ -135,7 +195,9 @@ class DreamStore: ObservableObject {
                 emotionCount[emotion, default: 0] += 1
             }
         }
-        let topEmotions: [(Emotion, Int)] = emotionCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
+        let topEmotions: [DreamStatistics.EmotionCount] = emotionCount.sorted { $0.value > $1.value }.prefix(5).map { 
+            DreamStatistics.EmotionCount(emotion: $0.key, count: $0.value) 
+        }
         
         // 标签统计
         var tagCount: [String: Int] = [:]
@@ -144,7 +206,9 @@ class DreamStore: ObservableObject {
                 tagCount[tag, default: 0] += 1
             }
         }
-        let topTags: [(String, Int)] = tagCount.sorted { $0.value > $1.value }.prefix(5).map { ($0.key, $0.value) }
+        let topTags: [DreamStatistics.TagCount] = tagCount.sorted { $0.value > $1.value }.prefix(5).map { 
+            DreamStatistics.TagCount(tag: $0.key, count: $0.value) 
+        }
         
         // 时间段统计
         var timeCount: [TimeOfDay: Int] = [:]
@@ -234,7 +298,37 @@ class DreamStore: ObservableObject {
         dreams.filter { $0.isLucid }
     }
     
-    // MARK: - 导出梦境
+    // MARK: - 导出梦境为 JSON
+    func exportDreams() -> Data? {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            encoder.outputFormatting = .prettyPrinted
+            return try encoder.encode(dreams)
+        } catch {
+            print("❌ 导出失败：\(error)")
+            return nil
+        }
+    }
+    
+    // MARK: - 导入梦境从 JSON
+    func importDreams(from data: Data) -> Bool {
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let importedDreams = try decoder.decode([Dream].self, from: data)
+            dreams.append(contentsOf: importedDreams)
+            extractTags()
+            saveDreams()
+            print("✅ 成功导入 \(importedDreams.count) 个梦境")
+            return true
+        } catch {
+            print("❌ 导入失败：\(error)")
+            return false
+        }
+    }
+    
+    // MARK: - 导出梦境文本
     func exportDream(_ dream: Dream) -> String {
         var text = "🌙 DreamLog - \(dream.title)\n\n"
         text += "日期：\(dream.date.formatted(.dateTime.year().month().day().hour().minute()))\n"
@@ -276,5 +370,114 @@ extension DreamStore {
     static var preview: DreamStore {
         let store = DreamStore()
         return store
+    }
+}
+
+// MARK: - Date 扩展
+extension Date {
+    func daysFromNow(_ days: Int) -> Date {
+        Calendar.current.date(byAdding: .day, value: days, to: self) ?? self
+    }
+}
+
+// MARK: - Dream Codable 支持
+// 使用 CodableDream 结构体进行序列化，避免与 @Published 冲突
+struct CodableDream: Codable {
+    let id: UUID
+    let title: String
+    let content: String
+    let originalText: String
+    let date: Date
+    let timeOfDay: TimeOfDay
+    let tags: [String]
+    let emotions: [Emotion]
+    let clarity: Int
+    let intensity: Int
+    let isLucid: Bool
+    let aiAnalysis: String?
+    let aiImageUrl: String?
+    let isPublic: Bool
+    let likeCount: Int
+    let createdAt: Date
+    let updatedAt: Date
+    
+    init(from dream: Dream) {
+        self.id = dream.id
+        self.title = dream.title
+        self.content = dream.content
+        self.originalText = dream.originalText
+        self.date = dream.date
+        self.timeOfDay = dream.timeOfDay
+        self.tags = dream.tags
+        self.emotions = dream.emotions
+        self.clarity = dream.clarity
+        self.intensity = dream.intensity
+        self.isLucid = dream.isLucid
+        self.aiAnalysis = dream.aiAnalysis
+        self.aiImageUrl = dream.aiImageUrl
+        self.isPublic = dream.isPublic
+        self.likeCount = dream.likeCount
+        self.createdAt = dream.createdAt
+        self.updatedAt = dream.updatedAt
+    }
+    
+    func toDream() -> Dream {
+        Dream(
+            id: id,
+            title: title,
+            content: content,
+            originalText: originalText,
+            date: date,
+            timeOfDay: timeOfDay,
+            tags: tags,
+            emotions: emotions,
+            clarity: clarity,
+            intensity: intensity,
+            isLucid: isLucid,
+            aiAnalysis: aiAnalysis,
+            aiImageUrl: aiImageUrl,
+            isPublic: isPublic,
+            likeCount: likeCount,
+            createdAt: createdAt,
+            updatedAt: updatedAt
+        )
+    }
+}
+
+extension DreamStore {
+    func loadDreams() {
+        // 尝试从 UserDefaults 加载
+        if let savedData = UserDefaults.standard.data(forKey: saveKey) {
+            do {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let savedDreams = try decoder.decode([CodableDream].self, from: savedData)
+                dreams = savedDreams.map { $0.toDream() }
+                print("✅ 成功加载 \(dreams.count) 个梦境记录")
+            } catch {
+                print("❌ 加载梦境失败：\(error)")
+                // 如果加载失败，使用示例数据
+                loadSampleDreams()
+            }
+        } else {
+            // 首次使用，加载示例数据
+            loadSampleDreams()
+        }
+        filteredDreams = dreams
+        extractTags()
+    }
+    
+    func saveDreams() {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            encoder.outputFormatting = .prettyPrinted
+            let codableDreams = dreams.map { CodableDream(from: $0) }
+            let encoded = try encoder.encode(codableDreams)
+            UserDefaults.standard.set(encoded, forKey: saveKey)
+            print("✅ 成功保存 \(dreams.count) 个梦境记录")
+        } catch {
+            print("❌ 保存梦境失败：\(error)")
+        }
     }
 }
