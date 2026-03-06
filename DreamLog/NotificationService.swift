@@ -117,6 +117,80 @@ class NotificationService: ObservableObject {
         print("✅ 已取消通知：\(id)")
     }
     
+    // MARK: - 设置现实检查提醒
+    func scheduleRealityCheckReminders(times: [(hour: Int, minute: Int)]) {
+        // 先取消旧的现实检查提醒
+        cancelRealityCheckReminders()
+        
+        for (index, time) in times.enumerated() {
+            let content = UNMutableNotificationContent()
+            content.title = "🔍 现实检查时间"
+            content.body = "问问自己：我现在在做梦吗？捏住鼻子试试能否呼吸～"
+            content.sound = .default
+            content.categoryIdentifier = "reality_check"
+            
+            var dateComponents = DateComponents()
+            dateComponents.hour = time.hour
+            dateComponents.minute = time.minute
+            dateComponents.timeZone = TimeZone.current
+            
+            let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+            
+            let request = UNNotificationRequest(
+                identifier: "reality_check_\(index)",
+                content: content,
+                trigger: trigger
+            )
+            
+            center.add(request) { error in
+                if let error = error {
+                    print("❌ 设置现实检查提醒失败：\(error)")
+                } else {
+                    print("✅ 现实检查提醒已设置：\(time.hour):\(String(format: "%02d", time.minute))")
+                }
+            }
+        }
+    }
+    
+    // MARK: - 取消所有现实检查提醒
+    func cancelRealityCheckReminders() {
+        var identifiers: [String] = []
+        for i in 0..<10 {
+            identifiers.append("reality_check_\(i)")
+        }
+        center.removePendingNotificationRequests(withIdentifiers: identifiers)
+        print("✅ 已取消所有现实检查提醒")
+    }
+    
+    // MARK: - 设置 WBTB 唤醒提醒
+    func scheduleWBTBReminder(afterHours: Double = 5) {
+        let content = UNMutableNotificationContent()
+        content.title = "⏰ WBTB 时间"
+        content.body = "醒来后保持清醒 20-60 分钟，然后带着知梦意图重新入睡吧！"
+        content.sound = .default
+        content.categoryIdentifier = "wbtb_reminder"
+        
+        let triggerDate = Date().addingTimeInterval(afterHours * 3600)
+        var dateComponents = Calendar.current.dateComponents([.hour, .minute], from: triggerDate)
+        dateComponents.timeZone = TimeZone.current
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: false)
+        
+        let request = UNNotificationRequest(
+            identifier: "wbtb_reminder",
+            content: content,
+            trigger: trigger
+        )
+        
+        center.add(request) { error in
+            if let error = error {
+                print("❌ 设置 WBTB 提醒失败：\(error)")
+            } else {
+                print("✅ WBTB 提醒已设置：\(afterHours) 小时后")
+            }
+        }
+    }
+    
     // MARK: - 检查是否有待处理的通知
     func checkPendingNotifications() {
         center.getPendingNotificationRequests { requests in
@@ -138,6 +212,20 @@ extension UNNotificationCategory {
     
     static let bedtimeReminder = UNNotificationCategory(
         identifier: "bedtime_reminder",
+        actions: [],
+        intentIdentifiers: [],
+        options: []
+    )
+    
+    static let realityCheck = UNNotificationCategory(
+        identifier: "reality_check",
+        actions: [],
+        intentIdentifiers: [],
+        options: []
+    )
+    
+    static let wbtbReminder = UNNotificationCategory(
+        identifier: "wbtb_reminder",
         actions: [],
         intentIdentifiers: [],
         options: []

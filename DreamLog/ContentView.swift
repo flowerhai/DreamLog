@@ -48,19 +48,26 @@ struct ContentView: View {
                 }
                 .tag(4)
             
+            LucidTrainingView()
+                .tabItem {
+                    Image(systemName: "brain.head.profile")
+                    Text("训练")
+                }
+                .tag(5)
+            
             GalleryView()
                 .tabItem {
                     Image(systemName: "photo.on.rectangle")
                     Text("画廊")
                 }
-                .tag(5)
+                .tag(6)
             
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(6)
+                .tag(7)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
