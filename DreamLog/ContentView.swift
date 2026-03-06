@@ -20,31 +20,45 @@ struct ContentView: View {
                 }
                 .tag(0)
             
+            CalendarView()
+                .tabItem {
+                    Image(systemName: "calendar")
+                    Text("日历")
+                }
+                .tag(1)
+            
             InsightsView()
                 .tabItem {
                     Image(systemName: "chart.bar.fill")
                     Text("洞察")
                 }
-                .tag(1)
+                .tag(2)
+            
+            DreamsGoalView()
+                .tabItem {
+                    Image(systemName: "target")
+                    Text("目标")
+                }
+                .tag(3)
             
             GalleryView()
                 .tabItem {
                     Image(systemName: "photo.on.rectangle")
                     Text("画廊")
                 }
-                .tag(2)
+                .tag(4)
             
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(3)
+                .tag(5)
         }
-        .tint(Color("AccentColor"))
+        .tint(Color(hex: "9B7EBD"))
         .background(
             LinearGradient(
-                colors: [Color(hex: "1A1A2E"), Color(hex: "16213E")],
+                colors: [Color(hex: "1A1A2E"), Color(hex: "16213E"), Color(hex: "0F3460")],
                 startPoint: .top,
                 endPoint: .bottom
             )
