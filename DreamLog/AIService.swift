@@ -79,6 +79,138 @@ class AIService: ObservableObject {
         return detected.isEmpty ? [.neutral] : detected
     }
     
+    // MARK: - 智能标签推荐
+    /// 基于梦境内容智能推荐标签
+    func recommendTags(content: String, existingTags: [String] = []) -> [String] {
+        var recommendations: [String] = []
+        let lowercasedContent = content.lowercased()
+        
+        // 梦境元素关键词映射
+        let tagMappings: [String: [String]] = [
+            "水": ["海洋", "河流", "湖泊", "游泳", "波浪", "下雨", "泪水"],
+            "飞行": ["飞", "天空", "空中", "翅膀", "漂浮"],
+            "追逐": ["追", "逃跑", "躲藏", "被追"],
+            "坠落": ["掉落", "跌落", "跳下", "悬崖"],
+            "考试": ["学校", "教室", "老师", "同学", "学习"],
+            "牙齿": ["牙", "掉牙", "嘴巴"],
+            "蛇": ["蛇", "蟒蛇", "毒蛇"],
+            "房子": ["家", "房间", "门", "窗户", "建筑"],
+            "死亡": ["去世", "葬礼", "墓地", "鬼魂"],
+            "性": ["亲密", "爱人", "浪漫"],
+            "动物": ["猫", "狗", "鸟", "鱼", "老虎", "狮子"],
+            "自然": ["树", "花", "草", "山", "森林", "花园"],
+            "交通工具": ["车", "飞机", "火车", "船", "地铁"],
+            "食物": ["吃", "喝", "饭", "水果", "蛋糕"],
+        ]
+        
+        // 匹配关键词
+        for (baseTag, keywords) in tagMappings {
+            if !existingTags.contains(baseTag) {
+                for keyword in keywords {
+                    if lowercasedContent.contains(keyword.lowercased()) {
+                        recommendations.append(baseTag)
+                        break
+                    }
+                }
+            }
+        }
+        
+        // 情绪相关标签
+        let emotionTagMappings: [Emotion: [String]] = [
+            .happy: ["开心", "快乐", "高兴", "美好", "愉快"],
+            .fearful: ["害怕", "恐惧", "恐怖", "吓人"],
+            .anxious: ["紧张", "焦虑", "担心", "不安"],
+            .sad: ["难过", "悲伤", "哭泣", "伤心"],
+            .angry: ["生气", "愤怒", "恼火"],
+            .calm: ["平静", "安宁", "放松", "舒适"],
+            .excited: ["兴奋", "激动", "刺激"],
+            .confused: ["困惑", "迷茫", "不解"],
+            .surprised: ["惊讶", "意外", "吃惊"],
+        ]
+        
+        for (emotion, keywords) in emotionTagMappings {
+            if !existingTags.contains(emotion.rawValue) {
+                for keyword in keywords {
+                    if lowercasedContent.contains(keyword.lowercased()) {
+                        recommendations.append(emotion.rawValue)
+                        break
+                    }
+                }
+            }
+        }
+        
+        // 场景标签
+        if lowercasedContent.contains("晚上") || lowercasedContent.contains("夜晚") || lowercasedContent.contains("黑暗") {
+            if !existingTags.contains("夜晚") { recommendations.append("夜晚") }
+        }
+        if lowercasedContent.contains("白天") || lowercasedContent.contains("阳光") || lowercasedContent.contains("明亮") {
+            if !existingTags.contains("白天") { recommendations.append("白天") }
+        }
+        if lowercasedContent.contains("梦醒") || lowercasedContent.contains("醒来") {
+            if !existingTags.contains("清醒") { recommendations.append("清醒") }
+        }
+        
+        // 去重并限制数量
+        let uniqueRecommendations = Array(Set(recommendations)).prefix(5).sorted()
+        return uniqueRecommendations
+    }
+    
+    // MARK: - 梦境相似度匹配
+    /// 计算两个梦境的相似度 (0-1)
+    func calculateSimilarity(between dream1: Dream, and dream2: Dream) -> Double {
+        var similarityScore: Double = 0.0
+        var weightSum: Double = 0.0
+        
+        // 标签相似度 (权重 0.4)
+        let tagSimilarity = jaccardSimilarity(set1: Set(dream1.tags), set2: Set(dream2.tags))
+        similarityScore += tagSimilarity * 0.4
+        weightSum += 0.4
+        
+        // 情绪相似度 (权重 0.3)
+        let emotionSimilarity = jaccardSimilarity(set1: Set(dream1.emotions), set2: Set(dream2.emotions))
+        similarityScore += emotionSimilarity * 0.3
+        weightSum += 0.3
+        
+        // 时间段相似度 (权重 0.15)
+        if dream1.timeOfDay == dream2.timeOfDay {
+            similarityScore += 0.15
+        }
+        weightSum += 0.15
+        
+        // 清晰度相似度 (权重 0.15)
+        let clarityDiff = abs(dream1.clarity - dream2.clarity)
+        let claritySimilarity = max(0, 1.0 - Double(clarityDiff) / 5.0)
+        similarityScore += claritySimilarity * 0.15
+        weightSum += 0.15
+        
+        return similarityScore / weightSum
+    }
+    
+    /// Jaccard 相似度计算
+    private func jaccardSimilarity<T: Hashable>(set1: Set<T>, set2: Set<T>) -> Double {
+        if set1.isEmpty && set2.isEmpty { return 0 }
+        let intersection = set1.intersection(set2).count
+        let union = set1.union(set2).count
+        return union > 0 ? Double(intersection) / Double(union) : 0
+    }
+    
+    /// 查找相似梦境
+    func findSimilarDreams(to dream: Dream, in dreams: [Dream], limit: Int = 5) -> [(dream: Dream, similarity: Double)] {
+        var similarDreams: [(Dream, Double)] = []
+        
+        for otherDream in dreams where otherDream.id != dream.id {
+            let similarity = calculateSimilarity(between: dream, and: otherDream)
+            if similarity > 0.2 {  // 阈值：20% 相似度
+                similarDreams.append((otherDream, similarity))
+            }
+        }
+        
+        // 按相似度排序
+        similarDreams.sort { $0.similarity > $1.similarity }
+        
+        return Array(similarDreams.prefix(limit))
+    }
+    
     // MARK: - 生成图像提示词
     func generateImagePrompt(from dream: Dream) -> String {
         var prompt = "Dream scene: \(String(dream.content.prefix(100)))"
