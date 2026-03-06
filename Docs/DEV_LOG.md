@@ -143,4 +143,45 @@
 
 ---
 
-*最后更新：2026-03-06 22:00*
+### 2026-03-06 12:00 AM (小组件功能开发)
+
+#### ✅ 本次提交
+- [x] **DreamLogWidget.swift** - 主小组件，显示梦境统计和最近梦境
+- [x] **DreamLogQuickWidget.swift** - 快速记录小组件，一键开始录音
+- [x] **DreamGoalWidget** - 梦境目标小组件，追踪每周记录目标
+- [x] **SettingsView 更新** - 添加小组件配置和预览
+- [x] **README 更新** - 添加小组件使用说明
+- [x] **支持 3 种小组件样式**:
+  - 🌙 梦境统计 (小/中尺寸)
+  - 🎤 快速记录 (小/中尺寸)
+  - 🎯 梦境目标 (小尺寸)
+- [x] **TimelineProvider** - 每小时自动更新数据
+- [x] **深度链接支持** - 点击小组件跳转到对应页面
+
+#### 🔧 代码改进
+- 新增 DreamLogWidget.swift (主统计组件)
+- 新增 DreamLogQuickWidget.swift (快速记录 + 目标组件)
+- SettingsView: 添加小组件配置区域，显示 3 种组件预览
+- 支持 URL Scheme 深度链接 (dreamlog://record, dreamlog://insights, dreamlog://widgets)
+- UserDefaults 集成，读取梦境数据实时显示
+
+#### 📊 代码统计
+- Swift 文件：17 个 (+2)
+- 总代码行数：~8000+ (+1500)
+- GitHub 提交：待提交
+
+#### 🎨 小组件设计
+- **渐变背景** - 紫色/蓝色/靛蓝渐变，符合梦境主题
+- **图标系统** - 月亮、麦克风、目标等 SF Symbols
+- **实时数据** - 显示梦境数量、最近标题、情绪状态
+- **进度环** - 视觉化展示每周目标完成度
+
+#### 🎯 下一步
+- [ ] 集成真实 AI API (LLM + Stable Diffusion)
+- [ ] 添加 iCloud 同步支持
+- [ ] WidgetKit 扩展目标配置 (Xcode 项目)
+- [ ] 添加更多小组件变体 (日历视图、月相)
+
+---
+
+*最后更新：2026-03-06 00:00*

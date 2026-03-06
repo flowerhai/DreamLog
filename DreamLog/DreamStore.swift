@@ -22,43 +22,6 @@ class DreamStore: ObservableObject {
         loadDreams()
     }
     
-    // MARK: - 加载梦境 (支持持久化)
-    func loadDreams() {
-        // 尝试从 UserDefaults 加载
-        if let savedData = UserDefaults.standard.data(forKey: saveKey) {
-            do {
-                let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .iso8601
-                let savedDreams = try decoder.decode([Dream].self, from: savedData)
-                dreams = savedDreams
-                print("✅ 成功加载 \(dreams.count) 个梦境记录")
-            } catch {
-                print("❌ 加载梦境失败：\(error)")
-                // 如果加载失败，使用示例数据
-                loadSampleDreams()
-            }
-        } else {
-            // 首次使用，加载示例数据
-            loadSampleDreams()
-        }
-        filteredDreams = dreams
-        extractTags()
-    }
-    
-    // MARK: - 保存梦境
-    func saveDreams() {
-        do {
-            let encoder = JSONEncoder()
-            encoder.dateEncodingStrategy = .iso8601
-            encoder.outputFormatting = .prettyPrinted
-            let encoded = try encoder.encode(dreams)
-            UserDefaults.standard.set(encoded, forKey: saveKey)
-            print("✅ 成功保存 \(dreams.count) 个梦境记录")
-        } catch {
-            print("❌ 保存梦境失败：\(error)")
-        }
-    }
-    
     // MARK: - 加载示例数据
     private func loadSampleDreams() {
         dreams = [
@@ -418,54 +381,103 @@ extension Date {
 }
 
 // MARK: - Dream Codable 支持
-extension Dream: Codable {
-    enum CodingKeys: String, CodingKey {
-        case id, title, content, originalText, date, timeOfDay, tags, emotions
-        case clarity, intensity, isLucid, aiAnalysis, aiImageUrl, isPublic
-        case likeCount, createdAt, updatedAt
+// 使用 CodableDream 结构体进行序列化，避免与 @Published 冲突
+struct CodableDream: Codable {
+    let id: UUID
+    let title: String
+    let content: String
+    let originalText: String
+    let date: Date
+    let timeOfDay: TimeOfDay
+    let tags: [String]
+    let emotions: [Emotion]
+    let clarity: Int
+    let intensity: Int
+    let isLucid: Bool
+    let aiAnalysis: String?
+    let aiImageUrl: String?
+    let isPublic: Bool
+    let likeCount: Int
+    let createdAt: Date
+    let updatedAt: Date
+    
+    init(from dream: Dream) {
+        self.id = dream.id
+        self.title = dream.title
+        self.content = dream.content
+        self.originalText = dream.originalText
+        self.date = dream.date
+        self.timeOfDay = dream.timeOfDay
+        self.tags = dream.tags
+        self.emotions = dream.emotions
+        self.clarity = dream.clarity
+        self.intensity = dream.intensity
+        self.isLucid = dream.isLucid
+        self.aiAnalysis = dream.aiAnalysis
+        self.aiImageUrl = dream.aiImageUrl
+        self.isPublic = dream.isPublic
+        self.likeCount = dream.likeCount
+        self.createdAt = dream.createdAt
+        self.updatedAt = dream.updatedAt
     }
     
-    convenience init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.init(
-            id: try container.decode(UUID.self, forKey: .id),
-            title: try container.decode(String.self, forKey: .title),
-            content: try container.decode(String.self, forKey: .content),
-            originalText: try container.decode(String.self, forKey: .originalText),
-            date: try container.decode(Date.self, forKey: .date),
-            timeOfDay: try container.decode(TimeOfDay.self, forKey: .timeOfDay),
-            tags: try container.decode([String].self, forKey: .tags),
-            emotions: try container.decode([Emotion].self, forKey: .emotions),
-            clarity: try container.decode(Int.self, forKey: .clarity),
-            intensity: try container.decode(Int.self, forKey: .intensity),
-            isLucid: try container.decode(Bool.self, forKey: .isLucid),
-            aiAnalysis: try container.decodeIfPresent(String.self, forKey: .aiAnalysis),
-            aiImageUrl: try container.decodeIfPresent(String.self, forKey: .aiImageUrl),
-            isPublic: try container.decode(Bool.self, forKey: .isPublic),
-            likeCount: try container.decode(Int.self, forKey: .likeCount),
-            createdAt: try container.decode(Date.self, forKey: .createdAt),
-            updatedAt: try container.decode(Date.self, forKey: .updatedAt)
+    func toDream() -> Dream {
+        Dream(
+            id: id,
+            title: title,
+            content: content,
+            originalText: originalText,
+            date: date,
+            timeOfDay: timeOfDay,
+            tags: tags,
+            emotions: emotions,
+            clarity: clarity,
+            intensity: intensity,
+            isLucid: isLucid,
+            aiAnalysis: aiAnalysis,
+            aiImageUrl: aiImageUrl,
+            isPublic: isPublic,
+            likeCount: likeCount,
+            createdAt: createdAt,
+            updatedAt: updatedAt
         )
     }
+}
+
+extension DreamStore {
+    func loadDreams() {
+        // 尝试从 UserDefaults 加载
+        if let savedData = UserDefaults.standard.data(forKey: saveKey) {
+            do {
+                let decoder = JSONDecoder()
+                decoder.dateDecodingStrategy = .iso8601
+                let savedDreams = try decoder.decode([CodableDream].self, from: savedData)
+                dreams = savedDreams.map { $0.toDream() }
+                print("✅ 成功加载 \(dreams.count) 个梦境记录")
+            } catch {
+                print("❌ 加载梦境失败：\(error)")
+                // 如果加载失败，使用示例数据
+                loadSampleDreams()
+            }
+        } else {
+            // 首次使用，加载示例数据
+            loadSampleDreams()
+        }
+        filteredDreams = dreams
+        extractTags()
+    }
     
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(id, forKey: .id)
-        try container.encode(title, forKey: .title)
-        try container.encode(content, forKey: .content)
-        try container.encode(originalText, forKey: .originalText)
-        try container.encode(date, forKey: .date)
-        try container.encode(timeOfDay, forKey: .timeOfDay)
-        try container.encode(tags, forKey: .tags)
-        try container.encode(emotions, forKey: .emotions)
-        try container.encode(clarity, forKey: .clarity)
-        try container.encode(intensity, forKey: .intensity)
-        try container.encode(isLucid, forKey: .isLucid)
-        try container.encodeIfPresent(aiAnalysis, forKey: .aiAnalysis)
-        try container.encodeIfPresent(aiImageUrl, forKey: .aiImageUrl)
-        try container.encode(isPublic, forKey: .isPublic)
-        try container.encode(likeCount, forKey: .likeCount)
-        try container.encode(createdAt, forKey: .createdAt)
-        try container.encode(updatedAt, forKey: .updatedAt)
+    func saveDreams() {
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            encoder.outputFormatting = .prettyPrinted
+            let codableDreams = dreams.map { CodableDream(from: $0) }
+            let encoded = try encoder.encode(codableDreams)
+            UserDefaults.standard.set(encoded, forKey: saveKey)
+            print("✅ 成功保存 \(dreams.count) 个梦境记录")
+        } catch {
+            print("❌ 保存梦境失败：\(error)")
+        }
     }
 }

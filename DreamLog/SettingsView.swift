@@ -37,6 +37,88 @@ struct SettingsView: View {
                     }
                 }
                 
+                // 小组件设置
+                Section(header: Label("小组件", systemImage: "widget")) {
+                    Link(destination: URL(string: "dreamlog://widgets")!) {
+                        HStack {
+                            Label("添加小组件", systemImage: "plus.app")
+                            Spacer()
+                            Image(systemName: "arrow.up.right.square")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("可用小组件")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        HStack(spacing: 12) {
+                            // 快速记录小组件预览
+                            VStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.blue]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 60, height: 60)
+                                    .overlay(
+                                        Image(systemName: "mic.fill")
+                                            .foregroundColor(.white)
+                                    )
+                                
+                                Text("快速记录")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            // 梦境统计小组件预览
+                            VStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(LinearGradient(
+                                        gradient: Gradient(colors: [Color.indigo, Color.purple]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 60, height: 60)
+                                    .overlay(
+                                        Image(systemName: "moon.stars.fill")
+                                            .foregroundColor(.white)
+                                    )
+                                
+                                Text("梦境统计")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            // 梦境目标小组件预览
+                            VStack(spacing: 4) {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(LinearGradient(
+                                        gradient: Gradient(colors: [Color.purple, Color.pink]),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    ))
+                                    .frame(width: 60, height: 60)
+                                    .overlay(
+                                        Image(systemName: "target")
+                                            .foregroundColor(.white)
+                                    )
+                                
+                                Text("梦境目标")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        Text("长按主屏幕 → 左上角 + → 搜索 DreamLog")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
                 // 提醒设置
                 Section(header: Label("提醒", systemImage: "bell")) {
                     Toggle("晨间提醒", isOn: $notificationsEnabled)
