@@ -6,9 +6,11 @@
 //
 
 import Foundation
+import SwiftUI
 
 /// 梦境元素类别
-enum DreamSymbolCategory: String, CaseIterable {
+enum DreamSymbolCategory: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
     case natural = "自然元素"
     case animals = "动物"
     case people = "人物"
@@ -384,8 +386,6 @@ class DreamDictionaryService: ObservableObject {
 
 // MARK: - 梦境词典视图
 
-import SwiftUI
-
 /// 梦境词典浏览视图
 struct DreamDictionaryView: View {
     @StateObject private var dictionary = DreamDictionaryService.shared
@@ -590,53 +590,6 @@ struct Chip: View {
             .background(Color.purple.opacity(0.2))
             .foregroundColor(.purple)
             .cornerRadius(12)
-    }
-}
-
-// 简单的流式布局
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.replacingUnspecifiedDimensions(), subviews: subviews, spacing: spacing)
-        return result.size
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(in: bounds.size, subviews: subviews, spacing: spacing)
-        
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
-                                      y: bounds.minY + result.positions[index].y),
-                         proposal: .unspecified)
-        }
-    }
-    
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-        
-        init(in size: CGSize, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var rowHeight: CGFloat = 0
-            
-            for subview in subviews {
-                let subviewSize = subview.sizeThatFits(.unspecified)
-                
-                if x + subviewSize.width > size.width && x > 0 {
-                    x = 0
-                    y += rowHeight + spacing
-                    rowHeight = 0
-                }
-                
-                positions.append(CGPoint(x: x, y: y))
-                rowHeight = max(rowHeight, subviewSize.height)
-                x += subviewSize.width + spacing
-            }
-            
-            self.size = CGSize(width: size.width, height: y + rowHeight)
-        }
     }
 }
 

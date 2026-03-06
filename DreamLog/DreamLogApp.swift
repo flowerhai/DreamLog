@@ -12,8 +12,8 @@ struct DreamLogApp: App {
     @StateObject private var dreamStore = DreamStore()
     @StateObject private var speechService = SpeechService()
     @StateObject private var aiService = AIService()
-    @StateObject private var notificationService = NotificationService.shared
-    @StateObject private var cloudSyncService = CloudSyncService.shared
+    @ObservedObject private var notificationService = NotificationService.shared
+    @ObservedObject private var cloudSyncService = CloudSyncService.shared
     
     var body: some Scene {
         WindowGroup {

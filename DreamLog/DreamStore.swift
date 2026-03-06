@@ -19,6 +19,7 @@ class DreamStore: ObservableObject {
     private var searchText: String = ""
     private let saveKey = "dreams_data"
     private let cloudSyncService: CloudSyncService
+    private var subscriptions: Set<AnyCancellable> = []
     
     init(cloudSyncService: CloudSyncService = .shared) {
         self.cloudSyncService = cloudSyncService
@@ -511,8 +512,6 @@ extension DreamStore {
             }
             .store(in: &subscriptions)
     }
-    
-    private var subscriptions: Set<AnyCancellable> = []
     
     /// 触发云同步
     func triggerCloudSync() {

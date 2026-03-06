@@ -54,7 +54,7 @@ class AIService: ObservableObject {
             .filter { $0.count >= 2 }
             .filter { !commonWords.contains($0) }
         
-        return Array(words.prefix(5)) as [String]
+        return Array(words.prefix(5))
     }
     
     // MARK: - 检测情绪
