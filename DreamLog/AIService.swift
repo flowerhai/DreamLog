@@ -187,7 +187,7 @@ class AIService: ObservableObject {
     }
     
     /// Jaccard 相似度计算
-    private func jaccardSimilarity<T: Hashable>(set1: Set<T>, set2: Set<T>) -> Double {
+    func jaccardSimilarity<T: Hashable>(set1: Set<T>, set2: Set<T>) -> Double {
         if set1.isEmpty && set2.isEmpty { return 0 }
         let intersection = set1.intersection(set2).count
         let union = set1.union(set2).count
