@@ -15,6 +15,77 @@
 
 ## 开发历史
 
+### 2026-03-06 (Day 2) - iCloud 同步功能
+
+#### ✅ 已完成
+- [x] **新增：CloudSyncService.swift** - 完整的 iCloud CloudKit 同步服务
+  - 云状态检测和可用性检查
+  - 梦境数据上传到云端
+  - 从云端拉取梦境数据
+  - 订阅数据库变更通知
+  - 同步状态管理 (idle/syncing/success/failed/unavailable)
+- [x] **DreamStore 云同步集成** - 将云同步功能集成到数据存储层
+  - 自动同步触发机制
+  - 云同步状态观察者
+  - 手动推送/拉取控制
+  - 本地与云端数据合并
+- [x] **DreamLogApp 更新** - 添加 CloudSyncService 环境对象
+  - 应用启动时初始化云同步
+  - 自动触发首次同步
+- [x] **SettingsView 云同步设置** - 完整的云同步设置界面
+  - iCloud 同步开关
+  - 实时同步状态显示 (图标 + 文字)
+  - 最后同步时间显示
+  - 手动推送/拉取按钮
+  - 同步说明文字
+- [x] **README 更新** - 文档更新
+  - 添加 iCloud 同步功能介绍
+  - 更新 Phase 4 开发计划 (标记已完成)
+  - 更新项目结构 (添加 CloudSyncService.swift)
+
+#### 🔧 技术实现
+
+**CloudSyncService 核心功能**:
+```swift
+- checkCloudStatus() - 检查 iCloud 账户状态
+- syncAllDreams() - 同步所有梦境到云端
+- loadDreamsFromCloud() - 从云端加载梦境
+- saveDreamToCloud() - 保存单个梦境
+- deleteDreamFromCloud() - 删除云端梦境
+- setupSubscriptions() - 设置变更订阅
+```
+
+**CloudKit 数据结构**:
+```swift
+Record Type: "Dream"
+Fields:
+- title: String
+- content: String
+- originalText: String
+- date: Date
+- timeOfDay: String
+- tags: [String]
+- emotions: [String]
+- clarity: Int
+- intensity: Int
+- isLucid: Bool
+- aiAnalysis: String?
+- aiImageUrl: String?
+```
+
+**同步策略**:
+- 本地优先：数据首先保存到本地 UserDefaults
+- 自动同步：每次保存后自动触发云同步
+- 冲突处理：基于时间戳，最新数据优先
+- 离线支持：无网络时使用本地数据，联网后自动同步
+
+#### 📊 代码统计
+- 新增文件：CloudSyncService.swift (~300 行)
+- 修改文件：DreamStore.swift (+80 行), DreamLogApp.swift (+10 行), SettingsView.swift (+60 行)
+- 总代码增量：~450 行
+
+---
+
 ### 2026-03-06 (Day 2)
 
 #### ✅ 已完成

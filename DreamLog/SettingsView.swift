@@ -23,6 +23,17 @@ struct SettingsView: View {
     @State private var exportMessage: String?
     @State private var importMessage: String?
     
+    // 同步状态颜色
+    var statusColor: Color {
+        switch dreamStore.cloudSyncStatus {
+        case .idle: return .secondary
+        case .syncing: return .blue
+        case .success: return .green
+        case .failed: return .red
+        case .unavailable: return .orange
+        }
+    }
+    
     var body: some View {
         NavigationView {
             Form {
@@ -139,8 +150,64 @@ struct SettingsView: View {
                 
                 // 数据与同步
                 Section(header: Label("数据与同步", systemImage: "arrow.triangle.2.circlepath")) {
-                    Toggle("iCloud 同步", isOn: $icloudSync)
+                    // iCloud 云同步状态
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Label("iCloud 同步", systemImage: "cloud.fill")
+                            Spacer()
+                            Toggle("", isOn: $icloudSync)
+                                .labelsHidden()
+                        }
+                        
+                        // 同步状态显示
+                        HStack {
+                            Text("\(dreamStore.cloudSyncStatus.icon) \(dreamStore.cloudSyncStatus.description)")
+                                .font(.caption)
+                                .foregroundColor(statusColor)
+                            Spacer()
+                            if let lastSync = dreamStore.lastSyncDate {
+                                Text("最后同步：\(lastSync, style: .relative)")
+                                    .font(.caption2)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        
+                        // 手动同步按钮
+                        if dreamStore.cloudSyncStatus != .syncing {
+                            HStack(spacing: 12) {
+                                Button(action: { dreamStore.pullFromCloud() }) {
+                                    Label("从云端拉取", systemImage: "cloud.download")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.blue)
+                                .disabled(!icloudSync)
+                                
+                                Button(action: { dreamStore.triggerCloudSync() }) {
+                                    Label("推送到云端", systemImage: "cloud.upload")
+                                        .frame(maxWidth: .infinity)
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.purple)
+                                .disabled(!icloudSync)
+                            }
+                        } else {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("正在同步...")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        // 云同步说明
+                        Text("启用后，梦境数据将自动同步到您的 iCloud 账户，可在所有设备间无缝访问。数据采用端到端加密，保护您的隐私。")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
                     
+                    Divider()
+                    
+                    // 导出功能
                     Button(action: { showingExportOptions = true }) {
                         HStack {
                             Label("导出数据", systemImage: "square.and.arrow.down")
@@ -150,6 +217,7 @@ struct SettingsView: View {
                         }
                     }
                     
+                    // 导入功能
                     Button(action: { showingImportPicker = true }) {
                         HStack {
                             Label("导入数据", systemImage: "square.and.arrow.up")
@@ -161,6 +229,7 @@ struct SettingsView: View {
                         }
                     }
                     
+                    // 删除所有
                     Button(role: .destructive) {
                         showingDeleteConfirm = true
                     } label: {
