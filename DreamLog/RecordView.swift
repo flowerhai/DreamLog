@@ -40,6 +40,9 @@ struct RecordView: View {
                         transcription: speechService.transcription
                     )
                     
+                    // Siri 快捷指令提示
+                    SiriRecordHintView()
+                    
                     // 标签选择
                     TagSection(
                         selectedTags: $selectedTags,

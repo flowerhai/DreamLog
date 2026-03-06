@@ -130,6 +130,29 @@ struct SettingsView: View {
                     }
                 }
                 
+                // Siri 快捷指令
+                Section(header: Label("Siri 与快捷指令", systemImage: "wand.and.stars")) {
+                    NavigationLink(destination: SiriShortcutSettingsView()) {
+                        Label("设置 Siri 快捷指令", systemImage: "mic.fill")
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("快捷命令")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Text("• 记录我的梦境")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 我的梦境统计")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 我最近做了什么梦")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
                 // 提醒设置
                 Section(header: Label("提醒", systemImage: "bell")) {
                     Toggle("晨间提醒", isOn: $notificationsEnabled)

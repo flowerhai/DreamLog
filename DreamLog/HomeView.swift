@@ -14,6 +14,7 @@ struct HomeView: View {
     @State private var showingRecordSheet = false
     @State private var searchText = ""
     @State private var showingAdvancedSearch = false
+    @AppStorage("siriTipDismissed") private var siriTipDismissed = false
     
     var body: some View {
         NavigationView {
@@ -21,6 +22,15 @@ struct HomeView: View {
                 // 快速记录区域
                 QuickRecordSection(showingRecordSheet: $showingRecordSheet)
                     .padding()
+                
+                // Siri 快捷指令提示
+                if !siriTipDismissed {
+                    SiriShortcutTipCard(onDismiss: {
+                        siriTipDismissed = true
+                    })
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                }
                 
                 // 搜索栏
                 HStack {
