@@ -1,7 +1,7 @@
 # DreamLog 每日开发报告 🌙
 
 **日期**: 2026-03-06  
-**时间**: 1:00 AM UTC  
+**时间**: 2:00 AM UTC (最后更新)  
 **分支**: dev → master (准备合并)  
 **开发者**: starry
 
@@ -11,12 +11,12 @@
 
 | 指标 | 数值 |
 |------|------|
-| 新增提交 | 7 次 |
-| 修改文件 | 24 个 |
-| 代码增量 | +5,269 行 |
-| 代码删除 | -171 行 |
-| 净增代码 | ~5,098 行 |
-| 新增功能 | 9 项 |
+| 新增提交 | 8 次 |
+| 修改文件 | 27 个 |
+| 代码增量 | +5,983 行 |
+| 代码删除 | -175 行 |
+| 净增代码 | ~5,808 行 |
+| 新增功能 | 12 项 |
 
 ---
 
@@ -102,6 +102,33 @@
   - 高对比度模式
   - 减少动效支持
 
+### 10. 高级搜索 🔍
+- **AdvancedSearchView.swift** - 多条件搜索和过滤
+  - 文本搜索 (标题/内容/标签)
+  - 情绪过滤 (多选)
+  - 标签过滤
+  - 日期范围 (今天/本周/本月/今年)
+  - 清晰度范围 (1-5 星)
+  - 强度范围 (1-5 星)
+  - 清醒梦过滤
+  - 排序选项 (日期/清晰度/强度/标题)
+
+### 11. 通知服务 🔔
+- **NotificationService.swift** - 通知管理
+  - 每日晨间提醒 (默认 8:00)
+  - 睡前提醒 (默认 22:00)
+  - 权限管理
+  - 通知类别配置
+  - 取消所有/特定通知
+
+### 12. 单元测试 🧪
+- **DreamLogTests.swift** - 完整测试套件
+  - DreamStore 测试 (添加/更新/删除/过滤/统计/导出)
+  - AIService 测试 (关键词提取/情绪检测/梦境分析)
+  - Dream 模型测试
+  - TimeOfDay 测试
+  - 性能测试
+
 ---
 
 ## 🔧 代码改进
@@ -109,30 +136,35 @@
 ### 文件组织
 ```
 DreamLog/
-├── DreamLogApp.swift          # App 入口
-├── ContentView.swift          # 主容器 (更新)
+├── DreamLogApp.swift          # App 入口 (更新)
+├── ContentView.swift          # 主容器
 ├── HomeView.swift             # 首页 (优化)
 ├── RecordView.swift           # 记录页面
 ├── InsightsView.swift         # 洞察页面
 ├── GalleryView.swift          # 画廊页面 (增强)
-├── CalendarView.swift         # 日历视图 ✨ NEW
-├── DreamsGoalView.swift       # 目标追踪 ✨ NEW
+├── CalendarView.swift         # 日历视图 ✨
+├── DreamsGoalView.swift       # 目标追踪 ✨
 ├── SettingsView.swift         # 设置页面 (完整功能)
-├── DreamDetailView.swift      # 梦境详情 ✨ NEW
-├── DreamSearchView.swift      # 搜索页面 ✨ NEW
-├── DreamShareCard.swift       # 分享卡片 ✨ NEW
-├── DreamLogWidget.swift       # 小组件 ✨ NEW
-├── DreamLogQuickWidget.swift  # 快速组件 ✨ NEW
+├── DreamDetailView.swift      # 梦境详情 ✨
+├── DreamSearchView.swift      # 搜索页面 ✨
+├── AdvancedSearchView.swift   # 高级搜索 ✨ NEW
+├── DreamShareCard.swift       # 分享卡片 ✨
+├── DreamLogWidget.swift       # 小组件 ✨
+├── DreamLogQuickWidget.swift  # 快速组件 ✨
 ├── Dream.swift                # 数据模型 (Codable)
 ├── DreamStore.swift           # 数据存储 (增强)
 ├── SpeechService.swift        # 语音服务
 ├── AIService.swift            # AI 服务
-├── ShareService.swift         # 分享服务 ✨ NEW
-├── Theme.swift                # 主题配置 (优化)
-├── CommonViews.swift          # 通用视图 ✨ NEW
-├── HapticFeedback.swift       # 触觉反馈 ✨ NEW
-├── Accessibility.swift        # 无障碍支持 ✨ NEW
-└── Animations.swift           # 动画效果 ✨ NEW
+├── ShareService.swift         # 分享服务 ✨
+├── NotificationService.swift  # 通知服务 ✨ NEW
+├── Theme.swift                # 主题配置
+├── CommonViews.swift          # 通用视图 ✨
+├── HapticFeedback.swift       # 触觉反馈 ✨
+├── Accessibility.swift        # 无障碍支持 ✨
+└── Animations.swift           # 动画效果 ✨
+
+DreamLogTests/
+└── DreamLogTests.swift        # 单元测试 ✨ NEW
 ```
 
 ### 核心改进
@@ -140,8 +172,10 @@ DreamLog/
 - **Dream**: 实现完整 Codable 协议
 - **SettingsView**: +706 行，添加导出/导入/反馈/小组件配置
 - **GalleryView**: 异步图片加载，错误处理
-- **HomeView**: 优化 UI 布局和交互
+- **HomeView**: 添加高级搜索入口按钮
+- **DreamLogApp**: 集成 NotificationService
 - **Theme**: 紫色系主题 (#9B7EBD)，渐变背景
+- **测试覆盖**: 新增 15+ 单元测试用例
 
 ---
 
@@ -189,7 +223,8 @@ $ git branch -a
   remotes/origin/master
 ```
 
-**dev 分支领先 master**: 7 次提交
+**dev 分支领先 master**: 8 次提交
+- 33c37d9 feat: 添加高级搜索、通知服务和单元测试 ✨ NEW
 - 491c7a2 feat: 添加日历视图、目标追踪和体验优化
 - cd6d684 feat(widget): 添加 iOS 小组件功能
 - 3cf735f feat: 添加数据持久化和设置页面完整功能
@@ -236,11 +271,13 @@ git push origin main
 
 ### Phase 5 - 优化 🔧
 - [ ] 性能优化
-- [ ] 单元测试
+- [x] 单元测试 ✅
 - [ ] UI 动画优化
 - [ ] 离线模式
 - [ ] 数据备份/恢复
 - [ ] 本地化支持 (中英文)
+- [x] 高级搜索 ✅
+- [x] 通知服务 ✅
 
 ---
 
