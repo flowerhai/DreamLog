@@ -19,6 +19,7 @@ struct DreamDetailView: View {
     @State private var showingDeleteAlert = false
     @State private var showingGenerateArt = false
     @State private var showingArtGallery = false
+    @State private var showingGenerateWallpaper = false
     
     var body: some View {
         ScrollView {
@@ -52,6 +53,11 @@ struct DreamDetailView: View {
                         onGenerate: { showingGenerateArt = true }
                     )
                 }
+                
+                // 梦境壁纸
+                WallpaperPromptSection(
+                    onGenerate: { showingGenerateWallpaper = true }
+                )
                 
                 // 操作按钮
                 ActionButtons(
@@ -91,6 +97,9 @@ struct DreamDetailView: View {
         }
         .sheet(isPresented: $showingArtGallery) {
             DreamArtGalleryView()
+        }
+        .sheet(isPresented: $showingGenerateWallpaper) {
+            DreamWallpaperView(dream: dream)
         }
     }
 }

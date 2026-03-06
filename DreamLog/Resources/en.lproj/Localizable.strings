@@ -1,0 +1,138 @@
+// Localizable.strings
+// DreamLog - English
+// English localization strings
+
+// General
+"save" = "Save";
+"cancel" = "Cancel";
+"delete" = "Delete";
+"done" = "Done";
+"edit" = "Edit";
+"add" = "Add";
+"confirm" = "Confirm";
+"loading" = "Loading...";
+"success" = "Success";
+"error" = "Error";
+
+// Home
+"homeTitle" = "DreamLog 🌙";
+"whatDidYouDream" = "What did you dream last night?";
+"holdToSpeak" = "Hold to Speak";
+"releaseToEnd" = "Release to End";
+"textInput" = "Text Input";
+"searchDreams" = "Search dreams, tags...";
+"noDreamsYet" = "No dreams yet";
+"startRecording" = "Record your first dream";
+
+// Record
+"recordTitle" = "Record Dream";
+"dreamContent" = "Dream Content";
+"contentPlaceholder" = "Describe your dream...";
+"selectTags" = "Select Tags";
+"selectEmotions" = "Select Emotions";
+"clarity" = "Clarity";
+"intensity" = "Intensity";
+"lucidDream" = "Lucid Dream";
+"aiAnalysis" = "AI Analysis";
+"analyzing" = "Analyzing...";
+
+// Insights
+"insightsTitle" = "Insights";
+"dreamStats" = "Dream Statistics";
+"totalDreams" = "Total Dreams";
+"thisWeek" = "This Week";
+"avgClarity" = "Avg Clarity";
+"avgIntensity" = "Avg Intensity";
+"emotionDistribution" = "Emotion Distribution";
+"topTags" = "Top Tags";
+"timeDistribution" = "Time Distribution";
+
+// Gallery
+"galleryTitle" = "Dream Gallery";
+"aiArt" = "AI Art";
+"generateArt" = "Generate Art";
+"generatingArt" = "Generating...";
+
+// Settings
+"settingsTitle" = "Settings";
+"appearance" = "Appearance";
+"darkMode" = "Dark Mode";
+"themeColor" = "Theme Color";
+"widgets" = "Widgets";
+"addWidget" = "Add Widget";
+"notifications" = "Reminders";
+"morningReminder" = "Morning Reminder";
+"reminderTime" = "Reminder Time";
+"autoAnalysis" = "Auto AI Analysis";
+"dataAndSync" = "Data & Sync";
+"icloudSync" = "iCloud Sync";
+"exportData" = "Export Data";
+"importData" = "Import Data";
+"deleteAll" = "Delete All";
+"feedback" = "Feedback";
+"rateApp" = "Rate App";
+"about" = "About";
+"version" = "Version";
+
+// Siri Shortcuts
+"siriShortcuts" = "Siri & Shortcuts";
+"setupSiri" = "Set Up Siri Shortcuts";
+"voiceCommands" = "Voice Commands";
+"recordMyDream" = "Record My Dream";
+"myDreamStats" = "My Dream Stats";
+"recentDreams" = "What dreams did I have recently";
+"siriTip" = "Try recording with Siri";
+"siriHint" = "Or say \"Record My Dream\" to Siri";
+
+// Dream Dictionary
+"dreamDictionary" = "Dream Dictionary";
+"searchSymbols" = "Search dream symbols";
+"categories" = "Categories";
+"interpretation" = "Interpretation";
+
+// Lucid Training
+"lucidTraining" = "Lucid Dream Training";
+"realityChecks" = "Reality Checks";
+"techniques" = "Techniques";
+"trainingPlan" = "Training Plan";
+
+// Goals
+"goals" = "Goals";
+"weeklyGoal" = "Weekly Goal";
+"streak" = "Streak";
+"achievements" = "Achievements";
+
+// Calendar
+"calendar" = "Calendar";
+"today" = "Today";
+"thisMonth" = "This Month";
+
+// Share
+"share" = "Share";
+"shareDream" = "Share Dream";
+"saveToPhotos" = "Save to Photos";
+"cardStyle" = "Choose Card Style";
+"classic" = "Classic";
+"minimal" = "Minimal";
+"dreamy" = "Dreamy";
+"gradient" = "Gradient";
+
+// Search
+"search" = "Search";
+"advancedSearch" = "Advanced Search";
+"filter" = "Filter";
+"resetFilters" = "Reset Filters";
+"dateRange" = "Date Range";
+"sortBy" = "Sort By";
+
+// Notifications
+"notificationsEnabled" = "Notifications Enabled";
+"notificationsDisabled" = "Notifications Disabled";
+"permissionRequired" = "Permission Required";
+
+// Errors
+"noContent" = "Content cannot be empty";
+"saveFailed" = "Save failed";
+"loadFailed" = "Load failed";
+"syncFailed" = "Sync failed";
+"networkError" = "Network error";
