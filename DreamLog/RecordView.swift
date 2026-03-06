@@ -511,7 +511,7 @@ struct AIPreviewSection: View {
             if !content.isEmpty && !aiService.isAnalyzing && similarDreams.isEmpty {
                 // 查找相似梦境
                 isFindingSimilar = true
-                let tempDream = Dream(title: "", content: content, originalText: content, date: Date(), timeOfDay: .night, tags: [], emotions: [], clarity: 3, intensity: 3, isLucid: false)
+                let tempDream = Dream(title: "", content: content, originalText: content, date: Date(), timeOfDay: .evening, tags: [], emotions: [], clarity: 3, intensity: 3, isLucid: false)
                 similarDreams = aiService.findSimilarDreams(to: tempDream, in: dreamStore.dreams, limit: 3)
                 isFindingSimilar = false
             }
