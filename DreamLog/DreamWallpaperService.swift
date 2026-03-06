@@ -154,13 +154,13 @@ class DreamWallpaperService: ObservableObject {
         case .minimalist:
             return UIColor.systemBackground
         case .artistic:
-            return dream.primaryEmotion?.color ?? UIColor.purple
+            return dream.primaryEmotion?.uiColor ?? UIColor.purple
         case .gradient:
             return UIColor.systemBackground
         case .nature:
             return UIColor.systemGreen
         case .abstract:
-            return dream.primaryEmotion?.color ?? UIColor.blue
+            return dream.primaryEmotion?.uiColor ?? UIColor.blue
         case .cosmic:
             return UIColor.black
         }

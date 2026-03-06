@@ -126,6 +126,18 @@ enum Emotion: String, Codable, CaseIterable {
         case .neutral: return "808080"
         }
     }
+    
+    var uiColor: UIColor {
+        UIColor(hex: color)
+    }
+}
+
+// MARK: - Dream 扩展
+extension Dream {
+    /// 获取主要情绪 (第一个情绪或默认中性)
+    var primaryEmotion: Emotion? {
+        emotions.first
+    }
 }
 
 // MARK: - 梦境标签

@@ -14,6 +14,7 @@ struct DreamLogApp: App {
     @StateObject private var aiService = AIService()
     @ObservedObject private var notificationService = NotificationService.shared
     @ObservedObject private var cloudSyncService = CloudSyncService.shared
+    @ObservedObject private var healthKitService = HealthKitService.shared
     
     var body: some Scene {
         WindowGroup {
@@ -23,6 +24,7 @@ struct DreamLogApp: App {
                 .environmentObject(aiService)
                 .environmentObject(notificationService)
                 .environmentObject(cloudSyncService)
+                .environmentObject(healthKitService)
                 .onAppear {
                     // 初始化通知服务
                     notificationService.checkAuthorization()
@@ -32,6 +34,9 @@ struct DreamLogApp: App {
                     if cloudSyncService.isCloudEnabled {
                         dreamStore.triggerCloudSync()
                     }
+                    
+                    // 检查 HealthKit 授权状态
+                    healthKitService.checkAuthorizationStatus()
                 }
         }
     }
