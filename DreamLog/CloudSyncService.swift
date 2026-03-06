@@ -16,6 +16,7 @@ enum CloudSyncStatus {
     case success           // 同步成功
     case failed(String)    // 同步失败
     case unavailable       // 云同步不可用
+    case conflict          // 检测到冲突
     
     var description: String {
         switch self {
@@ -24,6 +25,7 @@ enum CloudSyncStatus {
         case .success: return "已同步"
         case .failed(let message): return "同步失败：\(message)"
         case .unavailable: return "云同步不可用"
+        case .conflict: return "检测到冲突"
         }
     }
     
@@ -34,7 +36,20 @@ enum CloudSyncStatus {
         case .success: return "✅"
         case .failed: return "❌"
         case .unavailable: return "⚠️"
+        case .conflict: return "⚔️"
         }
+    }
+}
+
+/// 同步冲突信息
+struct SyncConflict {
+    let dreamId: UUID
+    let localVersion: Dream
+    let cloudVersion: Dream
+    let modifiedField: String
+    
+    var resolutionDescription: String {
+        "梦境 '\(localVersion.title)' 在本地和云端都有修改"
     }
 }
 
@@ -44,11 +59,13 @@ class CloudSyncService: ObservableObject {
     @Published var isCloudEnabled: Bool = false
     @Published var lastSyncDate: Date?
     @Published var pendingChanges: Int = 0
+    @Published var conflicts: [SyncConflict] = []
     
     private let container: CKContainer
     private let database: CKDatabase
     private let recordType = "Dream"
     private var subscriptions: [AnyCancellable] = []
+    private var syncHistory: [SyncHistoryEntry] = []
     
     // 单例
     static let shared = CloudSyncService()
@@ -59,6 +76,7 @@ class CloudSyncService: ObservableObject {
         
         checkCloudStatus()
         setupSubscriptions()
+        loadSyncHistory()
     }
     
     // MARK: - 检查云状态
@@ -91,7 +109,7 @@ class CloudSyncService: ObservableObject {
     
     // MARK: - 同步操作
     
-    /// 同步所有梦境到云端
+    /// 同步所有梦境到云端（增量同步）
     func syncAllDreams(_ dreams: [Dream]) {
         guard isCloudEnabled else {
             syncStatus = .unavailable
@@ -100,31 +118,87 @@ class CloudSyncService: ObservableObject {
         
         syncStatus = .syncing
         pendingChanges = dreams.count
+        conflicts.removeAll()
         
-        let operationQueue = OperationQueue()
-        operationQueue.maxConcurrentOperationCount = 3
-        
-        for dream in dreams {
-            let operation = BlockOperation { [weak self] in
-                self?.saveDreamToCloud(dream)
+        // 先查询云端现有记录，进行增量同步
+        fetchCloudDreams { [weak self] cloudDreams in
+            guard let self = self else { return }
+            
+            let operationQueue = OperationQueue()
+            operationQueue.maxConcurrentOperationCount = 3
+            
+            for dream in dreams {
+                let operation = BlockOperation {
+                    // 检查是否有冲突
+                    if let cloudDream = cloudDreams.first(where: { $0.id == dream.id }) {
+                        // 比较修改时间，检测冲突
+                        if dream.updatedAt > cloudDream.updatedAt {
+                            self.saveDreamToCloud(dream, recordName: dream.id.uuidString)
+                        } else if cloudDream.updatedAt > dream.updatedAt {
+                            // 云端版本更新，标记为冲突
+                            let conflict = SyncConflict(
+                                dreamId: dream.id,
+                                localVersion: dream,
+                                cloudVersion: cloudDream,
+                                modifiedField: "content"
+                            )
+                            DispatchQueue.main.async {
+                                self.conflicts.append(conflict)
+                                self.syncStatus = .conflict
+                            }
+                        }
+                    } else {
+                        // 新梦境，直接保存
+                        self.saveDreamToCloud(dream, recordName: dream.id.uuidString)
+                    }
+                }
+                operationQueue.addOperation(operation)
             }
-            operationQueue.addOperation(operation)
-        }
-        
-        operationQueue.addOperation { [weak self] in
-            DispatchQueue.main.async {
-                self?.syncStatus = .success
-                self?.pendingChanges = 0
-                self?.lastSyncDate = Date()
-                self?.saveLastSyncDate()
-                print("✅ 云同步完成：\(dreams.count) 个梦境")
+            
+            operationQueue.addOperation { [weak self] in
+                DispatchQueue.main.async {
+                    if self?.conflicts.isEmpty ?? true {
+                        self?.syncStatus = .success
+                        self?.addSyncHistoryEntry(.push, count: dreams.count, success: true)
+                    }
+                    self?.pendingChanges = 0
+                    self?.lastSyncDate = Date()
+                    self?.saveLastSyncDate()
+                    print("✅ 云同步完成：\(dreams.count) 个梦境")
+                }
             }
         }
     }
     
+    /// 从云端获取梦境列表
+    private func fetchCloudDreams(completion: @escaping ([Dream]) -> Void) {
+        guard isCloudEnabled else {
+            completion([])
+            return
+        }
+        
+        let query = CKQuery(recordType: recordType, predicate: NSPredicate(value: true))
+        database.perform(query, in: .privateCloud) { records, error in
+            if let error = error {
+                print("⚠️ 查询云端记录失败：\(error)")
+                completion([])
+                return
+            }
+            
+            guard let records = records else {
+                completion([])
+                return
+            }
+            
+            let cloudDreams = records.compactMap { self.dream(from: $0) }
+            completion(cloudDreams)
+        }
+    }
+    
     /// 保存单个梦境到云端
-    private func saveDreamToCloud(_ dream: Dream) {
-        let record = CKRecord(recordType: recordType, recordID: CKRecord.ID(recordName: dream.id.uuidString))
+    private func saveDreamToCloud(_ dream: Dream, recordName: String? = nil) {
+        let recordName = recordName ?? dream.id.uuidString
+        let record = CKRecord(recordType: recordType, recordID: CKRecord.ID(recordName: recordName))
         
         record["title"] = dream.title as CKRecordValue
         record["content"] = dream.content as CKRecordValue
@@ -137,6 +211,8 @@ class CloudSyncService: ObservableObject {
         record["isLucid"] = dream.isLucid as CKRecordValue
         record["aiAnalysis"] = dream.aiAnalysis as CKRecordValue
         record["aiImageUrl"] = dream.aiImageUrl as CKRecordValue
+        record["updatedAt"] = dream.updatedAt as CKRecordValue
+        record["createdAt"] = dream.createdAt as CKRecordValue
         
         // 情绪数组需要特殊处理
         let emotionStrings = dream.emotions.map { $0.rawValue }
@@ -146,6 +222,7 @@ class CloudSyncService: ObservableObject {
             if let error = error {
                 DispatchQueue.main.async {
                     self?.syncStatus = .failed(error.localizedDescription)
+                    self?.addSyncHistoryEntry(.push, count: 1, success: false, error: error.localizedDescription)
                     print("❌ 保存梦境到云端失败：\(error)")
                 }
             } else {
@@ -298,6 +375,132 @@ class CloudSyncService: ObservableObject {
     /// 推送到云端
     func pushToCloud(_ dreams: [Dream]) {
         syncAllDreams(dreams)
+    }
+    
+    // MARK: - 冲突解决
+    
+    /// 解决冲突 - 保留本地版本
+    func resolveConflictKeepLocal(_ conflict: SyncConflict) {
+        saveDreamToCloud(conflict.localVersion, recordName: conflict.dreamId.uuidString)
+        conflicts.removeAll { $0.dreamId == conflict.dreamId }
+        if conflicts.isEmpty {
+            syncStatus = .success
+        }
+        addSyncHistoryEntry(.conflictResolved, count: 1, success: true, details: "保留本地版本")
+    }
+    
+    /// 解决冲突 - 保留云端版本
+    func resolveConflictKeepCloud(_ conflict: SyncConflict, completion: @escaping (Dream) -> Void) {
+        conflicts.removeAll { $0.dreamId == conflict.dreamId }
+        if conflicts.isEmpty {
+            syncStatus = .success
+        }
+        addSyncHistoryEntry(.conflictResolved, count: 1, success: true, details: "保留云端版本")
+        completion(conflict.cloudVersion)
+    }
+    
+    /// 解决冲突 - 合并版本（保留两者内容）
+    func resolveConflictMerge(_ conflict: SyncConflict) -> Dream {
+        var merged = conflict.localVersion
+        merged.content = conflict.localVersion.content + "\n\n---\n\n[云端版本]\n" + conflict.cloudVersion.content
+        merged.updatedAt = Date()
+        saveDreamToCloud(merged, recordName: conflict.dreamId.uuidString)
+        conflicts.removeAll { $0.dreamId == conflict.dreamId }
+        if conflicts.isEmpty {
+            syncStatus = .success
+        }
+        addSyncHistoryEntry(.conflictResolved, count: 1, success: true, details: "合并版本")
+        return merged
+    }
+    
+    // MARK: - 同步历史
+    
+    /// 添加同步历史记录
+    private func addSyncHistoryEntry(_ type: SyncHistoryType, count: Int, success: Bool, error: String? = nil, details: String? = nil) {
+        let entry = SyncHistoryEntry(
+            id: UUID(),
+            timestamp: Date(),
+            type: type,
+            count: count,
+            success: success,
+            error: error,
+            details: details
+        )
+        syncHistory.insert(entry, at: 0)
+        
+        // 只保留最近 100 条记录
+        if syncHistory.count > 100 {
+            syncHistory.removeLast()
+        }
+        
+        saveSyncHistory()
+        print("📝 同步历史：\(type.description) - \(count) 个项目 - \(success ? "成功" : "失败")")
+    }
+    
+    /// 获取同步历史
+    func getSyncHistory(limit: Int = 20) -> [SyncHistoryEntry] {
+        Array(syncHistory.prefix(limit))
+    }
+    
+    /// 保存同步历史
+    private func saveSyncHistory() {
+        if let encoded = try? JSONEncoder().encode(syncHistory) {
+            UserDefaults.standard.set(encoded, forKey: "cloudSyncHistory")
+        }
+    }
+    
+    /// 加载同步历史
+    private func loadSyncHistory() {
+        if let data = UserDefaults.standard.data(forKey: "cloudSyncHistory"),
+           let history = try? JSONDecoder().decode([SyncHistoryEntry].self, from: data) {
+            syncHistory = history
+        }
+    }
+    
+    /// 清除同步历史
+    func clearSyncHistory() {
+        syncHistory.removeAll()
+        UserDefaults.standard.removeObject(forKey: "cloudSyncHistory")
+    }
+}
+
+// MARK: - 同步历史类型
+
+enum SyncHistoryType: String, Codable {
+    case push = "推送"
+    case pull = "拉取"
+    case autoSync = "自动同步"
+    case conflictResolved = "冲突解决"
+    case error = "错误"
+    
+    var description: String {
+        switch self {
+        case .push: return "☁️ 推送到云端"
+        case .pull: return "📥 从云端拉取"
+        case .autoSync: return "🔄 自动同步"
+        case .conflictResolved: return "⚔️ 冲突解决"
+        case .error: return "❌ 错误"
+        }
+    }
+}
+
+// MARK: - 同步历史记录
+
+struct SyncHistoryEntry: Codable, Identifiable {
+    let id: UUID
+    let timestamp: Date
+    let type: SyncHistoryType
+    let count: Int
+    let success: Bool
+    let error: String?
+    let details: String?
+    
+    var formattedDate: String {
+        timestamp.formatted(.dateTime.year().month().day().hour().minute())
+    }
+    
+    var statusIcon: String {
+        success ? "✅" : "❌"
     }
 }
 

@@ -34,26 +34,33 @@ struct ContentView: View {
                 }
                 .tag(2)
             
+            DreamDictionaryView()
+                .tabItem {
+                    Image(systemName: "text.book.closed.fill")
+                    Text("词典")
+                }
+                .tag(3)
+            
             DreamsGoalView()
                 .tabItem {
                     Image(systemName: "target")
                     Text("目标")
                 }
-                .tag(3)
+                .tag(4)
             
             GalleryView()
                 .tabItem {
                     Image(systemName: "photo.on.rectangle")
                     Text("画廊")
                 }
-                .tag(4)
+                .tag(5)
             
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(5)
+                .tag(6)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
