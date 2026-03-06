@@ -21,7 +21,11 @@ class AIService: ObservableObject {
         error = nil
         
         // 模拟 AI 分析 (实际项目中调用 LLM API)
-        await Task.sleep(nanoseconds: 2_000_000_000)  // 2 秒延迟
+        do {
+            try await Task.sleep(nanoseconds: 2_000_000_000)  // 2 秒延迟
+        } catch {
+            self.error = "分析过程出错: \(error.localizedDescription)"
+        }
         
         let analysis = generateMockAnalysis(content: content, tags: tags, emotions: emotions)
         
@@ -37,7 +41,11 @@ class AIService: ObservableObject {
         error = nil
         
         // 模拟图像生成 (实际项目中调用 Stable Diffusion API)
-        await Task.sleep(nanoseconds: 5_000_000_000)  // 5 秒延迟
+        do {
+            try await Task.sleep(nanoseconds: 5_000_000_000)  // 5 秒延迟
+        } catch {
+            self.error = "图像生成过程出错: \(error.localizedDescription)"
+        }
         
         // 返回示例 URL
         generatedImageUrl = "https://example.com/dream_image.jpg"
@@ -54,7 +62,7 @@ class AIService: ObservableObject {
             .filter { $0.count >= 2 }
             .filter { !commonWords.contains($0) }
         
-        return Array(words.prefix(5)) as [String]
+        return Array(words.prefix(5))
     }
     
     // MARK: - 检测情绪
@@ -81,7 +89,7 @@ class AIService: ObservableObject {
     
     // MARK: - 生成图像提示词
     func generateImagePrompt(from dream: Dream) -> String {
-        var prompt = "Dream scene: \(String(dream.content.prefix(100)))"
+        var prompt = "Dream scene: \(dream.content.prefix(100))"
         
         // 添加情绪色彩
         if dream.emotions.contains(.calm) {

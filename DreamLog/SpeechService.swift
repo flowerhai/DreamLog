@@ -73,23 +73,20 @@ class SpeechService: ObservableObject {
         do {
             try audioSession.setCategory(.record, mode: .measurement, options: .duckOthers)
             try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            print("音频配置失败：\(error)")
-        }
-        
-        // 开始录音
-        let inputNode = audioEngine.inputNode
-        let recordingFormat = inputNode.outputFormat(forBus: 0)
-        
-        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, when in
-            request.append(buffer)
-        }
-        
-        audioEngine.prepare()
-        do {
+            
+            // 开始录音
+            let inputNode = audioEngine.inputNode
+            let recordingFormat = inputNode.outputFormat(forBus: 0)
+            
+            inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { buffer, when in
+                request.append(buffer)
+            }
+            
+            audioEngine.prepare()
             try audioEngine.start()
         } catch {
-            print("音频引擎启动失败：\(error)")
+            self.error = "音频配置失败: \(error.localizedDescription)"
+            self.stopRecording()
         }
     }
     

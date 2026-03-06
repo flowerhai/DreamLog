@@ -503,3 +503,38 @@ extension AIService {
         .environmentObject(DreamStore())
         .environmentObject(AIService())
 }
+
+// MARK: - 空状态视图
+struct EmptyStateView: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    let actionTitle: String
+    let action: () -> Void
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(icon)
+                .font(.system(size: 80))
+            
+            Text(title)
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(.white)
+            
+            Text(subtitle)
+                .font(.body)
+                .foregroundColor(.white.opacity(0.6))
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+            
+            Button(actionTitle) {
+                action()
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.accentColor)
+        }
+        .padding()
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}

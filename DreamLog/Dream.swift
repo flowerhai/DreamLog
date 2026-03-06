@@ -174,6 +174,16 @@ struct AIAnalysis: Codable {
 }
 
 // MARK: - 梦境统计
+struct EmotionCount: Codable {
+    let emotion: Emotion
+    let count: Int
+}
+
+struct TagCount: Codable {
+    let tag: String
+    let count: Int
+}
+
 struct DreamStatistics: Codable {
     let totalDreams: Int
     let lucidDreams: Int

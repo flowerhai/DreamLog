@@ -24,8 +24,8 @@ struct HomeView: View {
                 // 搜索栏
                 SearchBar(text: $searchText)
                     .padding(.horizontal)
-                    .onChange(of: searchText) { _, newValue in
-                        dreamStore.filterDreams(searchText: newValue)
+                    .onChange(of: searchText) {
+                        dreamStore.filterDreams(searchText: $0)
                     }
                 
                 // 热门标签
@@ -61,36 +61,7 @@ struct QuickRecordSection: View {
                 showingRecordSheet = true
             }) {
                 VStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(
-                                LinearGradient(
-                                    colors: [Color(hex: "6B4E9A"), Color(hex: "9B7EBD")],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .frame(width: 80, height: 80)
-                        
-                        if speechService.isRecording {
-                            // 录音中动画
-                            ForEach(0..<3) { index in
-                                Circle()
-                                    .stroke(Color.white.opacity(0.3), lineWidth: 2)
-                                    .frame(width: 80 + CGFloat(index) * 20, height: 80 + CGFloat(index) * 20)
-                                    .scaleEffect(1 + Double(index) * 0.2)
-                                    .animation(
-                                        Animation.easeOut(duration: 1.5)
-                                            .repeatForever(autoreverses: false)
-                                            .delay(Double(index) * 0.3)
-                                    )
-                            }
-                        }
-                        
-                        Image(systemName: speechService.isRecording ? "waveform" : "mic.fill")
-                            .font(.system(size: 32))
-                            .foregroundColor(.white)
-                    }
+                    RecordingButtonView(isRecording: speechService.isRecording)
                     
                     Text(speechService.isRecording ? "松开结束" : "按住说话")
                         .font(.caption)
@@ -98,11 +69,15 @@ struct QuickRecordSection: View {
                 }
             }
             .buttonStyle(.plain)
-            .longPressAction {
-                speechService.startRecording()
-            } onRelease: {
-                speechService.stopRecording()
-            }
+            .simultaneousGesture(
+                LongPressGesture(minimumDuration: 0.01)
+                    .onChanged { _ in
+                        speechService.startRecording()
+                    }
+                    .onEnded { _ in
+                        speechService.stopRecording()
+                    }
+            )
             
             // 文字输入
             Button(action: { showingRecordSheet = true }) {
@@ -445,3 +420,43 @@ struct StyleButton: View {
         .environmentObject(DreamStore())
         .environmentObject(SpeechService())
 }
+
+// MARK: - 录音按钮视图
+struct RecordingButtonView: View {
+    let isRecording: Bool
+    
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "6B4E9A"), Color(hex: "9B7EBD")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 80, height: 80)
+            
+            if isRecording {
+                // 录音中动画
+                ForEach(0..<3) { index in
+                    Circle()
+                        .stroke(Color.white.opacity(0.3), lineWidth: 2)
+                        .frame(width: 80 + CGFloat(index) * 20, height: 80 + CGFloat(index) * 20)
+                        .scaleEffect(1 + Double(index) * 0.2)
+                        .animation(
+                            Animation.easeOut(duration: 1.5)
+                                .repeatForever(autoreverses: false)
+                                .delay(Double(index) * 0.3)
+                        )
+                }
+            }
+            
+            Image(systemName: isRecording ? "waveform" : "mic.fill")
+                .font(.system(size: 32))
+                .foregroundColor(.white)
+        }
+    }
+}
+
+
