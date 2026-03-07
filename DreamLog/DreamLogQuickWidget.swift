@@ -41,31 +41,29 @@ struct QuickRecordEntry: TimelineEntry {
 // MARK: - 小型快速记录组件
 struct QuickRecordSmallWidget: View {
     var entry: QuickRecordTimelineProvider.Entry
+    @State private var config: WidgetCustomizationConfig = .default
     
     var body: some View {
         Link(destination: URL(string: "dreamlog://record")!) {
             ZStack {
-                // 背景渐变
+                // 背景渐变 - 使用用户选择的主题
                 LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.purple,
-                        Color.blue
-                    ]),
+                    gradient: Gradient(colors: config.theme.colors),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
                 
                 VStack(spacing: 8) {
-                    // 月亮图标
-                    Image(systemName: "moon.stars.fill")
+                    // 主题图标
+                    Image(systemName: config.theme.iconSFSymbol)
                         .font(.system(size: 32))
-                        .foregroundColor(.white)
+                        .foregroundColor(config.theme.textColorValue)
                     
                     // 文字
                     Text("记录梦境")
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(config.theme.textColorValue)
                     
                     // 今日状态
                     if entry.hasDreamsToday {
@@ -75,28 +73,37 @@ struct QuickRecordSmallWidget: View {
                             Text("已记录")
                                 .font(.caption2)
                         }
-                        .foregroundColor(.white.opacity(0.9))
+                        .foregroundColor(config.theme.textColorValue.opacity(0.9))
                     }
                 }
             }
         }
+        .onAppear {
+            loadConfig()
+        }
+    }
+    
+    private func loadConfig() {
+        guard let data = UserDefaults.standard.data(forKey: "widgetCustomizationConfig"),
+              let loadedConfig = try? JSONDecoder().decode(WidgetCustomizationConfig.self, from: data)
+        else {
+            return
+        }
+        config = loadedConfig
     }
 }
 
 // MARK: - 中型快速记录组件
 struct QuickRecordMediumWidget: View {
     var entry: QuickRecordTimelineProvider.Entry
+    @State private var config: WidgetCustomizationConfig = .default
     
     var body: some View {
         Link(destination: URL(string: "dreamlog://record")!) {
             ZStack {
-                // 背景
+                // 背景 - 使用用户选择的主题
                 LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.purple.opacity(0.8),
-                        Color.indigo.opacity(0.8),
-                        Color.blue.opacity(0.8)
-                    ]),
+                    gradient: Gradient(colors: config.theme.colors.map { $0.opacity(0.85) }),
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
@@ -106,17 +113,17 @@ struct QuickRecordMediumWidget: View {
                     VStack(spacing: 8) {
                         ZStack {
                             Circle()
-                                .fill(Color.white.opacity(0.2))
+                                .fill(config.theme.textColorValue.opacity(0.2))
                                 .frame(width: 50, height: 50)
                             
                             Image(systemName: "mic.fill")
                                 .font(.system(size: 24))
-                                .foregroundColor(.white)
+                                .foregroundColor(config.theme.textColorValue)
                         }
                         
                         Text("按住说话")
                             .font(.caption2)
-                            .foregroundColor(.white.opacity(0.9))
+                            .foregroundColor(config.theme.textColorValue.opacity(0.9))
                     }
                     
                     // 右侧内容
@@ -124,11 +131,11 @@ struct QuickRecordMediumWidget: View {
                         Text("昨晚你梦见了什么？")
                             .font(.headline)
                             .fontWeight(.bold)
-                            .foregroundColor(.white)
+                            .foregroundColor(config.theme.textColorValue)
                         
                         Text("95% 的梦会在醒来 5 分钟内遗忘")
                             .font(.caption)
-                            .foregroundColor(.white.opacity(0.8))
+                            .foregroundColor(config.theme.textColorValue.opacity(0.8))
                         
                         if entry.hasDreamsToday {
                             HStack(spacing: 4) {
@@ -139,7 +146,7 @@ struct QuickRecordMediumWidget: View {
                             }
                             .padding(.horizontal, 8)
                             .padding(.vertical, 4)
-                            .background(Color.white.opacity(0.2))
+                            .background(config.theme.textColorValue.opacity(0.2))
                             .cornerRadius(8)
                         }
                     }
@@ -149,6 +156,18 @@ struct QuickRecordMediumWidget: View {
                 .padding()
             }
         }
+        .onAppear {
+            loadConfig()
+        }
+    }
+    
+    private func loadConfig() {
+        guard let data = UserDefaults.standard.data(forKey: "widgetCustomizationConfig"),
+              let loadedConfig = try? JSONDecoder().decode(WidgetCustomizationConfig.self, from: data)
+        else {
+            return
+        }
+        config = loadedConfig
     }
 }
 
@@ -157,36 +176,34 @@ struct DreamGoalWidget: View {
     var entry: QuickRecordTimelineProvider.Entry
     var weeklyCount: Int = 3
     var weeklyGoal: Int = 7
+    @State private var config: WidgetCustomizationConfig = .default
     
     var body: some View {
         Link(destination: URL(string: "dreamlog://insights")!) {
             ZStack {
-                // 背景
+                // 背景 - 使用用户选择的主题
                 LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.indigo,
-                        Color.purple
-                    ]),
+                    gradient: Gradient(colors: config.theme.colors),
                     startPoint: .top,
                     endPoint: .bottom
                 )
                 
                 VStack(spacing: 8) {
-                    Text("本周目标")
+                    Text(config.customName.isEmpty ? "本周目标" : config.customName)
                         .font(.caption)
                         .fontWeight(.semibold)
-                        .foregroundColor(.white)
+                        .foregroundColor(config.theme.textColorValue)
                     
                     // 进度环
                     ZStack {
                         Circle()
-                            .stroke(Color.white.opacity(0.2), lineWidth: 8)
+                            .stroke(config.theme.textColorValue.opacity(0.2), lineWidth: 8)
                             .frame(width: 60, height: 60)
                         
                         Circle()
                             .trim(from: 0, to: CGFloat(weeklyCount) / CGFloat(weeklyGoal))
                             .stroke(
-                                Color.white,
+                                config.theme.textColorValue,
                                 style: StrokeStyle(lineWidth: 8, lineCap: .round)
                             )
                             .frame(width: 60, height: 60)
@@ -195,19 +212,31 @@ struct DreamGoalWidget: View {
                         VStack(spacing: 2) {
                             Text("\(weeklyCount)")
                                 .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.white)
+                                .foregroundColor(config.theme.textColorValue)
                             Text("/ \(weeklyGoal)")
                                 .font(.caption2)
-                                .foregroundColor(.white.opacity(0.7))
+                                .foregroundColor(config.theme.textColorValue.opacity(0.7))
                         }
                     }
                     
                     Text("还差 \(weeklyGoal - weeklyCount) 个梦")
                         .font(.caption2)
-                        .foregroundColor(.white.opacity(0.9))
+                        .foregroundColor(config.theme.textColorValue.opacity(0.9))
                 }
             }
         }
+        .onAppear {
+            loadConfig()
+        }
+    }
+    
+    private func loadConfig() {
+        guard let data = UserDefaults.standard.data(forKey: "widgetCustomizationConfig"),
+              let loadedConfig = try? JSONDecoder().decode(WidgetCustomizationConfig.self, from: data)
+        else {
+            return
+        }
+        config = loadedConfig
     }
 }
 
@@ -222,8 +251,8 @@ struct DreamLogQuickWidget: Widget {
         ) { entry in
             QuickRecordSmallWidget(entry: entry)
         }
-        .configurationDisplayName("快速记录 🎤")
-        .description("一键开始梦境录音")
+        .configurationDisplayName("快速记录 🎤 个性化")
+        .description("可定制主题的快速录音小组件")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -239,8 +268,8 @@ struct DreamGoalWidgetBundle: Widget {
         ) { entry in
             DreamGoalWidget(entry: entry)
         }
-        .configurationDisplayName("梦境目标 🎯")
-        .description("追踪每周记录目标")
+        .configurationDisplayName("梦境目标 🎯 个性化")
+        .description("可定制主题的追踪小组件")
         .supportedFamilies([.systemSmall])
     }
 }

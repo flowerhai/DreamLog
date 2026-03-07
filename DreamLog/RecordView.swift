@@ -22,6 +22,8 @@ struct RecordView: View {
     @State private var isLucid: Bool = false
     @State private var isSaving: Bool = false
     @State private var showingSaveSuccess = false
+    @State private var recommendedTags: [String] = []
+    @State private var isAnalyzingContent: Bool = false
     
     var commonTags = ["水", "飞行", "追逐", "人", "动物", "家", "学校", "工作", "自然", "城市"]
     
@@ -38,10 +40,20 @@ struct RecordView: View {
                         transcription: speechService.transcription
                     )
                     
+                    // Siri 快捷指令提示
+                    SiriRecordHintView()
+                    
                     // 标签选择
                     TagSection(
                         selectedTags: $selectedTags,
-                        commonTags: commonTags
+                        commonTags: commonTags,
+                        recommendedTags: recommendedTags,
+                        isAnalyzing: isAnalyzingContent,
+                        onAddRecommendedTag: { tag in
+                            if !selectedTags.contains(tag) {
+                                selectedTags.append(tag)
+                            }
+                        }
                     )
                     
                     // 情绪选择
@@ -67,6 +79,24 @@ struct RecordView: View {
             }
             .navigationTitle("记录梦境")
             .navigationBarTitleDisplayMode(.inline)
+            .onChange(of: content) { _, newValue in
+                // 当内容变化时，智能推荐标签
+                if newValue.count >= 10 {
+                    isAnalyzingContent = true
+                    Task {
+                        // 模拟分析延迟
+                        try? await Task.sleep(nanoseconds: 500_000_000)
+                        let tags = aiService.recommendTags(content: newValue, existingTags: selectedTags)
+                        await MainActor.run {
+                            recommendedTags = tags
+                            isAnalyzingContent = false
+                        }
+                    }
+                } else {
+                    recommendedTags = []
+                    isAnalyzingContent = false
+                }
+            }
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("取消") {
@@ -175,33 +205,89 @@ struct ContentSection: View {
 struct TagSection: View {
     @Binding var selectedTags: [String]
     let commonTags: [String]
+    let recommendedTags: [String]
+    let isAnalyzing: Bool
+    let onAddRecommendedTag: (String) -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("添加标签")
                 .font(.headline)
                 .foregroundColor(.white)
             
-            FlowLayout(spacing: 8) {
-                ForEach(commonTags, id: \.self) { tag in
-                    Button(action: {
-                        if selectedTags.contains(tag) {
-                            selectedTags.removeAll { $0 == tag }
-                        } else {
-                            selectedTags.append(tag)
+            // 常用标签
+            if !commonTags.isEmpty {
+                FlowLayout(spacing: 8) {
+                    ForEach(commonTags, id: \.self) { tag in
+                        Button(action: {
+                            if selectedTags.contains(tag) {
+                                selectedTags.removeAll { $0 == tag }
+                            } else {
+                                selectedTags.append(tag)
+                            }
+                        }) {
+                            Text(tag)
+                                .font(.caption)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    selectedTags.contains(tag)
+                                        ? Color.accentColor
+                                        : Color.white.opacity(0.1)
+                                )
+                                .foregroundColor(.white)
+                                .cornerRadius(16)
                         }
-                    }) {
-                        Text(tag)
+                    }
+                }
+            }
+            
+            // 智能推荐标签
+            if !recommendedTags.isEmpty || isAnalyzing {
+                Divider()
+                    .background(Color.white.opacity(0.1))
+                
+                HStack {
+                    Image(systemName: isAnalyzing ? "circle.dotted" : "sparkles")
+                        .font(.caption)
+                        .foregroundColor(.accentColor)
+                        .rotationEffect(.degrees(isAnalyzing ? 360 : 0))
+                        .animation(isAnalyzing ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isAnalyzing)
+                    
+                    Text("智能推荐")
+                        .font(.caption)
+                        .foregroundColor(.accentColor)
+                }
+                
+                if isAnalyzing {
+                    HStack {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .accentColor))
+                        Text("分析梦境内容...")
                             .font(.caption)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                selectedTags.contains(tag)
-                                    ? Color.accentColor
-                                    : Color.white.opacity(0.1)
-                            )
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
+                            .foregroundColor(.secondary)
+                    }
+                } else {
+                    FlowLayout(spacing: 8) {
+                        ForEach(recommendedTags, id: \.self) { tag in
+                            Button(action: {
+                                onAddRecommendedTag(tag)
+                            }) {
+                                HStack(spacing: 4) {
+                                    Text(tag)
+                                        .font(.caption)
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.caption2)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Color.accentColor.opacity(0.2)
+                                )
+                                .foregroundColor(.accentColor)
+                                .cornerRadius(16)
+                            }
+                        }
                     }
                 }
             }
@@ -353,14 +439,18 @@ struct LucidDreamToggle: View {
 // MARK: - AI 预览部分
 struct AIPreviewSection: View {
     @EnvironmentObject var aiService: AIService
+    @EnvironmentObject var dreamStore: DreamStore
     let content: String
     
+    @State private var similarDreams: [(dream: Dream, similarity: Double)] = []
+    @State private var isFindingSimilar: Bool = false
+    
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "sparkles")
                     .foregroundColor(.yellow)
-                Text("AI 初步分析")
+                Text("AI 智能分析")
                     .font(.headline)
                     .foregroundColor(.white)
             }
@@ -374,7 +464,43 @@ struct AIPreviewSection: View {
                     .font(.caption)
                     .foregroundColor(.secondary)
             } else {
-                Text("保存后将生成详细解析")
+                // 相似梦境
+                if !similarDreams.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "link")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                            Text("相似梦境")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                        }
+                        
+                        ForEach(Array(similarDreams.prefix(2)), id: \.dream.id) { item in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.dream.title)
+                                        .font(.caption)
+                                        .fontWeight(.medium)
+                                        .foregroundColor(.white)
+                                    Text(String(item.dream.content.prefix(40)) + "...")
+                                        .font(.caption2)
+                                        .foregroundColor(.secondary)
+                                        .lineLimit(1)
+                                }
+                                Spacer()
+                                Text("\(Int(item.similarity * 100))%")
+                                    .font(.caption2)
+                                    .foregroundColor(.accentColor)
+                            }
+                            .padding(8)
+                            .background(Color.white.opacity(0.05))
+                            .cornerRadius(8)
+                        }
+                    }
+                }
+                
+                Text("保存后将生成详细解析和相似梦境匹配")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -385,10 +511,12 @@ struct AIPreviewSection: View {
                 .fill(Color.white.opacity(0.05))
         )
         .onAppear {
-            if !content.isEmpty && !aiService.isAnalyzing {
-                Task {
-                    await aiService.analyzeDream(content: content, tags: [], emotions: [])
-                }
+            if !content.isEmpty && !aiService.isAnalyzing && similarDreams.isEmpty {
+                // 查找相似梦境
+                isFindingSimilar = true
+                let tempDream = Dream(title: "", content: content, originalText: content, date: Date(), timeOfDay: .evening, tags: [], emotions: [], clarity: 3, intensity: 3, isLucid: false)
+                similarDreams = aiService.findSimilarDreams(to: tempDream, in: dreamStore.dreams, limit: 3)
+                isFindingSimilar = false
             }
         }
     }

@@ -13,6 +13,8 @@ struct HomeView: View {
     @EnvironmentObject var speechService: SpeechService
     @State private var showingRecordSheet = false
     @State private var searchText = ""
+    @State private var showingAdvancedSearch = false
+    @AppStorage("siriTipDismissed") private var siriTipDismissed = false
     
     var body: some View {
         NavigationView {
@@ -21,12 +23,33 @@ struct HomeView: View {
                 QuickRecordSection(showingRecordSheet: $showingRecordSheet)
                     .padding()
                 
-                // 搜索栏
-                SearchBar(text: $searchText)
+                // Siri 快捷指令提示
+                if !siriTipDismissed {
+                    SiriShortcutTipCard(onDismiss: {
+                        siriTipDismissed = true
+                    })
                     .padding(.horizontal)
-                    .onChange(of: searchText) { _, newValue in
-                        dreamStore.filterDreams(searchText: newValue)
+                    .padding(.bottom, 8)
+                }
+                
+                // 搜索栏
+                HStack {
+                    SearchBar(text: $searchText)
+                        .onChange(of: searchText) { _, newValue in
+                            dreamStore.filterDreams(searchText: newValue)
+                        }
+                    
+                    Button(action: { showingAdvancedSearch = true }) {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.accentColor)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Color.white.opacity(0.1))
+                            .cornerRadius(12)
                     }
+                }
+                .padding(.horizontal)
                 
                 // 热门标签
                 TagFilterSection(tags: dreamStore.tags) { tag in
@@ -40,6 +63,10 @@ struct HomeView: View {
             .navigationTitle("DreamLog 🌙")
             .sheet(isPresented: $showingRecordSheet) {
                 RecordView()
+            }
+            .sheet(isPresented: $showingAdvancedSearch) {
+                AdvancedSearchView()
+                    .environmentObject(dreamStore)
             }
         }
     }

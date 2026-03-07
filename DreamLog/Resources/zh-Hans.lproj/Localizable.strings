@@ -1,0 +1,138 @@
+// Localizable.strings
+// DreamLog - 中文 (简体)
+// 中文本地化字符串
+
+// 通用
+"save" = "保存";
+"cancel" = "取消";
+"delete" = "删除";
+"done" = "完成";
+"edit" = "编辑";
+"add" = "添加";
+"confirm" = "确认";
+"loading" = "加载中...";
+"success" = "成功";
+"error" = "错误";
+
+// 首页
+"homeTitle" = "DreamLog 🌙";
+"whatDidYouDream" = "昨晚你梦见了什么？";
+"holdToSpeak" = "按住说话";
+"releaseToEnd" = "松开结束";
+"textInput" = "文字输入";
+"searchDreams" = "搜索梦境、标签...";
+"noDreamsYet" = "还没有梦境记录";
+"startRecording" = "开始记录第一个梦";
+
+// 记录页面
+"recordTitle" = "记录梦境";
+"dreamContent" = "梦境内容";
+"contentPlaceholder" = "描述你的梦境...";
+"selectTags" = "选择标签";
+"selectEmotions" = "选择情绪";
+"clarity" = "清晰度";
+"intensity" = "强度";
+"lucidDream" = "清醒梦";
+"aiAnalysis" = "AI 解析";
+"analyzing" = "分析中...";
+
+// 洞察页面
+"insightsTitle" = "洞察";
+"dreamStats" = "梦境统计";
+"totalDreams" = "总梦境数";
+"thisWeek" = "本周";
+"avgClarity" = "平均清晰度";
+"avgIntensity" = "平均强度";
+"emotionDistribution" = "情绪分布";
+"topTags" = "热门标签";
+"timeDistribution" = "时间段分布";
+
+// 画廊
+"galleryTitle" = "梦境画廊";
+"aiArt" = "AI 绘画";
+"generateArt" = "生成画作";
+"generatingArt" = "正在生成...";
+
+// 设置
+"settingsTitle" = "设置";
+"appearance" = "外观";
+"darkMode" = "深色模式";
+"themeColor" = "主题色";
+"widgets" = "小组件";
+"addWidget" = "添加小组件";
+"notifications" = "提醒";
+"morningReminder" = "晨间提醒";
+"reminderTime" = "提醒时间";
+"autoAnalysis" = "自动 AI 解析";
+"dataAndSync" = "数据与同步";
+"icloudSync" = "iCloud 同步";
+"exportData" = "导出数据";
+"importData" = "导入数据";
+"deleteAll" = "删除所有";
+"feedback" = "反馈";
+"rateApp" = "评分";
+"about" = "关于";
+"version" = "版本";
+
+// Siri 快捷指令
+"siriShortcuts" = "Siri 与快捷指令";
+"setupSiri" = "设置 Siri 快捷指令";
+"voiceCommands" = "可用语音命令";
+"recordMyDream" = "记录我的梦境";
+"myDreamStats" = "我的梦境统计";
+"recentDreams" = "我最近做了什么梦";
+"siriTip" = "试试用 Siri 记录梦境";
+"siriHint" = "也可以用 Siri 说\"记录我的梦境\"";
+
+// 梦境词典
+"dreamDictionary" = "梦境词典";
+"searchSymbols" = "搜索梦境符号";
+"categories" = "分类";
+"interpretation" = "解读";
+
+// 清醒梦训练
+"lucidTraining" = "清醒梦训练";
+"realityChecks" = "现实检查";
+"techniques" = "技巧";
+"trainingPlan" = "训练计划";
+
+// 目标追踪
+"goals" = "目标";
+"weeklyGoal" = "周目标";
+"streak" = "连续记录";
+"achievements" = "成就";
+
+// 日历
+"calendar" = "日历";
+"today" = "今天";
+"thisMonth" = "本月";
+
+// 分享
+"share" = "分享";
+"shareDream" = "分享梦境";
+"saveToPhotos" = "保存到相册";
+"cardStyle" = "选择卡片样式";
+"classic" = "经典";
+"minimal" = "简约";
+"dreamy" = "梦幻";
+"gradient" = "渐变";
+
+// 搜索
+"search" = "搜索";
+"advancedSearch" = "高级搜索";
+"filter" = "过滤";
+"resetFilters" = "重置过滤器";
+"dateRange" = "日期范围";
+"sortBy" = "排序";
+
+// 通知
+"notificationsEnabled" = "通知已启用";
+"notificationsDisabled" = "通知已禁用";
+"permissionRequired" = "需要通知权限";
+
+// 错误信息
+"noContent" = "内容不能为空";
+"saveFailed" = "保存失败";
+"loadFailed" = "加载失败";
+"syncFailed" = "同步失败";
+"networkError" = "网络错误";

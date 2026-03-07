@@ -13,9 +13,13 @@ struct DreamDetailView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dreamStore: DreamStore
     @StateObject private var shareService = ShareService()
+    @StateObject private var aiArtService = AIArtService.shared
     @State private var showingShareSheet = false
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
+    @State private var showingGenerateArt = false
+    @State private var showingArtGallery = false
+    @State private var showingGenerateWallpaper = false
     
     var body: some View {
         ScrollView {
@@ -36,6 +40,24 @@ struct DreamDetailView: View {
                 if let analysis = dream.aiAnalysis {
                     AIAnalysisSection(analysis: analysis)
                 }
+                
+                // 梦境艺术
+                if !aiArtService.getArts(for: dream.id).isEmpty {
+                    DreamArtPreviewSection(
+                        dream: dream,
+                        arts: aiArtService.getArts(for: dream.id),
+                        onViewGallery: { showingArtGallery = true }
+                    )
+                } else {
+                    GenerateArtPromptSection(
+                        onGenerate: { showingGenerateArt = true }
+                    )
+                }
+                
+                // 梦境壁纸
+                WallpaperPromptSection(
+                    onGenerate: { showingGenerateWallpaper = true }
+                )
                 
                 // 操作按钮
                 ActionButtons(
@@ -69,6 +91,15 @@ struct DreamDetailView: View {
             }
         } message: {
             Text("这个操作无法撤销")
+        }
+        .sheet(isPresented: $showingGenerateArt) {
+            GenerateArtSheet(dream: dream)
+        }
+        .sheet(isPresented: $showingArtGallery) {
+            DreamArtGalleryView()
+        }
+        .sheet(isPresented: $showingGenerateWallpaper) {
+            DreamWallpaperView(dream: dream)
         }
     }
 }
@@ -314,6 +345,144 @@ struct ActionButtons: View {
                     .cornerRadius(12)
             }
         }
+    }
+}
+
+// MARK: - 梦境艺术预览区域
+struct DreamArtPreviewSection: View {
+    let dream: Dream
+    let arts: [DreamArt]
+    let onViewGallery: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "photo.on.rectangle.angled")
+                    .foregroundColor(.pink)
+                Text("梦境艺术")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                Button(action: onViewGallery) {
+                    Text("查看全部")
+                        .font(.caption)
+                        .foregroundColor(.accentColor)
+                }
+            }
+            
+            // 显示最新的艺术作品
+            if let latestArt = arts.first {
+                if let url = URL(string: latestArt.imageUrl) {
+                    AsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(height: 200)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        case .failure, .empty:
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.gray.opacity(0.2))
+                                .frame(height: 200)
+                                .overlay(
+                                    VStack {
+                                        Image(systemName: "photo")
+                                            .font(.title2)
+                                        Text("点击生成梦境图像")
+                                            .font(.caption)
+                                    }
+                                )
+                        @unknown default:
+                            EmptyView()
+                        }
+                    }
+                }
+                
+                HStack {
+                    Text(latestArt.style.rawValue)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    Text("\(arts.count) 幅作品")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "C471ED").opacity(0.2), Color(hex: "F64F59").opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "C471ED").opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - 生成艺术提示区域
+struct GenerateArtPromptSection: View {
+    let onGenerate: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "sparkles")
+                    .foregroundColor(.yellow)
+                Text("AI 梦境绘画")
+                    .font(.headline)
+                    .foregroundColor(.white)
+            }
+            
+            Text("将你的梦境转化为精美的艺术作品")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.8))
+            
+            Button(action: onGenerate) {
+                HStack {
+                    Image(systemName: "wand.and.stars")
+                    Text("生成梦境图像")
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        colors: [Color(hex: "C471ED"), Color(hex: "F64F59")],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .foregroundColor(.white)
+                .cornerRadius(12)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "6B4E9A").opacity(0.3), Color(hex: "9B7EBD").opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "6B4E9A").opacity(0.3), lineWidth: 1)
+                )
+        )
     }
 }
 

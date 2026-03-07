@@ -1,219 +1,152 @@
 # DreamLog 每日开发报告 🌙
 
 **日期**: 2026-03-06  
-**时间**: 1:00 AM UTC  
-**分支**: dev → master (准备合并)  
+**时间**: 4:15 AM UTC (本次更新)  
+**分支**: dev  
 **开发者**: starry
 
 ---
 
-## 📊 今日概览
+## 📊 本次开发概览
 
 | 指标 | 数值 |
 |------|------|
-| 新增提交 | 7 次 |
-| 修改文件 | 24 个 |
-| 代码增量 | +5,269 行 |
-| 代码删除 | -171 行 |
-| 净增代码 | ~5,098 行 |
-| 新增功能 | 9 项 |
+| 新增提交 | 2 次 |
+| 修改文件 | 4 个 |
+| 新增文件 | 1 个 |
+| 代码增量 | +875 行 |
+| 新增功能 | 2 项 |
 
 ---
 
-## ✅ 完成功能
+## ✅ 本次完成功能
 
-### 1. 梦境分享功能 📤
-- **DreamShareCard.swift** - 4 种分享卡片样式
-  - 经典样式 (Classic)
-  - 简约样式 (Minimal)
-  - 梦幻样式 (Dreamy)
-  - 渐变样式 (Gradient)
-- **ShareService.swift** - 分享服务
-  - 图片生成
-  - 系统分享集成
-  - 社交网络支持
+### 1. iCloud 同步增强 ☁️
 
-### 2. 梦境详情页面 📄
-- **DreamDetailView.swift** - 完整梦境详情
-  - 梦境内容展示
-  - AI 解析结果
-  - 情绪标签显示
-  - 编辑和删除功能
-  - 分享入口
+**CloudSyncService.swift 改进**:
 
-### 3. 数据持久化 💾
-- **DreamStore.swift** - 数据存储层增强
-  - UserDefaults 持久化
-  - Codable 支持
-  - 自动保存/加载
-  - 导出功能 (JSON/文本)
-  - 导入功能
-  - 批量删除
+- **冲突检测机制**
+  - 检测本地与云端版本差异
+  - 提供三种解决策略：保留本地/保留云端/合并版本
+  - 冲突状态 UI 提示
 
-### 4. iOS 小组件 📱
-- **DreamLogWidget.swift** - 主统计组件
-  - 梦境数量统计
-  - 最近梦境预览
-  - 情绪状态显示
-- **DreamLogQuickWidget.swift** - 快速记录组件
-  - 一键录音启动
-  - 梦境目标追踪
-  - 进度环可视化
-- **深度链接支持** - dreamlog:// URL Scheme
+- **同步历史记录**
+  - 记录每次同步操作（推送/拉取/自动同步/冲突解决）
+  - 保存最近 100 条同步历史
+  - 支持查看和清除历史
 
-### 5. 梦境日历视图 📅
-- **CalendarView.swift** - 月视图/周视图
-  - 梦境分布标记
-  - 清醒梦特殊标记
-  - 月份切换动画
-  - 当日快速预览
+- **增量同步优化**
+  - 先查询云端现有记录
+  - 仅同步有变化的梦境
+  - 基于 updatedAt 时间戳判断
 
-### 6. 目标追踪系统 🎯
-- **DreamsGoalView.swift** - 完整目标管理
-  - 周目标设置 (3/5/7/10/14 个)
-  - 进度条可视化
-  - 连续记录天数
-  - 成就徽章系统 (6 种)
-  - 激励语录轮播
+- **新增数据结构**
+  ```swift
+  enum CloudSyncStatus {
+      case conflict  // 新增冲突状态
+  }
+  
+  struct SyncConflict {
+      let dreamId: UUID
+      let localVersion: Dream
+      let cloudVersion: Dream
+      let modifiedField: String
+  }
+  
+  enum SyncHistoryType {
+      case push, pull, autoSync, conflictResolved, error
+  }
+  
+  struct SyncHistoryEntry: Codable, Identifiable {
+      let id: UUID
+      let timestamp: Date
+      let type: SyncHistoryType
+      let count: Int
+      let success: Bool
+      let error: String?
+      let details: String?
+  }
+  ```
 
-### 7. 触觉反馈管理器 📳
-- **HapticFeedback.swift** - 触觉反馈
-  - 成功/错误/警告反馈
-  - 轻击/中等/重击
-  - 录音反馈
-  - 选择反馈
+### 2. 梦境词典功能 📖
 
-### 8. 动画效果库 ✨
-- **Animations.swift** - 动画组件
-  - 淡入/淡出
-  - 滑动效果
-  - 缩放动画
-  - 脉冲效果
-  - 闪烁效果
-  - 波浪动画
-  - 粒子效果
-  - 星空背景
+**新增文件**: `DreamDictionary.swift` (875 行)
 
-### 9. 无障碍支持 ♿
-- **Accessibility.swift** - 无障碍功能
-  - 动态字体适配
-  - 屏幕阅读器标签
-  - 语音控制支持
-  - 高对比度模式
-  - 减少动效支持
+- **15+ 梦境符号解读**
+  - 自然元素：水、火、风
+  - 动物：蛇、鸟、猫
+  - 场所：房子、学校
+  - 行为：飞行、坠落、被追逐
+  - 物品：钥匙、镜子
+  - 身体：牙齿、头发
+
+- **多维度解读**
+  - 💡 基本含义
+  - 🧠 心理学解读（弗洛伊德/荣格理论）
+  - 🌍 文化差异（中国/西方/印度等）
+  - 🔗 相关符号关联
+
+- **浏览功能**
+  - 按 8 个类别筛选（自然/动物/人物/场所/行为/物品/身体/情绪）
+  - 关键词搜索
+  - 符号详情页面
+
+- **UI 组件**
+  - `DreamDictionaryView`: 主浏览视图
+  - `SymbolRow`: 符号列表项
+  - `FilterChip`: 类别筛选芯片
+  - `FlowLayout`: 自定义流式布局
+
+**ContentView 更新**:
+- 添加"词典"标签页（第 4 个 tab）
+- 图标：`text.book.closed.fill`
 
 ---
 
-## 🔧 代码改进
+## 📝 代码改进
 
-### 文件组织
+### CloudSyncService.swift
 ```
-DreamLog/
-├── DreamLogApp.swift          # App 入口
-├── ContentView.swift          # 主容器 (更新)
-├── HomeView.swift             # 首页 (优化)
-├── RecordView.swift           # 记录页面
-├── InsightsView.swift         # 洞察页面
-├── GalleryView.swift          # 画廊页面 (增强)
-├── CalendarView.swift         # 日历视图 ✨ NEW
-├── DreamsGoalView.swift       # 目标追踪 ✨ NEW
-├── SettingsView.swift         # 设置页面 (完整功能)
-├── DreamDetailView.swift      # 梦境详情 ✨ NEW
-├── DreamSearchView.swift      # 搜索页面 ✨ NEW
-├── DreamShareCard.swift       # 分享卡片 ✨ NEW
-├── DreamLogWidget.swift       # 小组件 ✨ NEW
-├── DreamLogQuickWidget.swift  # 快速组件 ✨ NEW
-├── Dream.swift                # 数据模型 (Codable)
-├── DreamStore.swift           # 数据存储 (增强)
-├── SpeechService.swift        # 语音服务
-├── AIService.swift            # AI 服务
-├── ShareService.swift         # 分享服务 ✨ NEW
-├── Theme.swift                # 主题配置 (优化)
-├── CommonViews.swift          # 通用视图 ✨ NEW
-├── HapticFeedback.swift       # 触觉反馈 ✨ NEW
-├── Accessibility.swift        # 无障碍支持 ✨ NEW
-└── Animations.swift           # 动画效果 ✨ NEW
+- 新增 SyncConflict 结构体
+- 新增 SyncHistoryEntry 结构体
+- 新增冲突解决方法：resolveConflictKeepLocal/KeepCloud/Merge
+- 新增同步历史管理：addSyncHistoryEntry/getSyncHistory/clearSyncHistory
+- 优化 syncAllDreams: 实现增量同步
+- 新增 fetchCloudDreams 方法
+- 更新 saveDreamToCloud: 添加时间戳字段
 ```
 
-### 核心改进
-- **ContentView**: 重新组织标签页顺序，新增日历和目标
-- **Dream**: 实现完整 Codable 协议
-- **SettingsView**: +706 行，添加导出/导入/反馈/小组件配置
-- **GalleryView**: 异步图片加载，错误处理
-- **HomeView**: 优化 UI 布局和交互
-- **Theme**: 紫色系主题 (#9B7EBD)，渐变背景
+### DreamDictionary.swift (NEW)
+```
++ DreamSymbolCategory 枚举（8 个类别）
++ DreamSymbol 结构体
++ DreamDictionaryService 类
++ DreamDictionaryView 视图
++ 辅助视图组件（FilterChip, SymbolRow, Chip, FlowLayout）
+```
 
----
-
-## 🧪 编译测试
-
-**环境**: Linux (OpenCloudOS)  
-**限制**: Swift 编译器不可用 (需要 macOS/Xcode)
-
-**代码审查结果**:
-- ✅ 文件结构完整
-- ✅ 无语法错误报告
-- ✅ 命名规范一致
-- ✅ 注释清晰
-- ✅ 代码组织合理
-
-**建议**: 在 macOS 环境进行最终编译测试
-
----
-
-## 📝 文档更新
+### ContentView.swift
+```
++ DreamDictionaryView 标签页
+- 调整现有标签页索引
+```
 
 ### README.md
-- ✅ 更新核心功能列表
-- ✅ 添加小组件使用说明
-- ✅ 更新开发计划进度
-- ✅ 补充项目结构
-- ✅ 添加无障碍和动画说明
-
-### DEV_LOG.md
-- ✅ 记录今日开发内容
-- ✅ 更新代码统计
-- ✅ 记录待办事项
+```
++ 梦境词典功能说明
++ iCloud 同步增强说明（冲突检测/历史记录）
++ 更新开发计划（梦境词典 ✅）
++ 更新项目结构
+```
 
 ---
 
-## 🌿 分支状态
+## 🌿 Git 提交记录
 
-```bash
-$ git branch -a
-* dev
-  main
-  master
-  remotes/origin/dev
-  remotes/origin/main
-  remotes/origin/master
 ```
-
-**dev 分支领先 master**: 7 次提交
-- 491c7a2 feat: 添加日历视图、目标追踪和体验优化
-- cd6d684 feat(widget): 添加 iOS 小组件功能
-- 3cf735f feat: 添加数据持久化和设置页面完整功能
-- bdf9c90 feat: 添加梦境分享功能和详情页面
-- 1e55066 fix: 修复 Swift 语法错误和编译问题
-- 0f465a4 docs(dev): 创建开发日志和定时任务配置
-- 5575ace feat(dev): 添加梦境搜索和过滤功能
-
----
-
-## 🎯 合并计划
-
-### 合并到 master
-```bash
-git checkout master
-git merge dev --no-ff -m "Merge dev: 日历视图、目标追踪、小组件和体验优化"
-git push origin master
-```
-
-### 同步 main 分支
-```bash
-git checkout main
-git merge master
-git push origin main
+8b04dc6 docs: 更新 README 添加梦境词典功能和同步增强说明
+62a2dfd feat: 增强 iCloud 同步（冲突检测 + 历史记录）并添加梦境词典功能
+4935ba3 feat: 添加 iCloud 云同步功能
 ```
 
 ---
@@ -227,20 +160,33 @@ git push origin main
 - [ ] 梦境壁纸生成
 
 ### Phase 4 - 进阶功能 🚀
-- [ ] iCloud 同步
+- [x] iCloud 同步 ✅
+- [x] 梦境词典 ✅
 - [ ] 清醒梦训练指南
-- [ ] 梦境词典
 - [ ] 社区分享 (匿名)
 - [ ] Apple Watch 应用
 - [ ] 小组件个性化定制
+- [ ] Siri 快捷指令
+- [ ] 健康 App 集成
 
 ### Phase 5 - 优化 🔧
 - [ ] 性能优化
-- [ ] 单元测试
+- [x] 单元测试 ✅
 - [ ] UI 动画优化
 - [ ] 离线模式
 - [ ] 数据备份/恢复
 - [ ] 本地化支持 (中英文)
+- [x] 高级搜索 ✅
+- [x] 通知服务 ✅
+
+---
+
+## 💡 下一步计划
+
+1. **清醒梦训练功能** - 添加清醒梦技巧和训练计划
+2. **Siri 快捷指令** - 支持语音快速记录梦境
+3. **AI 绘画集成** - 连接 Stable Diffusion API 生成梦境图像
+4. **性能优化** - 优化大数据量时的列表滚动性能
 
 ---
 

@@ -148,27 +148,16 @@ struct DreamImageCard: View {
     }
     
     private func loadImage() async {
-        guard let urlString = dream.aiImageUrl,
-              let url = URL(string: urlString) else {
+        guard let urlString = dream.aiImageUrl else {
             loadFailed = true
             isLoading = false
             return
         }
         
-        do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            
-            guard let httpResponse = response as? HTTPURLResponse,
-                  (200...299).contains(httpResponse.statusCode),
-                  let image = UIImage(data: data) else {
-                loadFailed = true
-                isLoading = false
-                return
-            }
-            
+        // 使用图片缓存服务加载
+        if let image = await ImageCacheService.shared.loadImage(from: urlString) {
             loadedImage = image
-        } catch {
-            print("❌ 加载图片失败：\(error)")
+        } else {
             loadFailed = true
         }
         

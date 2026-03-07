@@ -37,6 +37,9 @@ struct InsightsView: View {
                     // 梦境模式
                     PatternSection(patterns: patterns)
                     
+                    // 图表入口
+                    ChartsEntrySection()
+                    
                     Spacer()
                 }
                 .padding()
@@ -269,6 +272,40 @@ struct PatternCard: View {
             RoundedRectangle(cornerRadius: 8)
                 .fill(Color.white.opacity(0.05))
         )
+    }
+}
+
+// MARK: - 图表入口
+struct ChartsEntrySection: View {
+    var body: some View {
+        NavigationLink(destination: ChartsView()) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Image(systemName: "chart.pie.fill")
+                        .font(.title2)
+                        .foregroundColor(.accentColor)
+                    
+                    Text("查看详细图表")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Text("情绪饼图 · 趋势折线图 · 分布柱状图 · 热力图")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.accentColor.opacity(0.15))
+            )
+        }
     }
 }
 

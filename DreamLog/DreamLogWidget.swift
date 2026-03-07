@@ -2,7 +2,7 @@
 //  DreamLogWidget.swift
 //  DreamLogWidget
 //
-//  iOS 小组件 - 快速记录梦境
+//  iOS 小组件 - 快速记录梦境 (支持个性化定制)
 //
 
 import WidgetKit
@@ -11,11 +11,29 @@ import SwiftUI
 // MARK: - 梦境时间线提供者
 struct DreamTimelineProvider: TimelineProvider {
     func placeholder(in context: Context) -> DreamEntry {
-        DreamEntry(date: Date(), dreamCount: 3, lastDreamTitle: "昨晚的冒险", mood: .happy)
+        DreamEntry(
+            date: Date(),
+            dreamCount: 3,
+            lastDreamTitle: "昨晚的冒险",
+            mood: .happy,
+            weeklyCount: 3,
+            weeklyGoal: 7,
+            streak: 5,
+            quote: "记录你的梦境，发现潜意识的秘密"
+        )
     }
     
     func getSnapshot(in context: Context, completion: @escaping (DreamEntry) -> Void) {
-        let entry = DreamEntry(date: Date(), dreamCount: 3, lastDreamTitle: "昨晚的冒险", mood: .happy)
+        let entry = DreamEntry(
+            date: Date(),
+            dreamCount: 3,
+            lastDreamTitle: "昨晚的冒险",
+            mood: .happy,
+            weeklyCount: 3,
+            weeklyGoal: 7,
+            streak: 5,
+            quote: "记录你的梦境，发现潜意识的秘密"
+        )
         completion(entry)
     }
     
@@ -26,17 +44,58 @@ struct DreamTimelineProvider: TimelineProvider {
         let lastMoodRaw = UserDefaults.standard.integer(forKey: "lastMood")
         let lastMood = Emotion(rawValue: lastMoodRaw) ?? .neutral
         
+        // 加载小组件配置
+        let config = loadWidgetConfig()
+        
+        // 加载额外数据
+        let weeklyCount = UserDefaults.standard.integer(forKey: "weeklyDreamCount")
+        let weeklyGoal = UserDefaults.standard.integer(forKey: "weeklyGoal")
+        let streak = UserDefaults.standard.integer(forKey: "streakDays")
+        
+        // 获取语录
+        let quote = getQuote(for: config)
+        
         let entry = DreamEntry(
             date: Date(),
             dreamCount: dreamCount > 0 ? dreamCount : 0,
             lastDreamTitle: lastDreamTitle,
-            mood: lastMood
+            mood: lastMood,
+            weeklyCount: weeklyCount > 0 ? weeklyCount : 0,
+            weeklyGoal: weeklyGoal > 0 ? weeklyGoal : 7,
+            streak: streak > 0 ? streak : 0,
+            quote: quote
         )
         
         // 每小时更新一次
         let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
         let timeline = Timeline(entries: [entry], policy: .atEnd(nextUpdate))
         completion(timeline)
+    }
+    
+    // 加载小组件配置
+    private func loadWidgetConfig() -> WidgetCustomizationConfig {
+        guard let data = UserDefaults.standard.data(forKey: "widgetCustomizationConfig"),
+              let config = try? JSONDecoder().decode(WidgetCustomizationConfig.self, from: data)
+        else {
+            return .default
+        }
+        return config
+    }
+    
+    // 获取语录
+    private func getQuote(for config: WidgetCustomizationConfig) -> String {
+        if config.dataConfig.showQuote && !config.dataConfig.customQuote.isEmpty {
+            return config.dataConfig.customQuote
+        }
+        
+        let defaultQuotes = [
+            "记录你的梦境，发现潜意识的秘密",
+            "每个梦都是内心的声音",
+            "梦境是现实的镜子",
+            "今晚你会梦见什么？",
+            "捕捉醒来即逝的梦境"
+        ]
+        return defaultQuotes.randomElement() ?? "记录你的梦"
     }
 }
 
@@ -46,55 +105,101 @@ struct DreamEntry: TimelineEntry {
     let dreamCount: Int
     let lastDreamTitle: String
     let mood: Emotion
+    let weeklyCount: Int
+    let weeklyGoal: Int
+    let streak: Int
+    let quote: String
 }
 
 // MARK: - 小组件视图
 struct DreamLogWidgetEntryView: View {
     var entry: DreamTimelineProvider.Entry
+    @State private var config: WidgetCustomizationConfig = .default
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             // 标题
             HStack {
-                Text("DreamLog")
+                Text(config.customName.isEmpty ? "DreamLog" : config.customName)
                     .font(.headline)
                     .fontWeight(.bold)
                 Spacer()
-                Image(systemName: "moon.stars.fill")
-                    .foregroundColor(.purple)
+                Image(systemName: config.theme.iconSFSymbol)
+                    .foregroundColor(config.theme.textColorValue)
             }
             
             // 梦境统计
             if entry.dreamCount > 0 {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("已记录 \(entry.dreamCount) 个梦")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Text("\"\(entry.lastDreamTitle)\"")
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .lineLimit(2)
-                        .foregroundColor(.primary)
-                    
-                    HStack {
-                        Text(entry.mood.icon)
+                    if config.dataConfig.showDreamCount {
+                        Text("已记录 \(entry.dreamCount) 个梦")
                             .font(.caption)
-                        Text(entry.mood.name)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(config.theme.textColorValue.opacity(0.8))
+                    }
+                    
+                    if config.dataConfig.showLastDreamTitle {
+                        Text("\"\(entry.lastDreamTitle)\"")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                            .lineLimit(2)
+                            .foregroundColor(config.theme.textColorValue)
+                    }
+                    
+                    if config.dataConfig.showMood {
+                        HStack {
+                            Text(entry.mood.icon)
+                                .font(.caption)
+                            Text(entry.mood.name)
+                                .font(.caption2)
+                                .foregroundColor(config.theme.textColorValue.opacity(0.8))
+                        }
+                    }
+                    
+                    if config.dataConfig.showWeeklyGoal {
+                        HStack {
+                            Text("本周：\(entry.weeklyCount)/\(entry.weeklyGoal)")
+                                .font(.caption2)
+                                .foregroundColor(config.theme.textColorValue.opacity(0.7))
+                            
+                            if entry.weeklyCount >= entry.weeklyGoal {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(config.theme.textColorValue)
+                            }
+                        }
+                    }
+                    
+                    if config.dataConfig.showStreak && entry.streak > 0 {
+                        HStack {
+                            Image(systemName: "flame.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(.orange)
+                            Text("连续 \(entry.streak) 天")
+                                .font(.caption2)
+                                .foregroundColor(config.theme.textColorValue.opacity(0.7))
+                        }
                     }
                 }
             } else {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("还没有梦境记录")
                         .font(.caption)
-                        .foregroundColor(.secondary)
+                        .foregroundColor(config.theme.textColorValue.opacity(0.8))
                     
                     Text("今晚开始记录吧")
                         .font(.subheadline)
                         .fontWeight(.medium)
+                        .foregroundColor(config.theme.textColorValue)
                 }
+            }
+            
+            // 自定义语录
+            if config.dataConfig.showQuote && !entry.quote.isEmpty {
+                Text("\"\(entry.quote)\"")
+                    .font(.caption2)
+                    .italic()
+                    .foregroundColor(config.theme.textColorValue.opacity(0.7))
+                    .lineLimit(2)
             }
             
             Spacer()
@@ -105,20 +210,29 @@ struct DreamLogWidgetEntryView: View {
                     .font(.caption)
                 Text("长按快速记录")
                     .font(.caption2)
-                    .foregroundColor(.purple)
+                    .foregroundColor(config.theme.textColorValue.opacity(0.8))
             }
         }
         .padding()
         .background(
             LinearGradient(
-                gradient: Gradient(colors: [
-                    Color.purple.opacity(0.1),
-                    Color.blue.opacity(0.1)
-                ]),
+                gradient: Gradient(colors: config.theme.colors.map { $0.opacity(0.15) }),
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
         )
+        .onAppear {
+            loadConfig()
+        }
+    }
+    
+    private func loadConfig() {
+        guard let data = UserDefaults.standard.data(forKey: "widgetCustomizationConfig"),
+              let loadedConfig = try? JSONDecoder().decode(WidgetCustomizationConfig.self, from: data)
+        else {
+            return
+        }
+        config = loadedConfig
     }
 }
 
@@ -133,8 +247,8 @@ struct DreamLogWidget: Widget {
         ) { entry in
             DreamLogWidgetEntryView(entry: entry)
         }
-        .configurationDisplayName("DreamLog 🌙")
-        .description("快速查看梦境记录和统计")
+        .configurationDisplayName("DreamLog 🌙 个性化")
+        .description("可定制主题和内容的梦境小组件")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }

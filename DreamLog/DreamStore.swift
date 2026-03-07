@@ -2,7 +2,7 @@
 //  DreamStore.swift
 //  DreamLog
 //
-//  数据存储：管理梦境记录 (支持持久化)
+//  数据存储：管理梦境记录 (支持持久化 + iCloud 同步)
 //
 
 import Foundation
@@ -14,12 +14,17 @@ class DreamStore: ObservableObject {
     @Published var tags: [String] = []
     @Published var isRecording: Bool = false
     @Published var isLoading: Bool = false
+    @Published var cloudSyncStatus: CloudSyncStatus = .idle
     
     private var searchText: String = ""
     private let saveKey = "dreams_data"
+    private let cloudSyncService: CloudSyncService
+    private var subscriptions: Set<AnyCancellable> = []
     
-    init() {
+    init(cloudSyncService: CloudSyncService = .shared) {
+        self.cloudSyncService = cloudSyncService
         loadDreams()
+        setupCloudSyncObserver()
     }
     
     // MARK: - 加载示例数据
@@ -476,8 +481,74 @@ extension DreamStore {
             let encoded = try encoder.encode(codableDreams)
             UserDefaults.standard.set(encoded, forKey: saveKey)
             print("✅ 成功保存 \(dreams.count) 个梦境记录")
+            
+            // 自动同步到云端 (如果启用)
+            if cloudSyncService.isCloudEnabled {
+                cloudSyncService.pushToCloud(dreams)
+                cloudSyncStatus = cloudSyncService.syncStatus
+            }
         } catch {
             print("❌ 保存梦境失败：\(error)")
         }
+    }
+    
+    // MARK: - iCloud 云同步
+    
+    /// 设置云同步观察者
+    private func setupCloudSyncObserver() {
+        cloudSyncService.$syncStatus
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                self?.cloudSyncStatus = status
+            }
+            .store(in: &subscriptions)
+        
+        cloudSyncService.$isCloudEnabled
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] enabled in
+                if enabled {
+                    self?.triggerCloudSync()
+                }
+            }
+            .store(in: &subscriptions)
+    }
+    
+    /// 触发云同步
+    func triggerCloudSync() {
+        guard cloudSyncService.isCloudEnabled else {
+            cloudSyncStatus = .unavailable
+            return
+        }
+        
+        cloudSyncService.triggerSync(dreams)
+    }
+    
+    /// 从云端拉取梦境
+    func pullFromCloud() {
+        cloudSyncService.pullFromCloud { [weak self] cloudDreams in
+            guard let self = self, !cloudDreams.isEmpty else { return }
+            
+            // 合并云端和本地梦境 (避免重复)
+            let localIds = Set(self.dreams.map { $0.id })
+            let newDreams = cloudDreams.filter { !localIds.contains($0.id) }
+            
+            if !newDreams.isEmpty {
+                self.dreams.append(contentsOf: newDreams)
+                self.dreams.sort { $0.date > $1.date }
+                self.extractTags()
+                self.saveDreams()
+                print("✅ 从云端同步 \(newDreams.count) 个新梦境")
+            }
+        }
+    }
+    
+    /// 检查云同步状态
+    func checkCloudStatus() {
+        cloudSyncService.checkCloudStatus()
+    }
+    
+    /// 获取上次同步时间
+    var lastSyncDate: Date? {
+        cloudSyncService.lastSyncDate
     }
 }
