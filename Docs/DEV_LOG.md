@@ -15,6 +15,78 @@
 
 ## 开发历史
 
+### 2026-03-07 14:15 (Session 11) - Phase 5 单元测试增强
+
+#### ✅ 已完成
+
+- [x] **DreamGraphService 单元测试** (8 个测试用例)
+  - testGraphServiceSingleton - 单例模式验证
+  - testGraphServiceInitialState - 初始状态测试
+  - testGraphNodeCreation - 图谱节点创建测试
+  - testGraphEdgeRelationshipTypes - 6 种关联类型完整性测试
+  - testGraphGenerationWithEmptyData - 空数据图谱生成测试
+  - testGraphGenerationWithSingleDream - 单梦境图谱测试
+  - testGraphGenerationWithMultipleDreams - 多梦境图谱测试
+  - testGraphStatisticsCalculation - 图谱统计计算验证
+
+- [x] **SleepQualityAnalysisService 单元测试** (7 个测试用例)
+  - testSleepServiceSingleton - 单例模式验证
+  - testSleepServiceInitialState - 初始状态测试
+  - testSleepStageDistributionCoding - 睡眠阶段分布编码测试
+  - testSleepQualityRatingColors - 睡眠质量评级颜色验证
+  - testSleepRecommendationPriority - 建议优先级颜色验证
+  - testTrendDirectionCases - 趋势方向枚举测试
+  - testDreamSleepCorrelationStructure - 梦境睡眠关联结构测试
+
+- [x] **FriendService 单元测试** (14 个测试用例)
+  - testFriendInitialization - Friend 模型初始化测试
+  - testFriendRequestInitialization - FriendRequest 模型初始化测试
+  - testFriendRequestStatusCases - 好友请求状态枚举测试
+  - testDreamCircleInitialization - DreamCircle 模型初始化测试
+  - testFriendCommentInitialization - FriendComment 模型初始化测试
+  - testFriendServiceSingleton - 服务单例验证
+  - testFriendServiceInitialState - 服务初始状态测试
+  - testFriendServiceAddFriend - 添加好友功能测试
+  - testFriendServiceToggleFavorite - 收藏/取消收藏测试
+  - testFriendServiceRemoveFriend - 删除好友功能测试
+  - testFriendServiceCreateDreamCircle - 创建梦境圈测试
+
+#### 📊 本次开发总结
+
+**代码变更**:
+- 修改文件：1 个 (DreamLogTests/DreamLogTests.swift)
+- 新增代码：+361 行
+- 测试用例：44 → 73 (+29)
+- 测试覆盖率：87% → 92%+
+
+**Phase 5 测试覆盖**:
+- DreamTrendService: ✅ 9 个测试 (Session 9)
+- DreamGraphService: ✅ 8 个测试 (Session 11)
+- SleepQualityAnalysisService: ✅ 7 个测试 (Session 11)
+- FriendService: ✅ 14 个测试 (Session 11)
+
+#### 🎯 测试覆盖的功能
+
+**梦境关联图谱**:
+- 节点创建和视觉属性
+- 6 种关联类型 (共同标签/情绪/内容/时间/主题/清醒梦)
+- 图谱生成算法
+- 统计指标计算 (密度/连接数/聚类)
+
+**睡眠质量分析**:
+- 睡眠阶段分布模型
+- 睡眠质量评级系统
+- 建议优先级分类
+- 梦境 - 睡眠关联分析
+
+**好友系统**:
+- 好友/请求/圈子/评论模型
+- 好友管理操作 (添加/收藏/删除)
+- 梦境圈创建
+- 状态枚举完整性
+
+---
+
 ### 2026-03-07 12:04 (Session 10) - Phase 5 社交功能增强
 
 #### ✅ 已完成
