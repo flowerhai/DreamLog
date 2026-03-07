@@ -14,6 +14,7 @@ struct DreamDetailView: View {
     @EnvironmentObject var dreamStore: DreamStore
     @StateObject private var shareService = ShareService()
     @StateObject private var aiArtService = AIArtService.shared
+    @StateObject private var speechService = SpeechSynthesisService.shared
     @State private var showingShareSheet = false
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
@@ -29,6 +30,9 @@ struct DreamDetailView: View {
                 
                 // 梦境内容
                 ContentSection(dream: dream)
+                
+                // 语音播放
+                AudioPlaybackSection(dreamContent: dream.content)
                 
                 // 标签和情绪
                 TagsAndEmotionsSection(dream: dream)
@@ -167,6 +171,105 @@ struct ContentSection: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
         )
+    }
+}
+
+// MARK: - 语音播放区域
+struct AudioPlaybackSection: View {
+    let dreamContent: String
+    @StateObject private var speechService = SpeechSynthesisService.shared
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "speaker.wave.2.fill")
+                    .foregroundColor(.blue)
+                Text("🎧 聆听梦境")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                // 设置按钮
+                NavigationLink(destination: SpeechSettingsView()) {
+                    Image(systemName: "gear")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            // 播放控制
+            HStack(spacing: 16) {
+                // 播放/暂停按钮
+                Button(action: {
+                    if speechService.isSpeaking {
+                        speechService.togglePlayPause()
+                    } else {
+                        speechService.speak(dreamContent)
+                    }
+                }) {
+                    Image(systemName: speechService.isSpeaking && !speechService.isPaused ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.accentColor)
+                }
+                
+                // 状态和进度
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(speechService.isSpeaking ? (speechService.isPaused ? "已暂停" : "播放中...") : "点击播放")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .animation(.easeInOut, value: speechService.isSpeaking)
+                    
+                    // 波形动画
+                    if speechService.isSpeaking && !speechService.isPaused {
+                        HStack(spacing: 2) {
+                            ForEach(0..<4) { i in
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(Color.accentColor)
+                                    .frame(width: 3, height: CGFloat(8 + Int.random(in: 0...8)))
+                                    .animation(
+                                        Animation.easeInOut(duration: 0.4)
+                                            .repeatForever(autoreverses: true)
+                                            .delay(Double(i) * 0.1),
+                                        value: speechService.isSpeaking
+                                    )
+                            }
+                        }
+                        .frame(height: 20)
+                    }
+                }
+                
+                Spacer()
+                
+                // 停止按钮
+                if speechService.isSpeaking {
+                    Button(action: { speechService.stop() }) {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.blue.opacity(0.1))
+            )
+            
+            // 提示信息
+            Text("💡 睡前聆听梦境，探索潜意识深处。可在设置中调整语速、音调和语音。")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 4)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.05))
+        )
+        .onDisappear {
+            speechService.stop()
+        }
     }
 }
 

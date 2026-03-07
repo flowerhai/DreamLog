@@ -135,6 +135,36 @@ struct SettingsView: View {
                     }
                 }
                 
+                // 语音播放设置
+                Section(header: Label("语音播放", systemImage: "speaker.wave.3.fill")) {
+                    NavigationLink(destination: SpeechSettingsView()) {
+                        Label("🎙️ 语音设置", systemImage: "mic.fill")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("功能说明")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Text("• 在梦境详情页点击播放按钮即可聆听梦境")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 支持调整语速、音调和音量")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 提供多种语音选择（中文/英文）")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 适合睡前回顾或无障碍访问")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
                 // Siri 快捷指令
                 Section(header: Label("Siri 与快捷指令", systemImage: "wand.and.stars")) {
                     NavigationLink(destination: SiriShortcutSettingsView()) {
