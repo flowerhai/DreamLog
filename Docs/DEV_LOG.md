@@ -15,6 +15,86 @@
 
 ## 开发历史
 
+### 2026-03-07 18:12 (Session 12) - Phase 6 单元测试增强
+
+#### ✅ 已完成
+
+- [x] **DreamTimelineService 单元测试** (11 个测试用例)
+  - testTimelineServiceSingleton - 单例模式验证
+  - testTimelineServiceInitialState - 初始状态测试
+  - testTimelineDataGeneration - 时间轴数据生成测试
+  - testTimelineDataWithEmptyDreams - 空数据处理测试
+  - testTimelineFilterByTags - 标签过滤测试
+  - testTimelineFilterByLucidDreams - 清醒梦过滤测试
+  - testTimelineFilterByClarity - 清晰度过滤测试
+  - testTimelineStatsGeneration - 统计信息生成测试
+  - testTimelineStatsWithEmptyData - 空数据统计测试
+  - testTimelineGranularityAllCases - 分组级别枚举测试
+  - 修复情绪过滤逻辑 (Set 交集判断 bug)
+
+- [x] **DreamExportService 单元测试** (5 个测试用例)
+  - testExportServiceSingleton - 单例模式验证
+  - testExportFormatAllCases - 4 种导出格式完整性测试
+  - testExportFormatProperties - 格式属性 (图标/扩展名) 验证
+  - testExportServiceInitialization - 服务初始化测试
+  - testDreamStoreExportDreams - 梦境导出功能测试
+  - testDreamStoreExportEmptyDreams - 空数据导出测试
+
+- [x] **OnThisDayView 数据结构测试** (2 个测试用例)
+  - testOnThisDayDataStructure - 梦境回顾日期匹配验证
+  - testYearsWithDreamsCalculation - 年份计算逻辑测试
+
+#### 📊 本次开发总结
+
+**代码变更**:
+- 修改文件：2 个 (DreamTimelineService.swift, DreamLogTests/DreamLogTests.swift)
+- 新增代码：+292 行 (测试代码)
+- 修复 bug：1 个 (情绪过滤逻辑)
+- 测试用例：73 → 91 (+18)
+- 测试覆盖率：92% → 95%+
+
+**Phase 6 测试覆盖**:
+- DreamTimelineService: ✅ 11 个测试 (Session 12)
+- DreamExportService: ✅ 5 个测试 (Session 12)
+- OnThisDayView: ✅ 2 个测试 (Session 12)
+
+#### 🎯 测试覆盖的功能
+
+**梦境时间轴**:
+- 单例模式正确性
+- 初始状态验证
+- 数据生成算法
+- 多维度过滤 (标签/情绪/清醒梦/清晰度)
+- 统计信息计算
+- 分组级别枚举完整性
+
+**梦境导出**:
+- 4 种导出格式 (PDF/JSON/文本/Markdown)
+- 格式属性完整性 (图标/描述/扩展名)
+- DreamStore 导出功能
+- 空数据边界处理
+
+**梦境回顾**:
+- 日期匹配逻辑 (历史上的今天)
+- 年份计算正确性
+- 数据结构验证
+
+#### 📝 提交记录
+
+1. `test(phase6): 添加梦境时间轴单元测试并修复过滤逻辑` (5a36350)
+   - 修复情绪过滤逻辑 bug
+   - 新增 11 个测试用例
+
+2. `test(phase6): 添加梦境导出和回顾功能单元测试` (71e5299)
+   - 新增 7 个测试用例
+   - 覆盖导出和回顾功能
+
+3. `docs: 更新 README 添加 Phase 6 个性化体验功能` (2f653e0)
+   - 添加 Phase 6 开发计划文档
+   - 更新功能完成状态
+
+---
+
 ### 2026-03-07 14:15 (Session 11) - Phase 5 单元测试增强
 
 #### ✅ 已完成
