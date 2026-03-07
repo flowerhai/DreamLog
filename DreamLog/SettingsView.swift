@@ -458,14 +458,18 @@ struct ExportOptionsView: View {
     @State private var exportFormat: ExportFormat = .json
     
     enum ExportFormat: String, CaseIterable, Identifiable {
+        case pdf = "PDF"
         case json = "JSON"
         case text = "文本"
+        case markdown = "Markdown"
         
         var id: String { rawValue }
         var icon: String {
             switch self {
+            case .pdf: return "doc.fill"
             case .json: return "doc.badge.gearshape"
             case .text: return "doc.text"
+            case .markdown: return "doc.richtext"
             }
         }
     }
@@ -565,10 +569,14 @@ struct ExportOptionsView: View {
     
     private func formatDescription(for format: ExportFormat) -> String {
         switch format {
+        case .pdf:
+            return "精美的 PDF 文档，适合打印和分享"
         case .json:
             return "包含所有数据和元数据，适合备份"
         case .text:
             return "纯文本格式，易于阅读和分享"
+        case .markdown:
+            return "Markdown 格式，支持富文本编辑"
         }
     }
     
@@ -579,40 +587,22 @@ struct ExportOptionsView: View {
             var success = false
             var message = ""
             
-            switch exportFormat {
-            case .json:
-                if let data = dreamStore.exportDreams() {
-                    // 保存到临时文件
-                    let tempDir = FileManager.default.temporaryDirectory
-                    let fileURL = tempDir.appendingPathComponent("dreamlog_export_\(Date().timeIntervalSince1970).json")
-                    try? data.write(to: fileURL)
-                    
-                    // 使用 UIActivityViewController 分享
-                    DispatchQueue.main.async {
-                        let activityVC = UIActivityViewController(
-                            activityItems: [fileURL],
-                            applicationActivities: nil
-                        )
-                        
-                        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                           let rootViewController = windowScene.windows.first?.rootViewController {
-                            rootViewController.present(activityVC, animated: true)
-                        }
-                        success = true
-                        message = "成功导出 \(dreamStore.dreams.count) 个梦境"
-                    }
-                }
-                
-            case .text:
-                var allText = ""
-                for dream in dreamStore.dreams {
-                    allText += dreamStore.exportDream(dream)
-                    allText += "\n\n---\n\n"
-                }
-                
+            // 使用新的 DreamExportService
+            let exportService = DreamExportService.shared
+            let result = exportService.exportDreams(
+                dreams: dreamStore.dreams.sorted { $0.date > $1.date },
+                format: convertFormat(exportFormat),
+                includeAnalysis: true,
+                includeStats: exportFormat == .pdf,
+                theme: .starry
+            )
+            
+            switch result {
+            case .success(let data, let fileExtension):
                 let tempDir = FileManager.default.temporaryDirectory
-                let fileURL = tempDir.appendingPathComponent("dreamlog_export_\(Date().timeIntervalSince1970).txt")
-                try? allText.write(to: fileURL, atomically: true, encoding: .utf8)
+                let fileName = "dreamlog_export_\(Int(Date().timeIntervalSince1970)).\(fileExtension)"
+                let fileURL = tempDir.appendingPathComponent(fileName)
+                try? data.write(to: fileURL)
                 
                 DispatchQueue.main.async {
                     let activityVC = UIActivityViewController(
@@ -625,7 +615,12 @@ struct ExportOptionsView: View {
                         rootViewController.present(activityVC, animated: true)
                     }
                     success = true
-                    message = "成功导出 \(dreamStore.dreams.count) 个梦境"
+                    message = "成功导出 \(dreamStore.dreams.count) 个梦境为 \(exportFormat.rawValue) 格式"
+                }
+                
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    message = "导出失败：\(error)"
                 }
             }
             
@@ -637,6 +632,15 @@ struct ExportOptionsView: View {
             }
             
             isExporting = false
+        }
+    }
+    
+    private func convertFormat(_ format: ExportFormat) -> DreamExportService.ExportFormat {
+        switch format {
+        case .pdf: return .pdf
+        case .json: return .json
+        case .text: return .text
+        case .markdown: return .markdown
         }
     }
 }
