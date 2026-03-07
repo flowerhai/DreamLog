@@ -125,11 +125,14 @@ struct QuickRecordSection: View {
                 }
             }
             .buttonStyle(.plain)
-            .longPressAction {
-                speechService.startRecording()
-            } onRelease: {
-                speechService.stopRecording()
-            }
+            .longPressButtonAction(
+                onPress: {
+                    speechService.startRecording()
+                },
+                onRelease: {
+                    speechService.stopRecording()
+                }
+            )
             
             // 文字输入
             Button(action: { showingRecordSheet = true }) {
