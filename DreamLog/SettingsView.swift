@@ -50,6 +50,10 @@ struct SettingsView: View {
                 
                 // 小组件设置
                 Section(header: Label("小组件", systemImage: "widget")) {
+                    NavigationLink(destination: WidgetCustomizationView()) {
+                        Label("个性化定制", systemImage: "paintpalette")
+                    }
+                    
                     Link(destination: URL(string: "dreamlog://widgets")!) {
                         HStack {
                             Label("添加小组件", systemImage: "plus.app")
