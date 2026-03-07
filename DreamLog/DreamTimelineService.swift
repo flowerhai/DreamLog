@@ -119,7 +119,7 @@ class DreamTimelineService {
             
             // 情绪过滤
             if !filter.selectedEmotions.isEmpty {
-                let hasMatchingEmotion = !dream.emotions.intersection(filter.selectedEmotions).isEmpty
+                let hasMatchingEmotion = dream.emotions.contains { filter.selectedEmotions.contains($0) }
                 if !hasMatchingEmotion { return false }
             }
             

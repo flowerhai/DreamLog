@@ -1043,6 +1043,133 @@ final class DreamLogTests: XCTestCase {
         XCTAssertTrue(service.dreamCircles.first?.isPrivate ?? false)
     }
     
+    // MARK: - DreamTimelineService 测试 (Phase 6)
+    
+    func testTimelineServiceSingleton() throws {
+        let service1 = DreamTimelineService.shared
+        let service2 = DreamTimelineService.shared
+        XCTAssertTrue(service1 === service2, "DreamTimelineService 应该是单例")
+    }
+    
+    func testTimelineServiceInitialState() throws {
+        let service = DreamTimelineService.shared
+        let filter = TimelineFilter()
+        
+        XCTAssertFalse(filter.isActive, "初始过滤条件应该是非激活状态")
+        XCTAssertEqual(filter.granularity, .week, "默认分组级别应该是周")
+        XCTAssertFalse(filter.lucidOnly, "默认不应该只过滤清醒梦")
+        XCTAssertEqual(filter.minClarity, 1, "默认最低清晰度应该是 1")
+        XCTAssertTrue(filter.selectedTags.isEmpty, "初始标签过滤应该为空")
+        XCTAssertTrue(filter.selectedEmotions.isEmpty, "初始情绪过滤应该为空")
+    }
+    
+    func testTimelineDataGeneration() throws {
+        let service = DreamTimelineService.shared
+        let dreams = createTestDreams(count: 20)
+        
+        let dataPoints = service.generateTimelineData(dreams: dreams, filter: TimelineFilter())
+        
+        XCTAssertGreaterThan(dataPoints.count, 0, "应该生成时间轴数据点")
+        
+        for point in dataPoints {
+            XCTAssertGreaterThanOrEqual(point.dreamCount, 0, "梦境数量应该非负")
+            XCTAssertGreaterThanOrEqual(point.avgClarity, 0, "平均清晰度应该非负")
+            XCTAssertLessThanOrEqual(point.avgClarity, 5, "平均清晰度应该不超过 5")
+            XCTAssertGreaterThanOrEqual(point.avgIntensity, 0, "平均强度应该非负")
+            XCTAssertLessThanOrEqual(point.avgIntensity, 5, "平均强度应该不超过 5")
+            XCTAssertGreaterThanOrEqual(point.lucidDreamCount, 0, "清醒梦数量应该非负")
+        }
+    }
+    
+    func testTimelineDataWithEmptyDreams() throws {
+        let service = DreamTimelineService.shared
+        let dataPoints = service.generateTimelineData(dreams: [], filter: TimelineFilter())
+        
+        XCTAssertEqual(dataPoints.count, 0, "空梦境列表应该返回空数据点")
+    }
+    
+    func testTimelineFilterByTags() throws {
+        let service = DreamTimelineService.shared
+        let dreams = createTestDreams(count: 10)
+        
+        var filter = TimelineFilter()
+        filter.selectedTags = ["标签 0"]
+        
+        let filteredData = service.generateTimelineData(dreams: dreams, filter: filter)
+        let allData = service.generateTimelineData(dreams: dreams, filter: TimelineFilter())
+        
+        XCTAssertLessThanOrEqual(filteredData.count, allData.count, "过滤后数据点应该不多于全部数据")
+    }
+    
+    func testTimelineFilterByLucidDreams() throws {
+        let service = DreamTimelineService.shared
+        let dreams = createTestDreams(count: 15)
+        
+        var filter = TimelineFilter()
+        filter.lucidOnly = true
+        
+        let lucidData = service.generateTimelineData(dreams: dreams, filter: filter)
+        let allData = service.generateTimelineData(dreams: dreams, filter: TimelineFilter())
+        
+        let totalLucidInAllData = lucidData.reduce(0) { $0 + $1.lucidDreamCount }
+        let totalInAllData = allData.reduce(0) { $0 + $1.dreamCount }
+        
+        XCTAssertLessThanOrEqual(totalLucidInAllData, totalInAllData, "清醒梦数量应该不超过总梦境数")
+    }
+    
+    func testTimelineFilterByClarity() throws {
+        let service = DreamTimelineService.shared
+        let dreams = createTestDreams(count: 15)
+        
+        var filter = TimelineFilter()
+        filter.minClarity = 4
+        
+        let highClarityData = service.generateTimelineData(dreams: dreams, filter: filter)
+        let allData = service.generateTimelineData(dreams: dreams, filter: TimelineFilter())
+        
+        XCTAssertLessThanOrEqual(highClarityData.count, allData.count, "高清晰度过滤后数据应该不多于全部数据")
+    }
+    
+    func testTimelineStatsGeneration() throws {
+        let service = DreamTimelineService.shared
+        let dreams = createTestDreams(count: 20)
+        
+        let stats = service.getTimelineStats(dreams: dreams, filter: TimelineFilter())
+        
+        XCTAssertEqual(stats.totalDreams, dreams.count, "总梦境数应该匹配")
+        XCTAssertGreaterThanOrEqual(stats.avgClarity, 0, "平均清晰度应该非负")
+        XCTAssertLessThanOrEqual(stats.avgClarity, 5, "平均清晰度应该不超过 5")
+        XCTAssertGreaterThanOrEqual(stats.avgIntensity, 0, "平均强度应该非负")
+        XCTAssertLessThanOrEqual(stats.avgIntensity, 5, "平均强度应该不超过 5")
+        XCTAssertGreaterThanOrEqual(stats.lucidDreamPercentage, 0, "清醒梦百分比应该非负")
+        XCTAssertLessThanOrEqual(stats.lucidDreamPercentage, 100, "清醒梦百分比应该不超过 100")
+    }
+    
+    func testTimelineStatsWithEmptyData() throws {
+        let service = DreamTimelineService.shared
+        let stats = service.getTimelineStats(dreams: [], filter: TimelineFilter())
+        
+        XCTAssertEqual(stats.totalDreams, 0, "空数据总梦境数应该为 0")
+        XCTAssertEqual(stats.avgClarity, 0, "空数据平均清晰度应该为 0")
+        XCTAssertEqual(stats.avgIntensity, 0, "空数据平均强度应该为 0")
+        XCTAssertEqual(stats.lucidDreamPercentage, 0, "空数据清醒梦百分比应该为 0")
+    }
+    
+    func testTimelineGranularityAllCases() throws {
+        let granularities = TimelineGranularity.allCases
+        
+        XCTAssertEqual(granularities.count, 4, "应该有 4 种分组级别")
+        XCTAssertTrue(granularities.contains(.day), "应该包含天")
+        XCTAssertTrue(granularities.contains(.week), "应该包含周")
+        XCTAssertTrue(granularities.contains(.month), "应该包含月")
+        XCTAssertTrue(granularities.contains(.year), "应该包含年")
+        
+        for granularity in granularities {
+            XCTAssertFalse(granularity.icon.isEmpty, "分组级别应该有图标")
+            XCTAssertFalse(granularity.rawValue.isEmpty, "分组级别应该有名称")
+        }
+    }
+    
     // MARK: - 辅助方法
     
     private func createTestDreams(count: Int) -> [Dream] {
