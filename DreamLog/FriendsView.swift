@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FriendsView: View {
     @StateObject private var friendService: FriendService
-    @StateObject private var dreamStore: DreamStore
+    @ObservedObject var dreamStore: DreamStore
     @State private var selectedTab: FriendTab = .list
     @State private var showingAddFriend = false
     @State private var showingCreateCircle = false
