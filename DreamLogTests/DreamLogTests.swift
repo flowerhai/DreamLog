@@ -1356,4 +1356,175 @@ final class DreamLogTests: XCTestCase {
         
         return dreams
     }
+    
+    // MARK: - EnhancedShareService 测试 (Phase 7 - 增强分享)
+    
+    func testSharePlatformEnum() throws {
+        // 测试所有分享平台枚举值
+        let platforms = SharePlatform.allCases
+        
+        XCTAssertEqual(platforms.count, 9, "应该有 9 个分享平台")
+        
+        // 测试平台属性
+        let wechat = SharePlatform.wechat
+        XCTAssertEqual(wechat.rawValue, "微信")
+        XCTAssertEqual(wechat.icon, "message.fill")
+        XCTAssertNotNil(wechat.urlScheme)
+        
+        let copyLink = SharePlatform.copyLink
+        XCTAssertEqual(copyLink.rawValue, "复制链接")
+        XCTAssertNil(copyLink.urlScheme)
+    }
+    
+    func testShareCardStyleEnum() throws {
+        // 测试所有分享卡片样式
+        let styles = ShareCardStyle.allCases
+        
+        XCTAssertEqual(styles.count, 8, "应该有 8 种卡片样式")
+        
+        // 验证每种样式都有颜色配置
+        for style in styles {
+            XCTAssertFalse(style.backgroundColors.isEmpty, "\(style.rawValue) 应该有背景颜色")
+            XCTAssertNotNil(style.textColor, "\(style.rawValue) 应该有文字颜色")
+            XCTAssertNotNil(style.accentColor, "\(style.rawValue) 应该有强调色")
+        }
+        
+        // 测试特定样式
+        let starry = ShareCardStyle.starry
+        XCTAssertEqual(starry.rawValue, "星空")
+        
+        let sunset = ShareCardStyle.sunset
+        XCTAssertEqual(sunset.rawValue, "日落")
+        
+        let ocean = ShareCardStyle.ocean
+        XCTAssertEqual(ocean.rawValue, "海洋")
+        
+        let forest = ShareCardStyle.forest
+        XCTAssertEqual(forest.rawValue, "森林")
+    }
+    
+    func testDreamQRCodeData() throws {
+        let dream = Dream(
+            title: "测试梦境",
+            content: "测试内容",
+            tags: ["测试"],
+            emotions: [.happy],
+            clarity: 4,
+            isLucid: true
+        )
+        
+        // 测试私有分享 (7 天过期)
+        let privateQR = DreamQRCodeData(dream: dream, isPrivate: true, expiryDays: 7)
+        XCTAssertTrue(privateQR.isPrivate)
+        XCTAssertNotNil(privateQR.expiryDate)
+        XCTAssertEqual(privateQR.dreamId, dream.id)
+        XCTAssertEqual(privateQR.title, dream.title)
+        
+        // 测试公开分享 (永不过期)
+        let publicQR = DreamQRCodeData(dream: dream, isPrivate: false)
+        XCTAssertFalse(publicQR.isPrivate)
+        XCTAssertNil(publicQR.expiryDate)
+    }
+    
+    func testShareHistoryCodable() throws {
+        let dream = Dream(
+            title: "分享测试梦境",
+            content: "测试分享功能",
+            tags: ["分享", "测试"],
+            emotions: [.happy, .excited],
+            clarity: 5,
+            isLucid: false
+        )
+        
+        let history = ShareHistory(
+            dream: dream,
+            platform: .wechat,
+            style: .dreamy
+        )
+        
+        // 测试编码
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(history)
+        
+        // 测试解码
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decodedHistory = try decoder.decode(ShareHistory.self, from: data)
+        
+        XCTAssertEqual(history.id, decodedHistory.id)
+        XCTAssertEqual(history.dreamId, decodedHistory.dreamId)
+        XCTAssertEqual(history.dreamTitle, decodedHistory.dreamTitle)
+        XCTAssertEqual(history.platform, decodedHistory.platform)
+        XCTAssertEqual(history.shareStyle, decodedHistory.shareStyle)
+    }
+    
+    func testShareHistoryArray() throws {
+        var histories: [ShareHistory] = []
+        
+        for i in 0..<5 {
+            let dream = Dream(
+                title: "梦境\(i)",
+                content: "内容\(i)",
+                tags: ["测试"],
+                emotions: [.calm]
+            )
+            let platform: SharePlatform = i % 2 == 0 ? .wechat : .weibo
+            let style: ShareCardStyle = i % 3 == 0 ? .dreamy : .classic
+            
+            histories.append(ShareHistory(dream: dream, platform: platform, style: style))
+        }
+        
+        // 测试编码数组
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(histories)
+        
+        // 测试解码数组
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decodedHistories = try decoder.decode([ShareHistory].self, from: data)
+        
+        XCTAssertEqual(histories.count, decodedHistories.count)
+        
+        for i in 0..<histories.count {
+            XCTAssertEqual(histories[i].dreamTitle, decodedHistories[i].dreamTitle)
+            XCTAssertEqual(histories[i].platform, decodedHistories[i].platform)
+        }
+    }
+    
+    func testEnhancedShareServiceSingleton() throws {
+        let service1 = EnhancedShareService.shared
+        let service2 = EnhancedShareService.shared
+        
+        XCTAssertIdentical(service1, service2, "EnhancedShareService 应该是单例")
+        XCTAssertNotNil(service1.shareHistory)
+        XCTAssertTrue(service1.shareHistory.isEmpty, "初始分享历史应该为空")
+    }
+    
+    func testShareServiceProperties() throws {
+        let service = EnhancedShareService.shared
+        
+        // 测试初始状态
+        XCTAssertFalse(service.isGenerating)
+        XCTAssertNil(service.generatedImage)
+        XCTAssertNil(service.qrCodeImage)
+        XCTAssertNil(service.shareLink)
+        XCTAssertNil(service.error)
+    }
+    
+    func testShareServiceCleanup() throws {
+        let service = EnhancedShareService.shared
+        
+        // 添加一些测试历史
+        let dream = Dream(title: "测试", content: "内容", tags: [], emotions: [])
+        service.shareHistory.append(ShareHistory(dream: dream, platform: .wechat, style: .classic))
+        
+        XCTAssertFalse(service.shareHistory.isEmpty)
+        
+        // 清除历史
+        service.clearShareHistory()
+        
+        XCTAssertTrue(service.shareHistory.isEmpty)
+    }
 }

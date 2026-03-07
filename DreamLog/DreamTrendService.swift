@@ -550,22 +550,3 @@ class DreamTrendService: ObservableObject {
         return recommendations
     }
 }
-
-// MARK: - Emotion 扩展
-
-extension Emotion {
-    var rawValue: String {
-        switch self {
-        case .calm: return "平静"
-        case .happy: return "快乐"
-        case .anxious: return "焦虑"
-        case .fearful: return "恐惧"
-        case .confused: return "困惑"
-        case .excited: return "兴奋"
-        case .sad: return "悲伤"
-        case .angry: return "愤怒"
-        case .surprised: return "惊讶"
-        case .neutral: return "中性"
-        }
-    }
-}

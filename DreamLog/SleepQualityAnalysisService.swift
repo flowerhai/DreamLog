@@ -184,12 +184,12 @@ class SleepQualityAnalysisService: ObservableObject {
             // 计算各项指标
             let stageDistribution = calculateStageDistribution(from: filteredRecords)
             let qualityDistribution = calculateQualityDistribution(from: filteredRecords)
-            let作息分析 = calculateScheduleConsistency(from: filteredRecords)
+            let scheduleAnalysis = calculateScheduleConsistency(from: filteredRecords)
             let dreamCorrelation = analyzeDreamCorrelation(with: filteredRecords)
             let recommendations = generateRecommendations(
                 stageDistribution: stageDistribution,
                 qualityDistribution: qualityDistribution,
-                作息分析：作息分析，
+                scheduleAnalysis: scheduleAnalysis,
                 dreamCorrelation: dreamCorrelation
             )
             
@@ -200,15 +200,15 @@ class SleepQualityAnalysisService: ObservableObject {
                 averageEfficiency: calculateAverageEfficiency(from: filteredRecords),
                 consistencyScore: calculateConsistencyScore(from: filteredRecords),
                 stageDistribution: stageDistribution,
-                deepSleepTrend: calculateTrend(for: \.stages.filter { $0 == .deep }.count, in: filteredRecords),
-                remSleepTrend: calculateTrend(for: \.stages.filter { $0 == .rem }.count, in: filteredRecords),
+                deepSleepTrend: calculateDeepSleepTrend(in: filteredRecords),
+                remSleepTrend: calculateRemSleepTrend(in: filteredRecords),
                 qualityDistribution: qualityDistribution,
                 dominantQuality: qualityDistribution.max(by: { $0.value < $1.value })?.key,
                 qualityTrend: calculateQualityTrend(from: filteredRecords),
-                averageBedtime: 作息分析.averageBedtime,
-                averageWakeTime: 作息分析.averageWakeTime,
-                bedtimeConsistency: 作息分析.bedtimeConsistency,
-                wakeTimeConsistency: 作息分析.wakeTimeConsistency,
+                averageBedtime: scheduleAnalysis.averageBedtime,
+                averageWakeTime: scheduleAnalysis.averageWakeTime,
+                bedtimeConsistency: scheduleAnalysis.bedtimeConsistency,
+                wakeTimeConsistency: scheduleAnalysis.wakeTimeConsistency,
                 dreamCorrelation: dreamCorrelation,
                 recommendations: recommendations
             )
@@ -422,7 +422,7 @@ class SleepQualityAnalysisService: ObservableObject {
     private func generateRecommendations(
         stageDistribution: SleepStageDistribution,
         qualityDistribution: [SleepRecord.SleepQuality: Int],
-        作息分析：(averageBedtime: DateComponents, averageWakeTime: DateComponents, bedtimeConsistency: Double, wakeTimeConsistency: Double),
+        scheduleAnalysis: (averageBedtime: DateComponents, averageWakeTime: DateComponents, bedtimeConsistency: Double, wakeTimeConsistency: Double),
         dreamCorrelation: DreamSleepCorrelation
     ) -> [SleepRecommendation] {
         var recommendations: [SleepRecommendation] = []
@@ -450,7 +450,7 @@ class SleepQualityAnalysisService: ObservableObject {
         }
         
         // 作息一致性建议
-        if 作息分析.bedtimeConsistency < 0.7 {
+        if scheduleAnalysis.bedtimeConsistency < 0.7 {
             recommendations.append(SleepRecommendation(
                 category: .schedule,
                 title: "规律就寝时间",
@@ -461,7 +461,7 @@ class SleepQualityAnalysisService: ObservableObject {
         }
         
         // 睡眠时长建议
-        let avgHours = 作息分析.averageWakeTime.hour! - 作息分析.averageBedtime.hour!
+        let avgHours = scheduleAnalysis.averageWakeTime.hour! - scheduleAnalysis.averageBedtime.hour!
         if avgHours < 7 {
             recommendations.append(SleepRecommendation(
                 category: .duration,
@@ -525,14 +525,31 @@ class SleepQualityAnalysisService: ObservableObject {
         return consistency
     }
     
-    private func calculateTrend(for keyPath: KeyPath<SleepRecord, Int>, in records: [SleepRecord]) -> SleepQualityReport.TrendDirection {
+    private func calculateDeepSleepTrend(in records: [SleepRecord]) -> SleepQualityReport.TrendDirection {
         guard records.count >= 4 else { return .stable }
         
         let sorted = records.sorted { $0.startDate < $1.startDate }
         let midPoint = sorted.count / 2
         
-        let firstHalf = sorted.prefix(midPoint).map { $0[keyPath: keyPath] }.reduce(0, +) / midPoint
-        let secondHalf = sorted.suffix(sorted.count - midPoint).map { $0[keyPath: keyPath] }.reduce(0, +) / (sorted.count - midPoint)
+        let firstHalf = sorted.prefix(midPoint).map { $0.stages.filter { $0 == .deep }.count }.reduce(0, +) / midPoint
+        let secondHalf = sorted.suffix(sorted.count - midPoint).map { $0.stages.filter { $0 == .deep }.count }.reduce(0, +) / (sorted.count - midPoint)
+        
+        let change = Double(secondHalf - firstHalf) / Double(max(firstHalf, 1))
+        
+        if change > 0.1 { return .improving }
+        if change < -0.1 { return .declining }
+        if abs(change) > 0.05 { return .fluctuating }
+        return .stable
+    }
+    
+    private func calculateRemSleepTrend(in records: [SleepRecord]) -> SleepQualityReport.TrendDirection {
+        guard records.count >= 4 else { return .stable }
+        
+        let sorted = records.sorted { $0.startDate < $1.startDate }
+        let midPoint = sorted.count / 2
+        
+        let firstHalf = sorted.prefix(midPoint).map { $0.stages.filter { $0 == .rem }.count }.reduce(0, +) / midPoint
+        let secondHalf = sorted.suffix(sorted.count - midPoint).map { $0.stages.filter { $0 == .rem }.count }.reduce(0, +) / (sorted.count - midPoint)
         
         let change = Double(secondHalf - firstHalf) / Double(max(firstHalf, 1))
         

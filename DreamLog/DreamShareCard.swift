@@ -13,6 +13,10 @@ enum ShareCardStyle: String, CaseIterable, Identifiable {
     case minimal = "简约"
     case dreamy = "梦幻"
     case gradient = "渐变"
+    case starry = "星空"
+    case sunset = "日落"
+    case ocean = "海洋"
+    case forest = "森林"
     
     var id: String { rawValue }
     
@@ -26,6 +30,14 @@ enum ShareCardStyle: String, CaseIterable, Identifiable {
             return [Color(hex: "6B4E9A"), Color(hex: "9B7EBD"), Color(hex: "C9B1DD")]
         case .gradient:
             return [Color(hex: "FF6B6B"), Color(hex: "6B4E9A"), Color(hex: "4ECDC4")]
+        case .starry:
+            return [Color(hex: "0F0C29"), Color(hex: "302B63"), Color(hex: "24243E")]
+        case .sunset:
+            return [Color(hex: "FF512F"), Color(hex: "DD2476"), Color(hex: "FF9966")]
+        case .ocean:
+            return [Color(hex: "2E3192"), Color(hex: "1BFFFF"), Color(hex: "00C6FF")]
+        case .forest:
+            return [Color(hex: "134E5E"), Color(hex: "71B280"), Color(hex: "56AB2F")]
         }
     }
     
@@ -48,6 +60,14 @@ enum ShareCardStyle: String, CaseIterable, Identifiable {
             return Color(hex: "FFD700")
         case .gradient:
             return .white
+        case .starry:
+            return Color(hex: "FFD700")
+        case .sunset:
+            return Color(hex: "FFEB3B")
+        case .ocean:
+            return Color(hex: "FFFFFF")
+        case .forest:
+            return Color(hex: "90EE90")
         }
     }
 }
@@ -117,8 +137,40 @@ struct DreamShareCard: View {
         }
         
         // 装饰元素
-        if style == .dreamy {
+        decorativeElements
+    }
+    
+    // MARK: - 装饰元素
+    @ViewBuilder
+    private var decorativeElements: some View {
+        switch style {
+        case .starry:
+            starryDecorations
+        case .dreamy:
             dreamyDecorations
+        case .sunset:
+            sunsetDecorations
+        case .ocean:
+            oceanDecorations
+        case .forest:
+            forestDecorations
+        default:
+            EmptyView()
+        }
+    }
+    
+    // MARK: - 星空装饰
+    private var starryDecorations: some View {
+        ZStack {
+            ForEach(0..<30, id: \.self) { index in
+                Circle()
+                    .fill(Color.white.opacity(Double.random(in: 0.3...0.8)))
+                    .frame(width: CGFloat.random(in: 2...6))
+                    .position(
+                        x: CGFloat.random(in: 0...375),
+                        y: CGFloat.random(in: 0...500)
+                    )
+            }
         }
     }
     
@@ -129,6 +181,75 @@ struct DreamShareCard: View {
                 Circle()
                     .fill(style.textColor.opacity(0.05))
                     .frame(width: CGFloat.random(in: 50...150))
+                    .position(
+                        x: CGFloat.random(in: 0...375),
+                        y: CGFloat.random(in: 0...500)
+                    )
+            }
+        }
+    }
+    
+    // MARK: - 日落装饰
+    private var sunsetDecorations: some View {
+        ZStack {
+            // 太阳光晕
+            Circle()
+                .fill(Color(hex: "FF9966").opacity(0.3))
+                .frame(width: 200)
+                .position(x: 300, y: 100)
+            
+            // 云朵
+            ForEach(0..<3, id: \.self) { index in
+                Ellipse()
+                    .fill(Color.white.opacity(0.1))
+                    .frame(width: CGFloat.random(in: 80...150), height: CGFloat.random(in: 30...60))
+                    .position(
+                        x: CGFloat.random(in: 50...325),
+                        y: CGFloat.random(in: 50...200)
+                    )
+            }
+        }
+    }
+    
+    // MARK: - 海洋装饰
+    private var oceanDecorations: some View {
+        ZStack {
+            // 气泡
+            ForEach(0..<15, id: \.self) { index in
+                Circle()
+                    .stroke(Color.white.opacity(0.3), lineWidth: 1)
+                    .frame(width: CGFloat.random(in: 10...40))
+                    .position(
+                        x: CGFloat.random(in: 0...375),
+                        y: CGFloat.random(in: 0...500)
+                    )
+            }
+            
+            // 波浪
+            Path { path in
+                var startX: CGFloat = 0
+                while startX < 375 {
+                    path.move(to: CGPoint(x: startX, y: 450))
+                    path.addCurve(
+                        to: CGPoint(x: startX + 50, y: 450),
+                        control1: CGPoint(x: startX + 25, y: 440),
+                        control2: CGPoint(x: startX + 25, y: 460)
+                    )
+                    startX += 50
+                }
+            }
+            .stroke(Color.white.opacity(0.2), lineWidth: 2)
+        }
+    }
+    
+    // MARK: - 森林装饰
+    private var forestDecorations: some View {
+        ZStack {
+            // 树叶
+            ForEach(0..<20, id: \.self) { index in
+                Image(systemName: "leaf.fill")
+                    .font(.system(size: CGFloat.random(in: 10...25)))
+                    .foregroundColor(Color.white.opacity(0.15))
                     .position(
                         x: CGFloat.random(in: 0...375),
                         y: CGFloat.random(in: 0...500)

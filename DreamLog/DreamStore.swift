@@ -9,6 +9,8 @@ import Foundation
 import Combine
 
 class DreamStore: ObservableObject {
+    static let shared = DreamStore()
+    
     @Published var dreams: [Dream] = []
     @Published var filteredDreams: [Dream] = []
     @Published var tags: [String] = []
