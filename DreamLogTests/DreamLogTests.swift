@@ -1170,6 +1170,170 @@ final class DreamLogTests: XCTestCase {
         }
     }
     
+    // MARK: - DreamExportService 测试 (Phase 6)
+    
+    func testExportServiceSingleton() throws {
+        let service1 = DreamExportService.shared
+        let service2 = DreamExportService.shared
+        XCTAssertTrue(service1 === service2, "DreamExportService 应该是单例")
+    }
+    
+    func testExportFormatAllCases() throws {
+        let formats = DreamExportService.ExportFormat.allCases
+        
+        XCTAssertEqual(formats.count, 4, "应该有 4 种导出格式")
+        XCTAssertTrue(formats.contains(.pdf), "应该包含 PDF")
+        XCTAssertTrue(formats.contains(.json), "应该包含 JSON")
+        XCTAssertTrue(formats.contains(.text), "应该包含文本")
+        XCTAssertTrue(formats.contains(.markdown), "应该包含 Markdown")
+        
+        for format in formats {
+            XCTAssertFalse(format.icon.isEmpty, "格式应该有图标")
+            XCTAssertFalse(format.description.isEmpty, "格式应该有描述")
+            XCTAssertFalse(format.fileExtension.isEmpty, "格式应该有文件扩展名")
+        }
+    }
+    
+    func testExportFormatProperties() throws {
+        let pdf = DreamExportService.ExportFormat.pdf
+        XCTAssertEqual(pdf.icon, "doc.fill", "PDF 图标应该正确")
+        XCTAssertEqual(pdf.fileExtension, "pdf", "PDF 扩展名应该正确")
+        
+        let json = DreamExportService.ExportFormat.json
+        XCTAssertEqual(json.icon, "doc.badge.gearshape", "JSON 图标应该正确")
+        XCTAssertEqual(json.fileExtension, "json", "JSON 扩展名应该正确")
+        
+        let text = DreamExportService.ExportFormat.text
+        XCTAssertEqual(text.icon, "doc.text", "文本图标应该正确")
+        XCTAssertEqual(text.fileExtension, "txt", "文本扩展名应该正确")
+        
+        let markdown = DreamExportService.ExportFormat.markdown
+        XCTAssertEqual(markdown.icon, "doc.richtext", "Markdown 图标应该正确")
+        XCTAssertEqual(markdown.fileExtension, "md", "Markdown 扩展名应该正确")
+    }
+    
+    func testExportServiceInitialization() throws {
+        let service = DreamExportService.shared
+        XCTAssertNotNil(service, "服务应该成功初始化")
+    }
+    
+    func testDreamStoreExportDreams() throws {
+        let dreamStore = DreamStore.shared
+        let initialCount = dreamStore.dreams.count
+        
+        // 添加测试梦境
+        let testDream = Dream(
+            title: "导出测试梦境",
+            content: "这是用于测试导出功能的梦境内容",
+            tags: ["测试", "导出"],
+            emotions: [.happy],
+            clarity: 4,
+            isLucid: false,
+            date: Date()
+        )
+        dreamStore.addDream(testDream)
+        
+        // 测试导出
+        let data = dreamStore.exportDreams()
+        XCTAssertGreaterThan(data.count, 0, "导出数据不应该为空")
+        
+        // 验证导出的是 JSON 格式
+        let json = try JSONSerialization.jsonObject(with: data, options: [])
+        XCTAssertTrue(json is [[String: Any]], "导出数据应该是 JSON 数组")
+        
+        // 清理
+        dreamStore.deleteDream(testDream)
+        XCTAssertEqual(dreamStore.dreams.count, initialCount, "梦境数量应该恢复")
+    }
+    
+    func testDreamStoreExportEmptyDreams() throws {
+        let dreamStore = DreamStore.shared
+        let initialDreams = dreamStore.dreams
+        
+        // 临时清空梦境
+        for dream in initialDreams {
+            dreamStore.deleteDream(dream)
+        }
+        
+        // 测试空导出
+        let data = dreamStore.exportDreams()
+        XCTAssertGreaterThan(data.count, 0, "即使没有梦境也应该返回有效的 JSON")
+        
+        let json = try JSONSerialization.jsonObject(with: data, options: [])
+        XCTAssertTrue(json is [[String: Any]], "导出数据应该是 JSON 数组")
+        
+        // 恢复梦境
+        for dream in initialDreams {
+            dreamStore.addDream(dream)
+        }
+    }
+    
+    // MARK: - OnThisDayView 数据结构测试 (Phase 6)
+    
+    func testOnThisDayDataStructure() throws {
+        // 测试梦境回顾功能的数据结构
+        let calendar = Calendar.current
+        let today = Date()
+        let oneYearAgo = calendar.date(byAdding: .year, value: -1, to: today)!
+        
+        // 创建去年今天的梦境
+        let dream = Dream(
+            title: "去年今天的梦",
+            content: "这是一个去年今天的梦境",
+            tags: ["回顾", "周年纪念"],
+            emotions: [.happy, .calm],
+            clarity: 4,
+            isLucid: true,
+            date: oneYearAgo
+        )
+        
+        // 验证日期匹配
+        XCTAssertTrue(calendar.isDate(dream.date, inSameDayAs: today, matchingDecade: false), 
+                     "梦境日期应该与今天相同 (不同年份)")
+        XCTAssertEqual(calendar.component(.year, from: dream.date), 
+                      calendar.component(.year, from: today) - 1,
+                      "梦境应该是去年的")
+    }
+    
+    func testYearsWithDreamsCalculation() throws {
+        let dreamStore = DreamStore.shared
+        let calendar = Calendar.current
+        let today = Date()
+        
+        // 创建不同年份的梦境 (都在今天这个日期)
+        var testDreams: [Dream] = []
+        for yearOffset in 0..<3 {
+            if let date = calendar.date(byAdding: .year, value: -yearOffset, to: today) {
+                let dream = Dream(
+                    title: "\(yearOffset)年前的梦",
+                    content: "内容",
+                    tags: ["回顾"],
+                    emotions: [.calm],
+                    clarity: 3,
+                    isLucid: false,
+                    date: date
+                )
+                testDreams.append(dream)
+                dreamStore.addDream(dream)
+            }
+        }
+        
+        // 计算有梦境的年份
+        var years: Set<Int> = []
+        for dream in dreamStore.dreams {
+            if calendar.isDate(dream.date, inSameDayAs: today, matchingDecade: false) {
+                years.insert(calendar.component(.year, from: dream.date))
+            }
+        }
+        
+        XCTAssertGreaterThanOrEqual(years.count, 1, "应该至少有一个年份有梦境")
+        
+        // 清理
+        for dream in testDreams {
+            dreamStore.deleteDream(dream)
+        }
+    }
+    
     // MARK: - 辅助方法
     
     private func createTestDreams(count: Int) -> [Dream] {
