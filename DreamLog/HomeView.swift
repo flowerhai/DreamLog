@@ -212,18 +212,16 @@ struct DreamListSection: View {
     let dreams: [Dream]
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(dreams, id: \.id) { dream in
-                        NavigationLink(destination: DreamDetailView(dream: dream)) {
-                            DreamCard(dream: dream)
-                        }
-                        .buttonStyle(.plain)
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                ForEach(dreams, id: \.id) { dream in
+                    NavigationLink(destination: DreamDetailView(dream: dream)) {
+                        DreamCard(dream: dream)
                     }
+                    .buttonStyle(.plain)
                 }
-                .padding()
             }
+            .padding()
         }
     }
 }

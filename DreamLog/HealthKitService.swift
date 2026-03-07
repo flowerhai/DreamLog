@@ -7,6 +7,7 @@
 
 import Foundation
 import HealthKit
+import UIKit
 
 // MARK: - 睡眠数据模型
 

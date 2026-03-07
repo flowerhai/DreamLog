@@ -31,6 +31,7 @@ struct SettingsView: View {
         case .success: return .green
         case .failed: return .red
         case .unavailable: return .orange
+        case .conflict: return .orange
         }
     }
     
