@@ -682,6 +682,367 @@ final class DreamLogTests: XCTestCase {
         }
     }
     
+    // MARK: - DreamGraphService 测试
+    
+    func testGraphServiceSingleton() throws {
+        let service = DreamGraphService.shared
+        XCTAssertNotNil(service)
+        XCTAssertTrue(DreamGraphService.shared === service, "应该是单例")
+    }
+    
+    func testGraphServiceInitialState() throws {
+        let service = DreamGraphService.shared
+        XCTAssertFalse(service.isLoading)
+        XCTAssertNil(service.graphData)
+        XCTAssertNil(service.errorMessage)
+    }
+    
+    func testGraphNodeCreation() throws {
+        let dream = Dream(
+            title: "测试梦境",
+            content: "测试内容",
+            tags: ["标签 1", "标签 2"],
+            emotions: [.happy, .excited],
+            clarity: 4,
+            isLucid: true
+        )
+        
+        let node = GraphNode(dream: dream)
+        
+        XCTAssertEqual(node.title, "测试梦境")
+        XCTAssertEqual(node.tags.count, 2)
+        XCTAssertEqual(node.emotions.count, 2)
+        XCTAssertEqual(node.clarity, 4)
+        XCTAssertTrue(node.isLucid)
+        XCTAssertGreaterThan(node.size, 0)
+        XCTAssertFalse(node.color.isEmpty)
+    }
+    
+    func testGraphEdgeRelationshipTypes() throws {
+        let allTypes = GraphEdge.RelationshipType.allCases
+        XCTAssertEqual(allTypes.count, 6, "应该有 6 种关联类型")
+        
+        for type in allTypes {
+            XCTAssertFalse(type.icon.isEmpty, "图标不应为空")
+            XCTAssertFalse(type.color.isEmpty, "颜色不应为空")
+            XCTAssertFalse(type.rawValue.isEmpty, "名称不应为空")
+        }
+    }
+    
+    func testGraphGenerationWithEmptyData() async throws {
+        let service = DreamGraphService.shared
+        await service.generateGraph(from: [])
+        
+        XCTAssertNotNil(service.graphData)
+        XCTAssertEqual(service.graphData?.nodes.count, 0)
+        XCTAssertEqual(service.graphData?.edges.count, 0)
+    }
+    
+    func testGraphGenerationWithSingleDream() async throws {
+        let service = DreamGraphService.shared
+        let dreams = [
+            Dream(
+                title: "单个梦境",
+                content: "测试内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                clarity: 3,
+                isLucid: false
+            )
+        ]
+        
+        await service.generateGraph(from: dreams)
+        
+        XCTAssertNotNil(service.graphData)
+        XCTAssertEqual(service.graphData?.nodes.count, 1)
+        XCTAssertEqual(service.graphData?.statistics.totalNodes, 1)
+        XCTAssertEqual(service.graphData?.statistics.isolatedNodes, 1)
+    }
+    
+    func testGraphGenerationWithMultipleDreams() async throws {
+        let service = DreamGraphService.shared
+        let dreams = createTestDreams(count: 5)
+        
+        await service.generateGraph(from: dreams)
+        
+        XCTAssertNotNil(service.graphData)
+        XCTAssertEqual(service.graphData?.nodes.count, 5)
+        XCTAssertGreaterThan(service.graphData?.edges.count ?? 0, 0)
+        
+        let stats = service.graphData?.statistics
+        XCTAssertNotNil(stats)
+        XCTAssertEqual(stats?.totalNodes, 5)
+        XCTAssertGreaterThanOrEqual(stats?.density ?? 0, 0)
+        XCTAssertLessThanOrEqual(stats?.density ?? 0, 1)
+    }
+    
+    func testGraphStatisticsCalculation() async throws {
+        let service = DreamGraphService.shared
+        let dreams = createTestDreams(count: 10)
+        
+        await service.generateGraph(from: dreams)
+        
+        guard let stats = service.graphData?.statistics else {
+            XCTFail("应该有统计数据")
+            return
+        }
+        
+        XCTAssertEqual(stats.totalNodes, 10)
+        XCTAssertGreaterThanOrEqual(stats.totalEdges, 0)
+        XCTAssertGreaterThanOrEqual(stats.averageConnections, 0)
+        XCTAssertGreaterThanOrEqual(stats.density, 0)
+        XCTAssertLessThanOrEqual(stats.density, 1)
+        XCTAssertGreaterThanOrEqual(stats.largestCluster, 1)
+        XCTAssertGreaterThanOrEqual(stats.isolatedNodes, 0)
+    }
+    
+    // MARK: - SleepQualityAnalysisService 测试
+    
+    func testSleepServiceSingleton() throws {
+        let service = SleepQualityAnalysisService.shared
+        XCTAssertNotNil(service)
+        XCTAssertTrue(SleepQualityAnalysisService.shared === service, "应该是单例")
+    }
+    
+    func testSleepServiceInitialState() throws {
+        let service = SleepQualityAnalysisService.shared
+        XCTAssertFalse(service.isLoading)
+        XCTAssertNil(service.currentReport)
+        XCTAssertNil(service.errorMessage)
+        XCTAssertEqual(service.historicalReports.count, 0)
+    }
+    
+    func testSleepStageDistributionCoding() throws {
+        let distribution = SleepStageDistribution(
+            deepSleepPercent: 20.0,
+            remSleepPercent: 25.0,
+            coreSleepPercent: 50.0,
+            awakePercent: 5.0,
+            deepSleepDuration: 7200,
+            remSleepDuration: 9000,
+            coreSleepDuration: 18000,
+            awakeDuration: 1800,
+            deepSleepQuality: .good,
+            remSleepQuality: .excellent
+        )
+        
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(distribution)
+        
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(SleepStageDistribution.self, from: data)
+        
+        XCTAssertEqual(decoded.deepSleepPercent, distribution.deepSleepPercent)
+        XCTAssertEqual(decoded.remSleepPercent, distribution.remSleepPercent)
+        XCTAssertEqual(decoded.coreSleepPercent, distribution.coreSleepPercent)
+        XCTAssertEqual(decoded.awakePercent, distribution.awakePercent)
+    }
+    
+    func testSleepQualityRatingColors() throws {
+        let ratings: [SleepStageDistribution.SleepQualityRating] = [.excellent, .good, .fair, .poor]
+        
+        for rating in ratings {
+            XCTAssertFalse(rating.color.isEmpty, "\(rating.rawValue) 应该有颜色")
+            XCTAssertEqual(rating.color.count, 6, "颜色应该是 6 位十六进制")
+        }
+    }
+    
+    func testSleepRecommendationPriority() throws {
+        let priorities: [SleepRecommendation.Priority] = [.high, .medium, .low]
+        
+        for priority in priorities {
+            XCTAssertFalse(priority.color.isEmpty, "\(priority.rawValue) 应该有颜色")
+        }
+    }
+    
+    func testTrendDirectionCases() throws {
+        let directions: [SleepQualityReport.TrendDirection] = [.improving, .stable, .declining, .fluctuating]
+        
+        for direction in directions {
+            XCTAssertFalse(direction.rawValue.isEmpty)
+        }
+    }
+    
+    func testDreamSleepCorrelationStructure() throws {
+        let correlation = DreamSleepCorrelation(
+            correlationStrength: 0.75,
+            bestSleepQualityDreams: 10,
+            poorSleepQualityDreams: 3,
+            averageClarityAfterGoodSleep: 4.2,
+            averageClarityAfterPoorSleep: 2.8,
+            lucidDreamCorrelation: 0.6,
+            emotionCorrelation: [.happy: 0.8, .anxious: -0.5],
+            insight: "优质睡眠后梦境更清晰"
+        )
+        
+        XCTAssertGreaterThan(correlation.correlationStrength, 0)
+        XCTAssertLessThanOrEqual(correlation.correlationStrength, 1)
+        XCTAssertGreaterThan(correlation.insight.count, 0)
+    }
+    
+    // MARK: - FriendService 测试
+    
+    func testFriendInitialization() throws {
+        let friend = Friend(
+            userId: "user123",
+            username: "测试用户",
+            bio: "这是一个测试简介",
+            dreamCount: 50,
+            lucidDreamCount: 10,
+            streakDays: 7,
+            isFavorite: true
+        )
+        
+        XCTAssertEqual(friend.userId, "user123")
+        XCTAssertEqual(friend.username, "测试用户")
+        XCTAssertEqual(friend.bio, "这是一个测试简介")
+        XCTAssertEqual(friend.dreamCount, 50)
+        XCTAssertEqual(friend.lucidDreamCount, 10)
+        XCTAssertEqual(friend.streakDays, 7)
+        XCTAssertTrue(friend.isFavorite)
+        XCTAssertNotNil(friend.id)
+        XCTAssertNotNil(friend.addedAt)
+    }
+    
+    func testFriendRequestInitialization() throws {
+        let request = FriendRequest(
+            fromUserId: "user456",
+            fromUsername: "请求用户",
+            message: "想加你为好友",
+            status: .pending
+        )
+        
+        XCTAssertEqual(request.fromUserId, "user456")
+        XCTAssertEqual(request.fromUsername, "请求用户")
+        XCTAssertEqual(request.message, "想加你为好友")
+        XCTAssertEqual(request.status, .pending)
+        XCTAssertNotNil(request.id)
+        XCTAssertNotNil(request.createdAt)
+    }
+    
+    func testFriendRequestStatusCases() throws {
+        let statuses: [FriendRequestStatus] = [.pending, .accepted, .declined, .blocked]
+        
+        for status in statuses {
+            XCTAssertFalse(status.rawValue.isEmpty)
+        }
+    }
+    
+    func testDreamCircleInitialization() throws {
+        let circle = DreamCircle(
+            name: "测试圈子",
+            description: "这是一个测试梦境圈",
+            isPrivate: true,
+            createdBy: "user123"
+        )
+        
+        XCTAssertEqual(circle.name, "测试圈子")
+        XCTAssertEqual(circle.description, "这是一个测试梦境圈")
+        XCTAssertTrue(circle.isPrivate)
+        XCTAssertEqual(circle.createdBy, "user123")
+        XCTAssertEqual(circle.members.count, 0)
+        XCTAssertEqual(circle.sharedDreams.count, 0)
+        XCTAssertNotNil(circle.id)
+        XCTAssertNotNil(circle.createdAt)
+    }
+    
+    func testFriendCommentInitialization() throws {
+        let comment = FriendComment(
+            dreamId: UUID(),
+            userId: "user789",
+            username: "评论用户",
+            content: "这是一个有趣的梦！",
+            reactions: ["👍": 5, "❤️": 3]
+        )
+        
+        XCTAssertEqual(comment.userId, "user789")
+        XCTAssertEqual(comment.username, "评论用户")
+        XCTAssertEqual(comment.content, "这是一个有趣的梦！")
+        XCTAssertEqual(comment.reactions["👍"], 5)
+        XCTAssertEqual(comment.reactions["❤️"], 3)
+        XCTAssertFalse(comment.isEdited)
+        XCTAssertNotNil(comment.id)
+        XCTAssertNotNil(comment.createdAt)
+    }
+    
+    func testFriendServiceSingleton() throws {
+        let service = FriendService.shared
+        XCTAssertNotNil(service)
+        XCTAssertTrue(FriendService.shared === service, "应该是单例")
+    }
+    
+    func testFriendServiceInitialState() throws {
+        let service = FriendService.shared
+        XCTAssertFalse(service.isLoading)
+        XCTAssertEqual(service.friends.count, 0)
+        XCTAssertEqual(service.pendingRequests.count, 0)
+        XCTAssertEqual(service.dreamCircles.count, 0)
+        XCTAssertNil(service.errorMessage)
+    }
+    
+    func testFriendServiceAddFriend() async throws {
+        let service = FriendService.shared
+        
+        let friend = Friend(
+            userId: "test_user_001",
+            username: "测试好友",
+            bio: "测试简介",
+            dreamCount: 20
+        )
+        
+        await service.addFriend(friend)
+        
+        XCTAssertEqual(service.friends.count, 1)
+        XCTAssertEqual(service.friends.first?.username, "测试好友")
+    }
+    
+    func testFriendServiceToggleFavorite() async throws {
+        let service = FriendService.shared
+        
+        let friend = Friend(
+            userId: "test_user_002",
+            username: "可收藏好友",
+            isFavorite: false
+        )
+        
+        await service.addFriend(friend)
+        await service.toggleFavorite(friend)
+        
+        XCTAssertTrue(service.friends.first?.isFavorite ?? false)
+        
+        await service.toggleFavorite(friend)
+        XCTAssertFalse(service.friends.first?.isFavorite ?? false)
+    }
+    
+    func testFriendServiceRemoveFriend() async throws {
+        let service = FriendService.shared
+        
+        let friend = Friend(
+            userId: "test_user_003",
+            username: "待删除好友"
+        )
+        
+        await service.addFriend(friend)
+        XCTAssertEqual(service.friends.count, 1)
+        
+        await service.removeFriend(friend)
+        XCTAssertEqual(service.friends.count, 0)
+    }
+    
+    func testFriendServiceCreateDreamCircle() async throws {
+        let service = FriendService.shared
+        
+        await service.createDreamCircle(
+            name: "测试梦境圈",
+            description: "测试描述",
+            isPrivate: true
+        )
+        
+        XCTAssertEqual(service.dreamCircles.count, 1)
+        XCTAssertEqual(service.dreamCircles.first?.name, "测试梦境圈")
+        XCTAssertTrue(service.dreamCircles.first?.isPrivate ?? false)
+    }
+    
     // MARK: - 辅助方法
     
     private func createTestDreams(count: Int) -> [Dream] {
