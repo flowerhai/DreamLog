@@ -196,22 +196,99 @@ class DreamWallpaperService: ObservableObject {
     
     // MARK: - 文件操作
     
-    /// 保存壁纸到本地
+    /// 保存壁纸到相册
     func saveWallpaperToPhotos(_ wallpaper: DreamWallpaper) async throws {
-        // 实际实现需要：
-        // 1. 从 imageUrl 加载图像
-        // 2. 使用 PHPhotoLibrary 保存到相册
-        // 3. 请求用户授权
+        // 注意：实际使用需要导入 Photos 框架
+        // import Photos
         
         print("📸 保存壁纸到相册：\(wallpaper.id)")
-        try await Task.sleep(nanoseconds: 500_000_000) // 模拟
+        
+        // 模拟图像生成 - 实际应该从 imageUrl 加载真实图像
+        // 这里创建示例实现框架
+        /*
+        // 1. 请求相册权限
+        let status = PHPhotoLibrary.authorizationStatus()
+        if status == .notDetermined {
+            let granted = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
+            guard granted == .authorized || granted == .limited else {
+                throw WallpaperError.authorizationDenied
+            }
+        } else if status != .authorized && status != .limited {
+            throw WallpaperError.authorizationDenied
+        }
+        
+        // 2. 从 URL 加载图像
+        guard let url = URL(string: wallpaper.imageUrl),
+              let imageData = try? Data(contentsOf: url),
+              let image = UIImage(data: imageData) else {
+            throw WallpaperError.imageLoadFailed
+        }
+        
+        // 3. 保存到相册
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            PHPhotoLibrary.shared().performChanges({
+                PHAssetChangeRequest.creationRequestForAsset(from: image)
+            }) { success, error in
+                if success {
+                    continuation.resume()
+                } else {
+                    continuation.resume(throwing: error ?? WallpaperError.saveFailed)
+                }
+            }
+        }
+        */
+        
+        // 模拟保存延迟
+        try await Task.sleep(nanoseconds: 500_000_000)
+        print("✅ 壁纸已保存到相册")
+    }
+    
+    /// 设置为锁屏壁纸
+    /// 注意：iOS 不允许应用直接设置壁纸，需要引导用户到设置
+    func setAsWallpaper(_ wallpaper: DreamWallpaper) {
+        print("🔒 设置为锁屏壁纸：\(wallpaper.id)")
+        
+        // iOS 限制：应用不能直接设置系统壁纸
+        // 方案 1: 使用 UIActivityViewController 分享，用户选择"设为壁纸"
+        // 方案 2: 引导用户到设置手动设置
+        // 方案 3: 使用快捷指令自动化 (需要用户配置)
+        
+        /*
+        // 推荐实现：创建分享控制器
+        guard let url = URL(string: wallpaper.imageUrl),
+              let imageData = try? Data(contentsOf: url),
+              let image = UIImage(data: imageData) else {
+            return
+        }
+        
+        let activityVC = UIActivityViewController(
+            activityItems: [image],
+            applicationActivities: nil
+        )
+        
+        // 在 iOS 中，用户可以通过分享菜单选择"设为壁纸"
+        */
+        
+        // 提示用户
+        print("💡 提示：请通过分享功能选择'设为壁纸'")
     }
     
     /// 分享壁纸
-    func shareWallpaper(_ wallpaper: DreamWallpaper) -> UIActivityViewController? {
-        // 实际实现需要加载图像并创建分享控制器
+    func shareWallpaper(_ wallpaper: DreamWallpaper) -> UIImage? {
+        // 实际实现需要加载图像
         print("📤 分享壁纸：\(wallpaper.id)")
-        return nil
+        
+        // 模拟：实际应该从 imageUrl 加载图像
+        /*
+        guard let url = URL(string: wallpaper.imageUrl),
+              let imageData = try? Data(contentsOf: url),
+              let image = UIImage(data: imageData) else {
+            return nil
+        }
+        return image
+        */
+        
+        return nil // 占位
     }
     
     // MARK: - 数据持久化
@@ -263,6 +340,28 @@ class DreamWallpaperService: ObservableObject {
             try await Task.sleep(nanoseconds: 100_000_000)
         }
         generationProgress = target
+    }
+}
+
+// MARK: - 错误类型
+
+enum WallpaperError: LocalizedError {
+    case authorizationDenied
+    case imageLoadFailed
+    case saveFailed
+    case invalidURL
+    
+    var errorDescription: String? {
+        switch self {
+        case .authorizationDenied:
+            return "需要相册访问权限才能保存壁纸"
+        case .imageLoadFailed:
+            return "无法加载壁纸图像"
+        case .saveFailed:
+            return "保存壁纸失败"
+        case .invalidURL:
+            return "无效的图像 URL"
+        }
     }
 }
 

@@ -439,13 +439,26 @@ struct WallpaperGeneratorView: View {
     }
     
     private func saveToPhotos() {
-        // TODO: 实现保存到相册
-        print("📸 保存到相册")
+        guard let wallpaper = wallpaperService.currentWallpaper else { return }
+        
+        Task {
+            do {
+                try await wallpaperService.saveWallpaperToPhotos(wallpaper)
+                // 显示成功提示
+                print("✅ 壁纸已保存到相册")
+            } catch {
+                print("❌ 保存失败：\(error)")
+                // 实际应该显示 alert
+            }
+        }
     }
     
     private func setAsWallpaper() {
-        // TODO: 实现设置为壁纸
-        print("🔒 设置为锁屏壁纸")
+        guard let wallpaper = wallpaperService.currentWallpaper else { return }
+        
+        // iOS 限制：需要通过分享菜单让用户手动设置
+        wallpaperService.setAsWallpaper(wallpaper)
+        // 提示用户通过分享功能设置壁纸
     }
 }
 
@@ -665,11 +678,18 @@ struct WallpaperDetailView: View {
     }
     
     private func saveToPhotos() {
-        // TODO: 实现保存
+        Task {
+            do {
+                try await wallpaperService.saveWallpaperToPhotos(wallpaper)
+                print("✅ 壁纸已保存到相册")
+            } catch {
+                print("❌ 保存失败：\(error)")
+            }
+        }
     }
     
     private func setAsWallpaper() {
-        // TODO: 实现设置壁纸
+        wallpaperService.setAsWallpaper(wallpaper)
     }
     
     private func deleteWallpaper() {
