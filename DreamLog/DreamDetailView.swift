@@ -13,9 +13,11 @@ struct DreamDetailView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dreamStore: DreamStore
     @StateObject private var shareService = ShareService()
+    @StateObject private var friendService = FriendService()
     @StateObject private var aiArtService = AIArtService.shared
     @StateObject private var speechService = SpeechSynthesisService.shared
     @State private var showingShareSheet = false
+    @State private var showingPrivateShareSheet = false
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
     @State private var showingGenerateArt = false
@@ -66,6 +68,7 @@ struct DreamDetailView: View {
                 // 操作按钮
                 ActionButtons(
                     onShare: { showingShareSheet = true },
+                    onPrivateShare: { showingPrivateShareSheet = true },
                     onEdit: { showingEditSheet = true },
                     onDelete: { showingDeleteAlert = true }
                 )
@@ -86,6 +89,9 @@ struct DreamDetailView: View {
         }
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(dream: dream)
+        }
+        .sheet(isPresented: $showingPrivateShareSheet) {
+            PrivateShareView(dream: dream, friendService: friendService)
         }
         .alert("删除梦境", isPresented: $showingDeleteAlert) {
             Button("取消", role: .cancel) {}
@@ -416,36 +422,52 @@ struct AIAnalysisSection: View {
 // MARK: - 操作按钮
 struct ActionButtons: View {
     let onShare: () -> Void
+    let onPrivateShare: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: onShare) {
-                Label("分享", systemImage: "square.and.arrow.up")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+        VStack(spacing: 12) {
+            // 分享按钮行
+            HStack(spacing: 12) {
+                Button(action: onShare) {
+                    Label("公开分享", systemImage: "globe")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                
+                Button(action: onPrivateShare) {
+                    Label("好友分享", systemImage: "person.2.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
             }
             
-            Button(action: onEdit) {
-                Label("编辑", systemImage: "pencil")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
-            
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 50, height: 50)
-                    .background(Color.red.opacity(0.2))
-                    .foregroundColor(.red)
-                    .cornerRadius(12)
+            // 编辑和删除按钮行
+            HStack(spacing: 12) {
+                Button(action: onEdit) {
+                    Label("编辑", systemImage: "pencil")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white.opacity(0.1))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 18, weight: .semibold))
+                        .frame(width: 50, height: 50)
+                        .background(Color.red.opacity(0.2))
+                        .foregroundColor(.red)
+                        .cornerRadius(12)
+                }
             }
         }
     }
