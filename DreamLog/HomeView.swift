@@ -32,6 +32,12 @@ struct HomeView: View {
                     .padding(.bottom, 8)
                 }
                 
+                // 梦境回顾卡片 ✨ NEW (Phase 6)
+                OnThisDayCard()
+                    .environmentObject(dreamStore)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                
                 // 搜索栏
                 HStack {
                     SearchBar(text: $searchText)

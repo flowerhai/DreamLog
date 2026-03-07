@@ -69,6 +69,53 @@ struct InsightsView: View {
                     }
                     .buttonStyle(PlainButtonStyle())
                     
+                    // 梦境时间轴入口 ✨ NEW (Phase 6)
+                    NavigationLink(destination: DreamTimelineView().environmentObject(dreamStore)) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.green, Color.teal],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "timeline.selection")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("梦境时间轴")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Image(systemName: "sparkles")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                Text("可视化你的梦境分布和密度")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
                     // 梦境关联图谱入口 ✨ NEW
                     NavigationLink(destination: DreamGraphView().environmentObject(dreamStore)) {
                         HStack(spacing: 16) {
