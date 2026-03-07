@@ -274,6 +274,20 @@ open DreamLog.xcodeproj
 - [x] 小组件个性化定制 ✅ NEW
 - [x] 梦境朗读 (TTS) ✅ NEW
 
+### Phase 5 - 智能增强 🚧 (25%)
+
+- [x] AI 梦境趋势预测 ✅ NEW
+  - 情绪趋势分析 (8 种情绪追踪)
+  - 主题趋势分析 (新兴/减弱主题)
+  - 时间模式分析 (最佳回忆时段)
+  - 清晰度趋势 (线性回归)
+  - 清醒梦频率追踪
+  - AI 预测生成 (4 种类型)
+  - 个性化建议
+- [ ] 梦境关联图谱 ⏳
+- [ ] 睡眠质量深度分析 ⏳
+- [ ] 社交功能增强 ⏳
+
 ---
 
 ## 🏗️ 项目结构
@@ -308,6 +322,8 @@ DreamLog/
 │   ├── CloudSyncService.swift   # iCloud 同步 ✨ NEW
 │   ├── DreamDictionary.swift    # 梦境词典 ✨ NEW
 │   ├── LucidDreamTraining.swift # 清醒梦训练 ✨ NEW
+│   ├── DreamTrendService.swift  # AI 梦境趋势预测 ✨ NEW Phase 5
+│   ├── DreamTrendView.swift     # 梦境趋势分析 UI ✨ NEW Phase 5
 │   ├── ChartsView.swift         # 数据图表 ✨ NEW
 │   ├── NotificationService.swift # 通知服务 ✨ NEW
 │   ├── SiriShortcuts.swift      # Siri 快捷指令 ✨ NEW
