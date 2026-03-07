@@ -160,32 +160,32 @@ class SpeechSynthesisService: NSObject, ObservableObject {
 // MARK: - AVSpeechSynthesizerDelegate
 
 extension SpeechSynthesisService: AVSpeechSynthesizerDelegate {
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechSynthesisUtterance) {
-        DispatchQueue.main.async {
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechSynthesisUtterance) {
+        Task { @MainActor in
             self.isSpeaking = false
             self.isPaused = false
             self.currentUtterance = nil
         }
     }
     
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechSynthesisUtterance) {
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechSynthesisUtterance) {
         // 开始播放
     }
     
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didPause utterance: AVSpeechSynthesisUtterance) {
-        DispatchQueue.main.async {
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didPause utterance: AVSpeechSynthesisUtterance) {
+        Task { @MainActor in
             self.isPaused = true
         }
     }
     
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didContinue utterance: AVSpeechSynthesisUtterance) {
-        DispatchQueue.main.async {
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didContinue utterance: AVSpeechSynthesisUtterance) {
+        Task { @MainActor in
             self.isPaused = false
         }
     }
     
-    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechSynthesisUtterance) {
-        DispatchQueue.main.async {
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechSynthesisUtterance) {
+        Task { @MainActor in
             self.isSpeaking = false
             self.isPaused = false
         }
