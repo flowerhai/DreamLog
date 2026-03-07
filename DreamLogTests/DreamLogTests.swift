@@ -311,6 +311,177 @@ final class DreamLogTests: XCTestCase {
         XCTAssertEqual(TimeOfDay.from(date: eveningDate), .evening)
     }
     
+    // MARK: - SpeechSynthesisService 测试
+    
+    func testSpeechConfigDefault() throws {
+        let config = SpeechConfig.default
+        
+        XCTAssertEqual(config.rate, 0.5)
+        XCTAssertEqual(config.pitchMultiplier, 1.0)
+        XCTAssertEqual(config.volume, 1.0)
+        XCTAssertEqual(config.language, "zh-CN")
+        XCTAssertNil(config.voiceIdentifier)
+    }
+    
+    func testSpeechConfigEncoding() throws {
+        let config = SpeechConfig(
+            voiceIdentifier: "com.apple.ttsbundle.Ting-Ting",
+            rate: 0.6,
+            pitchMultiplier: 1.2,
+            volume: 0.8,
+            language: "en-US"
+        )
+        
+        let data = try JSONEncoder().encode(config)
+        let decoded = try JSONDecoder().decode(SpeechConfig.self, from: data)
+        
+        XCTAssertEqual(decoded.voiceIdentifier, config.voiceIdentifier)
+        XCTAssertEqual(decoded.rate, config.rate)
+        XCTAssertEqual(decoded.pitchMultiplier, config.pitchMultiplier)
+        XCTAssertEqual(decoded.volume, config.volume)
+        XCTAssertEqual(decoded.language, config.language)
+    }
+    
+    func testSpeechConfigEquatable() throws {
+        let config1 = SpeechConfig.default
+        let config2 = SpeechConfig.default
+        let config3 = SpeechConfig(voiceIdentifier: "test", rate: 0.6, pitchMultiplier: 1.0, volume: 1.0, language: "zh-CN")
+        
+        XCTAssertEqual(config1, config2)
+        XCTAssertNotEqual(config1, config3)
+    }
+    
+    func testSpeechServiceSingleton() throws {
+        let service1 = SpeechSynthesisService.shared
+        let service2 = SpeechSynthesisService.shared
+        
+        XCTAssertTrue(service1 === service2, "SpeechSynthesisService 应该是单例")
+    }
+    
+    func testSpeechServiceInitialState() throws {
+        let service = SpeechSynthesisService.shared
+        
+        XCTAssertFalse(service.isSpeaking)
+        XCTAssertFalse(service.isPaused)
+        XCTAssertGreaterThan(service.availableVoices.count, 0, "应该有可用的语音")
+    }
+    
+    func testSpeechServiceConfigPersistence() throws {
+        let service = SpeechSynthesisService.shared
+        
+        // 保存配置
+        service.config.rate = 0.7
+        service.config.pitchMultiplier = 1.3
+        service.config.volume = 0.9
+        service.saveConfig()
+        
+        // 重新加载配置
+        service.loadConfig()
+        
+        XCTAssertEqual(service.config.rate, 0.7, accuracy: 0.01)
+        XCTAssertEqual(service.config.pitchMultiplier, 1.3, accuracy: 0.01)
+        XCTAssertEqual(service.config.volume, 0.9, accuracy: 0.01)
+        
+        // 恢复默认
+        service.config = .default
+        service.saveConfig()
+    }
+    
+    func testSpeechServiceVoiceFiltering() throws {
+        let service = SpeechSynthesisService.shared
+        
+        // 验证语音列表只包含中文和英文
+        for voice in service.availableVoices {
+            XCTAssertTrue(
+                voice.language.hasPrefix("zh") || voice.language.hasPrefix("en"),
+                "语音应该是中文或英文：\(voice.name) - \(voice.language)"
+            )
+        }
+    }
+    
+    func testSpeechServiceEmptyText() throws {
+        let service = SpeechSynthesisService.shared
+        let expectation = XCTestExpectation(description: "Empty text should not crash")
+        
+        // 空文本不应该导致崩溃
+        service.speak("")
+        service.speak("   ")
+        
+        expectation.fulfill()
+        wait(for: [expectation], timeout: 1.0)
+    }
+    
+    // MARK: - ImageCacheService 测试
+    
+    func testImageCacheServiceSingleton() throws {
+        let cache1 = ImageCacheService.shared
+        let cache2 = ImageCacheService.shared
+        
+        XCTAssertTrue(cache1 === cache2, "ImageCacheService 应该是单例")
+    }
+    
+    func testImageCacheServiceMemoryLimit() throws {
+        let cache = ImageCacheService.shared
+        
+        // 验证内存缓存限制
+        XCTAssertEqual(cache.memoryCache.countLimit, 100, "内存缓存应该限制 100 张图片")
+    }
+    
+    func testImageCacheServiceCacheKey() throws {
+        let cache = ImageCacheService.shared
+        
+        let url1 = "https://example.com/image1.jpg"
+        let url2 = "https://example.com/image2.jpg"
+        let url3 = "https://example.com/image1.jpg"
+        
+        let key1 = cache.cacheKey(for: url1)
+        let key2 = cache.cacheKey(for: url2)
+        let key3 = cache.cacheKey(for: url3)
+        
+        XCTAssertNotEqual(key1, key2, "不同 URL 应该有不同的缓存键")
+        XCTAssertEqual(key1, key3, "相同 URL 应该有相同的缓存键")
+    }
+    
+    func testImageCacheServiceClearCache() throws {
+        let cache = ImageCacheService.shared
+        
+        // 清除缓存不应该崩溃
+        cache.clearMemoryCache()
+        cache.clearDiskCache()
+        cache.clearCache()
+    }
+    
+    // MARK: - CloudSyncService 测试
+    
+    func testCloudSyncServiceSingleton() throws {
+        let service1 = CloudSyncService.shared
+        let service2 = CloudSyncService.shared
+        
+        XCTAssertTrue(service1 === service2, "CloudSyncService 应该是单例")
+    }
+    
+    func testCloudSyncStatusDescriptions() throws {
+        let statuses: [CloudSyncStatus] = [.idle, .syncing, .success, .failed("error"), .unavailable, .conflict]
+        
+        for status in statuses {
+            XCTAssertGreaterThan(status.description.count, 0, "状态应该有描述")
+            XCTAssertGreaterThan(status.icon.count, 0, "状态应该有图标")
+        }
+    }
+    
+    func testSyncConflictDescription() throws {
+        let dream = Dream(title: "测试梦境", content: "内容", tags: [], emotions: [])
+        let conflict = SyncConflict(
+            dreamId: dream.id,
+            localVersion: dream,
+            cloudVersion: dream,
+            modifiedField: "content"
+        )
+        
+        XCTAssertGreaterThan(conflict.resolutionDescription.count, 0)
+        XCTAssertTrue(conflict.resolutionDescription.contains("测试梦境"))
+    }
+    
     // MARK: - 性能测试
     
     func testPerformanceExample() throws {
@@ -323,6 +494,17 @@ final class DreamLogTests: XCTestCase {
                     emotions: [.neutral]
                 )
                 dreamStore.addDream(dream)
+            }
+        }
+    }
+    
+    func testPerformanceImageCache() throws {
+        let cache = ImageCacheService.shared
+        
+        self.measure {
+            for i in 0..<50 {
+                let url = "https://example.com/image\(i).jpg"
+                _ = cache.cacheKey(for: url)
             }
         }
     }
