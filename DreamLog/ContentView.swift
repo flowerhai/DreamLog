@@ -76,12 +76,19 @@ struct ContentView: View {
                 }
                 .tag(8)
             
+            DreamGraphView()
+                .tabItem {
+                    Image(systemName: "network")
+                    Text("图谱")
+                }
+                .tag(9)
+            
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(9)
+                .tag(10)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
