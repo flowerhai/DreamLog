@@ -22,6 +22,53 @@ struct InsightsView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    // AI 趋势分析入口 ✨ NEW
+                    NavigationLink(destination: DreamTrendView().environmentObject(dreamStore)) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.purple, Color.pink],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "crystal.ball.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("AI 梦境趋势")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Image(systemName: "sparkles")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                Text("发现你的梦境模式和未来预测")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
                     // 统计卡片
                     StatsOverviewSection(stats: stats)
                     

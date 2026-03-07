@@ -508,4 +508,200 @@ final class DreamLogTests: XCTestCase {
             }
         }
     }
+    
+    // MARK: - DreamTrendService 测试
+    
+    func testTrendServiceSingleton() throws {
+        let service1 = DreamTrendService.shared
+        let service2 = DreamTrendService.shared
+        
+        XCTAssertTrue(service1 === service2, "DreamTrendService 应该是单例")
+    }
+    
+    func testTrendServiceInitialState() throws {
+        let service = DreamTrendService.shared
+        
+        XCTAssertFalse(service.isAnalyzing, "初始状态不应在分析中")
+        XCTAssertNil(service.trendReport, "初始状态不应有报告")
+        XCTAssertNil(service.error, "初始状态不应有错误")
+    }
+    
+    func testTrendReportGeneration() async throws {
+        let service = DreamTrendService.shared
+        
+        // 创建测试梦境数据
+        let dreams = createTestDreams(count: 10)
+        
+        let report = await service.generateTrendReport(dreams: dreams, periodDays: 30)
+        
+        XCTAssertNotNil(report, "应该生成趋势报告")
+        XCTAssertFalse(service.isAnalyzing, "分析完成后 should not be analyzing")
+        
+        if let report = report {
+            XCTAssertGreaterThan(report.emotionTrends.count, 0, "应该有情绪趋势数据")
+            XCTAssertGreaterThan(report.themeTrends.count, 0, "应该有主题趋势数据")
+            XCTAssertGreaterThan(report.predictions.count, 0, "应该有预测数据")
+            XCTAssertGreaterThan(report.recommendations.count, 0, "应该有建议数据")
+            
+            // 验证数据范围
+            XCTAssertGreaterThanOrEqual(report.emotionStability, 0)
+            XCTAssertLessThanOrEqual(report.emotionStability, 1)
+            
+            XCTAssertGreaterThanOrEqual(report.averageClarity, 1)
+            XCTAssertLessThanOrEqual(report.averageClarity, 5)
+            
+            XCTAssertGreaterThanOrEqual(report.lucidDreamFrequency, 0)
+            XCTAssertLessThanOrEqual(report.lucidDreamFrequency, 100)
+        }
+    }
+    
+    func testTrendReportWithInsufficientData() async throws {
+        let service = DreamTrendService.shared
+        
+        // 只创建 2 个梦境 (少于最低要求的 3 个)
+        let dreams = createTestDreams(count: 2)
+        
+        let report = await service.generateTrendReport(dreams: dreams, periodDays: 30)
+        
+        XCTAssertNil(report, "数据不足时不应生成报告")
+        XCTAssertNotNil(service.error, "应该有错误信息")
+    }
+    
+    func testTrendReportWithEmptyData() async throws {
+        let service = DreamTrendService.shared
+        
+        let report = await service.generateTrendReport(dreams: [], periodDays: 30)
+        
+        XCTAssertNil(report, "空数据不应生成报告")
+        XCTAssertNotNil(service.error, "应该有错误信息")
+    }
+    
+    func testTrendDirectionCalculation() async throws {
+        let service = DreamTrendService.shared
+        
+        // 创建具有明显趋势的梦境数据
+        var dreams: [Dream] = []
+        let calendar = Calendar.current
+        
+        // 最近 14 天的梦境 (更多快乐情绪)
+        for i in 0..<7 {
+            if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                dreams.append(Dream(
+                    title: "近期梦境\(i)",
+                    content: "快乐的梦境内容",
+                    tags: ["快乐", "美好"],
+                    emotions: [.happy, .excited],
+                    clarity: 4,
+                    isLucid: false,
+                    date: date
+                ))
+            }
+        }
+        
+        // 14 天前的梦境 (更多焦虑情绪)
+        for i in 7..<14 {
+            if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                dreams.append(Dream(
+                    title: "早期梦境\(i)",
+                    content: "焦虑的梦境内容",
+                    tags: ["焦虑", "压力"],
+                    emotions: [.anxious, .fearful],
+                    clarity: 2,
+                    isLucid: false,
+                    date: date
+                ))
+            }
+        }
+        
+        let report = await service.generateTrendReport(dreams: dreams, periodDays: 30)
+        
+        XCTAssertNotNil(report)
+        
+        if let report = report {
+            // 验证快乐情绪呈上升趋势
+            let happyTrend = report.emotionTrends.first(where: { $0.emotion == .happy })
+            XCTAssertNotNil(happyTrend)
+            XCTAssertEqual(happyTrend?.trend, .increasing, "快乐情绪应该呈上升趋势")
+            
+            // 验证焦虑情绪呈下降趋势
+            let anxiousTrend = report.emotionTrends.first(where: { $0.emotion == .anxious })
+            XCTAssertNotNil(anxiousTrend)
+            XCTAssertEqual(anxiousTrend?.trend, .decreasing, "焦虑情绪应该呈下降趋势")
+        }
+    }
+    
+    func testTimePatternAnalysis() async throws {
+        let service = DreamTrendService.shared
+        var dreams: [Dream] = []
+        
+        // 创建不同时间段的梦境
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 清晨梦境 (6-12 点)
+        for i in 0..<5 {
+            if var date = calendar.date(byAdding: .hour, value: 8, to: now) {
+                date = calendar.date(byAdding: .day, value: -i, to: date) ?? now
+                dreams.append(Dream(
+                    title: "清晨梦境\(i)",
+                    content: "清晨的梦境",
+                    tags: ["清晨"],
+                    emotions: [.calm],
+                    clarity: 3,
+                    isLucid: false,
+                    date: date
+                ))
+            }
+        }
+        
+        let report = await service.generateTrendReport(dreams: dreams, periodDays: 30)
+        
+        XCTAssertNotNil(report)
+        
+        if let report = report {
+            XCTAssertEqual(report.timePatterns.morningDreams, 5, "应该有 5 个清晨梦境")
+            XCTAssertEqual(report.bestRecallTime, .morning, "最佳时段应该是清晨")
+        }
+    }
+    
+    func testPredictionGeneration() async throws {
+        let service = DreamTrendService.shared
+        let dreams = createTestDreams(count: 10)
+        
+        let report = await service.generateTrendReport(dreams: dreams, periodDays: 30)
+        
+        XCTAssertNotNil(report)
+        
+        if let report = report {
+            for prediction in report.predictions {
+                XCTAssertGreaterThan(prediction.confidence, 0)
+                XCTAssertLessThanOrEqual(prediction.confidence, 1)
+                XCTAssertGreaterThan(prediction.description.count, 0)
+                XCTAssertGreaterThan(prediction.timeFrame.count, 0)
+            }
+        }
+    }
+    
+    // MARK: - 辅助方法
+    
+    private func createTestDreams(count: Int) -> [Dream] {
+        var dreams: [Dream] = []
+        let calendar = Calendar.current
+        
+        for i in 0..<count {
+            if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                dreams.append(Dream(
+                    title: "测试梦境\(i)",
+                    content: "这是第\(i)个测试梦境的内容，包含一些描述性的文字。",
+                    tags: ["测试", "标签\(i % 3)"],
+                    emotions: i % 2 == 0 ? [.happy] : [.calm],
+                    clarity: 3 + (i % 3),
+                    isLucid: i % 3 == 0,
+                    date: date
+                ))
+            }
+        }
+        
+        return dreams
+    }
 }

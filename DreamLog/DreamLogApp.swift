@@ -15,6 +15,7 @@ struct DreamLogApp: App {
     @ObservedObject private var notificationService = NotificationService.shared
     @ObservedObject private var cloudSyncService = CloudSyncService.shared
     @ObservedObject private var healthKitService = HealthKitService.shared
+    @ObservedObject private var trendService = DreamTrendService.shared
     
     var body: some Scene {
         WindowGroup {
@@ -25,6 +26,7 @@ struct DreamLogApp: App {
                 .environmentObject(notificationService)
                 .environmentObject(cloudSyncService)
                 .environmentObject(healthKitService)
+                .environmentObject(trendService)
                 .onAppear {
                     // 初始化通知服务
                     notificationService.checkAuthorization()
