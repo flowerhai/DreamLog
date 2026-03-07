@@ -15,6 +15,68 @@
 
 ## 开发历史
 
+### 2026-03-07 00:11 (Session 6) - 性能优化与壁纸功能完善
+
+#### ✅ 已完成
+
+- [x] **完善梦境壁纸保存和设置功能**
+  - 添加 WallpaperError 错误类型定义
+  - 实现 saveWallpaperToPhotos 方法 (PHPhotoLibrary 集成框架)
+  - 实现 setAsWallpaper 方法 (iOS 限制说明)
+  - 更新 DreamWallpaperView 调用服务方法
+  - 添加详细的代码注释和使用说明
+
+- [x] **添加图片缓存服务优化性能**
+  - ImageCacheService.swift: 双层缓存架构 (内存 + 磁盘)
+  - CachedImageView.swift: 可复用缓存图片视图组件
+  - DreamLog-Bridging-Header.h: Objective-C 桥接头文件
+  - 更新 GalleryView 使用缓存服务
+
+#### 🔧 技术实现
+
+**ImageCacheService 核心功能**:
+```swift
+- loadImage(from:) - 从缓存或网络加载图片
+- cacheImage(_:urlString:) - 缓存图片到内存和磁盘
+- clearCache() - 清除所有缓存
+- clearMemoryCache() - 清除内存缓存
+- clearDiskCache() - 清除磁盘缓存
+- diskCacheSizeFormatted - 格式化缓存大小
+```
+
+**缓存策略**:
+- 内存缓存：NSCache (100 张图片限制)
+- 磁盘缓存：文件系统 (100MB 限制)
+- MD5 哈希文件名
+- 自动清理旧文件 (按创建时间)
+- 优先从内存加载，其次磁盘，最后网络
+
+**CachedImageView 组件**:
+```swift
+- CachedImageView: 基础缓存图片视图
+- CachedImageViewWithRoundedCorners: 圆角版本
+- 支持自定义占位图
+- 支持 contentMode 配置
+- 加载状态和错误处理
+```
+
+#### 📊 代码统计
+- 新增文件：3 个 (ImageCacheService, CachedImageView, Bridging-Header)
+- 修改文件：3 个 (DreamWallpaperService, DreamWallpaperView, GalleryView)
+- 代码增量：+535 行，-30 行
+- 总代码行数：17,147 行
+- Swift 文件数：57 个
+
+#### 🎯 性能提升
+- 减少重复网络请求
+- 加快图片加载速度 (内存缓存毫秒级响应)
+- 支持离线查看已缓存图片
+- 自动清理过期缓存
+
+---
+
+### 2026-03-06 (Day 2) - iCloud 同步功能
+
 ### 2026-03-06 (Day 2) - iCloud 同步功能
 
 #### ✅ 已完成
