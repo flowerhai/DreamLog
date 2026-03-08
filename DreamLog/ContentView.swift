@@ -104,12 +104,19 @@ struct ContentView: View {
                 }
                 .tag(12)
             
+            DreamWrappedView()
+                .tabItem {
+                    Image(systemName: "sparkles")
+                    Text("回顾")
+                }
+                .tag(13)
+            
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(13)
+                .tag(14)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(

@@ -3146,4 +3146,443 @@ final class DreamLogTests: XCTestCase {
             XCTAssertEqual(buffer.format.channelCount, firstFormat.channelCount)
         }
     }
+    
+    // MARK: - DreamWrappedService 测试
+    
+    func testWrappedPeriodEnum() throws {
+        // 测试所有时间段枚举值
+        let allPeriods = WrappedPeriod.allCases
+        XCTAssertEqual(allPeriods.count, 5)
+        
+        XCTAssertEqual(WrappedPeriod.week.displayName, "本周")
+        XCTAssertEqual(WrappedPeriod.month.displayName, "本月")
+        XCTAssertEqual(WrappedPeriod.quarter.displayName, "本季度")
+        XCTAssertEqual(WrappedPeriod.year.displayName, "年度")
+        XCTAssertEqual(WrappedPeriod.allTime.displayName, "全部")
+        
+        // 测试天数计算
+        XCTAssertEqual(WrappedPeriod.week.dayCount, 7)
+        XCTAssertEqual(WrappedPeriod.month.dayCount, 30)
+        XCTAssertEqual(WrappedPeriod.quarter.dayCount, 90)
+        XCTAssertEqual(WrappedPeriod.year.dayCount, 365)
+    }
+    
+    func testWrappedCardTypeEnum() throws {
+        // 测试所有卡片类型枚举值
+        let allCards = WrappedCardType.allCases
+        XCTAssertEqual(allCards.count, 9)
+        
+        // 测试图标
+        XCTAssertEqual(WrappedCardType.overview.icon, "chart.bar.fill")
+        XCTAssertEqual(WrappedCardType.emotionJourney.icon, "heart.fill")
+        XCTAssertEqual(WrappedCardType.topThemes.icon, "tag.fill")
+        XCTAssertEqual(WrappedCardType.lucidDreams.icon, "eye.fill")
+        XCTAssertEqual(WrappedCardType.dreamStreak.icon, "flame.fill")
+        XCTAssertEqual(WrappedCardType.vividDream.icon, "star.fill")
+        XCTAssertEqual(WrappedCardType.dreamTime.icon, "clock.fill")
+        XCTAssertEqual(WrappedCardType.uniqueStats.icon, "sparkles")
+        XCTAssertEqual(WrappedCardType.shareCard.icon, "square.and.arrow.up.fill")
+        
+        // 测试渐变颜色
+        XCTAssertFalse(WrappedCardType.overview.gradientColors.isEmpty)
+        XCTAssertEqual(WrappedCardType.overview.gradientColors.count, 2)
+    }
+    
+    func testDreamWrappedDataCodable() throws {
+        let wrappedData = DreamWrappedData(
+            period: .year,
+            generatedAt: Date(),
+            totalDreams: 100,
+            lucidDreamCount: 25,
+            averageClarity: 4.2,
+            averageIntensity: 3.8,
+            topEmotions: [
+                DreamWrappedData.EmotionStat(name: "快乐", count: 30, percentage: 30.0),
+                DreamWrappedData.EmotionStat(name: "平静", count: 25, percentage: 25.0)
+            ],
+            topTags: [
+                DreamWrappedData.TagStat(name: "飞行", count: 20, percentage: 20.0),
+                DreamWrappedData.TagStat(name: "水", count: 15, percentage: 15.0)
+            ],
+            dreamStreak: 14,
+            longestStreak: 30,
+            mostVividDream: nil,
+            mostIntenseDream: nil,
+            timeOfDayDistribution: ["早晨": 30, "晚上": 70],
+            weeklyPattern: [10, 5, 8, 7, 9, 15, 20],
+            monthlyTrend: [
+                DreamWrappedData.MonthStat(month: "1 月", count: 8, averageClarity: 3.5),
+                DreamWrappedData.MonthStat(month: "2 月", count: 10, averageClarity: 4.0)
+            ],
+            uniqueStats: [
+                DreamWrappedData.UniqueStat(title: "最早的梦境", value: "05:30", icon: "sunrise.fill")
+            ],
+            shareCardQuote: "在年度里，我记录了 100 个梦境 🌙"
+        )
+        
+        // 测试编码
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let encodedData = try encoder.encode(wrappedData)
+        
+        // 测试解码
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decodedData = try decoder.decode(DreamWrappedData.self, from: encodedData)
+        
+        XCTAssertEqual(decodedData.totalDreams, 100)
+        XCTAssertEqual(decodedData.lucidDreamCount, 25)
+        XCTAssertEqual(decodedData.topEmotions.count, 2)
+        XCTAssertEqual(decodedData.topTags.count, 2)
+    }
+    
+    func testDreamWrappedServiceSingleton() throws {
+        let service1 = DreamWrappedService.shared
+        let service2 = DreamWrappedService.shared
+        
+        XCTAssertTrue(service1 === service2, "DreamWrappedService 应该是单例")
+    }
+    
+    func testDreamWrappedServiceInitialState() throws {
+        let service = DreamWrappedService.shared
+        
+        XCTAssertNil(service.currentWrappedData)
+        XCTAssertFalse(service.isGenerating)
+        XCTAssertEqual(service.generatedPeriod, .year)
+    }
+    
+    func testDreamWrappedDataGeneration() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 创建测试梦境数据
+        var dreams: [Dream] = []
+        for i in 0..<20 {
+            dreams.append(Dream(
+                title: "测试梦境\(i)",
+                content: "这是第\(i)个测试梦境内容",
+                tags: i % 3 == 0 ? ["飞行", "自由"] : ["水", "海洋"],
+                emotions: i % 2 == 0 ? [.happy, .excited] : [.calm, .peaceful],
+                clarity: (i % 5) + 1,
+                intensity: (i % 5) + 1,
+                isLucid: i % 4 == 0
+            ))
+        }
+        
+        // 生成年度总结
+        service.generateWrapped(for: .year, dreams: dreams)
+        
+        // 等待生成完成
+        try await Task.sleep(nanoseconds: 500_000_000)  // 0.5 秒
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        // 验证数据
+        XCTAssertEqual(wrappedData.totalDreams, 20)
+        XCTAssertEqual(wrappedData.lucidDreamCount, 5)  // 20/4 = 5
+        XCTAssertGreaterThan(wrappedData.averageClarity, 0)
+        XCTAssertGreaterThan(wrappedData.averageIntensity, 0)
+        XCTAssertFalse(wrappedData.topEmotions.isEmpty)
+        XCTAssertFalse(wrappedData.topTags.isEmpty)
+    }
+    
+    func testStreakCalculation() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 创建连续 7 天的梦境
+        var dreams: [Dream] = []
+        let calendar = Calendar.current
+        for i in 0..<7 {
+            if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                dreams.append(Dream(
+                    title: "梦境\(i)",
+                    content: "内容",
+                    tags: ["测试"],
+                    emotions: [.calm],
+                    timestamp: date
+                ))
+            }
+        }
+        
+        service.generateWrapped(for: .week, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertEqual(wrappedData.dreamStreak, 7, "连续记录应为 7 天")
+        XCTAssertEqual(wrappedData.longestStreak, 7, "最长连续应为 7 天")
+    }
+    
+    func testStreakCalculationWithGap() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 创建有间隔的梦境数据
+        var dreams: [Dream] = []
+        let calendar = Calendar.current
+        
+        // 前 3 天连续
+        for i in 0..<3 {
+            if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                dreams.append(Dream(
+                    title: "梦境\(i)",
+                    content: "内容",
+                    tags: ["测试"],
+                    emotions: [.calm],
+                    timestamp: date
+                ))
+            }
+        }
+        
+        // 跳过 2 天，再有 5 天连续
+        for i in 5..<10 {
+            if let date = calendar.date(byAdding: .day, value: -i, to: Date()) {
+                dreams.append(Dream(
+                    title: "梦境\(i)",
+                    content: "内容",
+                    tags: ["测试"],
+                    emotions: [.calm],
+                    timestamp: date
+                ))
+            }
+        }
+        
+        service.generateWrapped(for: .month, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertEqual(wrappedData.dreamStreak, 3, "当前连续应为 3 天")
+        XCTAssertEqual(wrappedData.longestStreak, 5, "最长连续应为 5 天")
+    }
+    
+    func testEmotionStatistics() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 创建带有特定情绪的梦境
+        var dreams: [Dream] = []
+        for _ in 0..<10 {
+            dreams.append(Dream(
+                title: "快乐梦境",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.happy]
+            ))
+        }
+        for _ in 0..<5 {
+            dreams.append(Dream(
+                title: "平静梦境",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.calm]
+            ))
+        }
+        
+        service.generateWrapped(for: .allTime, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertFalse(wrappedData.topEmotions.isEmpty)
+        
+        // 快乐应该排在第一位
+        let topEmotion = wrappedData.topEmotions.first
+        XCTAssertEqual(topEmotion?.name, "快乐")
+        XCTAssertEqual(topEmotion?.count, 10)
+    }
+    
+    func testTagStatistics() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 创建带有特定标签的梦境
+        var dreams: [Dream] = []
+        for _ in 0..<10 {
+            dreams.append(Dream(
+                title: "飞行梦境",
+                content: "内容",
+                tags: ["飞行"],
+                emotions: [.excited]
+            ))
+        }
+        for _ in 0..<5 {
+            dreams.append(Dream(
+                title: "海洋梦境",
+                content: "内容",
+                tags: ["水", "海洋"],
+                emotions: [.calm]
+            ))
+        }
+        
+        service.generateWrapped(for: .allTime, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertFalse(wrappedData.topTags.isEmpty)
+        
+        // 飞行应该排在第一位
+        let topTag = wrappedData.topTags.first
+        XCTAssertEqual(topTag?.name, "飞行")
+        XCTAssertEqual(topTag?.count, 10)
+    }
+    
+    func testWeeklyPatternCalculation() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 创建特定星期几的梦境
+        var dreams: [Dream] = []
+        let calendar = Calendar.current
+        
+        // 创建 5 个周日的梦境
+        for i in 0..<5 {
+            var components = DateComponents()
+            components.weekday = 1  // 周日
+            components.weekOfYear = i + 1
+            if let date = calendar.date(from: components) {
+                dreams.append(Dream(
+                    title: "周日梦境",
+                    content: "内容",
+                    tags: ["测试"],
+                    emotions: [.calm],
+                    timestamp: date
+                ))
+            }
+        }
+        
+        service.generateWrapped(for: .allTime, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertEqual(wrappedData.weeklyPattern.count, 7)
+        // 周日 (索引 0) 应该有 5 个梦境
+        XCTAssertGreaterThanOrEqual(wrappedData.weeklyPattern[0], 0)
+    }
+    
+    func testUniqueStatsGeneration() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 创建测试梦境
+        var dreams: [Dream] = []
+        for i in 0..<10 {
+            dreams.append(Dream(
+                title: "梦境\(i)",
+                content: String(repeating: "内容", count: i + 1),
+                tags: ["测试"],
+                emotions: [.calm],
+                isLucid: i % 2 == 0
+            ))
+        }
+        
+        service.generateWrapped(for: .allTime, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertFalse(wrappedData.uniqueStats.isEmpty)
+        
+        // 验证包含平均长度统计
+        let avgLengthStat = wrappedData.uniqueStats.first { $0.title == "平均梦境长度" }
+        XCTAssertNotNil(avgLengthStat)
+        XCTAssertTrue(avgLengthStat!.value.contains("字"))
+    }
+    
+    func testShareQuoteGeneration() async throws {
+        let service = DreamWrappedService.shared
+        
+        let dreams = [
+            Dream(title: "梦 1", content: "内容", tags: ["测试"], emotions: [.calm])
+        ]
+        
+        service.generateWrapped(for: .year, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertFalse(wrappedData.shareCardQuote.isEmpty)
+        XCTAssertTrue(wrappedData.shareCardQuote.contains("年度"))
+    }
+    
+    func testExportWrappedData() async throws {
+        let service = DreamWrappedService.shared
+        
+        let dreams = [
+            Dream(title: "测试梦境", content: "内容", tags: ["测试"], emotions: [.calm])
+        ]
+        
+        service.generateWrapped(for: .month, dreams: dreams)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        // 测试导出
+        let exportedData = service.exportWrappedData()
+        
+        XCTAssertNotNil(exportedData)
+        
+        // 验证可以解码
+        if let data = exportedData {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let decoded = try decoder.decode(DreamWrappedData.self, from: data)
+            XCTAssertEqual(decoded.totalDreams, 1)
+        }
+    }
+    
+    func testClearWrappedData() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 先生成一些数据
+        service.generateWrapped(for: .year, dreams: [
+            Dream(title: "测试", content: "内容", tags: ["测试"], emotions: [.calm])
+        ])
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        // 清除数据
+        service.clearWrappedData()
+        
+        XCTAssertNil(service.currentWrappedData)
+        XCTAssertEqual(service.generatedPeriod, .year)
+    }
+    
+    func testEmptyDreamsHandling() async throws {
+        let service = DreamWrappedService.shared
+        
+        // 测试空梦境数组
+        service.generateWrapped(for: .year, dreams: [])
+        try await Task.sleep(nanoseconds: 500_000_000)
+        
+        guard let wrappedData = service.currentWrappedData else {
+            XCTFail("总结数据生成失败")
+            return
+        }
+        
+        XCTAssertEqual(wrappedData.totalDreams, 0)
+        XCTAssertEqual(wrappedData.lucidDreamCount, 0)
+        XCTAssertEqual(wrappedData.averageClarity, 0)
+        XCTAssertEqual(wrappedData.averageIntensity, 0)
+        XCTAssertEqual(wrappedData.dreamStreak, 0)
+        XCTAssertTrue(wrappedData.topEmotions.isEmpty)
+        XCTAssertTrue(wrappedData.topTags.isEmpty)
+    }
 }
