@@ -38,6 +38,12 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 8)
                 
+                // 梦境故事卡片 ✨ NEW (Phase 8)
+                DreamStoriesCard()
+                    .environmentObject(dreamStore)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                
                 // 搜索栏
                 HStack {
                     SearchBar(text: $searchText)
@@ -471,6 +477,105 @@ struct StyleButton: View {
             }
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - 梦境故事卡片
+
+struct DreamStoriesCard: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @StateObject private var storyService = DreamStoryService.shared
+    @State private var showingStories = false
+    
+    var storiesCount: Int {
+        storyService.stories.count
+    }
+    
+    var recentDreamsCount: Int {
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date.distantPast
+        return dreamStore.dreams.filter { $0.date >= thirtyDaysAgo }.count
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "book.fill")
+                            .font(.title2)
+                            .foregroundColor(.purple)
+                        
+                        Text("梦境故事")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    
+                    Text(storiesCount > 0 
+                         ? "已创建 \(storiesCount) 个故事"
+                         : "将梦境变成精彩故事")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Button(action: { showingStories = true }) {
+                    HStack(spacing: 4) {
+                        Text(storiesCount > 0 ? "查看全部" : "开始创作")
+                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.purple)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.purple.opacity(0.2))
+                    .cornerRadius(8)
+                }
+            }
+            
+            // 快速操作
+            if recentDreamsCount > 0 && storiesCount == 0 {
+                HStack(spacing: 12) {
+                    Button(action: { showingStories = true }) {
+                        HStack {
+                            Image(systemName: "sparkles")
+                            Text("生成故事")
+                        }
+                        .font(.caption)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(
+                            LinearGradient(
+                                colors: [Color.purple, Color.purple.opacity(0.7)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(8)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "6B4E9A").opacity(0.3), Color(hex: "9B7EBD").opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "6B4E9A").opacity(0.3), lineWidth: 1)
+                )
+        )
+        .sheet(isPresented: $showingStories) {
+            DreamStoryView()
+        }
     }
 }
 
