@@ -42,7 +42,7 @@ struct DreamStory: Identifiable, Codable, Equatable {
             case .thirdPerson: return "客观叙述，如旁观者视角"
             case .diary: return "私人日记格式，情感丰富"
             case .fairyTale: return "童话般梦幻，充满魔法与奇迹"
-            case .suspsense: return "悬疑紧张，层层递进"
+            case .suspense: return "悬疑紧张，层层递进"
             case .poetic: return "诗意盎然，韵律优美"
             }
         }
@@ -53,7 +53,7 @@ struct DreamStory: Identifiable, Codable, Equatable {
             case .thirdPerson: return "在梦境的深处，"
             case .diary: return "亲爱的日记，"
             case .fairyTale: return "很久很久以前，在一个遥远的梦境世界里，"
-            case .suspsense: return "一切开始得如此突然，"
+            case .suspense: return "一切开始得如此突然，"
             case .poetic: return "在夜的帷幕下，"
             }
         }
@@ -64,7 +64,7 @@ struct DreamStory: Identifiable, Codable, Equatable {
             case .thirdPerson: return "eye.fill"
             case .diary: return "book.fill"
             case .fairyTale: return "wand.and.stars"
-            case .suspsense: return "magnifyingglass"
+            case .suspense: return "magnifyingglass"
             case .poetic: return "quote.opening"
             }
         }

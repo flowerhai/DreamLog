@@ -97,7 +97,7 @@ struct DreamDetailView: View {
             }
         }
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(dream: dream)
+            ShareSheet(items: [dream.content])
         }
         .sheet(isPresented: $showingPrivateShareSheet) {
             PrivateShareView(dream: dream, friendService: friendService)

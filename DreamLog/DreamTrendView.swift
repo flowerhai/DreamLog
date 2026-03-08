@@ -236,7 +236,7 @@ struct DreamTrendView: View {
                 }
                 .font(.subheadline)
                 
-                FlowLayout(spacing: 8) {
+                TagFlowLayout(spacing: 8) {
                     ForEach(report.emergingThemes, id: \.self) { theme in
                         TagBadge(text: theme, color: .green)
                     }
@@ -255,7 +255,7 @@ struct DreamTrendView: View {
                 .font(.subheadline)
                 .padding(.top, 8)
                 
-                FlowLayout(spacing: 8) {
+                TagFlowLayout(spacing: 8) {
                     ForEach(report.fadingThemes, id: \.self) { theme in
                         TagBadge(text: theme, color: .orange)
                     }
@@ -652,7 +652,7 @@ struct TagBadge: View {
     }
 }
 
-struct FlowLayout: View {
+struct TagFlowLayout: View {
     let spacing: CGFloat
     @Builder var content: () -> Content
     
