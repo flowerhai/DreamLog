@@ -59,12 +59,12 @@ class ViewImageRenderer {
 
 extension UIImage {
     /// 转换为 PNG Data
-    func pngData() -> Data? {
+    func toPngData() -> Data? {
         return self.pngData()
     }
     
     /// 转换为 JPEG Data
-    func jpegData(compressionQuality: CGFloat) -> Data? {
+    func toJpegData(compressionQuality: CGFloat) -> Data? {
         return self.jpegData(compressionQuality: compressionQuality)
     }
     
@@ -116,7 +116,7 @@ class WrappedShareCardGenerator {
     
     /// 保存卡片图片到 Documents 目录
     static func saveCard(image: UIImage, fileName: String) -> URL? {
-        guard let data = image.pngData() else { return nil }
+        guard let data = image.toPngData() else { return nil }
         
         let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
         let fileURL = documentsPath.appendingPathComponent("\(fileName).png")
