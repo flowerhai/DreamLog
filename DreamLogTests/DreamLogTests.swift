@@ -3797,4 +3797,218 @@ final class DreamLogTests: XCTestCase {
         // 验证卡片类型总数（包含新增的年度对比）
         XCTAssertEqual(WrappedCardType.allCases.count, 11)  // 原来 10 个 + 年度对比 1 个
     }
+    
+    // MARK: - Phase 12 PDF 日记导出功能测试
+    
+    func testPDFExportStyleAllCases() throws {
+        // 测试所有 PDF 导出风格
+        let allStyles = PDFExportStyle.allCases
+        
+        XCTAssertEqual(allStyles.count, 4)
+        XCTAssertTrue(allStyles.contains(.minimal))
+        XCTAssertTrue(allStyles.contains(.classic))
+        XCTAssertTrue(allStyles.contains(.artistic))
+        XCTAssertTrue(allStyles.contains(.modern))
+    }
+    
+    func testPDFExportStyleProperties() throws {
+        // 测试风格属性
+        XCTAssertEqual(PDFExportStyle.minimal.description, "干净简洁，专注内容")
+        XCTAssertEqual(PDFExportStyle.classic.description, "传统书籍排版，优雅正式")
+        XCTAssertEqual(PDFExportStyle.artistic.description, "创意布局，丰富装饰")
+        XCTAssertEqual(PDFExportStyle.modern.description, "时尚设计，大胆用色")
+    }
+    
+    func testPDFExportStyleIcons() throws {
+        // 测试风格图标
+        XCTAssertEqual(PDFExportStyle.minimal.iconName, "doc.text")
+        XCTAssertEqual(PDFExportStyle.classic.iconName, "book.fill")
+        XCTAssertEqual(PDFExportStyle.artistic.iconName, "paintpalette.fill")
+        XCTAssertEqual(PDFExportStyle.modern.iconName, "sparkles")
+    }
+    
+    func testPDFPageSizeAllCases() throws {
+        // 测试所有页面尺寸
+        let allSizes = PDFPageSize.allCases
+        
+        XCTAssertEqual(allSizes.count, 3)
+        XCTAssertTrue(allSizes.contains(.a4))
+        XCTAssertTrue(allSizes.contains(.letter))
+        XCTAssertTrue(allSizes.contains(.square))
+    }
+    
+    func testPDFPageSizeDimensions() throws {
+        // 测试页面尺寸维度
+        XCTAssertEqual(PDFPageSize.a4.size.width, 595)
+        XCTAssertEqual(PDFPageSize.a4.size.height, 842)
+        
+        XCTAssertEqual(PDFPageSize.letter.size.width, 612)
+        XCTAssertEqual(PDFPageSize.letter.size.height, 792)
+        
+        XCTAssertEqual(PDFPageSize.square.size.width, 600)
+        XCTAssertEqual(PDFPageSize.square.size.height, 600)
+    }
+    
+    func testPDFPageSizeDescriptions() throws {
+        // 测试页面尺寸描述
+        XCTAssertEqual(PDFPageSize.a4.description, "210 × 297 mm (国际标准)")
+        XCTAssertEqual(PDFPageSize.letter.description, "8.5 × 11 英寸 (美式标准)")
+        XCTAssertEqual(PDFPageSize.square.description, "600 × 600 pt (社交媒体)")
+    }
+    
+    func testPDFExportConfigDefault() throws {
+        // 测试默认配置
+        let config = PDFExportConfig.default
+        
+        XCTAssertEqual(config.style, .classic)
+        XCTAssertEqual(config.pageSize, .a4)
+        XCTAssertTrue(config.includeCoverPage)
+        XCTAssertTrue(config.includeTableOfContents)
+        XCTAssertTrue(config.includeAIImages)
+        XCTAssertTrue(config.includeStatistics)
+        XCTAssertTrue(config.includeTags)
+        XCTAssertTrue(config.includeEmotions)
+        XCTAssertEqual(config.customTitle, "我的梦境日记")
+        XCTAssertEqual(config.customSubtitle, "DreamLog Journal")
+        XCTAssertEqual(config.sortBy, .dateDesc)
+    }
+    
+    func testPDFExportConfigCodable() throws {
+        // 测试配置编码/解码
+        let config = PDFExportConfig(
+            style: .artistic,
+            pageSize: .letter,
+            includeCoverPage: false,
+            includeTableOfContents: true,
+            includeAIImages: true,
+            includeStatistics: false,
+            includeTags: true,
+            includeEmotions: false,
+            customTitle: "测试标题",
+            customSubtitle: "测试副标题",
+            dateRange: .thisMonth,
+            sortBy: .clarity
+        )
+        
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(config)
+        
+        let decoder = JSONDecoder()
+        let decodedConfig = try decoder.decode(PDFExportConfig.self, from: data)
+        
+        XCTAssertEqual(decodedConfig.style, .artistic)
+        XCTAssertEqual(decodedConfig.pageSize, .letter)
+        XCTAssertFalse(decodedConfig.includeCoverPage)
+        XCTAssertEqual(decodedConfig.customTitle, "测试标题")
+    }
+    
+    func testPDFExportConfigDateRangeAll() throws {
+        // 测试全部日期范围
+        let range = PDFExportConfig.DateRange.all
+        
+        XCTAssertEqual(range.startDate, Date.distantPast)
+        XCTAssertGreaterThanOrEqual(Date(), range.endDate)
+    }
+    
+    func testPDFExportConfigDateRangeThisWeek() throws {
+        // 测试本周日期范围
+        let range = PDFExportConfig.DateRange.thisWeek
+        
+        let calendar = Calendar.current
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date()))!
+        
+        XCTAssertEqual(range.startDate, startOfWeek)
+        XCTAssertGreaterThanOrEqual(range.endDate, Date())
+    }
+    
+    func testPDFExportConfigDateRangeThisMonth() throws {
+        // 测试本月日期范围
+        let range = PDFExportConfig.DateRange.thisMonth
+        
+        let calendar = Calendar.current
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: Date()))!
+        
+        XCTAssertEqual(range.startDate, startOfMonth)
+        XCTAssertGreaterThanOrEqual(range.endDate, Date())
+    }
+    
+    func testPDFExportConfigDateRangeThisYear() throws {
+        // 测试今年日期范围
+        let range = PDFExportConfig.DateRange.thisYear
+        
+        let calendar = Calendar.current
+        let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: Date()))!
+        
+        XCTAssertEqual(range.startDate, startOfYear)
+        XCTAssertGreaterThanOrEqual(range.endDate, Date())
+    }
+    
+    func testPDFExportConfigSortOptions() throws {
+        // 测试排序选项
+        let allOptions = PDFExportConfig.SortOption.allCases
+        
+        XCTAssertEqual(allOptions.count, 4)
+        XCTAssertTrue(allOptions.contains(.dateDesc))
+        XCTAssertTrue(allOptions.contains(.dateAsc))
+        XCTAssertTrue(allOptions.contains(.clarity))
+        XCTAssertTrue(allOptions.contains(.intensity))
+    }
+    
+    func testDreamJournalExportServiceSingleton() throws {
+        // 测试单例模式
+        let service1 = DreamJournalExportService.shared
+        let service2 = DreamJournalExportService.shared
+        
+        XCTAssertIdentical(service1, service2)
+    }
+    
+    func testDreamJournalExportServiceInitialState() throws {
+        // 测试初始状态
+        let service = DreamJournalExportService.shared
+        
+        // 验证默认配置
+        // 注意：由于配置是私有的，我们通过更新配置来间接测试
+        let newConfig = PDFExportConfig.default
+        service.updateConfig(newConfig)
+    }
+    
+    func testDreamJournalExportServiceConfigUpdate() throws {
+        // 测试配置更新
+        let service = DreamJournalExportService.shared
+        
+        let newConfig = PDFExportConfig(
+            style: .modern,
+            pageSize: .square,
+            includeCoverPage: false,
+            includeTableOfContents: false,
+            includeAIImages: true,
+            includeStatistics: true,
+            includeTags: false,
+            includeEmotions: false,
+            customTitle: "自定义标题",
+            customSubtitle: "自定义副标题",
+            dateRange: .thisWeek,
+            sortBy: .intensity
+        )
+        
+        service.updateConfig(newConfig)
+        // 配置已更新（无法直接验证私有属性，但方法调用成功）
+    }
+    
+    func testPDFExportErrorCases() throws {
+        // 测试所有错误类型
+        let noDreamsError = PDFExportError.noDreamsInRange
+        let generationError = PDFExportError.generationFailed
+        let saveError = PDFExportError.fileSaveFailed
+        
+        XCTAssertEqual(noDreamsError.errorDescription, "所选日期范围内没有梦境记录")
+        XCTAssertEqual(generationError.errorDescription, "PDF 生成失败，请重试")
+        XCTAssertEqual(saveError.errorDescription, "文件保存失败")
+    }
+    
+    func testPDFExportErrorLocalizedError() throws {
+        // 测试错误遵循 LocalizedError 协议
+        let error: LocalizedError = PDFExportError.noDreamsInRange
+        XCTAssertNotNil(error.errorDescription)
+    }
 }

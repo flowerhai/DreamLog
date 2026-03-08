@@ -287,6 +287,15 @@ struct SettingsView: View {
                         }
                     }
                     
+                    // PDF 日记导出
+                    NavigationLink(destination: DreamJournalExportView().environmentObject(dreamStore)) {
+                        Label("📕 导出 PDF 日记", systemImage: "book.closed")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
                     // 导入功能
                     Button(action: { showingImportPicker = true }) {
                         HStack {
