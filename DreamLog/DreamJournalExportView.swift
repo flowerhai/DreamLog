@@ -73,6 +73,12 @@ struct DreamJournalExportView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
+                    Picker("语言", selection: $config.language) {
+                        ForEach(PDFExportLanguage.allCases) { language in
+                            Text(language.displayName).tag(language)
+                        }
+                    }
+                    
                     Picker("页面尺寸", selection: $config.pageSize) {
                         ForEach(PDFPageSize.allCases) { size in
                             VStack(alignment: .leading) {
@@ -132,6 +138,33 @@ struct DreamJournalExportView: View {
                 Section("✏️ 自定义") {
                     TextField("日记标题", text: $config.customTitle)
                     TextField("副标题", text: $config.customSubtitle)
+                }
+                
+                // 批量导出
+                Section("📦 批量导出") {
+                    Button(action: batchExportByPeriod) {
+                        HStack {
+                            Image(systemName: "calendar.badge.plus")
+                            Text("按时间段批量导出")
+                        }
+                    }
+                    .disabled(isGenerating || dreamStore.dreams.isEmpty)
+                    
+                    Button(action: exportMultiLanguage) {
+                        HStack {
+                            Image(systemName: "globe")
+                            Text("导出多语言版本")
+                        }
+                    }
+                    .disabled(isGenerating || dreamStore.dreams.isEmpty)
+                    
+                    Button(action: exportAllStyles) {
+                        HStack {
+                            Image(systemName: "paintpalette")
+                            Text("导出所有风格")
+                        }
+                    }
+                    .disabled(isGenerating || dreamStore.dreams.isEmpty)
                 }
                 
                 // 导出按钮
@@ -270,6 +303,97 @@ struct DreamJournalExportView: View {
                 await MainActor.run {
                     isGenerating = false
                     showSuccess = true
+                }
+            } catch {
+                await MainActor.run {
+                    isGenerating = false
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    private func batchExportByPeriod() {
+        isGenerating = true
+        
+        Task {
+            do {
+                let dreams = dreamStore.dreams
+                let service = DreamJournalExportService.shared
+                let batchConfig = DreamJournalExportService.BatchExportConfig.default
+                
+                let exportedFiles = try await service.batchExport(dreams: dreams, batchConfig: batchConfig)
+                
+                await MainActor.run {
+                    isGenerating = false
+                    if exportedFiles.isEmpty {
+                        errorMessage = "没有梦境可导出"
+                        showError = true
+                    } else {
+                        errorMessage = "成功导出 \(exportedFiles.count) 个 PDF 文件到 Documents/DreamLogExports"
+                        showError = true // 复用错误弹窗显示成功消息
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isGenerating = false
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    private func exportMultiLanguage() {
+        isGenerating = true
+        
+        Task {
+            do {
+                let dreams = dreamStore.dreams
+                let service = DreamJournalExportService.shared
+                
+                let exportedFiles = try await service.exportMultiLanguage(dreams: dreams)
+                
+                await MainActor.run {
+                    isGenerating = false
+                    if exportedFiles.isEmpty {
+                        errorMessage = "没有梦境可导出"
+                        showError = true
+                    } else {
+                        errorMessage = "成功导出 \(exportedFiles.count) 种语言版本到 Documents/DreamLogExports/MultiLanguage"
+                        showError = true
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isGenerating = false
+                    errorMessage = error.localizedDescription
+                    showError = true
+                }
+            }
+        }
+    }
+    
+    private func exportAllStyles() {
+        isGenerating = true
+        
+        Task {
+            do {
+                let dreams = dreamStore.dreams
+                let service = DreamJournalExportService.shared
+                
+                let exportedFiles = try await service.exportAllStyles(dreams: dreams)
+                
+                await MainActor.run {
+                    isGenerating = false
+                    if exportedFiles.isEmpty {
+                        errorMessage = "没有梦境可导出"
+                        showError = true
+                    } else {
+                        errorMessage = "成功导出 \(exportedFiles.count) 种风格版本到 Documents/DreamLogExports/AllStyles"
+                        showError = true
+                    }
                 }
             } catch {
                 await MainActor.run {

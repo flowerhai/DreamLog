@@ -16,6 +16,10 @@ enum PDFExportStyle: String, CaseIterable, Identifiable {
     case classic = "经典风格"
     case artistic = "艺术风格"
     case modern = "现代风格"
+    case nature = "自然风格"
+    case sunset = "日落风格"
+    case ocean = "海洋风格"
+    case forest = "森林风格"
     
     var id: String { rawValue }
     
@@ -25,6 +29,10 @@ enum PDFExportStyle: String, CaseIterable, Identifiable {
         case .classic: return "传统书籍排版，优雅正式"
         case .artistic: return "创意布局，丰富装饰"
         case .modern: return "时尚设计，大胆用色"
+        case .nature: return "自然元素，清新绿色"
+        case .sunset: return "温暖渐变，橙红色调"
+        case .ocean: return "蓝色渐变，海洋元素"
+        case .forest: return "绿色主题，树叶装饰"
         }
     }
     
@@ -34,6 +42,10 @@ enum PDFExportStyle: String, CaseIterable, Identifiable {
         case .classic: return "book.fill"
         case .artistic: return "paintpalette.fill"
         case .modern: return "sparkles"
+        case .nature: return "leaf.fill"
+        case .sunset: return "sun.max.fill"
+        case .ocean: return "water.fill"
+        case .forest: return "tree.fill"
         }
     }
     
@@ -43,6 +55,23 @@ enum PDFExportStyle: String, CaseIterable, Identifiable {
         case .classic: return UIColor(red: 0.2, green: 0.2, blue: 0.3, alpha: 1)
         case .artistic: return UIColor(red: 0.6, green: 0.3, blue: 0.8, alpha: 1)
         case .modern: return UIColor(red: 0.4, green: 0.3, blue: 0.9, alpha: 1)
+        case .nature: return UIColor(red: 0.2, green: 0.6, blue: 0.3, alpha: 1)
+        case .sunset: return UIColor(red: 1.0, green: 0.4, blue: 0.2, alpha: 1)
+        case .ocean: return UIColor(red: 0.0, green: 0.5, blue: 0.8, alpha: 1)
+        case .forest: return UIColor(red: 0.1, green: 0.5, blue: 0.2, alpha: 1)
+        }
+    }
+    
+    var secondaryColor: UIColor {
+        switch self {
+        case .minimal: return .gray
+        case .classic: return UIColor(red: 0.4, green: 0.4, blue: 0.5, alpha: 1)
+        case .artistic: return UIColor(red: 0.8, green: 0.5, blue: 0.9, alpha: 1)
+        case .modern: return UIColor(red: 0.6, green: 0.5, blue: 1.0, alpha: 1)
+        case .nature: return UIColor(red: 0.6, green: 0.8, blue: 0.5, alpha: 1)
+        case .sunset: return UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1)
+        case .ocean: return UIColor(red: 0.3, green: 0.7, blue: 1.0, alpha: 1)
+        case .forest: return UIColor(red: 0.4, green: 0.7, blue: 0.4, alpha: 1)
         }
     }
 }
@@ -72,10 +101,111 @@ enum PDFPageSize: String, CaseIterable, Identifiable {
     }
 }
 
+/// PDF 导出语言
+enum PDFExportLanguage: String, CaseIterable, Codable, Identifiable {
+    case chinese = "zh-CN"
+    case english = "en-US"
+    case japanese = "ja-JP"
+    case korean = "ko-KR"
+    
+    var id: String { rawValue }
+    
+    var displayName: String {
+        switch self {
+        case .chinese: return "简体中文"
+        case .english: return "English"
+        case .japanese: return "日本語"
+        case .korean: return "한국어"
+        }
+    }
+    
+    var coverTitle: String {
+        switch self {
+        case .chinese: return "我的梦境日记"
+        case .english: return "My Dream Journal"
+        case .japanese: return "私の夢日記"
+        case .korean: return "나의 꿈 일기"
+        }
+    }
+    
+    var coverSubtitle: String {
+        switch self {
+        case .chinese: return "DreamLog Journal"
+        case .english: return "Recorded with DreamLog"
+        case .japanese: return "DreamLog で記録"
+        case .korean: return "DreamLog 로 기록"
+        }
+    }
+    
+    var tableOfContents: String {
+        switch self {
+        case .chinese: return "目录"
+        case .english: return "Table of Contents"
+        case .japanese: return "目次"
+        case .korean: return "목차"
+        }
+    }
+    
+    var statistics: String {
+        switch self {
+        case .chinese: return "梦境统计"
+        case .english: return "Dream Statistics"
+        case .japanese: return "夢の統計"
+        case .korean: return "꿈 통계"
+        }
+    }
+    
+    var totalDreams: String {
+        switch self {
+        case .chinese: return "总梦境数"
+        case .english: return "Total Dreams"
+        case .japanese: return "総夢数"
+        case .korean: return "총 꿈 수"
+        }
+    }
+    
+    var lucidDreams: String {
+        switch self {
+        case .chinese: return "清醒梦"
+        case .english: return "Lucid Dreams"
+        case .japanese: return "明晰夢"
+        case .korean: return "자각몽"
+        }
+    }
+    
+    var avgClarity: String {
+        switch self {
+        case .chinese: return "平均清晰度"
+        case .english: return "Average Clarity"
+        case .japanese: return "平均明瞭度"
+        case .korean: return "평균 선명도"
+        }
+    }
+    
+    var avgIntensity: String {
+        switch self {
+        case .chinese: return "平均强度"
+        case .english: return "Average Intensity"
+        case .japanese: return "平均強度"
+        case .korean: return "평균 강도"
+        }
+    }
+    
+    var backCoverText: String {
+        switch self {
+        case .chinese: return "记录你的每一个梦境"
+        case .english: return "Record Every Dream"
+        case .japanese: return "すべての夢を記録しよう"
+        case .korean: return "모든 꿈을 기록하세요"
+        }
+    }
+}
+
 /// PDF 导出配置
 struct PDFExportConfig: Codable {
     var style: PDFExportStyle
     var pageSize: PDFPageSize
+    var language: PDFExportLanguage
     var includeCoverPage: Bool
     var includeTableOfContents: Bool
     var includeAIImages: Bool
@@ -125,17 +255,25 @@ struct PDFExportConfig: Codable {
         PDFExportConfig(
             style: .classic,
             pageSize: .a4,
+            language: .chinese,
             includeCoverPage: true,
             includeTableOfContents: true,
             includeAIImages: true,
             includeStatistics: true,
             includeTags: true,
             includeEmotions: true,
-            customTitle: "我的梦境日记",
-            customSubtitle: "DreamLog Journal",
+            customTitle: "",
+            customSubtitle: "",
             dateRange: .all,
             sortBy: .dateDesc
         )
+    }
+    
+    /// 创建配置副本并修改指定属性
+    func copy<T>(_ keyPath: WritableKeyPath<PDFExportConfig, T>, _ value: T) -> PDFExportConfig {
+        var copy = self
+        copy[keyPath: keyPath] = value
+        return copy
     }
 }
 
@@ -227,6 +365,7 @@ class DreamJournalExportService {
         
         let bounds = context.format.bounds
         let style = config.style
+        let language = config.language
         
         // 背景渐变
         let gradientColors = [
@@ -239,25 +378,35 @@ class DreamJournalExportService {
         // 装饰元素
         drawDecorativeElements(context: context, bounds: bounds, style: style)
         
-        // 标题
+        // 标题 (使用自定义标题或语言默认标题)
+        let title = config.customTitle.isEmpty ? language.coverTitle : config.customTitle
         let titleRect = CGRect(x: bounds.midX - 200, y: bounds.midY - 150, width: 400, height: 100)
         let titleAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 48, weight: .bold),
             .foregroundColor: UIColor.white
         ]
-        config.customTitle.draw(in: titleRect, withAttributes: titleAttributes)
+        title.draw(in: titleRect, withAttributes: titleAttributes)
         
-        // 副标题
+        // 副标题 (使用自定义副标题或语言默认副标题)
+        let subtitle = config.customSubtitle.isEmpty ? language.coverSubtitle : config.customSubtitle
         let subtitleRect = CGRect(x: bounds.midX - 150, y: bounds.midY - 60, width: 300, height: 50)
         let subtitleAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 24, weight: .regular),
             .foregroundColor: UIColor.white.withAlphaComponent(0.9)
         ]
-        config.customSubtitle.draw(in: subtitleRect, withAttributes: subtitleAttributes)
+        subtitle.draw(in: subtitleRect, withAttributes: subtitleAttributes)
         
         // 统计信息
         let statsRect = CGRect(x: bounds.midX - 100, y: bounds.midY + 50, width: 200, height: 80)
-        let statsText = "\(dreamCount) 个梦境\n\(formattedDateRange())"
+        let dreamsText: String = {
+            switch language {
+            case .chinese: return "\(dreamCount) 个梦境"
+            case .english: return "\(dreamCount) Dreams"
+            case .japanese: return "\(dreamCount) 件の夢"
+            case .korean: return "\(dreamCount) 개의 꿈"
+            }
+        }()
+        let statsText = "\(dreamsText)\n\(formattedDateRange())"
         let statsAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 16, weight: .light),
             .foregroundColor: UIColor.white.withAlphaComponent(0.8)
@@ -278,6 +427,7 @@ class DreamJournalExportService {
         
         let bounds = context.format.bounds
         let margins = UIEdgeInsets(top: 80, left: 60, bottom: 60, right: 60)
+        let language = config.language
         
         // 标题
         let titleRect = CGRect(x: margins.left, y: margins.top, width: bounds.width - margins.left - margins.right, height: 60)
@@ -285,7 +435,7 @@ class DreamJournalExportService {
             .font: UIFont.systemFont(ofSize: 32, weight: .bold),
             .foregroundColor: config.style.primaryColor
         ]
-        "目录".draw(in: titleRect, withAttributes: titleAttributes)
+        language.tableOfContents.draw(in: titleRect, withAttributes: titleAttributes)
         
         // 分隔线
         let lineRect = CGRect(x: margins.left, y: margins.top + 65, width: bounds.width - margins.left - margins.right, height: 2)
@@ -298,12 +448,20 @@ class DreamJournalExportService {
         
         for (index, dream) in dreams.prefix(15).enumerated() {
             if yPosition + lineHeight > bounds.height - margins.bottom {
-                break // 避免超出页面
+                break
             }
             
             let entryRect = CGRect(x: margins.left, y: yPosition, width: bounds.width - margins.left - margins.right, height: lineHeight)
             
-            let entryText = "\(index + 1). \(dream.title.isEmpty ? "无题梦境" : dream.title) — \(formatDate(dream.date))"
+            let untitledDream: String = {
+                switch language {
+                case .chinese: return "无题梦境"
+                case .english: return "Untitled Dream"
+                case .japanese: return "無題の夢"
+                case .korean: return "제목 없는 꿈"
+                }
+            }()
+            let entryText = "\(index + 1). \(dream.title.isEmpty ? untitledDream : dream.title) — \(formatDate(dream.date))"
             let entryAttributes: [NSAttributedString.Key: Any] = [
                 .font: UIFont.systemFont(ofSize: 14, weight: .regular),
                 .foregroundColor: UIColor.darkGray
@@ -319,7 +477,15 @@ class DreamJournalExportService {
                 .font: UIFont.systemFont(ofSize: 12, weight: .light),
                 .foregroundColor: UIColor.gray
             ]
-            "… 以及另外 \(dreams.count - 15) 个梦境".draw(in: moreRect, withAttributes: moreAttributes)
+            let moreText: String = {
+                switch language {
+                case .chinese: return "… 以及另外 \(dreams.count - 15) 个梦境"
+                case .english: return "… and \(dreams.count - 15) more dreams"
+                case .japanese: return "… さらに \(dreams.count - 15) 件の夢"
+                case .korean: return "… 외 \(dreams.count - 15) 개의 꿈"
+                }
+            }()
+            moreText.draw(in: moreRect, withAttributes: moreAttributes)
         }
     }
     
@@ -328,6 +494,7 @@ class DreamJournalExportService {
         
         let bounds = context.format.bounds
         let margins = UIEdgeInsets(top: 80, left: 60, bottom: 60, right: 60)
+        let language = config.language
         
         // 标题
         let titleRect = CGRect(x: margins.left, y: margins.top, width: bounds.width - margins.left - margins.right, height: 60)
@@ -335,7 +502,7 @@ class DreamJournalExportService {
             .font: UIFont.systemFont(ofSize: 32, weight: .bold),
             .foregroundColor: config.style.primaryColor
         ]
-        "梦境统计".draw(in: titleRect, withAttributes: titleAttributes)
+        language.statistics.draw(in: titleRect, withAttributes: titleAttributes)
         
         // 统计卡片
         let stats = calculateStatistics(dreams)
@@ -343,15 +510,15 @@ class DreamJournalExportService {
         let cardHeight: CGFloat = 120
         
         // 第一行
-        drawStatCard(context: context, title: "总梦境数", value: "\(stats.totalCount)", icon: "moon.fill", 
+        drawStatCard(context: context, title: language.totalDreams, value: "\(stats.totalCount)", icon: "moon.fill", 
                      frame: CGRect(x: margins.left, y: margins.top + 100, width: cardWidth, height: cardHeight))
-        drawStatCard(context: context, title: "清醒梦", value: "\(stats.lucidCount)", icon: "eye.fill",
+        drawStatCard(context: context, title: language.lucidDreams, value: "\(stats.lucidCount)", icon: "eye.fill",
                      frame: CGRect(x: margins.left + cardWidth + 20, y: margins.top + 100, width: cardWidth, height: cardHeight))
         
         // 第二行
-        drawStatCard(context: context, title: "平均清晰度", value: String(format: "%.1f", stats.avgClarity), icon: "star.fill",
+        drawStatCard(context: context, title: language.avgClarity, value: String(format: "%.1f", stats.avgClarity), icon: "star.fill",
                      frame: CGRect(x: margins.left, y: margins.top + 240, width: cardWidth, height: cardHeight))
-        drawStatCard(context: context, title: "平均强度", value: String(format: "%.1f", stats.avgIntensity), icon: "bolt.fill",
+        drawStatCard(context: context, title: language.avgIntensity, value: String(format: "%.1f", stats.avgIntensity), icon: "bolt.fill",
                      frame: CGRect(x: margins.left + cardWidth + 20, y: margins.top + 240, width: cardWidth, height: cardHeight))
         
         // 情绪分布
@@ -361,7 +528,15 @@ class DreamJournalExportService {
             .font: UIFont.systemFont(ofSize: 20, weight: .semibold),
             .foregroundColor: UIColor.darkGray
         ]
-        "情绪分布".draw(in: emotionTitleRect, withAttributes: emotionTitleAttributes)
+        let emotionTitle: String = {
+            switch language {
+            case .chinese: return "情绪分布"
+            case .english: return "Emotion Distribution"
+            case .japanese: return "感情の分布"
+            case .korean: return "감정 분포"
+            }
+        }()
+        emotionTitle.draw(in: emotionTitleRect, withAttributes: emotionTitleAttributes)
         
         // 简单的情绪条形图
         var emotionYPos = emotionY + 40
@@ -390,6 +565,7 @@ class DreamJournalExportService {
         
         let bounds = context.format.bounds
         let margins = UIEdgeInsets(top: 80, left: 60, bottom: 60, right: 60)
+        let language = config.language
         
         // 页眉
         let headerRect = CGRect(x: margins.left, y: margins.top - 20, width: bounds.width - margins.left - margins.right, height: 40)
@@ -397,7 +573,15 @@ class DreamJournalExportService {
             .font: UIFont.systemFont(ofSize: 12, weight: .light),
             .foregroundColor: UIColor.gray
         ]
-        "第 \(pageNumber) 页 • \(formatDate(dream.date))".draw(in: headerRect, withAttributes: headerAttributes)
+        let headerText: String = {
+            switch language {
+            case .chinese: return "第 \(pageNumber) 页 • \(formatDate(dream.date))"
+            case .english: return "Page \(pageNumber) • \(formatDate(dream.date))"
+            case .japanese: return "\(pageNumber) ページ • \(formatDate(dream.date))"
+            case .korean: return "\(pageNumber) 페이지 • \(formatDate(dream.date))"
+            }
+        }()
+        headerText.draw(in: headerRect, withAttributes: headerAttributes)
         
         // 梦境标题
         let titleRect = CGRect(x: margins.left, y: margins.top + 20, width: bounds.width - margins.left - margins.right, height: 50)
@@ -405,7 +589,15 @@ class DreamJournalExportService {
             .font: UIFont.systemFont(ofSize: 24, weight: .bold),
             .foregroundColor: config.style.primaryColor
         ]
-        (dream.title.isEmpty ? "无题梦境" : dream.title).draw(in: titleRect, withAttributes: titleAttributes)
+        let untitledDream: String = {
+            switch language {
+            case .chinese: return "无题梦境"
+            case .english: return "Untitled Dream"
+            case .japanese: return "無題の夢"
+            case .korean: return "제목 없는 꿈"
+            }
+        }()
+        (dream.title.isEmpty ? untitledDream : dream.title).draw(in: titleRect, withAttributes: titleAttributes)
         
         // 元信息 (标签和情绪)
         var metaY = margins.top + 80
@@ -497,6 +689,7 @@ class DreamJournalExportService {
         
         let bounds = context.format.bounds
         let style = config.style
+        let language = config.language
         
         // 背景
         style.primaryColor.withAlphaComponent(0.1).setFill()
@@ -510,13 +703,13 @@ class DreamJournalExportService {
         ]
         "DreamLog 🌙".draw(in: logoRect, withAttributes: logoAttributes)
         
-        // 标语
+        // 标语 (使用语言特定的标语)
         let sloganRect = CGRect(x: bounds.midX - 150, y: bounds.midY + 60, width: 300, height: 40)
         let sloganAttributes: [NSAttributedString.Key: Any] = [
             .font: UIFont.systemFont(ofSize: 16, weight: .light),
             .foregroundColor: style.primaryColor.withAlphaComponent(0.7)
         ]
-        "记录你的梦，发现潜意识的秘密".draw(in: sloganRect, withAttributes: sloganAttributes)
+        language.backCoverText.draw(in: sloganRect, withAttributes: sloganAttributes)
         
         // 生成日期
         let dateRect = CGRect(x: bounds.midX - 100, y: bounds.height - 100, width: 200, height: 30)
@@ -524,7 +717,15 @@ class DreamJournalExportService {
             .font: UIFont.systemFont(ofSize: 12, weight: .regular),
             .foregroundColor: style.primaryColor.withAlphaComponent(0.5)
         ]
-        "生成于 \(formatDate(Date()))".draw(in: dateRect, withAttributes: dateAttributes)
+        let generatedText: String = {
+            switch language {
+            case .chinese: return "生成于 \(formatDate(Date()))"
+            case .english: return "Generated on \(formatDate(Date()))"
+            case .japanese: return "生成日：\(formatDate(Date()))"
+            case .korean: return "생성일: \(formatDate(Date()))"
+            }
+        }()
+        generatedText.draw(in: dateRect, withAttributes: dateAttributes)
     }
     
     // MARK: - 辅助方法
@@ -634,8 +835,141 @@ class DreamJournalExportService {
     private func formattedDateRange() -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .short
-        formatter.locale = Locale(identifier: "zh_CN")
+        formatter.locale = Locale(identifier: config.language.rawValue)
         return "\(formatter.string(from: config.dateRange.startDate)) - \(formatter.string(from: config.dateRange.endDate))"
+    }
+    
+    // MARK: - 批量导出功能
+    
+    /// 批量导出配置
+    struct BatchExportConfig {
+        var configs: [(name: String, config: PDFExportConfig)]
+        var outputDirectory: String
+        
+        static var `default`: BatchExportConfig {
+            let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first ?? ""
+            return BatchExportConfig(
+                configs: [
+                    ("本周梦境", PDFExportConfig.default.copy(\.dateRange, .thisWeek)),
+                    ("本月梦境", PDFExportConfig.default.copy(\.dateRange, .thisMonth)),
+                    ("今年梦境", PDFExportConfig.default.copy(\.dateRange, .thisYear)),
+                    ("全部梦境", PDFExportConfig.default)
+                ],
+                outputDirectory: documentsPath + "/DreamLogExports"
+            )
+        }
+    }
+    
+    /// 批量导出 PDF 文件
+    func batchExport(dreams: [Dream], batchConfig: BatchExportConfig) async throws -> [String] {
+        var exportedFiles: [String] = []
+        
+        // 创建输出目录
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: batchConfig.outputDirectory) {
+            try fileManager.createDirectory(atPath: batchConfig.outputDirectory, withIntermediateDirectories: true)
+        }
+        
+        for (name, config) in batchConfig.configs {
+            // 更新配置
+            updateConfig(config)
+            
+            // 过滤梦境
+            let filteredDreams = filterDreams(dreams)
+            
+            // 跳过空数据集
+            if filteredDreams.isEmpty {
+                continue
+            }
+            
+            // 生成 PDF
+            let pdfData = try await generatePDF(dreams: filteredDreams)
+            
+            // 保存文件
+            let fileName = "\(name)_\(Date().timeIntervalSince1970).pdf"
+                .replacingOccurrences(of: " ", with: "_")
+                .replacingOccurrences(of: "/", with: "-")
+            let filePath = batchConfig.outputDirectory + "/" + fileName
+            
+            if pdfData.write(toFile: filePath, atomically: true) {
+                exportedFiles.append(filePath)
+            }
+        }
+        
+        // 恢复默认配置
+        updateConfig(.default)
+        
+        return exportedFiles
+    }
+    
+    /// 导出多语言版本
+    func exportMultiLanguage(dreams: [Dream]) async throws -> [String] {
+        var exportedFiles: [String] = []
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first ?? ""
+        let outputDirectory = documentsPath + "/DreamLogExports/MultiLanguage"
+        
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: outputDirectory) {
+            try fileManager.createDirectory(atPath: outputDirectory, withIntermediateDirectories: true)
+        }
+        
+        // 导出所有语言版本
+        for language in PDFExportLanguage.allCases {
+            var config = PDFExportConfig.default
+            config.language = language
+            config.customTitle = language.coverTitle
+            config.customSubtitle = language.coverSubtitle
+            updateConfig(config)
+            
+            let pdfData = try await generatePDF(dreams: dreams)
+            
+            let fileName = "DreamJournal_\(language.rawValue)_\(Date().timeIntervalSince1970).pdf"
+            let filePath = outputDirectory + "/" + fileName
+            
+            if pdfData.write(toFile: filePath, atomically: true) {
+                exportedFiles.append(filePath)
+            }
+        }
+        
+        // 恢复默认配置
+        updateConfig(.default)
+        
+        return exportedFiles
+    }
+    
+    /// 导出所有风格版本
+    func exportAllStyles(dreams: [Dream]) async throws -> [String] {
+        var exportedFiles: [String] = []
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first ?? ""
+        let outputDirectory = documentsPath + "/DreamLogExports/AllStyles"
+        
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: outputDirectory) {
+            try fileManager.createDirectory(atPath: outputDirectory, withIntermediateDirectories: true)
+        }
+        
+        // 导出所有风格版本
+        for style in PDFExportStyle.allCases {
+            var config = PDFExportConfig.default
+            config.style = style
+            updateConfig(config)
+            
+            let pdfData = try await generatePDF(dreams: dreams)
+            
+            let fileName = "DreamJournal_\(style.rawValue)_\(Date().timeIntervalSince1970).pdf"
+                .replacingOccurrences(of: "风格", with: "")
+                .replacingOccurrences(of: " ", with: "_")
+            let filePath = outputDirectory + "/" + fileName
+            
+            if pdfData.write(toFile: filePath, atomically: true) {
+                exportedFiles.append(filePath)
+            }
+        }
+        
+        // 恢复默认配置
+        updateConfig(.default)
+        
+        return exportedFiles
     }
 }
 

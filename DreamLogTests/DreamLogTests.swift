@@ -3804,11 +3804,15 @@ final class DreamLogTests: XCTestCase {
         // 测试所有 PDF 导出风格
         let allStyles = PDFExportStyle.allCases
         
-        XCTAssertEqual(allStyles.count, 4)
+        XCTAssertEqual(allStyles.count, 8)
         XCTAssertTrue(allStyles.contains(.minimal))
         XCTAssertTrue(allStyles.contains(.classic))
         XCTAssertTrue(allStyles.contains(.artistic))
         XCTAssertTrue(allStyles.contains(.modern))
+        XCTAssertTrue(allStyles.contains(.nature))
+        XCTAssertTrue(allStyles.contains(.sunset))
+        XCTAssertTrue(allStyles.contains(.ocean))
+        XCTAssertTrue(allStyles.contains(.forest))
     }
     
     func testPDFExportStyleProperties() throws {
@@ -3817,6 +3821,10 @@ final class DreamLogTests: XCTestCase {
         XCTAssertEqual(PDFExportStyle.classic.description, "传统书籍排版，优雅正式")
         XCTAssertEqual(PDFExportStyle.artistic.description, "创意布局，丰富装饰")
         XCTAssertEqual(PDFExportStyle.modern.description, "时尚设计，大胆用色")
+        XCTAssertEqual(PDFExportStyle.nature.description, "自然元素，清新绿色")
+        XCTAssertEqual(PDFExportStyle.sunset.description, "温暖渐变，橙红色调")
+        XCTAssertEqual(PDFExportStyle.ocean.description, "蓝色渐变，海洋元素")
+        XCTAssertEqual(PDFExportStyle.forest.description, "绿色主题，树叶装饰")
     }
     
     func testPDFExportStyleIcons() throws {
@@ -3825,6 +3833,10 @@ final class DreamLogTests: XCTestCase {
         XCTAssertEqual(PDFExportStyle.classic.iconName, "book.fill")
         XCTAssertEqual(PDFExportStyle.artistic.iconName, "paintpalette.fill")
         XCTAssertEqual(PDFExportStyle.modern.iconName, "sparkles")
+        XCTAssertEqual(PDFExportStyle.nature.iconName, "leaf.fill")
+        XCTAssertEqual(PDFExportStyle.sunset.iconName, "sun.max.fill")
+        XCTAssertEqual(PDFExportStyle.ocean.iconName, "water.fill")
+        XCTAssertEqual(PDFExportStyle.forest.iconName, "tree.fill")
     }
     
     func testPDFPageSizeAllCases() throws {
@@ -3862,14 +3874,15 @@ final class DreamLogTests: XCTestCase {
         
         XCTAssertEqual(config.style, .classic)
         XCTAssertEqual(config.pageSize, .a4)
+        XCTAssertEqual(config.language, .chinese)
         XCTAssertTrue(config.includeCoverPage)
         XCTAssertTrue(config.includeTableOfContents)
         XCTAssertTrue(config.includeAIImages)
         XCTAssertTrue(config.includeStatistics)
         XCTAssertTrue(config.includeTags)
         XCTAssertTrue(config.includeEmotions)
-        XCTAssertEqual(config.customTitle, "我的梦境日记")
-        XCTAssertEqual(config.customSubtitle, "DreamLog Journal")
+        XCTAssertEqual(config.customTitle, "")
+        XCTAssertEqual(config.customSubtitle, "")
         XCTAssertEqual(config.sortBy, .dateDesc)
     }
     
@@ -3952,6 +3965,63 @@ final class DreamLogTests: XCTestCase {
         XCTAssertTrue(allOptions.contains(.dateAsc))
         XCTAssertTrue(allOptions.contains(.clarity))
         XCTAssertTrue(allOptions.contains(.intensity))
+    }
+    
+    func testPDFExportLanguageAllCases() throws {
+        // 测试所有导出语言
+        let allLanguages = PDFExportLanguage.allCases
+        
+        XCTAssertEqual(allLanguages.count, 4)
+        XCTAssertTrue(allLanguages.contains(.chinese))
+        XCTAssertTrue(allLanguages.contains(.english))
+        XCTAssertTrue(allLanguages.contains(.japanese))
+        XCTAssertTrue(allLanguages.contains(.korean))
+    }
+    
+    func testPDFExportLanguageDisplayNames() throws {
+        // 测试语言显示名称
+        XCTAssertEqual(PDFExportLanguage.chinese.displayName, "简体中文")
+        XCTAssertEqual(PDFExportLanguage.english.displayName, "English")
+        XCTAssertEqual(PDFExportLanguage.japanese.displayName, "日本語")
+        XCTAssertEqual(PDFExportLanguage.korean.displayName, "한국어")
+    }
+    
+    func testPDFExportLanguageCoverTitles() throws {
+        // 测试语言封面标题
+        XCTAssertEqual(PDFExportLanguage.chinese.coverTitle, "我的梦境日记")
+        XCTAssertEqual(PDFExportLanguage.english.coverTitle, "My Dream Journal")
+        XCTAssertEqual(PDFExportLanguage.japanese.coverTitle, "私の夢日記")
+        XCTAssertEqual(PDFExportLanguage.korean.coverTitle, "나의 꿈 일기")
+    }
+    
+    func testPDFExportLanguageLocalizedStrings() throws {
+        // 测试语言本地化字符串
+        XCTAssertEqual(PDFExportLanguage.chinese.tableOfContents, "目录")
+        XCTAssertEqual(PDFExportLanguage.english.tableOfContents, "Table of Contents")
+        XCTAssertEqual(PDFExportLanguage.japanese.tableOfContents, "目次")
+        XCTAssertEqual(PDFExportLanguage.korean.tableOfContents, "목차")
+        
+        XCTAssertEqual(PDFExportLanguage.chinese.statistics, "梦境统计")
+        XCTAssertEqual(PDFExportLanguage.english.statistics, "Dream Statistics")
+        
+        XCTAssertEqual(PDFExportLanguage.chinese.totalDreams, "总梦境数")
+        XCTAssertEqual(PDFExportLanguage.english.totalDreams, "Total Dreams")
+        
+        XCTAssertEqual(PDFExportLanguage.chinese.lucidDreams, "清醒梦")
+        XCTAssertEqual(PDFExportLanguage.english.lucidDreams, "Lucid Dreams")
+        
+        XCTAssertEqual(PDFExportLanguage.chinese.backCoverText, "记录你的每一个梦境")
+        XCTAssertEqual(PDFExportLanguage.english.backCoverText, "Record Every Dream")
+    }
+    
+    func testPDFExportConfigCopy() throws {
+        // 测试配置复制方法
+        let original = PDFExportConfig.default
+        let modified = original.copy(\.style, .artistic)
+        
+        XCTAssertEqual(original.style, .classic)
+        XCTAssertEqual(modified.style, .artistic)
+        XCTAssertEqual(modified.pageSize, original.pageSize)
     }
     
     func testDreamJournalExportServiceSingleton() throws {
