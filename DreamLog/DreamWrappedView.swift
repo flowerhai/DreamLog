@@ -179,6 +179,8 @@ struct DreamWrappedView: View {
             DreamTimeCard(data: data)
         case .uniqueStats:
             UniqueStatsCard(data: data)
+        case .yearComparison:
+            YearComparisonCard(data: data)
         case .shareCard:
             ShareCard(data: data)
         }
@@ -271,21 +273,23 @@ struct DreamWrappedView: View {
         // 生成分享数据
         guard let wrappedData = wrappedService.currentWrappedData else { return }
         
-        let shareText = """
-        🌙 我的\(wrappedData.period.displayName)梦境回顾
+        // 生成分享卡片图片
+        let shareItems: [Any]
         
-        📊 记录了 \(wrappedData.totalDreams) 个梦境
-        👁️ \(wrappedData.lucidDreamCount) 个清醒梦
-        🔥 连续记录 \(wrappedData.dreamStreak) 天
-        
-        \(wrappedData.shareCardQuote)
-        
-        来自 DreamLog App
-        """
+        if let cardImage = WrappedShareCardGenerator.generateStandardShareCard(data: wrappedData) {
+            // 同时分享图片和文字
+            shareItems = [
+                shareText(for: wrappedData),
+                cardImage
+            ]
+        } else {
+            // 降级为纯文字分享
+            shareItems = [shareText(for: wrappedData)]
+        }
         
         // 使用 UIActivityViewController 分享
         let activityVC = UIActivityViewController(
-            activityItems: [shareText],
+            activityItems: shareItems,
             applicationActivities: nil
         )
         
@@ -306,6 +310,20 @@ struct DreamWrappedView: View {
         }
     }
     
+    private func shareText(for wrappedData: DreamWrappedData) -> String {
+        """
+        🌙 我的\(wrappedData.period.displayName)梦境回顾
+        
+        📊 记录了 \(wrappedData.totalDreams) 个梦境
+        👁️ \(wrappedData.lucidDreamCount) 个清醒梦
+        🔥 连续记录 \(wrappedData.dreamStreak) 天
+        
+        \(wrappedData.shareCardQuote)
+        
+        来自 DreamLog App
+        """
+    }
+    
     private func saveWrapped() {
         // 导出总结数据为 JSON
         guard let wrappedData = wrappedService.currentWrappedData,
@@ -322,11 +340,25 @@ struct DreamWrappedView: View {
         do {
             try jsonData.write(to: fileURL)
             print("总结已保存到：\(fileURL.path)")
-            
-            // 显示成功提示
-            // 在实际应用中可以使用 Toast 或 Alert
         } catch {
             print("保存失败：\(error)")
+        }
+    }
+    
+    private func exportShareCardImage() {
+        guard let wrappedData = wrappedService.currentWrappedData else { return }
+        
+        // 导出所有类型的分享卡片
+        let exportedURLs = wrappedService.exportAllShareCards(data: wrappedData)
+        
+        if exportedURLs.isEmpty {
+            print("导出卡片图片失败")
+            return
+        }
+        
+        print("卡片图片已导出到:")
+        for (type, url) in exportedURLs {
+            print("  - \(type.displayName): \(url.path)")
         }
     }
 }
@@ -903,6 +935,205 @@ struct UniqueStatItem: View {
     }
 }
 
+// MARK: - 年度对比卡片
+
+struct YearComparisonCard: View {
+    let data: DreamWrappedData
+    @StateObject private var wrappedService = DreamWrappedService.shared
+    @EnvironmentObject var dreamStore: DreamStore
+    
+    @State private var comparisonData: YearComparisonData?
+    @State private var isLoading: Bool = false
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            HStack {
+                Image(systemName: "arrow.left.arrow.right")
+                    .font(.title2)
+                Text("年度对比")
+                    .font(.title)
+                    .fontWeight(.bold)
+            }
+            .foregroundColor(.white)
+            
+            if isLoading {
+                ProgressView()
+                    .scaleEffect(1.2)
+                    .tint(.white)
+            } else if let comparison = comparisonData {
+                comparisonContent(comparison)
+            } else {
+                noDataView
+            }
+        }
+        .padding(30)
+        .background(
+            RoundedRectangle(cornerRadius: 24)
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [Color(hex: "6366F1"), Color(hex: "8B5CF6")]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+        )
+        .padding()
+        .onAppear {
+            loadComparisonData()
+        }
+    }
+    
+    @ViewBuilder
+    private func comparisonContent(_ comparison: YearComparisonData) -> some View {
+        VStack(spacing: 20) {
+            // 今年数据
+            HStack(spacing: 20) {
+                YearStatCard(title: "今年", value: "\(comparison.thisYear.totalDreams)", subtitle: "个梦境", color: .white)
+                YearStatCard(title: "去年", value: "\(comparison.lastYear.totalDreams)", subtitle: "个梦境", color: .white.opacity(0.7))
+            }
+            
+            Divider().background(Color.white.opacity(0.2))
+            
+            // 对比洞察
+            VStack(alignment: .leading, spacing: 12) {
+                Text("📊 年度洞察")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                ForEach(comparison.insights, id: \.self) { insight in
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundColor(.white.opacity(0.8))
+                        Text(insight)
+                            .font(.subheadline)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding()
+            .background(Color.white.opacity(0.1))
+            .cornerRadius(12)
+            
+            // 变化指标
+            HStack(spacing: 16) {
+                if comparison.dreamsChange != 0 {
+                    ChangeIndicator(value: comparison.dreamsChange, label: "梦境数")
+                }
+                if comparison.lucidChange != 0 {
+                    ChangeIndicator(value: comparison.lucidChange, label: "清醒梦")
+                }
+                if comparison.clarityChange != 0 {
+                    ChangeIndicator(value: comparison.clarityChange, isDouble: true, label: "清晰度")
+                }
+            }
+        }
+    }
+    
+    private var noDataView: some View {
+        VStack(spacing: 16) {
+            Image(systemName: "calendar.badge.clock")
+                .font(.system(size: 50))
+                .foregroundColor(.white.opacity(0.5))
+            
+            Text("暂无对比数据")
+                .font(.headline)
+                .foregroundColor(.white)
+            
+            Text("需要至少两年的梦境记录才能生成年度对比")
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.7))
+                .multilineTextAlignment(.center)
+            
+            Button(action: loadComparisonData) {
+                Text("重新加载")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 10)
+                    .background(Color.white.opacity(0.2))
+                    .cornerRadius(20)
+            }
+        }
+    }
+    
+    private func loadComparisonData() {
+        isLoading = true
+        DispatchQueue.global(qos: .userInitiated).async {
+            let data = wrappedService.generateYearOverYearComparison(dreams: dreamStore.dreams)
+            DispatchQueue.main.async {
+                comparisonData = data
+                isLoading = false
+            }
+        }
+    }
+}
+
+struct YearStatCard: View {
+    let title: String
+    let value: String
+    let subtitle: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(color.opacity(0.8))
+            
+            Text(value)
+                .font(.title)
+                .fontWeight(.bold)
+                .foregroundColor(color)
+            
+            Text(subtitle)
+                .font(.caption)
+                .foregroundColor(color.opacity(0.7))
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Color.white.opacity(0.1))
+        .cornerRadius(12)
+    }
+}
+
+struct ChangeIndicator: View {
+    let value: Double
+    let isDouble: Bool
+    let label: String
+    
+    init(value: Int, label: String) {
+        self.value = Double(value)
+        self.isDouble = false
+        self.label = label
+    }
+    
+    init(value: Double, isDouble: Bool = false, label: String) {
+        self.value = value
+        self.isDouble = isDouble
+        self.label = label
+    }
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(spacing: 4) {
+                Image(systemName: value >= 0 ? "arrow.up.right" : "arrow.down.right")
+                    .foregroundColor(value >= 0 ? .green : .red)
+                Text(String(format: "%\(value >= 0 ? "+" : "")%.0f", value))
+                    .font(.headline)
+                    .foregroundColor(value >= 0 ? .green : .red)
+            }
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.white.opacity(0.7))
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color.white.opacity(0.1))
+        .cornerRadius(8)
+    }
+}
+
 // MARK: - 分享卡片
 
 struct ShareCard: View {
@@ -979,34 +1210,6 @@ struct WrapLayout: View {
             }
             .padding(.horizontal, 4)
         }
-    }
-}
-
-// MARK: - 颜色扩展
-
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3:
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6:
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8:
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
     }
 }
 

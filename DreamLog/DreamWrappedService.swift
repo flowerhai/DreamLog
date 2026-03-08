@@ -42,6 +42,7 @@ enum WrappedCardType: String, CaseIterable, Identifiable {
     case vividDream = "最清晰的梦"
     case dreamTime = "梦境时间"
     case uniqueStats = "独特统计"
+    case yearComparison = "年度对比"
     case shareCard = "分享卡片"
     
     var id: String { rawValue }
@@ -56,6 +57,7 @@ enum WrappedCardType: String, CaseIterable, Identifiable {
         case .vividDream: return "star.fill"
         case .dreamTime: return "clock.fill"
         case .uniqueStats: return "sparkles"
+        case .yearComparison: return "arrow.left.arrow.right"
         case .shareCard: return "square.and.arrow.up.fill"
         }
     }
@@ -70,6 +72,7 @@ enum WrappedCardType: String, CaseIterable, Identifiable {
         case .vividDream: return ["#FFD700", "#FFA500"]
         case .dreamTime: return ["#00B4DB", "#0083B0"]
         case .uniqueStats: return ["#F093FB", "#F5576C"]
+        case .yearComparison: return ["#6366F1", "#8B5CF6"]
         case .shareCard: return ["#667EEA", "#764BA2"]
         }
     }
@@ -410,5 +413,198 @@ class DreamWrappedService: ObservableObject {
     func clearWrappedData() {
         currentWrappedData = nil
         generatedPeriod = .year
+    }
+    
+    // MARK: - 年度对比功能 (Phase 11.5)
+    
+    /// 生成年度对比数据（今年 vs 去年）
+    func generateYearOverYearComparison(dreams: [Dream]) -> YearComparisonData? {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 今年的梦境
+        let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now))!
+        let thisYearDreams = dreams.filter { $0.timestamp >= startOfYear }
+        
+        // 去年的梦境
+        let lastYear = calendar.component(.year, from: now) - 1
+        let startOfLastYear = calendar.date(from: DateComponents(year: lastYear))!
+        let endOfLastYear = calendar.date(byAdding: .year, value: 1, to: startOfLastYear)!
+        let lastYearDreams = dreams.filter { $0.timestamp >= startOfLastYear && $0.timestamp < endOfLastYear }
+        
+        // 如果去年没有数据，返回 nil
+        if lastYearDreams.isEmpty {
+            return nil
+        }
+        
+        // 生成对比数据
+        let thisYearData = analyzeDreams(thisYearDreams, period: .year)
+        let lastYearData = analyzeDreams(lastYearDreams, period: .year)
+        
+        return YearComparisonData(
+            thisYear: thisYearData,
+            lastYear: lastYearData,
+            dreamsChange: thisYearDreams.count - lastYearDreams.count,
+            dreamsChangePercent: lastYearDreams.count > 0 
+                ? Double(thisYearDreams.count - lastYearDreams.count) / Double(lastYearDreams.count) * 100 
+                : 0,
+            lucidChange: thisYearData.lucidDreamCount - lastYearData.lucidDreamCount,
+            clarityChange: thisYearData.averageClarity - lastYearData.averageClarity,
+            streakChange: thisYearData.dreamStreak - lastYearData.dreamStreak
+        )
+    }
+    
+    /// 生成月度对比数据（本月 vs 上月）
+    func generateMonthOverMonthComparison(dreams: [Dream]) -> MonthComparisonData? {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 本月的梦境
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
+        let thisMonthDreams = dreams.filter { $0.timestamp >= startOfMonth }
+        
+        // 上月的梦境
+        let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfMonth)!
+        let lastMonthDreams = dreams.filter { $0.timestamp >= startOfLastMonth && $0.timestamp < startOfMonth }
+        
+        // 如果上月没有数据，返回 nil
+        if lastMonthDreams.isEmpty {
+            return nil
+        }
+        
+        // 生成对比数据
+        let thisMonthData = analyzeDreams(thisMonthDreams, period: .month)
+        let lastMonthData = analyzeDreams(lastMonthDreams, period: .month)
+        
+        return MonthComparisonData(
+            thisMonth: thisMonthData,
+            lastMonth: lastMonthData,
+            dreamsChange: thisMonthDreams.count - lastMonthDreams.count,
+            dreamsChangePercent: lastMonthDreams.count > 0 
+                ? Double(thisMonthDreams.count - lastMonthDreams.count) / Double(lastMonthDreams.count) * 100 
+                : 0,
+            lucidChange: thisMonthData.lucidDreamCount - lastMonthData.lucidDreamCount,
+            clarityChange: thisMonthData.averageClarity - lastMonthData.averageClarity
+        )
+    }
+    
+    // MARK: - 图片导出功能 (Phase 11.5)
+    
+    /// 导出分享卡片图片
+    func exportShareCard(type: ShareCardType, data: DreamWrappedData) -> URL? {
+        var image: UIImage?
+        var fileName: String
+        
+        switch type {
+        case .standard:
+            image = WrappedShareCardGenerator.generateStandardShareCard(data: data)
+            fileName = "DreamWrapped_Standard_\(Date().formatted(.dateTime.year().month().day()))"
+        case .square:
+            image = WrappedShareCardGenerator.generateSquareShareCard(data: data)
+            fileName = "DreamWrapped_Square_\(Date().formatted(.dateTime.year().month().day()))"
+        case .wechat:
+            image = WrappedShareCardGenerator.generateWeChatShareCard(data: data)
+            fileName = "DreamWrapped_WeChat_\(Date().formatted(.dateTime.year().month().day()))"
+        }
+        
+        guard let cardImage = image else { return nil }
+        
+        return WrappedShareCardGenerator.saveCard(image: cardImage, fileName: fileName)
+    }
+    
+    /// 批量导出所有类型的分享卡片
+    func exportAllShareCards(data: DreamWrappedData) -> [ShareCardType: URL] {
+        var results: [ShareCardType: URL] = [:]
+        
+        for type in ShareCardType.allCases {
+            if let url = exportShareCard(type: type, data: data) {
+                results[type] = url
+            }
+        }
+        
+        return results
+    }
+}
+
+// MARK: - 对比数据结构
+
+/// 年度对比数据
+struct YearComparisonData {
+    let thisYear: DreamWrappedData
+    let lastYear: DreamWrappedData
+    let dreamsChange: Int
+    let dreamsChangePercent: Double
+    let lucidChange: Int
+    let clarityChange: Double
+    let streakChange: Int
+    
+    var insights: [String] {
+        var insights: [String] = []
+        
+        if dreamsChange > 0 {
+            insights.append("今年比去年多记录了 \(dreamsChange) 个梦境 (\(String(format: "%.1f", dreamsChangePercent))% 增长)")
+        } else if dreamsChange < 0 {
+            insights.append("今年比去年少记录了 \(abs(dreamsChange)) 个梦境")
+        }
+        
+        if lucidChange > 0 {
+            insights.append("清醒梦数量增加了 \(lucidChange) 个 🌟")
+        }
+        
+        if clarityChange > 0 {
+            insights.append("梦境清晰度提高了 \(String(format: "%.1f", clarityChange)) 分")
+        }
+        
+        if streakChange > 0 {
+            insights.append("连续记录天数增加了 \(streakChange) 天 🔥")
+        }
+        
+        return insights.isEmpty ? ["今年和去年的梦境记录相当"] : insights
+    }
+}
+
+/// 月度对比数据
+struct MonthComparisonData {
+    let thisMonth: DreamWrappedData
+    let lastMonth: DreamWrappedData
+    let dreamsChange: Int
+    let dreamsChangePercent: Double
+    let lucidChange: Int
+    let clarityChange: Double
+    
+    var insights: [String] {
+        var insights: [String] = []
+        
+        if dreamsChange > 0 {
+            insights.append("本月比上月多记录了 \(dreamsChange) 个梦境")
+        } else if dreamsChange < 0 {
+            insights.append("本月比上月少记录了 \(abs(dreamsChange)) 个梦境")
+        }
+        
+        if lucidChange > 0 {
+            insights.append("清醒梦数量增加了 \(lucidChange) 个")
+        }
+        
+        if clarityChange > 0 {
+            insights.append("梦境清晰度提高了 \(String(format: "%.1f", clarityChange)) 分")
+        }
+        
+        return insights.isEmpty ? ["本月和上月的梦境记录相当"] : insights
+    }
+}
+
+/// 分享卡片类型
+enum ShareCardType: String, CaseIterable {
+    case standard = "标准"      // 1080x1920 - Instagram Story
+    case square = "方形"        // 1080x1080 - Instagram Post
+    case wechat = "微信"        // 1080x1350 - 微信朋友圈
+    
+    var displayName: String { rawValue }
+    var sizeDescription: String {
+        switch self {
+        case .standard: return "1080×1920 (Story)"
+        case .square: return "1080×1080 (Post)"
+        case .wechat: return "1080×1350 (微信)"
+        }
     }
 }

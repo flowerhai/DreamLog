@@ -3585,4 +3585,216 @@ final class DreamLogTests: XCTestCase {
         XCTAssertTrue(wrappedData.topEmotions.isEmpty)
         XCTAssertTrue(wrappedData.topTags.isEmpty)
     }
+    
+    // MARK: - Phase 11.5 年度对比功能测试
+    
+    func testYearOverYearComparison() throws {
+        let service = DreamWrappedService.shared
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 创建今年的梦境
+        var thisYearDreams: [Dream] = []
+        for i in 0..<10 {
+            let date = calendar.date(byAdding: .month, value: -i, to: now)!
+            thisYearDreams.append(Dream(
+                title: "今年梦 \(i)",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                timestamp: date,
+                clarity: 7,
+                intensity: 6,
+                isLucid: i % 2 == 0
+            ))
+        }
+        
+        // 创建去年的梦境
+        var lastYearDreams: [Dream] = []
+        for i in 0..<8 {
+            let date = calendar.date(byAdding: .year, value: -1, to: now)!
+            let monthOffset = calendar.date(byAdding: .month, value: -i, to: date)!
+            lastYearDreams.append(Dream(
+                title: "去年梦 \(i)",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                timestamp: monthOffset,
+                clarity: 6,
+                intensity: 5,
+                isLucid: i % 3 == 0
+            ))
+        }
+        
+        let allDreams = thisYearDreams + lastYearDreams
+        
+        // 测试年度对比
+        let comparison = service.generateYearOverYearComparison(dreams: allDreams)
+        
+        XCTAssertNotNil(comparison)
+        XCTAssertEqual(comparison?.thisYear.totalDreams, 10)
+        XCTAssertEqual(comparison?.lastYear.totalDreams, 8)
+        XCTAssertEqual(comparison?.dreamsChange, 2)
+        XCTAssertGreaterThan(comparison?.dreamsChangePercent ?? 0, 0)
+    }
+    
+    func testYearOverYearComparisonNoLastYearData() throws {
+        let service = DreamWrappedService.shared
+        
+        // 只有今年的梦境
+        let dreams = [
+            Dream(title: "今年梦", content: "内容", tags: ["测试"], emotions: [.calm])
+        ]
+        
+        let comparison = service.generateYearOverYearComparison(dreams: dreams)
+        
+        XCTAssertNil(comparison)  // 没有去年数据应该返回 nil
+    }
+    
+    func testMonthOverMonthComparison() throws {
+        let service = DreamWrappedService.shared
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 创建本月的梦境
+        var thisMonthDreams: [Dream] = []
+        for i in 0..<5 {
+            let date = calendar.date(byAdding: .day, value: -i, to: now)!
+            thisMonthDreams.append(Dream(
+                title: "本月梦 \(i)",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                timestamp: date,
+                clarity: 7,
+                intensity: 6
+            ))
+        }
+        
+        // 创建上月的梦境
+        var lastMonthDreams: [Dream] = []
+        for i in 0..<3 {
+            let date = calendar.date(byAdding: .month, value: -1, to: now)!
+            let dayOffset = calendar.date(byAdding: .day, value: -i, to: date)!
+            lastMonthDreams.append(Dream(
+                title: "上月梦 \(i)",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                timestamp: dayOffset,
+                clarity: 6,
+                intensity: 5
+            ))
+        }
+        
+        let allDreams = thisMonthDreams + lastMonthDreams
+        
+        // 测试月度对比
+        let comparison = service.generateMonthOverMonthComparison(dreams: allDreams)
+        
+        XCTAssertNotNil(comparison)
+        XCTAssertEqual(comparison?.thisMonth.totalDreams, 5)
+        XCTAssertEqual(comparison?.lastMonth.totalDreams, 3)
+        XCTAssertEqual(comparison?.dreamsChange, 2)
+    }
+    
+    func testYearComparisonInsights() throws {
+        let service = DreamWrappedService.shared
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 创建今年更多梦境
+        var thisYearDreams: [Dream] = []
+        for i in 0..<20 {
+            let date = calendar.date(byAdding: .month, value: -i % 12, to: now)!
+            thisYearDreams.append(Dream(
+                title: "今年梦 \(i)",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                timestamp: date,
+                clarity: 8,
+                intensity: 7,
+                isLucid: true
+            ))
+        }
+        
+        // 创建去年较少梦境
+        var lastYearDreams: [Dream] = []
+        for i in 0..<10 {
+            let date = calendar.date(byAdding: .year, value: -1, to: now)!
+            lastYearDreams.append(Dream(
+                title: "去年梦 \(i)",
+                content: "内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                timestamp: date,
+                clarity: 6,
+                intensity: 5,
+                isLucid: false
+            ))
+        }
+        
+        let allDreams = thisYearDreams + lastYearDreams
+        let comparison = service.generateYearOverYearComparison(dreams: allDreams)
+        
+        XCTAssertNotNil(comparison)
+        XCTAssertFalse(comparison!.insights.isEmpty)
+        
+        // 验证包含增长洞察
+        let hasGrowthInsight = comparison!.insights.contains { $0.contains("多记录") || $0.contains("增长") }
+        XCTAssertTrue(hasGrowthInsight)
+    }
+    
+    // MARK: - Phase 11.5 分享卡片类型测试
+    
+    func testShareCardTypeCases() throws {
+        // 测试所有分享卡片类型
+        let allTypes = ShareCardType.allCases
+        
+        XCTAssertEqual(allTypes.count, 3)
+        XCTAssertTrue(allTypes.contains(.standard))
+        XCTAssertTrue(allTypes.contains(.square))
+        XCTAssertTrue(allTypes.contains(.wechat))
+    }
+    
+    func testShareCardTypeDisplayNames() throws {
+        XCTAssertEqual(ShareCardType.standard.displayName, "标准")
+        XCTAssertEqual(ShareCardType.square.displayName, "方形")
+        XCTAssertEqual(ShareCardType.wechat.displayName, "微信")
+    }
+    
+    func testShareCardTypeSizeDescriptions() throws {
+        XCTAssertEqual(ShareCardType.standard.sizeDescription, "1080×1920 (Story)")
+        XCTAssertEqual(ShareCardType.square.sizeDescription, "1080×1080 (Post)")
+        XCTAssertEqual(ShareCardType.wechat.sizeDescription, "1080×1350 (微信)")
+    }
+    
+    // MARK: - Phase 11.5 图片导出功能测试
+    
+    func testViewImageRendererBasic() throws {
+        // 测试视图渲染器基本功能
+        let testView = Text("测试")
+            .frame(width: 100, height: 100)
+        
+        let image = ViewImageRenderer.render(view: testView, size: CGSize(width: 100, height: 100))
+        
+        XCTAssertNotNil(image)
+        XCTAssertEqual(image?.size.width, 100)
+        XCTAssertEqual(image?.size.height, 100)
+    }
+    
+    func testWrappedCardTypeYearComparison() throws {
+        // 测试新增的年度对比卡片类型
+        let allCards = WrappedCardType.allCases
+        
+        XCTAssertTrue(allCards.contains(.yearComparison))
+        XCTAssertEqual(WrappedCardType.yearComparison.icon, "arrow.left.arrow.right")
+        XCTAssertEqual(WrappedCardType.yearComparison.gradientColors, ["#6366F1", "#8B5CF6"])
+    }
+    
+    func testWrappedCardTypeCount() throws {
+        // 验证卡片类型总数（包含新增的年度对比）
+        XCTAssertEqual(WrappedCardType.allCases.count, 11)  // 原来 10 个 + 年度对比 1 个
+    }
 }
