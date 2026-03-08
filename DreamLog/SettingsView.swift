@@ -16,7 +16,7 @@ struct SettingsView: View {
     @AppStorage("autoAnalysis") private var autoAnalysis = true
     @AppStorage("darkMode") private var darkMode = true
     
-    @StateObject private var reminderService = SmartReminderService.shared
+    @ObservedObject private var reminderService = SmartReminderService.shared
     
     @State private var showingExportOptions = false
     @State private var showingImportPicker = false

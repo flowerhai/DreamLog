@@ -11,8 +11,8 @@ import HealthKit
 // MARK: - 主视图
 
 struct SleepQualityAnalysisView: View {
-    @StateObject private var analysisService = SleepQualityAnalysisService.shared
-    @StateObject private var healthKitService = HealthKitService.shared
+    @ObservedObject private var analysisService = SleepQualityAnalysisService.shared
+    @ObservedObject private var healthKitService = HealthKitService.shared
     @State private var selectedPeriod: Int = 30
     @State private var showingRecommendations = false
     @State private var showingCorrelationDetails = false

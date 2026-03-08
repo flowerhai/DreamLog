@@ -9,7 +9,7 @@ import SwiftUI
 
 struct DreamTrendView: View {
     @EnvironmentObject var dreamStore: DreamStore
-    @StateObject private var trendService = DreamTrendService.shared
+    @ObservedObject private var trendService = DreamTrendService.shared
     @State private var selectedPeriod: Int = 30 // 默认分析 30 天
     @State private var showingPeriodPicker = false
     

@@ -11,7 +11,7 @@ import SwiftUI
 
 struct DreamWallpaperView: View {
     let dream: Dream
-    @StateObject private var wallpaperService = DreamWallpaperService.shared
+    @ObservedObject private var wallpaperService = DreamWallpaperService.shared
     @State private var selectedStyle: DreamWallpaper.WallpaperStyle = .gradient
     @State private var selectedSize: DreamWallpaper.WallpaperSize = .universal
     @State private var showingGenerator = false
@@ -345,7 +345,7 @@ struct WallpaperGeneratorView: View {
     let style: DreamWallpaper.WallpaperStyle
     let size: DreamWallpaper.WallpaperSize
     @Environment(\.dismiss) var dismiss
-    @StateObject private var wallpaperService = DreamWallpaperService.shared
+    @ObservedObject private var wallpaperService = DreamWallpaperService.shared
     
     var body: some View {
         NavigationView {
@@ -497,7 +497,7 @@ struct GenerationStepView: View {
 // MARK: - 壁纸库视图
 
 struct WallpaperLibraryView: View {
-    @StateObject private var wallpaperService = DreamWallpaperService.shared
+    @ObservedObject private var wallpaperService = DreamWallpaperService.shared
     @State private var selectedWallpaper: DreamWallpaper?
     @State private var showingGrid = true
     
@@ -605,7 +605,7 @@ struct WallpaperListItem: View {
 struct WallpaperDetailView: View {
     let wallpaper: DreamWallpaper
     @Environment(\.dismiss) var dismiss
-    @StateObject private var wallpaperService = DreamWallpaperService.shared
+    @ObservedObject private var wallpaperService = DreamWallpaperService.shared
     
     var body: some View {
         NavigationView {

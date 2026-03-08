@@ -324,7 +324,7 @@ class EnhancedShareService: ObservableObject {
 struct SharePlatformPicker: View {
     let dream: Dream
     let style: ShareCardStyle
-    @StateObject private var shareService = EnhancedShareService.shared
+    @ObservedObject private var shareService = EnhancedShareService.shared
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -415,7 +415,7 @@ struct SharePlatformPicker: View {
 // MARK: - 二维码分享视图
 struct QRCodeShareView: View {
     let dream: Dream
-    @StateObject private var shareService = EnhancedShareService.shared
+    @ObservedObject private var shareService = EnhancedShareService.shared
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -470,7 +470,7 @@ struct QRCodeShareView: View {
 
 // MARK: - 分享历史视图
 struct ShareHistoryView: View {
-    @StateObject private var shareService = EnhancedShareService.shared
+    @ObservedObject private var shareService = EnhancedShareService.shared
     @Environment(\.dismiss) var dismiss
     
     var body: some View {

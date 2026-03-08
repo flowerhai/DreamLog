@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - 梦境故事主视图
 
 struct DreamStoryView: View {
-    @StateObject private var storyService = DreamStoryService.shared
+    @ObservedObject private var storyService = DreamStoryService.shared
     @State private var selectedStory: DreamStory?
     @State private var showStoryDetail = false
     @State private var selectedStyle: DreamStory.NarrativeStyle = .firstPerson

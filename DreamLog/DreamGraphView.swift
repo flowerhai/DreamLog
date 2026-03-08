@@ -12,8 +12,8 @@ import UIKit
 // MARK: - 梦境关联图谱主视图
 
 struct DreamGraphView: View {
-    @StateObject private var dreamStore = DreamStore.shared
-    @StateObject private var graphService = DreamGraphService.shared
+    @EnvironmentObject var dreamStore: DreamStore
+    @ObservedObject private var graphService = DreamGraphService.shared
     @State private var selectedNode: GraphNode?
     @State private var selectedEdge: GraphEdge?
     @State private var showingFilters = false

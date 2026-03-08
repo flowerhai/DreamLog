@@ -196,7 +196,7 @@ extension SpeechSynthesisService: AVSpeechSynthesizerDelegate {
 
 struct DreamAudioPlayerView: View {
     let dreamContent: String
-    @StateObject private var speechService = SpeechSynthesisService.shared
+    @ObservedObject private var speechService = SpeechSynthesisService.shared
     
     var body: some View {
         HStack(spacing: 12) {
@@ -239,7 +239,7 @@ struct DreamAudioPlayerView: View {
 // MARK: - 语音设置视图
 
 struct SpeechSettingsView: View {
-    @StateObject private var speechService = SpeechSynthesisService.shared
+    @ObservedObject private var speechService = SpeechSynthesisService.shared
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {

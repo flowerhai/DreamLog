@@ -14,9 +14,9 @@ struct DreamDetailView: View {
     @EnvironmentObject var dreamStore: DreamStore
     @StateObject private var shareService = ShareService()
     @StateObject private var friendService = FriendService()
-    @StateObject private var aiArtService = AIArtService.shared
-    @StateObject private var speechService = SpeechSynthesisService.shared
-    @StateObject private var storyService = DreamStoryService.shared
+    @ObservedObject private var aiArtService = AIArtService.shared
+    @ObservedObject private var speechService = SpeechSynthesisService.shared
+    @ObservedObject private var storyService = DreamStoryService.shared
     @State private var showingShareSheet = false
     @State private var showingPrivateShareSheet = false
     @State private var showingEditSheet = false
@@ -200,7 +200,7 @@ struct ContentSection: View {
 // MARK: - 语音播放区域
 struct AudioPlaybackSection: View {
     let dreamContent: String
-    @StateObject private var speechService = SpeechSynthesisService.shared
+    @ObservedObject private var speechService = SpeechSynthesisService.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

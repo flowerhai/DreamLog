@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - 艺术画廊主视图
 
 struct DreamArtGalleryView: View {
-    @StateObject private var aiArtService = AIArtService.shared
+    @ObservedObject private var aiArtService = AIArtService.shared
     @State private var selectedStyle: DreamArt.ArtStyle = .dreamy
     @State private var showingGrid = true
     @State private var searchText = ""
@@ -432,7 +432,7 @@ struct InfoRow: View {
 struct GenerateArtSheet: View {
     let dream: Dream
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var aiArtService = AIArtService.shared
+    @ObservedObject private var aiArtService = AIArtService.shared
     @State private var selectedStyle: DreamArt.ArtStyle = .dreamy
     @State private var selectedStyles: Set<DreamArt.ArtStyle> = [.dreamy]
     @State private var customPrompt: String = ""

@@ -7,7 +7,7 @@
 import SwiftUI
 
 struct MeditationView: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     @State private var selectedTab = 0
     @State private var showingMixer = false
     @State private var customMix: SoundMix?
@@ -72,7 +72,7 @@ struct MeditationView: View {
 
 // MARK: - 音效库视图
 struct SoundLibraryView: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     @State private var selectedCategory: SoundCategory? = nil
     
     var filteredSounds: [SoundType] {
@@ -147,7 +147,7 @@ struct FilterChip: View {
 }
 
 struct SoundCard: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     let sound: SoundType
     @State private var isPlaying = false
     
@@ -208,7 +208,7 @@ struct SoundCard: View {
 
 // MARK: - 引导冥想列表
 struct GuidedMeditationListView: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     
     var body: some View {
         ScrollView {
@@ -224,7 +224,7 @@ struct GuidedMeditationListView: View {
 }
 
 struct GuidedMeditationCard: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     let meditation: GuidedMeditationType
     @State private var isPlaying = false
     
@@ -289,7 +289,7 @@ struct GuidedMeditationCard: View {
 
 // MARK: - 混音器视图
 struct SoundMixerView: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     @Binding var customMix: SoundMix?
     @State private var sounds: [SoundMix.SoundMixItem] = []
     @State private var masterVolume: Float = 1.0
@@ -535,7 +535,7 @@ struct SavePresetSheet: View {
 
 // MARK: - 我的预设视图
 struct MyPresetsView: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     @State private var presets: [SoundMix] = []
     
     var body: some View {
@@ -573,7 +573,7 @@ struct MyPresetsView: View {
 }
 
 struct PresetCard: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     let preset: SoundMix
     @State private var isPlaying = false
     
@@ -655,7 +655,7 @@ struct PresetCard: View {
 
 // MARK: - 迷你播放器
 struct MiniPlayerView: View {
-    @StateObject private var meditationService = MeditationService.shared
+    @ObservedObject private var meditationService = MeditationService.shared
     
     var body: some View {
         Group {

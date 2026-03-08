@@ -388,7 +388,7 @@ class DreamDictionaryService: ObservableObject {
 
 /// 梦境词典浏览视图
 struct DreamDictionaryView: View {
-    @StateObject private var dictionary = DreamDictionaryService.shared
+    @ObservedObject private var dictionary = DreamDictionaryService.shared
     @State private var selectedSymbol: DreamSymbol?
     @State private var showingSearch = false
     

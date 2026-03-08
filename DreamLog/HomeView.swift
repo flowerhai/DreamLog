@@ -484,7 +484,7 @@ struct StyleButton: View {
 
 struct DreamStoriesCard: View {
     @EnvironmentObject var dreamStore: DreamStore
-    @StateObject private var storyService = DreamStoryService.shared
+    @ObservedObject private var storyService = DreamStoryService.shared
     @State private var showingStories = false
     
     var storiesCount: Int {
