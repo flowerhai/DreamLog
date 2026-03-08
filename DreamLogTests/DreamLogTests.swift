@@ -2296,4 +2296,303 @@ final class DreamLogTests: XCTestCase {
             XCTAssertEqual(ratio, decoded, "\(ratio.rawValue) 应该可以正确编码和解码")
         }
     }
+    
+    // MARK: - DreamMusicService 测试 (Phase 9)
+    
+    func testDreamMusicServiceSingleton() throws {
+        let service1 = DreamMusicService.shared
+        let service2 = DreamMusicService.shared
+        
+        XCTAssertIdentical(service1, service2, "DreamMusicService 应该是单例")
+    }
+    
+    func testDreamMusicServiceInitialState() async throws {
+        let service = DreamMusicService.shared
+        
+        XCTAssertFalse(service.isGenerating)
+        XCTAssertEqual(service.generationProgress, 0.0)
+        XCTAssertNil(service.currentMusic)
+        XCTAssertNil(service.errorMessage)
+    }
+    
+    func testDreamMusicMoodAllCases() throws {
+        // 验证所有情绪都可以编码和解码
+        for mood in DreamMusic.DreamMusicMood.allCases {
+            let encoded = try JSONEncoder().encode(mood)
+            let decoded = try JSONDecoder().decode(DreamMusic.DreamMusicMood.self, from: encoded)
+            XCTAssertEqual(mood, decoded, "\(mood.rawValue) 应该可以正确编码和解码")
+            
+            // 验证每个情绪都有图标和颜色
+            XCTAssertFalse(mood.icon.isEmpty, "\(mood.rawValue) 应该有图标")
+            XCTAssertFalse(mood.color.isEmpty, "\(mood.rawValue) 应该有颜色")
+            XCTAssertFalse(mood.description.isEmpty, "\(mood.rawValue) 应该有描述")
+        }
+    }
+    
+    func testDreamMusicTempoAllCases() throws {
+        // 验证所有节奏都可以编码和解码
+        for tempo in DreamMusic.DreamMusicTempo.allCases {
+            let encoded = try JSONEncoder().encode(tempo)
+            let decoded = try JSONDecoder().decode(DreamMusic.DreamMusicTempo.self, from: encoded)
+            XCTAssertEqual(tempo, decoded, "\(tempo.rawValue) 应该可以正确编码和解码")
+            
+            // 验证 BPM 范围有效
+            XCTAssertGreaterThan(tempo.bpmRange.upperBound, tempo.bpmRange.lowerBound)
+            XCTAssertGreaterThanOrEqual(tempo.bpmRange.lowerBound, 40)
+            XCTAssertLessThanOrEqual(tempo.bpmRange.upperBound, 140)
+        }
+    }
+    
+    func testDreamMusicInstrumentAllCases() throws {
+        // 验证所有乐器都可以编码和解码
+        for instrument in DreamMusic.DreamMusicInstrument.allCases {
+            let encoded = try JSONEncoder().encode(instrument)
+            let decoded = try JSONDecoder().decode(DreamMusic.DreamMusicInstrument.self, from: encoded)
+            XCTAssertEqual(instrument, decoded, "\(instrument.rawValue) 应该可以正确编码和解码")
+            
+            // 验证每个乐器都有图标
+            XCTAssertFalse(instrument.icon.isEmpty, "\(instrument.rawValue) 应该有图标")
+        }
+    }
+    
+    func testDreamMusicStructure() throws {
+        let dreamId = UUID()
+        let music = DreamMusic(
+            dreamId: dreamId,
+            title: "测试音乐",
+            duration: 180,
+            mood: .peaceful,
+            tempo: .slow,
+            instruments: [.piano, .strings],
+            audioLayers: [],
+            createdAt: Date()
+        )
+        
+        XCTAssertEqual(music.dreamId, dreamId)
+        XCTAssertEqual(music.title, "测试音乐")
+        XCTAssertEqual(music.duration, 180)
+        XCTAssertEqual(music.mood, .peaceful)
+        XCTAssertEqual(music.tempo, .slow)
+        XCTAssertEqual(music.instruments.count, 2)
+        XCTAssertFalse(music.isFavorite)
+        XCTAssertNotNil(music.id)
+    }
+    
+    func testAudioLayerStructure() throws {
+        let layer = DreamMusic.AudioLayer(
+            instrument: .piano,
+            volume: 0.8,
+            pan: 0.0,
+            reverb: 0.5,
+            delay: 0.3,
+            loop: true,
+            sampleName: "piano_peaceful"
+        )
+        
+        XCTAssertEqual(layer.instrument, .piano)
+        XCTAssertEqual(layer.volume, 0.8)
+        XCTAssertEqual(layer.pan, 0.0)
+        XCTAssertEqual(layer.reverb, 0.5)
+        XCTAssertEqual(layer.delay, 0.3)
+        XCTAssertTrue(layer.loop)
+        XCTAssertEqual(layer.sampleName, "piano_peaceful")
+    }
+    
+    func testDreamMusicMoodColorConversion() throws {
+        // 验证所有情绪颜色都是有效的十六进制格式
+        for mood in DreamMusic.DreamMusicMood.allCases {
+            let color = mood.color
+            // 颜色应该是 6 位十六进制
+            XCTAssertEqual(color.count, 6, "\(mood.rawValue) 的颜色应该是 6 位十六进制")
+            XCTAssertTrue(color.allSatisfy { $0.isHexDigit }, "\(mood.rawValue) 的颜色应该是有效的十六进制")
+        }
+    }
+    
+    func testDreamMusicCodable() throws {
+        let dreamId = UUID()
+        let music = DreamMusic(
+            dreamId: dreamId,
+            title: "测试音乐",
+            duration: 180,
+            mood: .dreamy,
+            tempo: .moderate,
+            instruments: [.piano, .harp, .windChimes],
+            audioLayers: [
+                DreamMusic.AudioLayer(
+                    instrument: .piano,
+                    volume: 0.7,
+                    pan: -0.2,
+                    reverb: 0.6,
+                    delay: 0.3,
+                    loop: true,
+                    sampleName: "piano_dreamy"
+                )
+            ],
+            createdAt: Date(),
+            isFavorite: true,
+            filePath: "/path/to/music.m4a"
+        )
+        
+        // 编码
+        let encoded = try JSONEncoder().encode(music)
+        
+        // 解码
+        let decoded = try JSONDecoder().decode(DreamMusic.self, from: encoded)
+        
+        // 验证
+        XCTAssertEqual(music.id, decoded.id)
+        XCTAssertEqual(music.dreamId, decoded.dreamId)
+        XCTAssertEqual(music.title, decoded.title)
+        XCTAssertEqual(music.duration, decoded.duration)
+        XCTAssertEqual(music.mood, decoded.mood)
+        XCTAssertEqual(music.tempo, decoded.tempo)
+        XCTAssertEqual(music.instruments, decoded.instruments)
+        XCTAssertEqual(music.audioLayers.count, decoded.audioLayers.count)
+        XCTAssertEqual(music.isFavorite, decoded.isFavorite)
+        XCTAssertEqual(music.filePath, decoded.filePath)
+    }
+    
+    func testMusicGenerationWithDifferentDreams() async throws {
+        let service = DreamMusicService.shared
+        
+        // 测试平静的梦境
+        let peacefulDream = Dream(
+            title: "宁静的夜晚",
+            content: "我在安静的湖边散步",
+            tags: ["平静", "自然"],
+            emotions: [.calm],
+            clarity: 4
+        )
+        
+        let peacefulMusic = await service.generateMusic(for: peacefulDream)
+        XCTAssertNotNil(peacefulMusic)
+        XCTAssertEqual(peacefulMusic?.mood, .peaceful)
+        
+        // 测试紧张的梦境
+        let tenseDream = Dream(
+            title: "追逐",
+            content: "有人在追我，我很害怕",
+            tags: ["恐惧", "焦虑"],
+            emotions: [.fearful, .anxious],
+            clarity: 3
+        )
+        
+        let tenseMusic = await service.generateMusic(for: tenseDream)
+        XCTAssertNotNil(tenseMusic)
+        XCTAssertEqual(tenseMusic?.mood, .tense)
+        
+        // 测试清醒梦
+        let lucidDream = Dream(
+            title: "清醒飞行",
+            content: "我知道自己在做梦，我飞了起来",
+            tags: ["清醒梦", "飞行"],
+            emotions: [.excited],
+            clarity: 5,
+            isLucid: true
+        )
+        
+        let lucidMusic = await service.generateMusic(for: lucidDream)
+        XCTAssertNotNil(lucidMusic)
+        XCTAssertEqual(lucidMusic?.mood, .ethereal)
+    }
+    
+    func testInstrumentSelectionFromDreamContent() async throws {
+        let service = DreamMusicService.shared
+        
+        // 测试水相关梦境
+        let waterDream = Dream(
+            title: "海边",
+            content: "我在海边听海浪声，雨水打在沙滩上",
+            tags: ["水"],
+            emotions: [.calm]
+        )
+        
+        let waterMusic = await service.generateMusic(for: waterDream)
+        XCTAssertNotNil(waterMusic)
+        XCTAssertTrue(waterMusic?.instruments.contains(.oceanWaves) ?? false, "水梦境应该包含海浪音效")
+        
+        // 测试森林相关梦境
+        let forestDream = Dream(
+            title: "森林漫步",
+            content: "在森林里散步，周围都是树",
+            tags: ["自然"],
+            emotions: [.calm]
+        )
+        
+        let forestMusic = await service.generateMusic(for: forestDream)
+        XCTAssertNotNil(forestMusic)
+        XCTAssertTrue(forestMusic?.instruments.contains(.forestAmbience) ?? false, "森林梦境应该包含森林氛围")
+        
+        // 测试冥想相关梦境
+        let meditationDream = Dream(
+            title: "冥想",
+            content: "我在冥想，内心非常宁静",
+            tags: ["冥想"],
+            emotions: [.calm]
+        )
+        
+        let meditationMusic = await service.generateMusic(for: meditationDream)
+        XCTAssertNotNil(meditationMusic)
+        XCTAssertTrue(meditationMusic?.instruments.contains(.singingBowl) ?? false, "冥想梦境应该包含颂钵")
+    }
+    
+    func testMusicTitleGeneration() async throws {
+        let service = DreamMusicService.shared
+        
+        // 测试有标题的梦境
+        let titledDream = Dream(
+            title: "我的梦境",
+            content: "内容",
+            tags: [],
+            emotions: [.calm]
+        )
+        
+        let titledMusic = await service.generateMusic(for: titledDream)
+        XCTAssertNotNil(titledMusic)
+        XCTAssertTrue(titledMusic?.title.contains("我的梦境") ?? false, "音乐标题应该包含梦境标题")
+        
+        // 测试无标题的梦境
+        let untitledDream = Dream(
+            title: nil,
+            content: "内容",
+            tags: [],
+            emotions: [.calm]
+        )
+        
+        let untitledMusic = await service.generateMusic(for: untitledDream)
+        XCTAssertNotNil(untitledMusic)
+        XCTAssertTrue(untitledMusic?.title.contains("梦境") ?? true, "无标题梦境的音乐应该有默认标题")
+    }
+    
+    func testMusicLibraryManagement() async throws {
+        let service = DreamMusicService.shared
+        let initialCount = service.musicLibrary.count
+        
+        // 生成并保存音乐
+        let dream = Dream(
+            title: "测试",
+            content: "内容",
+            tags: [],
+            emotions: [.calm]
+        )
+        
+        if let music = await service.generateMusic(for: dream) {
+            service.saveMusic(music)
+            XCTAssertEqual(service.musicLibrary.count, initialCount + 1)
+            
+            // 测试收藏
+            service.toggleFavorite(music)
+            let favoritedMusic = service.musicLibrary.first(where: { $0.id == music.id })
+            XCTAssertEqual(favoritedMusic?.isFavorite, true)
+            
+            // 取消收藏
+            service.toggleFavorite(music)
+            let unfavoritedMusic = service.musicLibrary.first(where: { $0.id == music.id })
+            XCTAssertEqual(unfavoritedMusic?.isFavorite, false)
+            
+            // 删除
+            service.deleteMusic(music)
+            XCTAssertEqual(service.musicLibrary.count, initialCount)
+        }
+    }
 }

@@ -97,12 +97,19 @@ struct ContentView: View {
                 }
                 .tag(11)
             
+            DreamMusicView()
+                .tabItem {
+                    Image(systemName: "music.note.house.fill")
+                    Text("音乐")
+                }
+                .tag(12)
+            
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(12)
+                .tag(13)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
