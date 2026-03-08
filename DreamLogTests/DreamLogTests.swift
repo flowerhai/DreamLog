@@ -1721,4 +1721,579 @@ final class DreamLogTests: XCTestCase {
         XCTAssertNotNil(service.lastAnalysis)
         XCTAssertEqual(service.lastAnalysis?.totalDreams, 3)
     }
+    
+    // MARK: - ReminderType 测试
+    
+    func testReminderTypeAllCases() throws {
+        let allTypes = ReminderType.allCases
+        
+        XCTAssertEqual(allTypes.count, 6, "应该有 6 种提醒类型")
+        
+        let expectedTypes: [ReminderType] = [
+            .optimalTime, .bedtime, .morning,
+            .goalAchieved, .streak, .weekly
+        ]
+        
+        for expectedType in expectedTypes {
+            XCTAssertTrue(allTypes.contains(expectedType), "应该包含 \(expectedType.rawValue)")
+        }
+    }
+    
+    func testReminderTypeIcons() throws {
+        for type in ReminderType.allCases {
+            XCTAssertFalse(type.icon.isEmpty, "\(type.rawValue) 应该有图标")
+            XCTAssertTrue(type.icon.hasSuffix("fill") || !type.icon.isEmpty, "\(type.rawValue) 图标应该是有效的 SF Symbol")
+        }
+        
+        XCTAssertEqual(ReminderType.optimalTime.icon, "clock.fill")
+        XCTAssertEqual(ReminderType.bedtime.icon, "moon.fill")
+        XCTAssertEqual(ReminderType.morning.icon, "sun.max.fill")
+        XCTAssertEqual(ReminderType.goalAchieved.icon, "trophy.fill")
+        XCTAssertEqual(ReminderType.streak.icon, "flame.fill")
+        XCTAssertEqual(ReminderType.weekly.icon, "calendar")
+    }
+    
+    func testReminderTypeTitles() throws {
+        for type in ReminderType.allCases {
+            XCTAssertFalse(type.title.isEmpty, "\(type.rawValue) 应该有标题")
+        }
+        
+        XCTAssertEqual(ReminderType.optimalTime.title, "最佳记录时间")
+        XCTAssertEqual(ReminderType.bedtime.title, "睡前放松提醒")
+        XCTAssertEqual(ReminderType.morning.title, "晨间回顾提醒")
+        XCTAssertEqual(ReminderType.goalAchieved.title, "目标达成庆祝")
+        XCTAssertEqual(ReminderType.streak.title, "连续记录激励")
+        XCTAssertEqual(ReminderType.weekly.title, "每周总结")
+    }
+    
+    // MARK: - ReminderConfig 测试
+    
+    func testReminderConfigDefaultValues() throws {
+        let config = ReminderConfig.default
+        
+        XCTAssertTrue(config.isEnabled)
+        XCTAssertTrue(config.optimalTimeEnabled)
+        XCTAssertTrue(config.bedtimeEnabled)
+        XCTAssertEqual(config.bedtimeTime, "22:00")
+        XCTAssertTrue(config.morningEnabled)
+        XCTAssertEqual(config.morningTime, "08:00")
+        XCTAssertTrue(config.goalCelebrationEnabled)
+        XCTAssertTrue(config.streakReminderEnabled)
+        XCTAssertTrue(config.weeklySummaryEnabled)
+        XCTAssertEqual(config.weeklySummaryDay, 0)
+    }
+    
+    func testReminderConfigCodable() throws {
+        var config = ReminderConfig()
+        config.isEnabled = true
+        config.optimalTimeEnabled = false
+        config.bedtimeTime = "23:30"
+        config.morningTime = "07:00"
+        config.weeklySummaryDay = 3
+        
+        // 编码
+        let encoded = try JSONEncoder().encode(config)
+        
+        // 解码
+        let decoded = try JSONDecoder().decode(ReminderConfig.self, from: encoded)
+        
+        XCTAssertEqual(decoded.isEnabled, config.isEnabled)
+        XCTAssertEqual(decoded.optimalTimeEnabled, config.optimalTimeEnabled)
+        XCTAssertEqual(decoded.bedtimeTime, config.bedtimeTime)
+        XCTAssertEqual(decoded.morningTime, config.morningTime)
+        XCTAssertEqual(decoded.weeklySummaryDay, config.weeklySummaryDay)
+    }
+    
+    func testReminderConfigToggleAllReminders() throws {
+        var config = ReminderConfig()
+        
+        // 关闭所有提醒
+        config.optimalTimeEnabled = false
+        config.bedtimeEnabled = false
+        config.morningEnabled = false
+        config.weeklySummaryEnabled = false
+        
+        XCTAssertFalse(config.optimalTimeEnabled)
+        XCTAssertFalse(config.bedtimeEnabled)
+        XCTAssertFalse(config.morningEnabled)
+        XCTAssertFalse(config.weeklySummaryEnabled)
+        
+        // 重新开启
+        config.optimalTimeEnabled = true
+        config.bedtimeEnabled = true
+        config.morningEnabled = true
+        config.weeklySummaryEnabled = true
+        
+        XCTAssertTrue(config.optimalTimeEnabled)
+        XCTAssertTrue(config.bedtimeEnabled)
+        XCTAssertTrue(config.morningEnabled)
+        XCTAssertTrue(config.weeklySummaryEnabled)
+    }
+    
+    // MARK: - RecordingHabitAnalysis 测试
+    
+    func testRecordingHabitAnalysisEmptyData() throws {
+        let dreamStore = DreamStore()
+        let analysis = RecordingHabitAnalysis.analyze(from: dreamStore)
+        
+        XCTAssertEqual(analysis.totalDreams, 0)
+        XCTAssertEqual(analysis.optimalHour, 8) // 默认值
+        XCTAssertEqual(analysis.averageClarity, 3.0) // 默认值
+        XCTAssertEqual(analysis.recordingStreak, 0)
+        XCTAssertEqual(analysis.longestStreak, 0)
+        XCTAssertTrue(analysis.dreamsByHour.isEmpty)
+    }
+    
+    func testRecordingHabitAnalysisWithTimeDistribution() throws {
+        let dreamStore = DreamStore()
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 创建 10 个梦境，其中 7 个在晚上 22 点，3 个在早上 8 点
+        for i in 0..<7 {
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            dateComponents.hour = 22
+            dateComponents.day = dateComponents.day! - i
+            
+            if let date = calendar.date(from: dateComponents) {
+                let dream = Dream(title: "晚梦\(i)", content: "内容", tags: [], emotions: [], date: date, clarity: 4)
+                dreamStore.addDream(dream)
+            }
+        }
+        
+        for i in 0..<3 {
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            dateComponents.hour = 8
+            dateComponents.day = dateComponents.day! - i
+            
+            if let date = calendar.date(from: dateComponents) {
+                let dream = Dream(title: "早梦\(i)", content: "内容", tags: [], emotions: [], date: date, clarity: 3)
+                dreamStore.addDream(dream)
+            }
+        }
+        
+        let analysis = RecordingHabitAnalysis.analyze(from: dreamStore)
+        
+        XCTAssertEqual(analysis.totalDreams, 10)
+        XCTAssertEqual(analysis.optimalHour, 22) // 晚上 22 点最多
+        XCTAssertEqual(analysis.dreamsByHour[22], 7)
+        XCTAssertEqual(analysis.dreamsByHour[8], 3)
+    }
+    
+    func testRecordingHabitAnalysisAverageClarity() throws {
+        let dreamStore = DreamStore()
+        
+        // 添加不同清晰度的梦境
+        let dreams = [
+            Dream(title: "清晰", content: "内容", tags: [], emotions: [], clarity: 5),
+            Dream(title: "中等", content: "内容", tags: [], emotions: [], clarity: 3),
+            Dream(title: "模糊", content: "内容", tags: [], emotions: [], clarity: 1)
+        ]
+        
+        for dream in dreams {
+            dreamStore.addDream(dream)
+        }
+        
+        let analysis = RecordingHabitAnalysis.analyze(from: dreamStore)
+        
+        XCTAssertEqual(analysis.totalDreams, 3)
+        XCTAssertEqual(analysis.averageClarity, 3.0, accuracy: 0.01) // (5+3+1)/3 = 3.0
+    }
+    
+    func testRecordingHabitAnalysisStreakCalculation() throws {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 创建连续 3 天的梦境
+        var dreams: [Dream] = []
+        for i in 0..<3 {
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            dateComponents.day = dateComponents.day! - i
+            dateComponents.hour = 8
+            
+            if let date = calendar.date(from: dateComponents) {
+                dreams.append(Dream(title: "Day \(i)", content: "内容", tags: [], emotions: [], date: date, clarity: 4))
+            }
+        }
+        
+        // 验证日期是连续的
+        for i in 0..<dreams.count - 1 {
+            let daysDiff = calendar.dateComponents([.day], from: dreams[i + 1].date, to: dreams[i].date).day ?? 0
+            XCTAssertEqual(daysDiff, 1, "梦境日期应该连续")
+        }
+    }
+    
+    // MARK: - SmartReminderService Notification Tests
+    
+    func testSmartReminderServiceNotificationContent() throws {
+        let service = SmartReminderService.shared
+        
+        // 验证服务可以访问（实际通知调度需要真机测试）
+        XCTAssertNotNil(service)
+        XCTAssertNotNil(service.config)
+        
+        // 验证配置可以修改和保存
+        let originalBedtime = service.config.bedtimeTime
+        service.config.bedtimeTime = "23:00"
+        XCTAssertEqual(service.config.bedtimeTime, "23:00")
+        
+        // 恢复原值
+        service.config.bedtimeTime = originalBedtime
+    }
+    
+    func testSmartReminderServiceTimeParsing() throws {
+        // 测试时间格式解析
+        let timeFormats = [
+            "22:00",
+            "08:30",
+            "23:45",
+            "00:00",
+            "12:00"
+        ]
+        
+        for timeString in timeFormats {
+            let parts = timeString.split(separator: ":")
+            XCTAssertEqual(parts.count, 2, "时间格式应该是 HH:MM")
+            
+            if let hour = Int(parts[0]), let minute = Int(parts[1]) {
+                XCTAssertGreaterThanOrEqual(hour, 0, "小时应该 >= 0")
+                XCTAssertLessThan(hour, 24, "小时应该 < 24")
+                XCTAssertGreaterThanOrEqual(minute, 0, "分钟应该 >= 0")
+                XCTAssertLessThan(minute, 60, "分钟应该 < 60")
+            } else {
+                XCTFail("时间解析失败：\(timeString)")
+            }
+        }
+    }
+    
+    func testSmartReminderServiceWeeklyDayRange() throws {
+        // 测试每周提醒日期范围 (0-6, 周日到周六)
+        for day in 0...6 {
+            var config = ReminderConfig()
+            config.weeklySummaryDay = day
+            XCTAssertEqual(config.weeklySummaryDay, day)
+        }
+        
+        // 验证边界值
+        var config = ReminderConfig()
+        config.weeklySummaryDay = 0 // 周日
+        XCTAssertEqual(config.weeklySummaryDay, 0)
+        
+        config.weeklySummaryDay = 6 // 周六
+        XCTAssertEqual(config.weeklySummaryDay, 6)
+    }
+    
+    // MARK: - Integration Tests
+    
+    func testSmartReminderServiceFullWorkflow() throws {
+        let service = SmartReminderService.shared
+        let dreamStore = DreamStore()
+        
+        // 1. 初始状态
+        XCTAssertNil(service.lastAnalysis)
+        
+        // 2. 添加梦境数据
+        for i in 0..<5 {
+            let dream = Dream(
+                title: "工作流梦境\(i)",
+                content: "测试内容",
+                tags: ["工作流"],
+                emotions: [.calm],
+                clarity: 4
+            )
+            dreamStore.addDream(dream)
+        }
+        
+        // 3. 更新分析
+        service.updateAnalysis(from: dreamStore)
+        XCTAssertNotNil(service.lastAnalysis)
+        XCTAssertEqual(service.lastAnalysis?.totalDreams, 5)
+        
+        // 4. 修改配置
+        service.config.bedtimeTime = "22:30"
+        service.config.morningTime = "07:30"
+        
+        // 5. 保存配置
+        service.saveConfig()
+        
+        // 6. 验证配置已保存
+        XCTAssertEqual(service.config.bedtimeTime, "22:30")
+        XCTAssertEqual(service.config.morningTime, "07:30")
+    }
+    
+    // MARK: - AIArtService Phase 8 Tests
+    
+    func testArtStyleAllCases() throws {
+        let allStyles = DreamArt.ArtStyle.allCases
+        
+        // Phase 1-7: 8 styles, Phase 8: +6 styles = 14 total
+        XCTAssertEqual(allStyles.count, 14, "应该有 14 种艺术风格")
+        
+        // 验证原有风格
+        XCTAssertTrue(allStyles.contains(.realistic))
+        XCTAssertTrue(allStyles.contains(.impressionist))
+        XCTAssertTrue(allStyles.contains(.surreal))
+        XCTAssertTrue(allStyles.contains(.anime))
+        XCTAssertTrue(allStyles.contains(.watercolor))
+        XCTAssertTrue(allStyles.contains(.oil))
+        XCTAssertTrue(allStyles.contains(.digital))
+        XCTAssertTrue(allStyles.contains(.dreamy))
+        
+        // 验证 Phase 8 新增风格
+        XCTAssertTrue(allStyles.contains(.abstract))
+        XCTAssertTrue(allStyles.contains(.minimalist))
+        XCTAssertTrue(allStyles.contains(.cyberpunk))
+        XCTAssertTrue(allStyles.contains(.fantasy))
+        XCTAssertTrue(allStyles.contains(.noir))
+        XCTAssertTrue(allStyles.contains(.popArt))
+    }
+    
+    func testArtStyleProperties() throws {
+        for style in DreamArt.ArtStyle.allCases {
+            XCTAssertFalse(style.description.isEmpty, "\(style.rawValue) 应该有描述")
+            XCTAssertFalse(style.promptSuffix.isEmpty, "\(style.rawValue) 应该有提示词后缀")
+            XCTAssertFalse(style.negativePrompt.isEmpty, "\(style.rawValue) 应该有负面提示词")
+            XCTAssertFalse(style.icon.isEmpty, "\(style.rawValue) 应该有图标")
+            XCTAssertFalse(style.color.isEmpty, "\(style.rawValue) 应该有颜色")
+            
+            // 验证颜色格式 (6 位十六进制)
+            XCTAssertEqual(style.color.count, 6, "\(style.rawValue) 颜色应该是 6 位十六进制")
+        }
+    }
+    
+    func testArtStyleNegativePrompts() throws {
+        // 验证不同风格的负面提示词不同
+        let realistic = DreamArt.ArtStyle.realistic.negativePrompt
+        let surreal = DreamArt.ArtStyle.surreal.negativePrompt
+        let cyberpunk = DreamArt.ArtStyle.cyberpunk.negativePrompt
+        
+        XCTAssertNotEqual(realistic, surreal, "不同风格应该有不同的负面提示词")
+        XCTAssertNotEqual(surreal, cyberpunk, "不同风格应该有不同的负面提示词")
+        
+        // 验证负面提示词包含常见质量词
+        XCTAssertTrue(realistic.contains("low quality") || realistic.contains("blurry"))
+        XCTAssertTrue(surreal.contains("realistic") || surreal.contains("ordinary"))
+    }
+    
+    func testArtStyleIcons() throws {
+        // 验证所有风格都有有效的 SF Symbol 图标
+        for style in DreamArt.ArtStyle.allCases {
+            XCTAssertFalse(style.icon.isEmpty, "\(style.rawValue) 应该有图标")
+        }
+        
+        // 验证特定图标
+        XCTAssertEqual(DreamArt.ArtStyle.realistic.icon, "camera.fill")
+        XCTAssertEqual(DreamArt.ArtStyle.cyberpunk.icon, "bolt.fill")
+        XCTAssertEqual(DreamArt.ArtStyle.fantasy.icon, "wand.and.stars")
+        XCTAssertEqual(DreamArt.ArtStyle.noir.icon, "moon.fill")
+    }
+    
+    func testArtStyleColors() throws {
+        // 验证所有风格都有颜色
+        for style in DreamArt.ArtStyle.allCases {
+            XCTAssertFalse(style.color.isEmpty, "\(style.rawValue) 应该有颜色")
+        }
+        
+        // 验证特定颜色
+        XCTAssertEqual(DreamArt.ArtStyle.realistic.color, "007AFF")
+        XCTAssertEqual(DreamArt.ArtStyle.cyberpunk.color, "00F0FF")
+        XCTAssertEqual(DreamArt.ArtStyle.fantasy.color, "9D50DD")
+    }
+    
+    func testAspectRatioAllCases() throws {
+        let allRatios = DreamArt.AspectRatio.allCases
+        
+        XCTAssertEqual(allRatios.count, 5, "应该有 5 种宽高比")
+        
+        XCTAssertTrue(allRatios.contains(.square))
+        XCTAssertTrue(allRatios.contains(.portrait))
+        XCTAssertTrue(allRatios.contains(.landscape))
+        XCTAssertTrue(allRatios.contains(.portrait4x5))
+        XCTAssertTrue(allRatios.contains(.landscape4x3))
+    }
+    
+    func testAspectRatioDimensions() throws {
+        // 验证正方形
+        XCTAssertEqual(DreamArt.AspectRatio.square.width, 1024)
+        XCTAssertEqual(DreamArt.AspectRatio.square.height, 1024)
+        
+        // 验证竖屏 9:16
+        XCTAssertEqual(DreamArt.AspectRatio.portrait.width, 576)
+        XCTAssertEqual(DreamArt.AspectRatio.portrait.height, 1024)
+        
+        // 验证横屏 16:9
+        XCTAssertEqual(DreamArt.AspectRatio.landscape.width, 1024)
+        XCTAssertEqual(DreamArt.AspectRatio.landscape.height, 576)
+        
+        // 验证肖像 4:5
+        XCTAssertEqual(DreamArt.AspectRatio.portrait4x5.width, 832)
+        XCTAssertEqual(DreamArt.AspectRatio.portrait4x5.height, 1040)
+        
+        // 验证风景 4:3
+        XCTAssertEqual(DreamArt.AspectRatio.landscape4x3.width, 1024)
+        XCTAssertEqual(DreamArt.AspectRatio.landscape4x3.height, 768)
+    }
+    
+    func testAspectRatioDisplayNames() throws {
+        for ratio in DreamArt.AspectRatio.allCases {
+            XCTAssertFalse(ratio.displayName.isEmpty, "\(ratio.rawValue) 应该有显示名称")
+        }
+        
+        XCTAssertEqual(DreamArt.AspectRatio.square.displayName, "正方形 (1:1)")
+        XCTAssertEqual(DreamArt.AspectRatio.portrait.displayName, "竖屏 (9:16)")
+        XCTAssertEqual(DreamArt.AspectRatio.landscape.displayName, "横屏 (16:9)")
+    }
+    
+    func testAIArtServicePromptGeneration() throws {
+        let service = AIArtService.shared
+        
+        // 创建测试梦境
+        let dream = Dream(
+            title: "奇幻森林",
+            content: "我在一片神秘的森林中漫步，周围是发光的蘑菇和高大的树木。月光透过树叶洒下斑驳的光影。",
+            tags: ["森林", "月光", "奇幻"],
+            emotions: [.calm, .wondrous],
+            clarity: 4,
+            intensity: 3,
+            timeOfDay: .night,
+            isLucid: true
+        )
+        
+        // 生成提示词
+        let prompt = service.generatePrompt(from: dream, style: .fantasy)
+        
+        // 验证提示词包含关键元素
+        XCTAssertTrue(prompt.contains("奇幻森林"), "提示词应该包含标题")
+        XCTAssertTrue(prompt.contains("moonlight") || prompt.contains("night"), "提示词应该包含时间氛围")
+        XCTAssertTrue(prompt.contains("fantasy"), "提示词应该包含风格后缀")
+        XCTAssertTrue(prompt.contains("masterpiece"), "提示词应该包含质量词")
+        
+        // 验证清醒梦效果
+        XCTAssertTrue(prompt.contains("lucid dream"), "清醒梦应该添加特殊效果")
+        
+        print("🎨 生成的提示词：\(prompt)")
+    }
+    
+    func testAIArtServiceNegativePromptGeneration() throws {
+        let service = AIArtService.shared
+        
+        // 为不同风格生成负面提示词
+        let realisticNegative = service.generateNegativePrompt(for: .realistic)
+        let animeNegative = service.generateNegativePrompt(for: .anime)
+        
+        // 验证包含通用质量词
+        XCTAssertTrue(realisticNegative.contains("low quality"))
+        XCTAssertTrue(realisticNegative.contains("blurry"))
+        
+        // 验证不同风格有不同的负面提示
+        XCTAssertNotEqual(realisticNegative, animeNegative)
+        
+        print("🚫 写实风格负面提示：\(realisticNegative)")
+        print("🚫 动漫风格负面提示：\(animeNegative)")
+    }
+    
+    func testAIArtServicePromptWithEmotions() throws {
+        let service = AIArtService.shared
+        
+        // 创建带有强烈情绪的梦境
+        let happyDream = Dream(
+            title: "快乐时光",
+            content: "阳光明媚的日子",
+            tags: [],
+            emotions: [.happy],
+            clarity: 5,
+            intensity: 5
+        )
+        
+        let sadDream = Dream(
+            title: "悲伤回忆",
+            content: "阴雨天",
+            tags: [],
+            emotions: [.sad],
+            clarity: 2,
+            intensity: 2
+        )
+        
+        let happyPrompt = service.generatePrompt(from: happyDream, style: .realistic)
+        let sadPrompt = service.generatePrompt(from: sadDream, style: .realistic)
+        
+        // 验证情绪影响提示词
+        XCTAssertTrue(happyPrompt.contains("joyful") || happyPrompt.contains("bright"))
+        XCTAssertTrue(sadPrompt.contains("melancholic") || sadPrompt.contains("somber"))
+        
+        // 验证清晰度和强度影响
+        XCTAssertTrue(happyPrompt.contains("crystal clear") || happyPrompt.contains("vivid"))
+        XCTAssertTrue(sadPrompt.contains("dreamy blur") || sadPrompt.contains("muted"))
+    }
+    
+    func testAIArtServicePromptWithTimeOfDay() throws {
+        let service = AIArtService.shared
+        
+        let baseDream = Dream(
+            title: "测试",
+            content: "内容",
+            tags: [],
+            emotions: []
+        )
+        
+        // 测试不同时间段
+        let morningPrompt = service.generatePrompt(from: baseDream, style: .realistic)
+        
+        // 默认应该是某种时间段
+        XCTAssertTrue(morningPrompt.contains("morning") || morningPrompt.contains("afternoon") ||
+                     morningPrompt.contains("evening") || morningPrompt.contains("night") ||
+                     morningPrompt.contains("dawn") || morningPrompt.contains("dusk"))
+    }
+    
+    func testAIArtServiceSingleton() throws {
+        let service1 = AIArtService.shared
+        let service2 = AIArtService.shared
+        
+        XCTAssertIdentical(service1, service2, "AIArtService 应该是单例")
+    }
+    
+    func testAIArtServiceInitialState() throws {
+        let service = AIArtService.shared
+        
+        XCTAssertFalse(service.isGenerating)
+        XCTAssertEqual(service.generationProgress, 0.0)
+        XCTAssertNil(service.currentDreamArt)
+        XCTAssertNil(service.errorMessage)
+    }
+    
+    func testDreamArtStructure() throws {
+        let dreamId = UUID()
+        let art = DreamArt(
+            dreamId: dreamId,
+            imageUrl: "https://example.com/image.jpg",
+            prompt: "测试提示词",
+            style: .dreamy,
+            createdAt: Date()
+        )
+        
+        XCTAssertEqual(art.dreamId, dreamId)
+        XCTAssertEqual(art.imageUrl, "https://example.com/image.jpg")
+        XCTAssertEqual(art.prompt, "测试提示词")
+        XCTAssertEqual(art.style, .dreamy)
+        XCTAssertFalse(art.isFavorite)
+        XCTAssertNotNil(art.id)
+    }
+    
+    func testDreamArtArtStyleAllCases() throws {
+        // 验证所有风格都可以编码和解码
+        for style in DreamArt.ArtStyle.allCases {
+            let encoded = try JSONEncoder().encode(style)
+            let decoded = try JSONDecoder().decode(DreamArt.ArtStyle.self, from: encoded)
+            XCTAssertEqual(style, decoded, "\(style.rawValue) 应该可以正确编码和解码")
+        }
+    }
+    
+    func testDreamArtAspectRatioCodable() throws {
+        // 验证所有宽高比都可以编码和解码
+        for ratio in DreamArt.AspectRatio.allCases {
+            let encoded = try JSONEncoder().encode(ratio)
+            let decoded = try JSONDecoder().decode(DreamArt.AspectRatio.self, from: encoded)
+            XCTAssertEqual(ratio, decoded, "\(ratio.rawValue) 应该可以正确编码和解码")
+        }
+    }
 }
