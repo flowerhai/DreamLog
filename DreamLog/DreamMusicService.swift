@@ -170,6 +170,10 @@ class DreamMusicService: ObservableObject {
     @Published var currentTime: TimeInterval = 0
     @Published var musicLibrary: [DreamMusic] = []
     
+    // Phase 10 - 导出进度
+    @Published var isExporting = false
+    @Published var exportProgress: Double = 0.0
+    
     private var audioPlayer: AVAudioPlayer?
     private var playTimer: Timer?
     
@@ -492,8 +496,22 @@ class DreamMusicService: ObservableObject {
     
     // MARK: - 音乐导出
     
-    /// 导出音乐为音频文件 (AAC/m4a 格式)
+    // Phase 10 - 真实音频合成引擎
+    private let audioEngine = AudioSynthesisEngine.shared
+    
+    /// 导出音乐为音频文件 (AAC/m4a 格式) - Phase 10 真实音频合成
     func exportMusic(_ music: DreamMusic) async -> URL? {
+        await MainActor.run {
+            isExporting = true
+            exportProgress = 0.0
+        }
+        
+        defer {
+            Task { @MainActor in
+                isExporting = false
+            }
+        }
+        
         guard let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first else {
             return nil
         }
@@ -511,42 +529,145 @@ class DreamMusicService: ObservableObject {
         let fileName = "\(safeTitle)_\(music.id.uuidString.prefix(8)).m4a"
         let fileURL = exportsDirectory.appendingPathComponent(fileName)
         
-        // 模拟音频导出 - 实际实现需要 AVAudioEngine 和音频合成
-        // 这里创建一个占位文件，标记为已导出
-        let exportInfo: [String: Any] = [
-            "musicId": music.id.uuidString,
-            "title": music.title,
-            "duration": music.duration,
-            "mood": music.mood.rawValue,
-            "tempo": music.tempo.rawValue,
-            "instruments": music.instruments.map { $0.rawValue },
-            "exportDate": Date().ISO8601Format(),
-            "format": "AAC",
-            "sampleRate": 44100,
-            "bitRate": 256,
-            "channels": 2
-        ]
+        // Phase 10: 使用真实音频合成引擎生成音频
+        do {
+            // 合成所有音频层并混合
+            let mixedBuffer = try await synthesizeMusic(music)
+            
+            // 导出为 AAC 格式
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                audioEngine.exportToAAC(buffer: mixedBuffer, to: fileURL) { success, error in
+                    if success {
+                        continuation.resume()
+                    } else {
+                        continuation.resume(throwing: error ?? NSError(domain: "AudioExport", code: -1, userInfo: [NSLocalizedDescriptionKey: "导出失败"]))
+                    }
+                }
+            }
+            
+            // 导出元数据文件
+            let exportInfo: [String: Any] = [
+                "musicId": music.id.uuidString,
+                "title": music.title,
+                "duration": music.duration,
+                "mood": music.mood.rawValue,
+                "tempo": music.tempo.rawValue,
+                "instruments": music.instruments.map { $0.rawValue },
+                "audioLayers": music.audioLayers.map { layer in
+                    [
+                        "instrument": layer.instrument.rawValue,
+                        "volume": layer.volume,
+                        "pan": layer.pan,
+                        "reverb": layer.reverb,
+                        "delay": layer.delay,
+                        "loop": layer.loop
+                    ]
+                },
+                "exportDate": Date().ISO8601Format(),
+                "format": "AAC",
+                "sampleRate": 44100,
+                "bitRate": 256,
+                "channels": 2,
+                "fileSize": try? FileManager.default.attributesOfItem(atPath: fileURL.path)[.size] as? Int ?? 0
+            ]
+            
+            let metadataURL = fileURL.deletingPathExtension().appendingPathExtension("json")
+            if let jsonData = try? JSONSerialization.data(withJSONObject: exportInfo, options: .prettyPrinted) {
+                try jsonData.write(to: metadataURL)
+            }
+            
+            // 更新音乐的文件路径
+            if var updatedMusic = musicLibrary.first(where: { $0.id == music.id }) {
+                updatedMusic.filePath = fileURL.path
+                if let index = musicLibrary.firstIndex(where: { $0.id == music.id }) {
+                    musicLibrary[index] = updatedMusic
+                    saveMusicLibrary()
+                }
+            }
+            
+            print("🎵 音乐导出成功：\(fileURL.path)")
+            return fileURL
+            
+        } catch {
+            print("❌ 音乐导出失败：\(error.localizedDescription)")
+            // 回退到旧版本 (创建元数据文件)
+            let exportInfo: [String: Any] = [
+                "musicId": music.id.uuidString,
+                "title": music.title,
+                "duration": music.duration,
+                "mood": music.mood.rawValue,
+                "tempo": music.tempo.rawValue,
+                "instruments": music.instruments.map { $0.rawValue },
+                "exportDate": Date().ISO8601Format(),
+                "format": "AAC",
+                "sampleRate": 44100,
+                "bitRate": 256,
+                "channels": 2,
+                "error": error.localizedDescription
+            ]
+            
+            let metadataURL = fileURL.deletingPathExtension().appendingPathExtension("json")
+            if let jsonData = try? JSONSerialization.data(withJSONObject: exportInfo, options: .prettyPrinted) {
+                try? jsonData.write(to: metadataURL)
+            }
+            
+            return nil
+        }
+    }
+    
+    /// 合成音乐 - 将所有音频层混合
+    private func synthesizeMusic(_ music: DreamMusic) async throws -> AVAudioPCMBuffer {
+        let sampleRate = 44100.0
+        let duration = music.duration
+        let frameCount = AVAudioFrameCount(duration * sampleRate)
         
-        // 导出元数据文件 (实际音频合成需要 AVAudioEngine 实现)
-        let metadataURL = fileURL.deletingPathExtension().appendingPathExtension("json")
-        if let jsonData = try? JSONSerialization.data(withJSONObject: exportInfo, options: .prettyPrinted) {
-            try? jsonData.write(to: metadataURL)
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
+            throw NSError(domain: "AudioSynthesis", code: -1, userInfo: [NSLocalizedDescriptionKey: "无法创建音频格式"])
         }
         
-        // 创建空的音频文件作为占位符
-        // TODO: 实现真实的音频合成和导出
-        try? Data().write(to: fileURL)
+        guard let mixedBuffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
+            throw NSError(domain: "AudioSynthesis", code: -1, userInfo: [NSLocalizedDescriptionKey: "无法创建音频缓冲区"])
+        }
+        mixedBuffer.frameLength = frameCount
         
-        // 更新音乐的文件路径
-        if var updatedMusic = musicLibrary.first(where: { $0.id == music.id }) {
-            updatedMusic.filePath = fileURL.path
-            if let index = musicLibrary.firstIndex(where: { $0.id == music.id }) {
-                musicLibrary[index] = updatedMusic
-                saveMusicLibrary()
+        // 初始化缓冲区为静音
+        if let floatChannelData = mixedBuffer.floatChannelData {
+            for channel in 0..<Int(format.channelCount) {
+                memset(floatChannelData[channel], 0, Int(frameCount) * MemoryLayout<Float>.stride)
             }
         }
         
-        return fileURL
+        // 合成并混合每个音频层
+        for (index, layer) in music.audioLayers.enumerated() {
+            guard let layerBuffer = audioEngine.synthesizeAudioLayer(layer, duration: duration, sampleRate: sampleRate) else {
+                continue
+            }
+            
+            // 混合到主缓冲区
+            mixBuffer(mixedBuffer, with: layerBuffer, volume: layer.volume)
+            
+            // 更新进度
+            await MainActor.run {
+                let progress = Double(index + 1) / Double(music.audioLayers.count)
+                exportProgress = progress
+            }
+        }
+        
+        return mixedBuffer
+    }
+    
+    /// 混合两个音频缓冲区
+    private func mixBuffer(_ target: AVAudioPCMBuffer, with source: AVAudioPCMBuffer, volume: Float) {
+        guard let targetData = target.floatChannelData,
+              let sourceData = source.floatChannelData else { return }
+        
+        let frameCount = Int(target.frameLength)
+        
+        for channel in 0..<Int(target.format.channelCount) {
+            for i in 0..<frameCount {
+                targetData[channel][i] += sourceData[channel][i] * volume
+            }
+        }
     }
     
     /// 批量导出音乐

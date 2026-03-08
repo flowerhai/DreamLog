@@ -2818,4 +2818,332 @@ final class DreamLogTests: XCTestCase {
         // 播放列表应该包含为每个梦境生成的音乐
         XCTAssertEqual(playlist.count, dreams.count)
     }
+    
+    // MARK: - Phase 10 真实音频合成测试
+    
+    func testAudioSynthesisEngineInitialization() throws {
+        let engine = AudioSynthesisEngine.shared
+        
+        // 验证引擎可以初始化
+        XCTAssertNotNil(engine)
+        XCTAssertFalse(engine.isExporting)
+        XCTAssertEqual(engine.exportProgress, 0.0)
+    }
+    
+    func testAudioLayerSynthesis() async throws {
+        let engine = AudioSynthesisEngine.shared
+        
+        let layer = DreamMusic.AudioLayer(
+            instrument: .piano,
+            volume: 0.8,
+            pan: 0.0,
+            reverb: 0.5,
+            delay: 0.3,
+            loop: true,
+            sampleName: "piano_peaceful"
+        )
+        
+        // 合成 1 秒的音频
+        let buffer = engine.synthesizeAudioLayer(layer, duration: 1.0, sampleRate: 44100)
+        
+        XCTAssertNotNil(buffer)
+        XCTAssertEqual(buffer?.format.sampleRate, 44100)
+        XCTAssertEqual(buffer?.format.channelCount, 2)
+    }
+    
+    func testAllInstrumentSynthesis() async throws {
+        let engine = AudioSynthesisEngine.shared
+        
+        let instruments: [DreamMusic.DreamMusicInstrument] = [
+            .piano, .strings, .flute, .harp, .synth, .ambientPad,
+            .natureSounds, .singingBowl, .windChimes,
+            .oceanWaves, .rainSounds, .forestAmbience
+        ]
+        
+        for instrument in instruments {
+            let layer = DreamMusic.AudioLayer(
+                instrument: instrument,
+                volume: 0.6,
+                pan: 0.0,
+                reverb: 0.4,
+                delay: 0.2,
+                loop: true,
+                sampleName: "\(instrument.rawValue)_test"
+            )
+            
+            let buffer = engine.synthesizeAudioLayer(layer, duration: 0.5, sampleRate: 44100)
+            
+            XCTAssertNotNil(buffer, "合成失败：\(instrument.rawValue)")
+            XCTAssertEqual(buffer?.frameLength, 22050)  // 0.5 秒 @ 44100Hz
+        }
+    }
+    
+    func testMusicTemplateStructure() throws {
+        let template = MusicTemplate(
+            mood: .peaceful,
+            tempo: .slow,
+            instruments: [.piano, .strings, .ambientPad],
+            baseDuration: 180
+        )
+        
+        XCTAssertEqual(template.mood, .peaceful)
+        XCTAssertEqual(template.tempo, .slow)
+        XCTAssertEqual(template.instruments.count, 3)
+        XCTAssertEqual(template.baseDuration, 180)
+    }
+    
+    func testAudioEnvelopeFunctions() async throws {
+        let engine = AudioSynthesisEngine.shared
+        
+        // 测试不同乐器的包络函数 (通过合成验证)
+        let testCases: [(DreamMusic.DreamMusicInstrument, String)] = [
+            (.piano, "piano"),
+            (.strings, "strings"),
+            (.flute, "flute"),
+            (.harp, "harp"),
+            (.synth, "synth"),
+            (.ambientPad, "pad")
+        ]
+        
+        for (instrument, name) in testCases {
+            let layer = DreamMusic.AudioLayer(
+                instrument: instrument,
+                volume: 0.7,
+                pan: 0.0,
+                reverb: 0.3,
+                delay: 0.1,
+                loop: false,
+                sampleName: "\(name)_envelope_test"
+            )
+            
+            let buffer = engine.synthesizeAudioLayer(layer, duration: 0.1, sampleRate: 44100)
+            
+            XCTAssertNotNil(buffer, "\(name) 包络测试失败")
+        }
+    }
+    
+    func testNoiseGeneration() async throws {
+        let engine = AudioSynthesisEngine.shared
+        
+        // 测试自然音效合成
+        let natureInstruments: [DreamMusic.DreamMusicInstrument] = [
+            .oceanWaves, .rainSounds, .forestAmbience
+        ]
+        
+        for instrument in natureInstruments {
+            let layer = DreamMusic.AudioLayer(
+                instrument: instrument,
+                volume: 0.5,
+                pan: 0.0,
+                reverb: 0.6,
+                delay: 0.2,
+                loop: true,
+                sampleName: "\(instrument.rawValue)_noise"
+            )
+            
+            let buffer = engine.synthesizeAudioLayer(layer, duration: 0.5, sampleRate: 44100)
+            
+            XCTAssertNotNil(buffer, "\(instrument.rawValue) 噪声生成失败")
+            
+            // 验证有音频数据 (不是全静音)
+            if let floatData = buffer?.floatChannelData?[0] {
+                var hasNonZero = false
+                for i in 0..<Int(buffer!.frameLength) {
+                    if abs(floatData[i]) > 0.001 {
+                        hasNonZero = true
+                        break
+                    }
+                }
+                XCTAssertTrue(hasNonZero, "\(instrument.rawValue) 生成的音频全为静音")
+            }
+        }
+    }
+    
+    func testAudioEffectsApplication() async throws {
+        let engine = AudioSynthesisEngine.shared
+        
+        // 测试带效果的音频合成
+        let layer = DreamMusic.AudioLayer(
+            instrument: .piano,
+            volume: 0.8,
+            pan: -0.5,  // 偏左
+            reverb: 0.8,  // 高混响
+            delay: 0.6,  // 高延迟
+            loop: true,
+            sampleName: "piano_effects_test"
+        )
+        
+        let buffer = engine.synthesizeAudioLayer(layer, duration: 1.0, sampleRate: 44100)
+        
+        XCTAssertNotNil(buffer)
+        
+        // 验证效果器应用 (有混响和延迟的音频应该有不同的特征)
+        if let floatData = buffer?.floatChannelData?[0] {
+            var sum: Float = 0
+            for i in 0..<Int(buffer!.frameLength) {
+                sum += abs(floatData[i])
+            }
+            let averageAmplitude = sum / Float(buffer!.frameLength)
+            
+            // 平均振幅应该大于 0 (有声音)
+            XCTAssertGreaterThan(averageAmplitude, 0.001, "应用效果器后音频振幅过低")
+        }
+    }
+    
+    func testMusicExportWithRealSynthesis() async throws {
+        let service = DreamMusicService.shared
+        
+        let dream = Dream(
+            title: "真实合成测试",
+            content: "测试真实音频合成和导出功能",
+            tags: ["测试", "Phase10"],
+            emotions: [.peaceful]
+        )
+        
+        // 生成音乐
+        guard let music = await service.generateMusic(for: dream) else {
+            XCTFail("音乐生成失败")
+            return
+        }
+        
+        // 验证音乐有多个音频层
+        XCTAssertGreaterThan(music.audioLayers.count, 0, "音乐应该有多个音频层")
+        
+        // 导出音乐 (使用真实合成)
+        let exportURL = await service.exportMusic(music)
+        
+        // 验证导出结果
+        XCTAssertNotNil(exportURL, "音乐导出失败")
+        
+        if let url = exportURL {
+            // 验证文件存在
+            XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), "导出文件不存在")
+            
+            // 验证文件大小 (真实音频文件应该大于 0)
+            let fileSize = try FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int ?? 0
+            XCTAssertGreaterThan(fileSize, 0, "导出文件大小为 0")
+            
+            // 验证元数据文件存在
+            let metadataURL = url.deletingPathExtension().appendingPathExtension("json")
+            XCTAssertTrue(FileManager.default.fileExists(atPath: metadataURL.path), "元数据文件不存在")
+            
+            // 验证元数据内容
+            if let metadata = try? Data(contentsOf: metadataURL),
+               let json = try? JSONSerialization.jsonObject(with: metadata) as? [String: Any] {
+                XCTAssertEqual(json["musicId"] as? String, music.id.uuidString)
+                XCTAssertEqual(json["title"] as? String, music.title)
+                XCTAssertEqual(json["format"] as? String, "AAC")
+                XCTAssertEqual(json["sampleRate"] as? Int, 44100)
+                XCTAssertEqual(json["bitRate"] as? Int, 256000)
+            }
+            
+            // 清理测试文件
+            try? FileManager.default.removeItem(at: url)
+            try? FileManager.default.removeItem(at: metadataURL)
+        }
+    }
+    
+    func testExportProgressTracking() async throws {
+        let service = DreamMusicService.shared
+        
+        let dream = Dream(
+            title: "进度追踪测试",
+            content: "测试导出进度追踪",
+            tags: ["测试"],
+            emotions: [.calm]
+        )
+        
+        guard let music = await service.generateMusic(for: dream) else {
+            XCTFail("音乐生成失败")
+            return
+        }
+        
+        // 验证初始状态
+        XCTAssertEqual(service.exportProgress, 0.0)
+        XCTAssertFalse(service.isExporting)
+        
+        // 开始导出
+        let exportTask = Task {
+            await service.exportMusic(music)
+        }
+        
+        // 等待一小段时间让导出开始
+        try? await Task.sleep(nanoseconds: 100_000_000)  // 0.1 秒
+        
+        // 验证导出状态
+        // 注意：由于导出可能很快完成，这里只做基本验证
+        await exportTask.value
+        
+        // 导出完成后进度应该重置
+        XCTAssertFalse(service.isExporting)
+    }
+    
+    func testBatchExportWithRealSynthesis() async throws {
+        let service = DreamMusicService.shared
+        
+        // 创建多个梦境
+        var dreams: [Dream] = []
+        for i in 0..<3 {
+            dreams.append(Dream(
+                title: "批量导出测试\(i)",
+                content: "内容\(i)",
+                tags: ["批量测试"],
+                emotions: [.calm]
+            ))
+        }
+        
+        // 生成音乐
+        var musics: [DreamMusic] = []
+        for dream in dreams {
+            if let music = await service.generateMusic(for: dream) {
+                musics.append(music)
+            }
+        }
+        
+        XCTAssertEqual(musics.count, dreams.count, "应该为每个梦境生成音乐")
+        
+        // 批量导出
+        let exportedURLs = await service.exportMusicBatch(musics)
+        
+        // 验证所有文件都导出成功
+        XCTAssertEqual(exportedURLs.count, musics.count, "应该导出所有音乐文件")
+        
+        // 验证文件存在
+        for url in exportedURLs {
+            XCTAssertTrue(FileManager.default.fileExists(atPath: url.path), "导出文件不存在：\(url.path)")
+            
+            // 清理
+            try? FileManager.default.removeItem(at: url)
+            let metadataURL = url.deletingPathExtension().appendingPathExtension("json")
+            try? FileManager.default.removeItem(at: metadataURL)
+        }
+    }
+    
+    func testAudioLayerMixing() async throws {
+        let engine = AudioSynthesisEngine.shared
+        
+        // 创建多个音频层
+        let layers = [
+            DreamMusic.AudioLayer(instrument: .piano, volume: 0.6, pan: 0.0, reverb: 0.5, delay: 0.3, loop: true, sampleName: "piano"),
+            DreamMusic.AudioLayer(instrument: .strings, volume: 0.5, pan: -0.2, reverb: 0.6, delay: 0.2, loop: true, sampleName: "strings"),
+            DreamMusic.AudioLayer(instrument: .ambientPad, volume: 0.4, pan: 0.2, reverb: 0.8, delay: 0.4, loop: true, sampleName: "pad")
+        ]
+        
+        // 合成每个层
+        var buffers: [AVAudioPCMBuffer] = []
+        for layer in layers {
+            if let buffer = engine.synthesizeAudioLayer(layer, duration: 0.5, sampleRate: 44100) {
+                buffers.append(buffer)
+            }
+        }
+        
+        XCTAssertEqual(buffers.count, 3, "应该成功合成所有音频层")
+        
+        // 验证所有缓冲区格式一致
+        let firstFormat = buffers[0].format
+        for buffer in buffers {
+            XCTAssertEqual(buffer.format.sampleRate, firstFormat.sampleRate)
+            XCTAssertEqual(buffer.format.channelCount, firstFormat.channelCount)
+        }
+    }
 }
