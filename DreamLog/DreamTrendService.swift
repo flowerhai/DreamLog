@@ -109,13 +109,7 @@ class DreamTrendService: ObservableObject {
         case fluctuating = "fluctuating"   // 波动
     }
     
-    /// 一天中的时段
-    enum TimeOfDay: String, Codable {
-        case morning = "morning"           // 清晨 (6-12 点)
-        case afternoon = "afternoon"       // 下午 (12-18 点)
-        case evening = "evening"           // 傍晚 (18-24 点)
-        case night = "night"               // 深夜 (0-6 点)
-    }
+    // Note: TimeOfDay is defined in Dream.swift - using the shared enum to avoid conflicts
     
     // MARK: - 公开方法
     
@@ -532,7 +526,7 @@ class DreamTrendService: ObservableObject {
         // 基于清醒梦的建议
         if lucidTrend == .increasing {
             recommendations.append("你的清醒梦训练见效了！继续坚持现实检查练习")
-        } else if lucidTrend == .stable && lucidTrend == .stable {
+        } else if lucidTrend == .stable || lucidTrend == .decreasing {
             recommendations.append("尝试 MILD 或 WBTB 技巧来提高清醒梦频率")
         }
         
