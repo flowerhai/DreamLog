@@ -299,6 +299,7 @@ struct RecentDreamsPicker: View {
 struct MusicListItemView: View {
     let music: DreamMusic
     let onTap: () -> Void
+    @StateObject private var musicService = DreamMusicService.shared
     
     var body: some View {
         Button(action: onTap) {
@@ -345,6 +346,49 @@ struct MusicListItemView: View {
             .padding(8)
             .background(Color.gray.opacity(0.05))
             .cornerRadius(12)
+        }
+        .contextMenu {
+            // 播放
+            Button(action: onTap) {
+                Label("播放", systemImage: "play.fill")
+            }
+            
+            // 导出
+            Button(action: {
+                Task {
+                    await musicService.exportMusic(music)
+                }
+            }) {
+                Label("导出音频", systemImage: "square.and.arrow.down")
+            }
+            
+            // 分享
+            Button(action: {
+                Task {
+                    await musicService.shareMusic(music)
+                }
+            }) {
+                Label("分享", systemImage: "square.and.arrow.up")
+            }
+            
+            Divider()
+            
+            // 收藏
+            Button(action: {
+                musicService.toggleFavorite(music)
+            }) {
+                Label(music.isFavorite ? "取消收藏" : "收藏", 
+                      systemImage: music.isFavorite ? "heart.slash.fill" : "heart.fill")
+            }
+            
+            Divider()
+            
+            // 删除
+            Button(role: .destructive, action: {
+                musicService.deleteMusic(music)
+            }) {
+                Label("删除", systemImage: "trash")
+            }
         }
     }
     
@@ -663,35 +707,72 @@ struct DreamMusicGeneratorView: View {
             .cornerRadius(16)
             
             // 操作按钮
-            HStack(spacing: 15) {
-                Button(action: {
-                    musicService.saveMusic(music)
-                    dismiss()
-                }) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.down")
-                        Text("保存")
+            VStack(spacing: 12) {
+                HStack(spacing: 15) {
+                    Button(action: {
+                        musicService.saveMusic(music)
+                        dismiss()
+                    }) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.down")
+                            Text("保存")
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.vertical, 12)
+                        .background(Color.gray.opacity(0.2))
+                        .foregroundColor(.primary)
+                        .cornerRadius(10)
                     }
-                    .padding(.horizontal, 25)
-                    .padding(.vertical, 12)
-                    .background(Color.gray.opacity(0.2))
-                    .foregroundColor(.primary)
-                    .cornerRadius(10)
+                    
+                    Button(action: {
+                        musicService.play(music)
+                        musicService.saveMusic(music)
+                    }) {
+                        HStack {
+                            Image(systemName: "play.fill")
+                            Text("播放")
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.vertical, 12)
+                        .background(Color.purple)
+                        .foregroundColor(.white)
+                        .cornerRadius(10)
+                    }
                 }
                 
-                Button(action: {
-                    musicService.play(music)
-                    musicService.saveMusic(music)
-                }) {
-                    HStack {
-                        Image(systemName: "play.fill")
-                        Text("播放")
+                // 导出和分享按钮
+                HStack(spacing: 15) {
+                    Button(action: {
+                        Task {
+                            await musicService.exportMusic(music)
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.down.on.square")
+                            Text("导出")
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.vertical, 12)
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundColor(.blue)
+                        .cornerRadius(10)
                     }
-                    .padding(.horizontal, 25)
-                    .padding(.vertical, 12)
-                    .background(Color.purple)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
+                    
+                    Button(action: {
+                        Task {
+                            await musicService.shareMusic(music)
+                        }
+                    }) {
+                        HStack {
+                            Image(systemName: "square.and.arrow.up")
+                            Text("分享")
+                        }
+                        .padding(.horizontal, 25)
+                        .padding(.vertical, 12)
+                        .background(Color.green.opacity(0.1))
+                        .foregroundColor(.green)
+                        .cornerRadius(10)
+                    }
                 }
             }
         }
@@ -865,10 +946,88 @@ struct DreamMusicPlayerView: View {
             .navigationTitle("播放器")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    // 睡眠定时器按钮
+                    Menu {
+                        Button(action: { musicService.setSleepTimer(duration: 0) }) {
+                            Label("关闭", systemImage: "timer")
+                        }
+                        Button(action: { musicService.setSleepTimer(duration: 15 * 60) }) {
+                            Label("15 分钟", systemImage: "timer")
+                        }
+                        Button(action: { musicService.setSleepTimer(duration: 30 * 60) }) {
+                            Label("30 分钟", systemImage: "timer")
+                        }
+                        Button(action: { musicService.setSleepTimer(duration: 45 * 60) }) {
+                            Label("45 分钟", systemImage: "timer")
+                        }
+                        Button(action: { musicService.setSleepTimer(duration: 60 * 60) }) {
+                            Label("1 小时", systemImage: "timer")
+                        }
+                        Button(action: { musicService.setSleepTimer(duration: 90 * 60) }) {
+                            Label("90 分钟", systemImage: "timer")
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: musicService.isSleepTimerActive ? "timer.fill" : "timer")
+                                .foregroundColor(musicService.isSleepTimerActive ? .orange : .primary)
+                            if musicService.isSleepTimerActive {
+                                Text(musicService.formatSleepTimerRemaining())
+                                    .font(.caption)
+                            }
+                        }
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
-                        musicService.stop()
-                        dismiss()
+                    Menu {
+                        // 导出选项
+                        Button(action: {
+                            Task {
+                                await musicService.exportMusic(music)
+                            }
+                        }) {
+                            Label("导出音频", systemImage: "square.and.arrow.down")
+                        }
+                        
+                        // 分享选项
+                        Menu("分享到") {
+                            Button(action: {
+                                Task {
+                                    await musicService.shareMusicToSocial(music, platform: .wechat)
+                                }
+                            }) {
+                                Label("微信", systemImage: "message.fill")
+                            }
+                            Button(action: {
+                                Task {
+                                    await musicService.shareMusicToSocial(music, platform: .weibo)
+                                }
+                            }) {
+                                Label("微博", systemImage: "weibo")
+                            }
+                            Button(action: {
+                                Task {
+                                    await musicService.shareMusicToSocial(music, platform: .qq)
+                                }
+                            }) {
+                                Label("QQ", systemImage: "message.circle.fill")
+                            }
+                            Button(action: {
+                                UIPasteboard.general.string = music.title
+                            }) {
+                                Label("复制链接", systemImage: "link")
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        Button("完成") {
+                            musicService.stop()
+                            dismiss()
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }

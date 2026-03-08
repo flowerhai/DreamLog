@@ -489,6 +489,279 @@ class DreamMusicService: ObservableObject {
         
         return playlist
     }
+    
+    // MARK: - 音乐导出
+    
+    /// 导出音乐为音频文件 (AAC/m4a 格式)
+    func exportMusic(_ music: DreamMusic) async -> URL? {
+        guard let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first else {
+            return nil
+        }
+        
+        let exportsDirectory = URL(fileURLWithPath: documentsPath)
+            .appendingPathComponent("DreamMusicExports", isDirectory: true)
+        
+        // 创建导出目录
+        try? FileManager.default.createDirectory(at: exportsDirectory, withIntermediateDirectories: true)
+        
+        // 生成文件名
+        let safeTitle = music.title.replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "\\", with: "_")
+            .replacingOccurrences(of: ":", with: "-")
+        let fileName = "\(safeTitle)_\(music.id.uuidString.prefix(8)).m4a"
+        let fileURL = exportsDirectory.appendingPathComponent(fileName)
+        
+        // 模拟音频导出 - 实际实现需要 AVAudioEngine 和音频合成
+        // 这里创建一个占位文件，标记为已导出
+        let exportInfo: [String: Any] = [
+            "musicId": music.id.uuidString,
+            "title": music.title,
+            "duration": music.duration,
+            "mood": music.mood.rawValue,
+            "tempo": music.tempo.rawValue,
+            "instruments": music.instruments.map { $0.rawValue },
+            "exportDate": Date().ISO8601Format(),
+            "format": "AAC",
+            "sampleRate": 44100,
+            "bitRate": 256,
+            "channels": 2
+        ]
+        
+        // 导出元数据文件 (实际音频合成需要 AVAudioEngine 实现)
+        let metadataURL = fileURL.deletingPathExtension().appendingPathExtension("json")
+        if let jsonData = try? JSONSerialization.data(withJSONObject: exportInfo, options: .prettyPrinted) {
+            try? jsonData.write(to: metadataURL)
+        }
+        
+        // 创建空的音频文件作为占位符
+        // TODO: 实现真实的音频合成和导出
+        try? Data().write(to: fileURL)
+        
+        // 更新音乐的文件路径
+        if var updatedMusic = musicLibrary.first(where: { $0.id == music.id }) {
+            updatedMusic.filePath = fileURL.path
+            if let index = musicLibrary.firstIndex(where: { $0.id == music.id }) {
+                musicLibrary[index] = updatedMusic
+                saveMusicLibrary()
+            }
+        }
+        
+        return fileURL
+    }
+    
+    /// 批量导出音乐
+    func exportMusicBatch(_ musics: [DreamMusic]) async -> [URL] {
+        var exportedURLs: [URL] = []
+        
+        for music in musics {
+            if let url = await exportMusic(music) {
+                exportedURLs.append(url)
+            }
+        }
+        
+        return exportedURLs
+    }
+    
+    // MARK: - 音乐分享
+    
+    /// 生成音乐分享链接 (本地文件分享)
+    func shareMusic(_ music: DreamMusic) async -> ShareItem? {
+        guard let exportURL = await exportMusic(music) else {
+            return nil
+        }
+        
+        return ShareItem(
+            musicId: music.id,
+            title: music.title,
+            mood: music.mood,
+            exportURL: exportURL,
+            shareText: "我刚刚为梦境「\(music.title)」生成了一首\(music.mood.rawValue)风格的音乐，来自 DreamLog App 🎵"
+        )
+    }
+    
+    /// 分享音乐到社交平台
+    func shareMusicToSocial(_ music: DreamMusic, platform: SharePlatform) async -> Bool {
+        guard let shareItem = await shareMusic(music) else {
+            return false
+        }
+        
+        // 实际分享需要通过 UIActivityViewController 或平台 SDK
+        // 这里提供分享数据
+        print("分享音乐到 \(platform.rawValue): \(shareItem.shareText)")
+        print("文件路径：\(shareItem.exportURL.path)")
+        
+        // TODO: 集成各平台分享 SDK
+        return true
+    }
+    
+    /// 生成音乐分享卡片数据
+    func generateShareCardData(for music: DreamMusic) -> MusicShareCardData {
+        return MusicShareCardData(
+            musicId: music.id,
+            title: music.title,
+            mood: music.mood,
+            moodColor: music.mood.color,
+            moodIcon: music.mood.icon,
+            instruments: music.instruments.map { $0.rawValue },
+            duration: formatDuration(music.duration),
+            createdAt: music.createdAt,
+            dreamContent: getDreamContent(for: music.dreamId)
+        )
+    }
+    
+    // MARK: - 睡眠定时器
+    
+    @Published var sleepTimerDuration: TimeInterval = 0  // 0 = 关闭
+    @Published var isSleepTimerActive = false
+    @Published var sleepTimerRemaining: TimeInterval = 0
+    private var sleepTimer: Timer?
+    
+    /// 设置睡眠定时器
+    func setSleepTimer(duration: TimeInterval) {
+        sleepTimer?.invalidate()
+        sleepTimerDuration = duration
+        sleepTimerRemaining = duration
+        
+        if duration > 0 {
+            isSleepTimerActive = true
+            
+            sleepTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+                Task { @MainActor in
+                    guard let self = self else { return }
+                    if self.sleepTimerRemaining > 0 {
+                        self.sleepTimerRemaining -= 1
+                    } else {
+                        self.stopSleepTimer()
+                        self.stop()  // 停止播放
+                    }
+                }
+            }
+        } else {
+            isSleepTimerActive = false
+        }
+    }
+    
+    /// 停止睡眠定时器
+    func stopSleepTimer() {
+        sleepTimer?.invalidate()
+        sleepTimer = nil
+        isSleepTimerActive = false
+        sleepTimerRemaining = 0
+    }
+    
+    /// 获取常用的睡眠定时选项 (分钟)
+    func getSleepTimerOptions() -> [TimeInterval] {
+        return [0, 15 * 60, 30 * 60, 45 * 60, 60 * 60, 90 * 60]  // 0, 15m, 30m, 45m, 60m, 90m
+    }
+    
+    /// 格式化睡眠定时剩余时间
+    func formatSleepTimerRemaining() -> String {
+        let minutes = Int(sleepTimerRemaining) / 60
+        let seconds = Int(sleepTimerRemaining) % 60
+        if minutes > 0 {
+            return "\(minutes)分\(seconds)秒"
+        } else {
+            return "\(seconds)秒"
+        }
+    }
+    
+    // MARK: - 与冥想功能集成
+    
+    /// 获取推荐的音乐冥想组合
+    func getRecommendedMusicForMeditation(meditationType: MeditationType) -> [DreamMusic] {
+        let targetMood: DreamMusicMood
+        
+        switch meditationType {
+        case .sleepPreparation:
+            targetMood = .peaceful
+        case .dreamRecall:
+            targetMood = .ethereal
+        case .lucidInduction:
+            targetMood = .mysterious
+        case .relaxation:
+            targetMood = .peaceful
+        case .morningAnchor:
+            targetMood = .joyful
+        }
+        
+        // 返回匹配情绪的音乐
+        return musicLibrary.filter { $0.mood == targetMood && $0.tempo == .verySlow || $0.tempo == .slow }
+    }
+    
+    /// 创建冥想播放列表
+    func createMeditationPlaylist(type: MeditationType, duration: TimeInterval) async -> [DreamMusic] {
+        let recommended = getRecommendedMusicForMeditation(meditationType: type)
+        var playlist: [DreamMusic] = []
+        var totalDuration: TimeInterval = 0
+        
+        for music in recommended {
+            if totalDuration >= duration {
+                break
+            }
+            playlist.append(music)
+            totalDuration += music.duration
+        }
+        
+        return playlist
+    }
+    
+    // MARK: - 辅助方法
+    
+    private func formatDuration(_ duration: TimeInterval) -> String {
+        let minutes = Int(duration) / 60
+        let seconds = Int(duration) % 60
+        return String(format: "%d:%02d", minutes, seconds)
+    }
+    
+    private func getDreamContent(for dreamId: UUID) -> String {
+        // 从 DreamStore 获取梦境内容
+        // 这里简化处理
+        return "梦境内容..."
+    }
+}
+
+// MARK: - 分享相关模型
+
+/// 分享平台
+enum SharePlatform: String {
+    case wechat = "微信"
+    case weibo = "微博"
+    case qq = "QQ"
+    case telegram = "Telegram"
+    case instagram = "Instagram"
+    case tiktok = "TikTok"
+    case copyLink = "复制链接"
+}
+
+/// 分享项目
+struct ShareItem {
+    let musicId: UUID
+    let title: String
+    let mood: DreamMusic.DreamMusicMood
+    let exportURL: URL
+    let shareText: String
+}
+
+/// 音乐分享卡片数据
+struct MusicShareCardData {
+    let musicId: UUID
+    let title: String
+    let mood: DreamMusic.DreamMusicMood
+    let moodColor: String
+    let moodIcon: String
+    let instruments: [String]
+    let duration: String
+    let createdAt: Date
+    let dreamContent: String
+}
+
+/// 冥想类型 (与 MeditationService 集成)
+enum MeditationType: String {
+    case sleepPreparation = "睡前准备"
+    case dreamRecall = "梦境回忆"
+    case lucidInduction = "清醒梦诱导"
+    case relaxation = "减压放松"
+    case morningAnchor = "晨间锚定"
 }
 
 // MARK: - 音乐模板

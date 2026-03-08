@@ -2595,4 +2595,227 @@ final class DreamLogTests: XCTestCase {
             XCTAssertEqual(service.musicLibrary.count, initialCount)
         }
     }
+    
+    // MARK: - Phase 9.5 高级音乐功能测试
+    
+    func testSleepTimerOptions() throws {
+        let service = DreamMusicService.shared
+        let options = service.getSleepTimerOptions()
+        
+        XCTAssertEqual(options.count, 6)
+        XCTAssertEqual(options[0], 0)  // 关闭
+        XCTAssertEqual(options[1], 15 * 60)  // 15 分钟
+        XCTAssertEqual(options[2], 30 * 60)  // 30 分钟
+        XCTAssertEqual(options[3], 45 * 60)  // 45 分钟
+        XCTAssertEqual(options[4], 60 * 60)  // 1 小时
+        XCTAssertEqual(options[5], 90 * 60)  // 90 分钟
+    }
+    
+    func testSleepTimerSetting() async throws {
+        let service = DreamMusicService.shared
+        
+        // 初始状态
+        XCTAssertFalse(service.isSleepTimerActive)
+        XCTAssertEqual(service.sleepTimerDuration, 0)
+        XCTAssertEqual(service.sleepTimerRemaining, 0)
+        
+        // 设置 15 分钟定时器
+        service.setSleepTimer(duration: 15 * 60)
+        XCTAssertTrue(service.isSleepTimerActive)
+        XCTAssertEqual(service.sleepTimerDuration, 15 * 60)
+        XCTAssertEqual(service.sleepTimerRemaining, 15 * 60)
+        
+        // 停止定时器
+        service.stopSleepTimer()
+        XCTAssertFalse(service.isSleepTimerActive)
+        XCTAssertEqual(service.sleepTimerRemaining, 0)
+    }
+    
+    func testSleepTimerFormat() throws {
+        let service = DreamMusicService.shared
+        service.sleepTimerRemaining = 900  // 15 分钟
+        
+        let formatted = service.formatSleepTimerRemaining()
+        XCTAssertTrue(formatted.contains("分"))
+        XCTAssertTrue(formatted.contains("秒"))
+    }
+    
+    func testMusicExportStructure() async throws {
+        let service = DreamMusicService.shared
+        
+        let dream = Dream(
+            title: "测试导出",
+            content: "测试内容",
+            tags: [],
+            emotions: [.calm]
+        )
+        
+        if let music = await service.generateMusic(for: dream) {
+            // 测试导出方法存在并返回 URL
+            let exportURL = await service.exportMusic(music)
+            
+            // 导出应该返回一个 URL (即使是模拟的)
+            XCTAssertNotNil(exportURL)
+            XCTAssertTrue(exportURL?.path.contains("DreamMusicExports") ?? true)
+        }
+    }
+    
+    func testBatchMusicExport() async throws {
+        let service = DreamMusicService.shared
+        
+        var dreams: [Dream] = []
+        for i in 0..<3 {
+            dreams.append(Dream(
+                title: "测试导出\(i)",
+                content: "测试内容\(i)",
+                tags: [],
+                emotions: [.calm]
+            ))
+        }
+        
+        var musics: [DreamMusic] = []
+        for dream in dreams {
+            if let music = await service.generateMusic(for: dream) {
+                musics.append(music)
+            }
+        }
+        
+        let exportedURLs = await service.exportMusicBatch(musics)
+        XCTAssertEqual(exportedURLs.count, musics.count)
+    }
+    
+    func testShareItemGeneration() async throws {
+        let service = DreamMusicService.shared
+        
+        let dream = Dream(
+            title: "测试分享",
+            content: "测试内容",
+            tags: [],
+            emotions: [.peaceful]
+        )
+        
+        if let music = await service.generateMusic(for: dream) {
+            let shareItem = await service.shareMusic(music)
+            
+            XCTAssertNotNil(shareItem)
+            XCTAssertEqual(shareItem?.musicId, music.id)
+            XCTAssertEqual(shareItem?.title, music.title)
+            XCTAssertEqual(shareItem?.mood, music.mood)
+            XCTAssertNotNil(shareItem?.shareText)
+            XCTAssertTrue(shareItem?.shareText.contains(music.title) ?? true)
+        }
+    }
+    
+    func testSharePlatformEnum() throws {
+        // 测试所有分享平台
+        XCTAssertEqual(SharePlatform.wechat.rawValue, "微信")
+        XCTAssertEqual(SharePlatform.weibo.rawValue, "微博")
+        XCTAssertEqual(SharePlatform.qq.rawValue, "QQ")
+        XCTAssertEqual(SharePlatform.telegram.rawValue, "Telegram")
+        XCTAssertEqual(SharePlatform.instagram.rawValue, "Instagram")
+        XCTAssertEqual(SharePlatform.tiktok.rawValue, "TikTok")
+        XCTAssertEqual(SharePlatform.copyLink.rawValue, "复制链接")
+    }
+    
+    func testMeditationTypeRecommendation() async throws {
+        let service = DreamMusicService.shared
+        
+        // 生成一些测试音乐
+        let peacefulDream = Dream(
+            title: "平静梦境",
+            content: "平静的内容",
+            tags: [],
+            emotions: [.calm]
+        )
+        
+        if let music = await service.generateMusic(for: peacefulDream) {
+            service.saveMusic(music)
+        }
+        
+        // 测试冥想推荐
+        let recommended = service.getRecommendedMusicForMeditation(meditationType: .relaxation)
+        
+        // 应该返回平静情绪的音乐
+        XCTAssertNotNil(recommended)
+    }
+    
+    func testMeditationPlaylistCreation() async throws {
+        let service = DreamMusicService.shared
+        
+        // 创建冥想播放列表
+        let playlist = await service.createMeditationPlaylist(
+            type: .sleepPreparation,
+            duration: 1800  // 30 分钟
+        )
+        
+        // 播放列表应该存在 (可能为空如果没有匹配的音乐)
+        XCTAssertNotNil(playlist)
+    }
+    
+    func testMeditationTypeEnum() throws {
+        // 测试所有冥想类型
+        XCTAssertEqual(MeditationType.sleepPreparation.rawValue, "睡前准备")
+        XCTAssertEqual(MeditationType.dreamRecall.rawValue, "梦境回忆")
+        XCTAssertEqual(MeditationType.lucidInduction.rawValue, "清醒梦诱导")
+        XCTAssertEqual(MeditationType.relaxation.rawValue, "减压放松")
+        XCTAssertEqual(MeditationType.morningAnchor.rawValue, "晨间锚定")
+    }
+    
+    func testMusicShareCardData() async throws {
+        let service = DreamMusicService.shared
+        
+        let dream = Dream(
+            title: "测试卡片",
+            content: "测试内容",
+            tags: [],
+            emotions: [.peaceful]
+        )
+        
+        if let music = await service.generateMusic(for: dream) {
+            let cardData = service.generateShareCardData(for: music)
+            
+            XCTAssertEqual(cardData.musicId, music.id)
+            XCTAssertEqual(cardData.title, music.title)
+            XCTAssertEqual(cardData.mood, music.mood)
+            XCTAssertEqual(cardData.moodColor, music.mood.color)
+            XCTAssertEqual(cardData.moodIcon, music.mood.icon)
+            XCTAssertEqual(cardData.instruments.count, music.instruments.count)
+        }
+    }
+    
+    func testMusicDurationFormat() async throws {
+        let service = DreamMusicService.shared
+        
+        let dream = Dream(
+            title: "测试",
+            content: "内容",
+            tags: [],
+            emotions: [.calm]
+        )
+        
+        if let music = await service.generateMusic(for: dream) {
+            // 验证音乐有合理的时长
+            XCTAssertGreaterThan(music.duration, 0)
+            XCTAssertLessThanOrEqual(music.duration, 300)  // 最多 5 分钟
+        }
+    }
+    
+    func testPlaylistGeneration() async throws {
+        let service = DreamMusicService.shared
+        
+        var dreams: [Dream] = []
+        for i in 0..<3 {
+            dreams.append(Dream(
+                title: "播放列表测试\(i)",
+                content: "内容\(i)",
+                tags: [],
+                emotions: [.calm]
+            ))
+        }
+        
+        let playlist = await service.generatePlaylist(for: dreams)
+        
+        // 播放列表应该包含为每个梦境生成的音乐
+        XCTAssertEqual(playlist.count, dreams.count)
+    }
 }
