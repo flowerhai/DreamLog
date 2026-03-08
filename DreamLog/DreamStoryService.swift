@@ -94,6 +94,9 @@ class DreamStoryService: ObservableObject {
     // 本地存储的故事
     @Published var stories: [DreamStory] = []
     
+    // 生成历史记录
+    @Published var generationHistory: [GenerationRecord] = []
+    
     private let fileManager = FileManager.default
     private var storiesDirectory: URL {
         let documents = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
@@ -102,12 +105,14 @@ class DreamStoryService: ObservableObject {
     
     private init() {
         loadStories()
+        loadGenerationHistory()
     }
     
     // MARK: - 故事生成
     
     /// 为梦境生成完整故事
     func generateStory(for dream: Dream, style: DreamStory.NarrativeStyle) async {
+        let startTime = Date()
         isGenerating = true
         generationProgress = 0.0
         errorMessage = nil
@@ -118,47 +123,59 @@ class DreamStoryService: ObservableObject {
         
         print("📖 开始生成梦境故事 - 风格：\(style.rawValue)")
         
-        // 步骤 1: 分析梦境内容
-        generationProgress = 0.1
-        let analysis = analyzeDreamContent(dream)
-        print("📊 梦境分析完成：\(analysis.themes.count) 个主题，情绪：\(analysis.mood)")
-        
-        // 步骤 2: 扩展故事情节
-        generationProgress = 0.3
-        let plotElements = expandPlotElements(dream: dream, analysis: analysis)
-        print("📝 情节扩展完成：\(plotElements.count) 个情节元素")
-        
-        // 步骤 3: 生成故事结构
-        generationProgress = 0.5
-        let chapters = generateStoryStructure(dream: dream, analysis: analysis, plotElements: plotElements, style: style)
-        print("📚 故事结构完成：\(chapters.count) 个章节")
-        
-        // 步骤 4: 编写完整故事
-        generationProgress = 0.7
-        let fullContent = assembleFullStory(chapters: chapters, style: style)
-        
-        // 步骤 5: 创建故事对象
-        generationProgress = 0.9
-        let totalWordCount = fullContent.count / 2 // 估算中文字数
-        
-        let story = DreamStory(
-            dreamId: dream.id,
-            title: generateStoryTitle(dream: dream, style: style),
-            content: fullContent,
-            narrativeStyle: style,
-            wordCount: totalWordCount,
-            chapters: chapters,
-            themes: analysis.themes,
-            mood: analysis.mood,
-            createdAt: Date()
-        )
-        
-        currentStory = story
-        stories.insert(story, at: 0)
-        saveStories()
-        
-        generationProgress = 1.0
-        print("✅ 故事生成完成 - 总字数：\(totalWordCount)")
+        do {
+            // 步骤 1: 分析梦境内容
+            generationProgress = 0.1
+            let analysis = analyzeDreamContent(dream)
+            print("📊 梦境分析完成：\(analysis.themes.count) 个主题，情绪：\(analysis.mood)")
+            
+            // 步骤 2: 扩展故事情节
+            generationProgress = 0.3
+            let plotElements = expandPlotElements(dream: dream, analysis: analysis)
+            print("📝 情节扩展完成：\(plotElements.count) 个情节元素")
+            
+            // 步骤 3: 生成故事结构
+            generationProgress = 0.5
+            let chapters = generateStoryStructure(dream: dream, analysis: analysis, plotElements: plotElements, style: style)
+            print("📚 故事结构完成：\(chapters.count) 个章节")
+            
+            // 步骤 4: 编写完整故事
+            generationProgress = 0.7
+            let fullContent = assembleFullStory(chapters: chapters, style: style)
+            
+            // 步骤 5: 创建故事对象
+            generationProgress = 0.9
+            let totalWordCount = fullContent.count / 2 // 估算中文字数
+            
+            let story = DreamStory(
+                dreamId: dream.id,
+                title: generateStoryTitle(dream: dream, style: style),
+                content: fullContent,
+                narrativeStyle: style,
+                wordCount: totalWordCount,
+                chapters: chapters,
+                themes: analysis.themes,
+                mood: analysis.mood,
+                createdAt: Date()
+            )
+            
+            currentStory = story
+            stories.insert(story, at: 0)
+            saveStories()
+            
+            generationProgress = 1.0
+            
+            // 记录生成历史
+            let duration = Date().timeIntervalSince(startTime)
+            recordGeneration(dream: dream, style: style, wordCount: totalWordCount, duration: duration, isSuccess: true)
+            
+            print("✅ 故事生成完成 - 总字数：\(totalWordCount) - 耗时：\(String(format: "%.2f", duration))秒")
+        } catch {
+            let duration = Date().timeIntervalSince(startTime)
+            errorMessage = error.localizedDescription
+            recordGeneration(dream: dream, style: style, wordCount: 0, duration: duration, isSuccess: false, errorMessage: error.localizedDescription)
+            print("❌ 故事生成失败：\(error)")
+        }
     }
     
     // MARK: - 梦境分析
@@ -607,6 +624,181 @@ class DreamStoryService: ObservableObject {
         formatter.dateFormat = "yyyy 年 MM 月 dd 日 HH:mm"
         formatter.locale = Locale(identifier: "zh_CN")
         return formatter.string(from: date)
+    }
+}
+
+// MARK: - 导出功能增强
+
+/// 导出故事为 PDF (生成 PDF 数据)
+func exportStoryAsPDF(_ story: DreamStory) -> Data? {
+    // 注意：实际 PDF 生成需要在 iOS 中使用 UIGraphicsPDFRenderer
+    // 这里提供文本内容，实际渲染在视图中完成
+    let content = exportStoryAsMarkdown(story)
+    return content.data(using: .utf8)
+}
+
+/// 导出故事为 EPUB (简化版本)
+func exportStoryAsEPUB(_ story: DreamStory) -> String {
+    // EPUB 基本结构
+    let epubContent = """
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <title>\(story.title)</title>
+        <meta charset="utf-8"/>
+    </head>
+    <body>
+        <h1>\(story.title)</h1>
+        <p><strong>叙事风格</strong>: \(story.narrativeStyle.rawValue)</p>
+        <p><strong>字数</strong>: \(story.wordCount)</p>
+        <p><strong>主题</strong>: \(story.themes.joined(separator: ", "))</p>
+        <hr/>
+    \(story.chapters.map { chapter in
+        """
+        <h2>\(chapter.title)</h2>
+        <p>\(chapter.content.replacingOccurrences(of: "\n", with: "<br/>"))</p>
+        """
+    }.joined(separator: "\n"))
+    </body>
+    </html>
+    """
+    return epubContent
+}
+
+/// 保存导出文件
+func saveExportedFile(content: Data, fileName: String, directory: String = "Exports") -> URL? {
+    let exportsDirectory = storiesDirectory.appendingPathComponent(directory, isDirectory: true)
+    
+    do {
+        try fileManager.createDirectory(at: exportsDirectory, withIntermediateDirectories: true)
+        let fileURL = exportsDirectory.appendingPathComponent(fileName)
+        try content.write(to: fileURL)
+        print("✅ 文件已保存：\(fileURL.path)")
+        return fileURL
+    } catch {
+        print("❌ 保存文件失败：\(error)")
+        return nil
+    }
+}
+
+/// 保存导出文件 (文本)
+func saveExportedFile(content: String, fileName: String, directory: String = "Exports") -> URL? {
+    guard let data = content.data(using: .utf8) else {
+        print("❌ 文本编码失败")
+        return nil
+    }
+    return saveExportedFile(content: data, fileName: fileName, directory: directory)
+}
+
+// MARK: - 生成历史
+
+/// 生成历史记录
+struct GenerationRecord: Identifiable, Codable {
+    var id: UUID = UUID()
+    var dreamId: UUID
+    var dreamTitle: String
+    var style: DreamStory.NarrativeStyle
+    var wordCount: Int
+    var createdAt: Date
+    var duration: TimeInterval // 生成耗时 (秒)
+    var isSuccess: Bool
+    var errorMessage: String?
+}
+
+/// 记录生成历史
+func recordGeneration(dream: Dream, style: DreamStory.NarrativeStyle, wordCount: Int, duration: TimeInterval, isSuccess: Bool, errorMessage: String? = nil) {
+    let record = GenerationRecord(
+        dreamId: dream.id,
+        dreamTitle: dream.title.isEmpty ? "无题梦境" : dream.title,
+        style: style,
+        wordCount: wordCount,
+        createdAt: Date(),
+        duration: duration,
+        isSuccess: isSuccess,
+        errorMessage: errorMessage
+    )
+    
+    generationHistory.insert(record, at: 0)
+    
+    // 保留最近 100 条记录
+    if generationHistory.count > 100 {
+        generationHistory.removeLast(generationHistory.count - 100)
+    }
+    
+    saveGenerationHistory()
+}
+
+/// 保存生成历史
+private func saveGenerationHistory() {
+    let historyFile = storiesDirectory.appendingPathComponent("generation_history.json")
+    
+    do {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(generationHistory)
+        try data.write(to: historyFile)
+    } catch {
+        print("❌ 保存生成历史失败：\(error)")
+    }
+}
+
+/// 加载生成历史
+private func loadGenerationHistory() {
+    let historyFile = storiesDirectory.appendingPathComponent("generation_history.json")
+    
+    guard let data = try? Data(contentsOf: historyFile) else {
+        return
+    }
+    
+    do {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        generationHistory = try decoder.decode([GenerationRecord].self, from: data)
+    } catch {
+        print("❌ 加载生成历史失败：\(error)")
+    }
+}
+
+/// 清除生成历史
+func clearGenerationHistory() {
+    generationHistory.removeAll()
+    saveGenerationHistory()
+}
+
+/// 获取生成统计
+func getGenerationStatistics() -> GenerationStatistics {
+    let totalGenerations = generationHistory.count
+    let successfulGenerations = generationHistory.filter { $0.isSuccess }.count
+    let totalWords = generationHistory.reduce(0) { $0 + $1.wordCount }
+    let avgDuration = generationHistory.isEmpty ? 0 : generationHistory.reduce(0) { $0 + $1.duration } / Double(totalGenerations)
+    
+    // 按风格统计
+    var styleCounts: [DreamStory.NarrativeStyle: Int] = [:]
+    for record in generationHistory {
+        styleCounts[record.style, default: 0] += 1
+    }
+    
+    return GenerationStatistics(
+        totalGenerations: totalGenerations,
+        successfulGenerations: successfulGenerations,
+        totalWords: totalWords,
+        averageDuration: avgDuration,
+        styleCounts: styleCounts
+    )
+}
+
+/// 生成统计
+struct GenerationStatistics {
+    var totalGenerations: Int
+    var successfulGenerations: Int
+    var totalWords: Int
+    var averageDuration: TimeInterval
+    var styleCounts: [DreamStory.NarrativeStyle: Int]
+    
+    var successRate: Double {
+        guard totalGenerations > 0 else { return 0 }
+        return Double(successfulGenerations) / Double(totalGenerations) * 100
     }
 }
 
