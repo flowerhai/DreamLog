@@ -16,12 +16,15 @@ struct SettingsView: View {
     @AppStorage("autoAnalysis") private var autoAnalysis = true
     @AppStorage("darkMode") private var darkMode = true
     
+    @StateObject private var reminderService = SmartReminderService.shared
+    
     @State private var showingExportOptions = false
     @State private var showingImportPicker = false
     @State private var showingDeleteConfirm = false
     @State private var showingFeedbackSheet = false
     @State private var exportMessage: String?
     @State private var importMessage: String?
+    @State private var showingSmartReminderSettings = false
     
     // 同步状态颜色
     var statusColor: Color {
@@ -204,6 +207,15 @@ struct SettingsView: View {
                     }
                     
                     Toggle("自动 AI 解析", isOn: $autoAnalysis)
+                    
+                    // 智能提醒系统入口
+                    NavigationLink(destination: SmartReminderSettingsView(service: reminderService, dreamStore: dreamStore)) {
+                        Label("🧠 智能提醒设置", systemImage: "brain.head.profile")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // 数据与同步

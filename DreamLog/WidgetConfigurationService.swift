@@ -74,6 +74,35 @@ struct WidgetTheme: Codable, Identifiable, Hashable {
             gradientColors: ["#B19CD9", "#C8A2C8"],
             iconSFSymbol: "flower.open",
             textColor: "#FFFFFF"
+        ),
+        // MARK: - Phase 6 新增主题
+        WidgetTheme(
+            id: "sakura",
+            name: "樱花粉",
+            gradientColors: ["#FFB7C5", "#FF69B4"],
+            iconSFSymbol: "flower.open",
+            textColor: "#FFFFFF"
+        ),
+        WidgetTheme(
+            id: "mint",
+            name: "薄荷绿",
+            gradientColors: ["#98FF98", "#3EB489"],
+            iconSFSymbol: "leaf.fill",
+            textColor: "#000000"
+        ),
+        WidgetTheme(
+            id: "lemon",
+            name: "柠檬黄",
+            gradientColors: ["#FFF700", "#FFD700"],
+            iconSFSymbol: "sun.max.fill",
+            textColor: "#000000"
+        ),
+        WidgetTheme(
+            id: "lavender_purple",
+            name: "薰衣草紫",
+            gradientColors: ["#E6E6FA", "#967BB6"],
+            iconSFSymbol: "moon.stars.fill",
+            textColor: "#000000"
         )
     ]
     

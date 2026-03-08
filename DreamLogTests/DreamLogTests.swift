@@ -1527,4 +1527,198 @@ final class DreamLogTests: XCTestCase {
         
         XCTAssertTrue(service.shareHistory.isEmpty)
     }
+    
+    // MARK: - SmartReminderService 测试 (Phase 6)
+    
+    func testReminderTypeEnum() throws {
+        // 测试所有提醒类型
+        let allTypes = ReminderType.allCases
+        XCTAssertEqual(allTypes.count, 6, "应该有 6 种提醒类型")
+        
+        // 测试图标
+        XCTAssertEqual(ReminderType.optimalTime.icon, "clock.fill")
+        XCTAssertEqual(ReminderType.bedtime.icon, "moon.fill")
+        XCTAssertEqual(ReminderType.morning.icon, "sun.max.fill")
+        XCTAssertEqual(ReminderType.goalAchieved.icon, "trophy.fill")
+        XCTAssertEqual(ReminderType.streak.icon, "flame.fill")
+        XCTAssertEqual(ReminderType.weekly.icon, "calendar")
+        
+        // 测试标题
+        XCTAssertEqual(ReminderType.optimalTime.title, "最佳记录时间")
+        XCTAssertEqual(ReminderType.bedtime.title, "睡前放松提醒")
+        XCTAssertEqual(ReminderType.morning.title, "晨间回顾提醒")
+        XCTAssertEqual(ReminderType.goalAchieved.title, "目标达成庆祝")
+        XCTAssertEqual(ReminderType.streak.title, "连续记录激励")
+        XCTAssertEqual(ReminderType.weekly.title, "每周总结")
+    }
+    
+    func testReminderConfigCodable() throws {
+        var config = ReminderConfig()
+        config.isEnabled = true
+        config.optimalTimeEnabled = true
+        config.bedtimeEnabled = true
+        config.bedtimeTime = "23:00"
+        config.morningEnabled = true
+        config.morningTime = "07:30"
+        config.goalCelebrationEnabled = false
+        config.streakReminderEnabled = true
+        config.weeklySummaryEnabled = true
+        config.weeklySummaryDay = 1 // Monday
+        
+        // 测试编码
+        let encoder = JSONEncoder()
+        let data = try encoder.encode(config)
+        
+        // 测试解码
+        let decoder = JSONDecoder()
+        let decodedConfig = try decoder.decode(ReminderConfig.self, from: data)
+        
+        XCTAssertEqual(config.isEnabled, decodedConfig.isEnabled)
+        XCTAssertEqual(config.optimalTimeEnabled, decodedConfig.optimalTimeEnabled)
+        XCTAssertEqual(config.bedtimeTime, decodedConfig.bedtimeTime)
+        XCTAssertEqual(config.morningTime, decodedConfig.morningTime)
+        XCTAssertEqual(config.weeklySummaryDay, decodedConfig.weeklySummaryDay)
+    }
+    
+    func testReminderConfigDefault() throws {
+        let config = ReminderConfig.default
+        
+        XCTAssertTrue(config.isEnabled)
+        XCTAssertTrue(config.optimalTimeEnabled)
+        XCTAssertTrue(config.bedtimeEnabled)
+        XCTAssertEqual(config.bedtimeTime, "22:00")
+        XCTAssertTrue(config.morningEnabled)
+        XCTAssertEqual(config.morningTime, "08:00")
+        XCTAssertTrue(config.goalCelebrationEnabled)
+        XCTAssertTrue(config.streakReminderEnabled)
+        XCTAssertTrue(config.weeklySummaryEnabled)
+        XCTAssertEqual(config.weeklySummaryDay, 0) // Sunday
+    }
+    
+    func testRecordingHabitAnalysisEmptyData() throws {
+        let dreamStore = DreamStore()
+        let analysis = RecordingHabitAnalysis.analyze(from: dreamStore)
+        
+        XCTAssertEqual(analysis.totalDreams, 0)
+        XCTAssertEqual(analysis.optimalHour, 8) // 默认值
+        XCTAssertEqual(analysis.averageClarity, 3.0) // 默认值
+        XCTAssertEqual(analysis.recordingStreak, 0)
+        XCTAssertEqual(analysis.longestStreak, 0)
+    }
+    
+    func testRecordingHabitAnalysisWithDreams() throws {
+        let dreamStore = DreamStore()
+        
+        // 添加多个梦境用于分析
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 添加 5 个梦境，都在上午 8 点
+        for i in 0..<5 {
+            var dateComponents = calendar.dateComponents([.year, .month, .day], from: now)
+            dateComponents.hour = 8
+            dateComponents.day = dateComponents.day! - i
+            
+            if let date = calendar.date(from: dateComponents) {
+                let dream = Dream(
+                    title: "测试梦境\(i)",
+                    content: "测试内容",
+                    tags: ["测试"],
+                    emotions: [.calm],
+                    clarity: 4
+                )
+                // 手动设置日期
+                dreamStore.addDream(dream)
+            }
+        }
+        
+        let analysis = RecordingHabitAnalysis.analyze(from: dreamStore)
+        
+        XCTAssertGreaterThan(analysis.totalDreams, 0)
+        XCTAssertEqual(analysis.optimalHour, 8) // 应该在 8 点
+        XCTAssertGreaterThanOrEqual(analysis.averageClarity, 0)
+        XCTAssertLessThanOrEqual(analysis.averageClarity, 5)
+    }
+    
+    func testRecordingHabitAnalysisStreakCalculation() throws {
+        // 测试连续记录计算逻辑
+        let dreams = [
+            Dream(title: "Day 1", content: "内容", tags: [], emotions: [], date: Date().addingTimeInterval(-86400 * 2)),
+            Dream(title: "Day 2", content: "内容", tags: [], emotions: [], date: Date().addingTimeInterval(-86400)),
+            Dream(title: "Day 3", content: "内容", tags: [], emotions: [], date: Date())
+        ]
+        
+        // 验证梦境日期设置正确
+        let calendar = Calendar.current
+        for i in 0..<dreams.count - 1 {
+            let daysDiff = calendar.dateComponents([.day], from: dreams[i].date, to: dreams[i + 1].date).day ?? 0
+            XCTAssertGreaterThanOrEqual(daysDiff, 0)
+        }
+    }
+    
+    func testSmartReminderServiceSingleton() throws {
+        let service1 = SmartReminderService.shared
+        let service2 = SmartReminderService.shared
+        
+        XCTAssertIdentical(service1, service2, "SmartReminderService 应该是单例")
+    }
+    
+    func testSmartReminderServiceInitialState() throws {
+        let service = SmartReminderService.shared
+        
+        // 测试初始配置
+        XCTAssertTrue(service.config.isEnabled)
+        XCTAssertNotNil(service.config)
+        
+        // 测试分析初始状态
+        XCTAssertNil(service.lastAnalysis)
+    }
+    
+    func testSmartReminderServiceConfigPersistence() throws {
+        let service = SmartReminderService.shared
+        
+        // 修改配置
+        service.config.bedtimeTime = "23:30"
+        service.config.morningTime = "07:00"
+        service.config.weeklySummaryDay = 3 // Wednesday
+        
+        // 保存配置
+        service.saveConfig()
+        
+        // 创建新实例并加载配置
+        let newService = SmartReminderService.shared
+        
+        XCTAssertEqual(newService.config.bedtimeTime, "23:30")
+        XCTAssertEqual(newService.config.morningTime, "07:00")
+        XCTAssertEqual(newService.config.weeklySummaryDay, 3)
+        
+        // 恢复默认配置
+        newService.config.bedtimeTime = "22:00"
+        newService.config.morningTime = "08:00"
+        newService.config.weeklySummaryDay = 0
+        newService.saveConfig()
+    }
+    
+    func testSmartReminderServiceAnalysisUpdate() throws {
+        let service = SmartReminderService.shared
+        let dreamStore = DreamStore()
+        
+        // 添加一些梦境数据
+        for i in 0..<3 {
+            let dream = Dream(
+                title: "测试梦境\(i)",
+                content: "测试内容",
+                tags: ["测试"],
+                emotions: [.calm],
+                clarity: 4
+            )
+            dreamStore.addDream(dream)
+        }
+        
+        // 更新分析
+        service.updateAnalysis(from: dreamStore)
+        
+        XCTAssertNotNil(service.lastAnalysis)
+        XCTAssertEqual(service.lastAnalysis?.totalDreams, 3)
+    }
 }

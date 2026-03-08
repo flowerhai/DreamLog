@@ -260,7 +260,11 @@ struct DreamLogWidget_Previews: PreviewProvider {
             date: Date(),
             dreamCount: 5,
             lastDreamTitle: "飞翔在星空下",
-            mood: .happy
+            mood: .happy,
+            weeklyCount: 3,
+            weeklyGoal: 7,
+            streak: 5,
+            quote: "记录你的梦境，发现潜意识的秘密"
         ))
         .previewContext(WidgetPreviewContext(family: .systemSmall))
         
@@ -268,43 +272,15 @@ struct DreamLogWidget_Previews: PreviewProvider {
             date: Date(),
             dreamCount: 0,
             lastDreamTitle: "",
-            mood: .neutral
+            mood: .neutral,
+            weeklyCount: 0,
+            weeklyGoal: 7,
+            streak: 0,
+            quote: "今晚开始记录吧"
         ))
         .previewContext(WidgetPreviewContext(family: .systemSmall))
     }
 }
 
-// MARK: - Emotion 扩展 (小组件用)
-extension Emotion {
-    var icon: String {
-        switch self {
-        case .calm: return "😌"
-        case .happy: return "😊"
-        case .anxious: return "😰"
-        case .fearful: return "😨"
-        case .confused: return "😕"
-        case .excited: return "🤩"
-        case .sad: return "😢"
-        case .angry: return "😠"
-        case .surprised: return "😲"
-        case .neutral: return "😐"
-        @unknown default: return "😐"
-        }
-    }
-    
-    var name: String {
-        switch self {
-        case .calm: return "平静"
-        case .happy: return "快乐"
-        case .anxious: return "焦虑"
-        case .fearful: return "恐惧"
-        case .confused: return "困惑"
-        case .excited: return "兴奋"
-        case .sad: return "悲伤"
-        case .angry: return "愤怒"
-        case .surprised: return "惊讶"
-        case .neutral: return "中性"
-        @unknown default: return "未知"
-        }
-    }
-}
+// Note: Emotion icon and name properties are defined in Dream.swift
+// This extension was removed to avoid duplicate definitions

@@ -14,37 +14,32 @@ struct OnThisDayView: View {
     @State private var showingDreamDetail = false
     @State private var selectedDream: Dream?
     
-    var today: Date
-    var yearsWithDreams: [Int]
-    var dreamsForSelectedYear: [Dream]
-    
-    init(today: Date = Date()) {
-        self.today = today
-        _dreamStore = EnvironmentObject()
-        
-        // 计算有梦境的年份
-        let calendar = Calendar.current
-        var years: Set<Int> = []
-        for dream in dreamStore.dreams {
-            if calendar.isDate(dream.date, inSameDayAs: today) {
-                years.insert(calendar.component(.year, from: dream.date))
-            }
-        }
-        self.yearsWithDreams = years.sorted().reversed()
-        
-        // 获取选中年份的梦境
-        if let selectedYear = yearsWithDreams.first {
-            self.selectedYear = selectedYear
-            self.dreamsForSelectedYear = dreamStore.dreams.filter { dream in
-                calendar.component(.year, from: dream.date) == selectedYear &&
-                calendar.isDate(dream.date, inSameDayAs: today)
-            }.sorted { $0.date > $1.date }
-        } else {
-            self.dreamsForSelectedYear = []
-        }
-    }
+    var today: Date = Date()
     
     var calendar: Calendar { Calendar.current }
+    
+    var dreamsOnThisDay: [Dream] {
+        dreamStore.dreams.filter { dream in
+            calendar.isDate(dream.date, inSameDayAs: today)
+        }.sorted { $0.date > $1.date }
+    }
+    
+    var yearsWithDreams: [Int] {
+        var years: Set<Int> = []
+        for dream in dreamsOnThisDay {
+            years.insert(calendar.component(.year, from: dream.date))
+        }
+        return years.sorted().reversed()
+    }
+    
+    var dreamsForSelectedYear: [Dream] {
+        guard let selectedYear = selectedYear ?? yearsWithDreams.first else {
+            return []
+        }
+        return dreamsOnThisDay.filter { dream in
+            calendar.component(.year, from: dream.date) == selectedYear
+        }
+    }
     
     var body: some View {
         NavigationView {
@@ -280,11 +275,10 @@ struct DreamReviewCard: View {
                 .lineLimit(2)
             
             // 内容预览
-            Text(dream.content.prefix(100))
+            Text(dream.content.count > 100 ? String(dream.content.prefix(100)) + "..." : dream.content)
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.7))
                 .lineLimit(3)
-                .if(dream.content.count > 100) { $0.text("...") }
             
             // 底部标签
             HStack {
@@ -323,6 +317,89 @@ struct DreamReviewCard: View {
         .padding()
         .background(Color.white.opacity(0.08))
         .cornerRadius(16)
+    }
+}
+
+// MARK: - 梦境回顾卡片 (首页用)
+
+struct OnThisDayCard: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    
+    var today: Date = Date()
+    var dreamsOnThisDay: [Dream] {
+        let calendar = Calendar.current
+        return dreamStore.dreams.filter { dream in
+            calendar.isDate(dream.date, inSameDayAs: today)
+        }.sorted { $0.date > $1.date }
+    }
+    
+    var yearsWithDreams: [Int] {
+        let calendar = Calendar.current
+        var years: Set<Int> = []
+        for dream in dreamsOnThisDay {
+            years.insert(calendar.component(.year, from: dream.date))
+        }
+        return years.sorted().reversed()
+    }
+    
+    var body: some View {
+        if !yearsWithDreams.isEmpty {
+            NavigationLink(destination: OnThisDayView(today: today)) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("📅 历史上的今天")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                            
+                            Text("你在 \(yearsWithDreams.count) 个年份的今天记录过梦境")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                    
+                    // 最近的一条梦境预览
+                    if let recentDream = dreamsOnThisDay.first {
+                        HStack(spacing: 8) {
+                            Image(systemName: "moon.fill")
+                                .font(.caption)
+                                .foregroundColor(.accentColor)
+                            
+                            Text(recentDream.title)
+                                .font(.subheadline)
+                                .foregroundColor(.white.opacity(0.9))
+                                .lineLimit(1)
+                            
+                            Text("· \(yearsWithDreams.first ?? 0)")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.5))
+                        }
+                    }
+                }
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [Color.purple.opacity(0.3), Color.pink.opacity(0.3)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
+                )
+            }
+            .buttonStyle(.plain)
+        }
     }
 }
 
