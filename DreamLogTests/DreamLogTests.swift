@@ -4380,4 +4380,310 @@ final class DreamLogTests: XCTestCase {
         
         XCTAssertEqual(assistant.messages.count, initialCount + 2)
     }
+    
+    // MARK: - Phase 13 语音模式测试
+    
+    func testVoiceModeEnableDisable() async throws {
+        let assistant = DreamAssistantService.shared
+        
+        // 初始状态
+        XCTAssertFalse(assistant.voiceModeEnabled)
+        
+        // 启用语音模式
+        assistant.enableVoiceMode(true)
+        XCTAssertTrue(assistant.voiceModeEnabled)
+        
+        // 禁用语音模式
+        assistant.enableVoiceMode(false)
+        XCTAssertFalse(assistant.voiceModeEnabled)
+    }
+    
+    func testVoiceModeStateTransition() async throws {
+        let assistant = DreamAssistantService.shared
+        
+        // 初始状态
+        XCTAssertEqual(assistant.state, .idle)
+        
+        // 开始聆听
+        assistant.startListening()
+        XCTAssertEqual(assistant.state, .listening)
+        XCTAssertTrue(assistant.isListening)
+        
+        // 停止聆听
+        assistant.stopListening()
+        XCTAssertEqual(assistant.state, .idle)
+        XCTAssertFalse(assistant.isListening)
+    }
+    
+    func testSpeechQueueProcessing() async throws {
+        let assistant = DreamAssistantService.shared
+        
+        // 模拟添加多条语音消息到队列
+        assistant.speakQueue = ["消息 1", "消息 2", "消息 3"]
+        
+        // 验证队列状态
+        XCTAssertEqual(assistant.speakQueue.count, 3)
+        
+        // 清空队列
+        assistant.speakQueue.removeAll()
+        XCTAssertEqual(assistant.speakQueue.count, 0)
+    }
+    
+    func testSpeechMessagePlayback() async throws {
+        let assistant = DreamAssistantService.shared
+        
+        // 验证语音播放状态
+        XCTAssertFalse(assistant.isSpeaking)
+        
+        // 模拟播放 (实际播放需要硬件支持)
+        // 这里只验证状态管理逻辑
+        assistant.isSpeaking = true
+        XCTAssertTrue(assistant.isSpeaking)
+        
+        assistant.isSpeaking = false
+        XCTAssertFalse(assistant.isSpeaking)
+    }
+    
+    func testVoiceModeToggle() async throws {
+        let assistant = DreamAssistantService.shared
+        
+        let initialState = assistant.voiceModeEnabled
+        assistant.toggleVoiceMode()
+        XCTAssertEqual(assistant.voiceModeEnabled, !initialState)
+        
+        assistant.toggleVoiceMode()
+        XCTAssertEqual(assistant.voiceModeEnabled, initialState)
+    }
+    
+    // MARK: - Phase 13 预测洞察测试
+    
+    func testPredictionInsightsGeneration() async throws {
+        let assistant = DreamAssistantService.shared
+        let trendService = DreamTrendService.shared
+        
+        // 创建测试梦境数据
+        let dreams = createTestDreams(count: 20)
+        
+        // 生成预测洞察
+        let insights = await assistant.generatePredictionInsights(dreams: dreams)
+        
+        XCTAssertGreaterThan(insights.count, 0)
+        
+        for insight in insights {
+            XCTAssertFalse(insight.type.rawValue.isEmpty)
+            XCTAssertGreaterThan(insight.description.count, 0)
+            XCTAssertGreaterThan(insight.confidence, 0)
+            XCTAssertLessThanOrEqual(insight.confidence, 1)
+        }
+    }
+    
+    func testEmotionTrendPrediction() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 15)
+        
+        let insights = await assistant.generatePredictionInsights(dreams: dreams)
+        
+        let emotionInsights = insights.filter { $0.type == .emotionTrend }
+        XCTAssertGreaterThan(emotionInsights.count, 0)
+        
+        let emotionInsight = emotionInsights.first!
+        XCTAssertTrue(emotionInsight.description.contains("情绪") || 
+                      emotionInsight.description.contains("积极") ||
+                      emotionInsight.description.contains("消极"))
+    }
+    
+    func testThemeTrendPrediction() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 15)
+        
+        let insights = await assistant.generatePredictionInsights(dreams: dreams)
+        
+        let themeInsights = insights.filter { $0.type == .themeTrend }
+        XCTAssertGreaterThan(themeInsights.count, 0)
+        
+        let themeInsight = themeInsights.first!
+        XCTAssertTrue(themeInsight.description.contains("主题") || 
+                      themeInsight.description.contains("标签") ||
+                      themeInsight.description.contains("内容"))
+    }
+    
+    func testClarityPrediction() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 15)
+        
+        let insights = await assistant.generatePredictionInsights(dreams: dreams)
+        
+        let clarityInsights = insights.filter { $0.type == .clarity }
+        XCTAssertGreaterThan(clarityInsights.count, 0)
+        
+        let clarityInsight = clarityInsights.first!
+        XCTAssertTrue(clarityInsight.description.contains("清晰度") || 
+                      clarityInsight.description.contains("提升") ||
+                      clarityInsight.description.contains("下降"))
+    }
+    
+    func testLucidDreamOpportunityPrediction() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 15)
+        
+        let insights = await assistant.generatePredictionInsights(dreams: dreams)
+        
+        let lucidInsights = insights.filter { $0.type == .lucidDream }
+        XCTAssertGreaterThan(lucidInsights.count, 0)
+        
+        let lucidInsight = lucidInsights.first!
+        XCTAssertTrue(lucidInsight.description.contains("清醒梦") || 
+                      lucidInsight.description.contains("机会") ||
+                      lucidInsight.description.contains("频率"))
+    }
+    
+    // MARK: - Phase 13 深度分析测试
+    
+    func testDeepAnalysisReportGeneration() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 20)
+        
+        let report = await assistant.performDeepAnalysis(dreams: dreams)
+        
+        XCTAssertNotNil(report)
+        
+        if let report = report {
+            XCTAssertGreaterThanOrEqual(report.totalDreams, 0)
+            XCTAssertGreaterThanOrEqual(report.avgClarity, 1)
+            XCTAssertLessThanOrEqual(report.avgClarity, 5)
+            XCTAssertGreaterThanOrEqual(report.avgIntensity, 1)
+            XCTAssertLessThanOrEqual(report.avgIntensity, 5)
+            XCTAssertGreaterThanOrEqual(report.lucidRatio, 0)
+            XCTAssertLessThanOrEqual(report.lucidRatio, 1)
+        }
+    }
+    
+    func testNineDimensionAnalysis() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 25)
+        
+        let report = await assistant.performDeepAnalysis(dreams: dreams)
+        
+        guard let report = report else {
+            XCTFail("应该生成分析报告")
+            return
+        }
+        
+        // 验证 9 维度完整性
+        XCTAssertNotNil(report.totalDreams)
+        XCTAssertNotNil(report.avgClarity)
+        XCTAssertNotNil(report.avgIntensity)
+        XCTAssertNotNil(report.lucidRatio)
+        XCTAssertNotNil(report.dreamFrequency)
+        XCTAssertNotNil(report.streakDays)
+        XCTAssertNotNil(report.bestRecordingTime)
+        XCTAssertNotNil(report.topTags)
+        XCTAssertNotNil(report.topEmotions)
+    }
+    
+    func testTagCloudGeneration() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 20)
+        
+        let report = await assistant.performDeepAnalysis(dreams: dreams)
+        
+        guard let report = report else {
+            XCTFail("应该生成分析报告")
+            return
+        }
+        
+        // 验证标签云数据
+        XCTAssertGreaterThan(report.topTags.count, 0)
+        
+        for tag in report.topTags {
+            XCTAssertFalse(tag.key.isEmpty)
+            XCTAssertGreaterThan(tag.value, 0)
+        }
+    }
+    
+    func testEmotionCloudGeneration() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 20)
+        
+        let report = await assistant.performDeepAnalysis(dreams: dreams)
+        
+        guard let report = report else {
+            XCTFail("应该生成分析报告")
+            return
+        }
+        
+        // 验证情绪云数据
+        XCTAssertGreaterThan(report.topEmotions.count, 0)
+        
+        for emotion in report.topEmotions {
+            XCTAssertFalse(emotion.key.rawValue.isEmpty)
+            XCTAssertGreaterThan(emotion.value, 0)
+        }
+    }
+    
+    func testAnalysisReportCodable() async throws {
+        let assistant = DreamAssistantService.shared
+        let dreams = createTestDreams(count: 15)
+        
+        let report = await assistant.performDeepAnalysis(dreams: dreams)
+        
+        guard let report = report else {
+            XCTFail("应该生成分析报告")
+            return
+        }
+        
+        // 测试 Codable 编解码
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
+        let data = try encoder.encode(report)
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        let decodedReport = try decoder.decode(DreamAnalysisReport.self, from: data)
+        
+        XCTAssertEqual(decodedReport.totalDreams, report.totalDreams)
+        XCTAssertEqual(decodedReport.avgClarity, report.avgClarity)
+        XCTAssertEqual(decodedReport.avgIntensity, report.avgIntensity)
+    }
+    
+    // MARK: - 预测模型测试
+    
+    func testDreamPredictionModel() throws {
+        let prediction = DreamPrediction(
+            type: .emotionTrend,
+            trend: .positive,
+            confidence: 0.75,
+            description: "情绪趋势积极",
+            timeFrame: "未来 7 天"
+        )
+        
+        XCTAssertEqual(prediction.type, .emotionTrend)
+        XCTAssertEqual(prediction.trend, .positive)
+        XCTAssertEqual(prediction.confidence, 0.75)
+        XCTAssertEqual(prediction.description, "情绪趋势积极")
+        XCTAssertEqual(prediction.timeFrame, "未来 7 天")
+    }
+    
+    func testDreamPredictionType() throws {
+        let allTypes = DreamPredictionType.allCases
+        XCTAssertEqual(allTypes.count, 4)
+        
+        for type in allTypes {
+            XCTAssertFalse(type.rawValue.isEmpty)
+            XCTAssertFalse(type.icon.isEmpty)
+            XCTAssertFalse(type.displayName.isEmpty)
+        }
+    }
+    
+    func testDreamTrend() throws {
+        let trends: [DreamTrend] = [.positive, .negative, .stable]
+        
+        for trend in trends {
+            XCTAssertFalse(trend.rawValue.isEmpty)
+            XCTAssertFalse(trend.icon.isEmpty)
+            XCTAssertFalse(trend.color.isEmpty)
+        }
+    }
 }
