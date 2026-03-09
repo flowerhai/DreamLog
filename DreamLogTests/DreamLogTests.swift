@@ -4081,4 +4081,303 @@ final class DreamLogTests: XCTestCase {
         let error: LocalizedError = PDFExportError.noDreamsInRange
         XCTAssertNotNil(error.errorDescription)
     }
+    
+    // MARK: - DreamAssistant 测试 (Phase 13)
+    
+    func testChatMessageModel() throws {
+        // 测试聊天消息模型
+        let message = ChatMessage(
+            content: "测试消息",
+            sender: .user,
+            type: .text
+        )
+        
+        XCTAssertEqual(message.content, "测试消息")
+        XCTAssertEqual(message.sender, .user)
+        XCTAssertEqual(message.type, .text)
+        XCTAssertNotNil(message.id)
+        XCTAssertNotNil(message.timestamp)
+    }
+    
+    func testChatMessageCodable() throws {
+        // 测试消息 Codable
+        let message = ChatMessage(
+            content: "测试 Codable",
+            sender: .assistant,
+            type: .insight
+        )
+        
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(message)
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decoded = try decoder.decode(ChatMessage.self, from: data)
+        
+        XCTAssertEqual(decoded.content, message.content)
+        XCTAssertEqual(decoded.sender, message.sender)
+        XCTAssertEqual(decoded.type, message.type)
+    }
+    
+    func testMessageSenderEnum() throws {
+        // 测试发送者枚举
+        XCTAssertEqual(MessageSender.user.rawValue, "user")
+        XCTAssertEqual(MessageSender.assistant.rawValue, "assistant")
+    }
+    
+    func testMessageTypeEnum() throws {
+        // 测试消息类型枚举
+        XCTAssertEqual(MessageType.text.rawValue, "text")
+        XCTAssertEqual(MessageType.suggestion.rawValue, "suggestion")
+        XCTAssertEqual(MessageType.dreamCard.rawValue, "dreamCard")
+        XCTAssertEqual(MessageType.insight.rawValue, "insight")
+        XCTAssertEqual(MessageType.quickAction.rawValue, "quickAction")
+    }
+    
+    func testSuggestionChipModel() throws {
+        // 测试建议芯片模型
+        let chip = SuggestionChip(
+            title: "本周统计",
+            query: "我这周记录了多少个梦？",
+            icon: "chart.bar"
+        )
+        
+        XCTAssertEqual(chip.title, "本周统计")
+        XCTAssertEqual(chip.query, "我这周记录了多少个梦？")
+        XCTAssertEqual(chip.icon, "chart.bar")
+        XCTAssertNotNil(chip.id)
+    }
+    
+    func testQuickActionModel() throws {
+        // 测试快速操作模型
+        let action = QuickAction(
+            title: "记录梦境",
+            icon: "mic.fill",
+            action: .recordDream
+        )
+        
+        XCTAssertEqual(action.title, "记录梦境")
+        XCTAssertEqual(action.icon, "mic.fill")
+        XCTAssertEqual(action.action, QuickActionType.recordDream)
+        XCTAssertNotNil(action.id)
+    }
+    
+    func testQuickActionTypeEnum() throws {
+        // 测试快速操作类型枚举
+        let actions: [QuickActionType] = [
+            .recordDream, .viewStats, .browseGallery,
+            .searchDreams, .lucidTraining, .meditation
+        ]
+        
+        XCTAssertEqual(actions.count, 6)
+    }
+    
+    func testInsightCardModel() throws {
+        // 测试洞察卡片模型
+        let insight = InsightCard(
+            title: "梦境统计",
+            description: "本周共记录 5 个梦境",
+            icon: "chart.bar",
+            value: "5",
+            trend: .up,
+            color: "accent"
+        )
+        
+        XCTAssertEqual(insight.title, "梦境统计")
+        XCTAssertEqual(insight.description, "本周共记录 5 个梦境")
+        XCTAssertEqual(insight.value, "5")
+        XCTAssertEqual(insight.trend, .up)
+    }
+    
+    func testTrendDirectionEnum() throws {
+        // 测试趋势方向枚举
+        XCTAssertEqual(TrendDirection.up.rawValue, "up")
+        XCTAssertEqual(TrendDirection.down.rawValue, "down")
+        XCTAssertEqual(TrendDirection.stable.rawValue, "stable")
+    }
+    
+    func testAssistantStateEnum() throws {
+        // 测试助手状态枚举
+        let states: [AssistantState] = [.idle, .listening, .thinking, .speaking]
+        XCTAssertEqual(states.count, 4)
+    }
+    
+    func testQueryIntentParseSearch() throws {
+        // 测试查询意图解析 - 搜索
+        let intent1 = QueryIntent.parse("搜索关于飞行的梦")
+        if case .searchDreams(let keyword) = intent1 {
+            XCTAssertTrue(keyword.contains("飞行"))
+        } else {
+            XCTFail("Expected searchDreams intent")
+        }
+        
+        let intent2 = QueryIntent.parse("找找有水的梦境")
+        if case .searchDreams = intent2 {
+            // 正确识别为搜索
+        } else {
+            XCTFail("Expected searchDreams intent")
+        }
+    }
+    
+    func testQueryIntentParseStats() throws {
+        // 测试查询意图解析 - 统计
+        let intent1 = QueryIntent.parse("我这周记录了多少个梦？")
+        if case .askStats = intent1 {
+            // 正确识别为统计查询
+        } else {
+            XCTFail("Expected askStats intent")
+        }
+        
+        let intent2 = QueryIntent.parse("我的清醒梦比例是多少？")
+        if case .askStats = intent2 {
+            // 正确识别为统计查询
+        } else {
+            XCTFail("Expected askStats intent")
+        }
+    }
+    
+    func testQueryIntentParsePattern() throws {
+        // 测试查询意图解析 - 模式
+        let intent1 = QueryIntent.parse("我最近经常梦到什么？")
+        if case .askPattern = intent1 {
+            // 正确识别为模式查询
+        } else {
+            XCTFail("Expected askPattern intent")
+        }
+        
+        let intent2 = QueryIntent.parse("我的梦境情绪趋势如何？")
+        if case .askPattern = intent2 {
+            // 正确识别为模式查询
+        } else {
+            XCTFail("Expected askPattern intent")
+        }
+    }
+    
+    func testQueryIntentParseRecommendation() throws {
+        // 测试查询意图解析 - 推荐
+        let intent = QueryIntent.parse("给我一些记录建议")
+        if case .askRecommendation = intent {
+            // 正确识别为推荐请求
+        } else {
+            XCTFail("Expected askRecommendation intent")
+        }
+    }
+    
+    func testQueryIntentParseHelp() throws {
+        // 测试查询意图解析 - 帮助
+        let intent = QueryIntent.parse("如何使用这个功能？")
+        if case .askHelp = intent {
+            // 正确识别为帮助请求
+        } else {
+            XCTFail("Expected askHelp intent")
+        }
+    }
+    
+    func testQueryIntentParseRecordDream() throws {
+        // 测试查询意图解析 - 记录梦境
+        let intent = QueryIntent.parse("我想记录一个梦")
+        if case .recordDream = intent {
+            // 正确识别为记录请求
+        } else {
+            XCTFail("Expected recordDream intent")
+        }
+    }
+    
+    func testQueryIntentParseUnknown() throws {
+        // 测试查询意图解析 - 未知
+        let intent = QueryIntent.parse("今天天气怎么样？")
+        if case .unknown = intent {
+            // 正确识别为未知意图
+        } else {
+            XCTFail("Expected unknown intent")
+        }
+    }
+    
+    func testDreamAssistantServiceSingleton() throws {
+        // 测试助手服务单例
+        let service1 = DreamAssistantService.shared
+        let service2 = DreamAssistantService.shared
+        
+        XCTAssertIdentical(service1, service2)
+    }
+    
+    func testDreamAssistantServiceInitialState() async throws {
+        // 测试助手服务初始状态
+        let assistant = DreamAssistantService.shared
+        
+        XCTAssertEqual(assistant.state, .idle)
+        XCTAssertFalse(assistant.isSpeaking)
+        XCTAssertGreaterThan(assistant.messages.count, 0)  // 应该有问候语
+        XCTAssertGreaterThan(assistant.suggestions.count, 0)
+        XCTAssertGreaterThan(assistant.quickActions.count, 0)
+    }
+    
+    func testDreamAssistantServiceSuggestions() async throws {
+        // 测试建议芯片
+        let assistant = DreamAssistantService.shared
+        
+        let expectedTitles = ["本周统计", "常见主题", "情绪分析", "清醒梦", "最佳时间", "连续记录"]
+        let actualTitles = assistant.suggestions.map { $0.title }
+        
+        for expected in expectedTitles {
+            XCTAssertTrue(actualTitles.contains(expected), "Should contain suggestion: \(expected)")
+        }
+    }
+    
+    func testDreamAssistantServiceQuickActions() async throws {
+        // 测试快速操作
+        let assistant = DreamAssistantService.shared
+        
+        let expectedTitles = ["记录梦境", "查看统计", "梦境画廊", "搜索", "清醒梦", "冥想"]
+        let actualTitles = assistant.quickActions.map { $0.title }
+        
+        for expected in expectedTitles {
+            XCTAssertTrue(actualTitles.contains(expected), "Should contain action: \(expected)")
+        }
+    }
+    
+    func testDreamAssistantServiceSendMessage() async throws {
+        // 测试发送消息
+        let assistant = DreamAssistantService.shared
+        let initialCount = assistant.messages.count
+        
+        await assistant.sendMessage("测试消息")
+        
+        XCTAssertEqual(assistant.messages.count, initialCount + 2)  // 用户消息 + 助手回复
+        
+        let lastUserMessage = assistant.messages[assistant.messages.count - 2]
+        XCTAssertEqual(lastUserMessage.sender, .user)
+        XCTAssertEqual(lastUserMessage.content, "测试消息")
+        
+        let lastAssistantMessage = assistant.messages.last
+        XCTAssertEqual(lastAssistantMessage?.sender, .assistant)
+    }
+    
+    func testDreamAssistantServiceClearHistory() async throws {
+        // 测试清除历史
+        let assistant = DreamAssistantService.shared
+        
+        await assistant.sendMessage("测试消息 1")
+        await assistant.sendMessage("测试消息 2")
+        
+        let countBeforeClear = assistant.messages.count
+        XCTAssertGreaterThan(countBeforeClear, 1)
+        
+        assistant.clearHistory()
+        
+        XCTAssertGreaterThan(assistant.messages.count, 0)  // 应该有问候语
+        XCTAssertLessThan(assistant.messages.count, countBeforeClear)
+    }
+    
+    func testDreamAssistantServiceHandleSuggestion() async throws {
+        // 测试处理建议芯片
+        let assistant = DreamAssistantService.shared
+        let suggestion = assistant.suggestions.first!
+        let initialCount = assistant.messages.count
+        
+        await assistant.handleSuggestion(suggestion)
+        
+        XCTAssertEqual(assistant.messages.count, initialCount + 2)
+    }
 }

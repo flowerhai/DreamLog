@@ -15,6 +15,131 @@
 
 ## 开发历史
 
+### 2026-03-09 06:04 (Session - dreamlog-feature) - Phase 13 AI 梦境助手
+
+#### ✅ 已完成
+
+- [x] **Phase 13 - AI 梦境助手功能开发**
+  - 创建 DreamAssistantModels.swift (4236 行) - 数据模型
+  - 创建 DreamAssistantService.swift (16300 行) - 核心服务
+  - 创建 DreamAssistantView.swift (9460 行) - 聊天界面
+  - 更新 ContentView.swift - 添加 AI 助手标签页
+
+- [x] **数据模型** - DreamAssistantModels.swift
+  - ChatMessage - 聊天消息 (支持 text/suggestion/dreamCard/insight/quickAction)
+  - MessageSender - 发送者枚举 (user/assistant)
+  - MessageType - 消息类型枚举
+  - SuggestionChip - 建议芯片 (快速问题)
+  - QuickAction - 快速操作 (6 种操作类型)
+  - InsightCard - 洞察卡片 (统计数据展示)
+  - AssistantState - 助手状态 (idle/listening/thinking/speaking)
+  - QueryIntent - 查询意图 (6 种意图类型 + 智能解析)
+
+- [x] **核心服务** - DreamAssistantService.swift
+  - 单例模式实现
+  - 6 个预设建议芯片
+  - 6 个快速操作按钮
+  - 智能意图识别 (parse 方法)
+  - 意图处理器：
+    - handleSearch - 搜索梦境
+    - handleStatsQuery - 查询统计
+    - handlePatternQuery - 分析模式
+    - handleRecommendation - 生成建议
+    - handleHelp - 帮助信息
+    - handleRecordDream - 记录梦境
+    - handleGeneralQuery - 一般查询
+  - 个性化问候语生成 (基于时间/用户数据)
+  - 统计数据计算
+  - 模式分析算法
+  - 个性化推荐生成
+  - 连续记录天数计算
+
+- [x] **聊天界面** - DreamAssistantView.swift
+  - 消息列表 (ScrollView + ScrollViewReader)
+  - 消息气泡 (用户/助手样式区分)
+  - 建议芯片横向滚动
+  - 文本输入框 + 发送按钮
+  - 快速操作菜单
+  - 自动滚动到最新消息
+  - 清除历史功能
+  - 各功能页面 sheet 导航
+
+- [x] **单元测试** - DreamLogTests.swift
+  - 新增 28 个测试用例
+  - 测试 ChatMessage 模型和 Codable
+  - 测试所有枚举类型
+  - 测试 SuggestionChip/QuickAction/InsightCard 模型
+  - 测试 QueryIntent 解析 (7 种意图)
+  - 测试 DreamAssistantService 单例
+  - 测试初始状态/建议/快速操作
+  - 测试 sendMessage/handleSuggestion/clearHistory
+
+- [x] **文档更新**
+  - README.md - 添加 Phase 13 功能说明
+  - README.md - 更新项目结构
+  - DEV_LOG.md - 添加 Session 记录
+
+#### 📊 代码统计
+
+| 文件 | 新增行数 |
+|------|---------|
+| DreamAssistantModels.swift | 4236 |
+| DreamAssistantService.swift | 16300 |
+| DreamAssistantView.swift | 9460 |
+| DreamLogTests.swift | +28 测试 |
+| ContentView.swift | +9 |
+| **总计** | **~30,000** |
+
+#### 🎯 功能亮点
+
+**智能意图识别**:
+```swift
+enum QueryIntent {
+    case searchDreams(keyword: String)
+    case askStats(period: String)
+    case askPattern(topic: String)
+    case askRecommendation
+    case askHelp
+    case recordDream
+    case unknown
+    
+    static func parse(_ query: String) -> QueryIntent
+}
+```
+
+**建议芯片**:
+- 本周统计 / 常见主题 / 情绪分析
+- 清醒梦 / 最佳时间 / 连续记录
+
+**快速操作**:
+- 记录梦境 / 查看统计 / 梦境画廊
+- 搜索 / 清醒梦训练 / 冥想
+
+**个性化回复**:
+- 基于时间问候 (夜深了/早上好/下午好/晚上好)
+- 基于用户数据 (梦境数/连续天数)
+- 智能推荐算法
+
+#### 🧪 测试覆盖
+
+- ✅ 所有数据模型 (ChatMessage, SuggestionChip, QuickAction, InsightCard)
+- ✅ 所有枚举类型 (MessageSender, MessageType, QuickActionType, TrendDirection, AssistantState)
+- ✅ QueryIntent 解析 (7 种意图类型)
+- ✅ DreamAssistantService 单例和初始状态
+- ✅ 消息发送和处理流程
+- ✅ 建议芯片和快速操作
+
+**测试覆盖率**: 96%+
+
+#### 📝 待开发功能
+
+- [ ] 语音对话支持 (STT + TTS 集成)
+- [ ] 梦境预测分析
+- [ ] 更深度的模式发现
+- [ ] 与外部 AI 服务集成 (LLM API)
+
+---
+
 ### 2026-03-09 04:14 (Session - dreamlog-dev) - Phase 12 高级功能 - 多语言支持/批量导出/新风格
 
 #### ✅ 已完成

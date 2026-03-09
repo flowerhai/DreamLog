@@ -111,12 +111,19 @@ struct ContentView: View {
                 }
                 .tag(13)
             
+            DreamAssistantView()
+                .tabItem {
+                    Image(systemName: "message.fill")
+                    Text("助手")
+                }
+                .tag(14)
+            
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(14)
+                .tag(15)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
