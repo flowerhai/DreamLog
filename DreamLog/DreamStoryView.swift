@@ -2,953 +2,640 @@
 //  DreamStoryView.swift
 //  DreamLog
 //
-//  梦境故事生成与查看界面
-//  Phase 8 - AI 增强功能
+//  Dream Story Generation & Reading View - Phase 14
+//  UI for creating and reading narrative stories from dreams
 //
 
 import SwiftUI
 
-// MARK: - 梦境故事主视图
-
+/// Dream Story View - Main container
 struct DreamStoryView: View {
-    @ObservedObject private var storyService = DreamStoryService.shared
-    @EnvironmentObject var dreamStore: DreamStore
-    @State private var selectedStory: DreamStory?
-    @State private var showStoryDetail = false
-    @State private var selectedStyle: DreamStory.NarrativeStyle = .firstPerson
-    @State private var showStylePicker = false
+    @StateObject private var store = DreamStore.shared
     @State private var selectedDream: Dream?
-    @State private var showDreamPicker = false
-    @State private var showGenerationHistory = false
+    @State private var isGeneratingStory = false
+    @State private var generatedStory: DreamStoryService.GeneratedStory?
+    @State private var showGenrePicker = false
+    @State private var selectedGenre: DreamStoryService.StoryGenre = .fantasy
+    @State private var savedStories: [DreamStoryService.GeneratedStory] = []
+    @State private var showStoryReader = false
+    @State private var readingStory: DreamStoryService.GeneratedStory?
     
     var body: some View {
         NavigationView {
-            Group {
-                if storyService.stories.isEmpty {
-                    emptyStateView
-                } else {
-                    storyListView
+            ZStack {
+                // Background gradient
+                LinearGradient(
+                    gradient: Gradient(colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.1)]),
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                
+                VStack(spacing: 0) {
+                    // Header
+                    storyHeader
+                    
+                    // Saved Stories List
+                    if !savedStories.isEmpty {
+                        savedStoriesSection
+                    } else {
+                        emptyStateView
+                    }
+                    
+                    // Generate New Story Button
+                    generateButton
                 }
             }
             .navigationTitle("梦境故事")
+            .navigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { showGenerationHistory = true }) {
-                        Label("历史记录", systemImage: "clock.arrow.circlepath")
-                    }
-                }
-                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showDreamPicker = true }) {
-                        Label("新建故事", systemImage: "plus")
+                    Button(action: refreshStories) {
+                        Image(systemName: "arrow.clockwise")
                     }
                 }
             }
-        }
-        .sheet(isPresented: $showDreamPicker) {
-            DreamPickerView(selectedDream: $selectedDream) { dream in
-                if dream != nil {
-                    showStylePicker = true
-                }
+            .onAppear {
+                loadSavedStories()
             }
-        }
-        .sheet(isPresented: $showStylePicker) {
-            if let dream = selectedDream {
-                StylePickerView(dream: dream, selectedStyle: $selectedStyle) { style in
-                    Task {
-                        await storyService.generateStory(for: dream, style: style)
+            .sheet(isPresented: $showGenrePicker) {
+                GenrePickerView(
+                    selectedGenre: $selectedGenre,
+                    onSelect: {
+                        showGenrePicker = false
+                        generateStory()
                     }
+                )
+            }
+            .sheet(isPresented: $showStoryReader) {
+                if let story = readingStory {
+                    StoryReaderView(story: story, onDelete: deleteStory)
                 }
             }
-        }
-        .sheet(isPresented: $showGenerationHistory) {
-            GenerationHistoryView()
-        }
-        .sheet(item: $selectedStory) { story in
-            StoryDetailView(story: story)
         }
     }
     
-    // MARK: - 空状态视图
+    // MARK: - Header
+    
+    private var storyHeader: some View {
+        VStack(spacing: 16) {
+            // Icon and title
+            VStack(spacing: 8) {
+                Text("📖")
+                    .font(.system(size: 60))
+                
+                Text("梦境故事集")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("将你的梦境转化为精彩的故事")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.vertical, 24)
+            
+            // Stats
+            HStack(spacing: 30) {
+                StatView(
+                    value: "\(savedStories.count)",
+                    label: "已创作故事",
+                    icon: "📚"
+                )
+                
+                StatView(
+                    value: "\(DreamStoryService.StoryGenre.allCases.count)",
+                    label: "故事风格",
+                    icon: "🎭"
+                )
+            }
+            .padding(.horizontal)
+        }
+        .background(Color.white.opacity(0.7))
+        .cornerRadius(16)
+        .padding()
+    }
+    
+    // MARK: - Saved Stories Section
+    
+    private var savedStoriesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("我的故事集")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(savedStories, id: \.id) { story in
+                        StoryCardView(story: story) {
+                            readingStory = story
+                            showStoryReader = true
+                        }
+                    }
+                }
+                .padding(.horizontal)
+            }
+        }
+    }
+    
+    // MARK: - Empty State
     
     private var emptyStateView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "book.closed")
-                .font(.system(size: 60))
-                .foregroundColor(.purple)
+            Spacer()
             
-            Text("还没有梦境故事")
+            Image(systemName: "book.closed")
+                .font(.system(size: 80))
+                .foregroundColor(.purple.opacity(0.5))
+            
+            Text("还没有创作故事")
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("选择一个梦境，让它变成精彩的故事")
+            Text("选择一个梦境，开始你的故事创作之旅")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
             
-            Button(action: { showDreamPicker = true }) {
-                Label("选择梦境", systemImage: "sparkles")
-                    .padding()
-                    .background(Color.purple)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-            .padding(.top, 10)
-            
-            if !dreamStore.dreams.isEmpty {
-                Text("你有 \(dreamStore.dreams.count) 个梦境可用于创作")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .padding(.top, 8)
-            }
+            Spacer()
         }
-        .padding(40)
     }
     
-    // MARK: - 故事列表视图
+    // MARK: - Generate Button
     
-    private var storyListView: some View {
-        List(storyService.stories) { story in
-            StoryListItemView(story: story)
-                .onTapGesture {
-                    selectedStory = story
-                }
-        }
-        .listStyle(InsetGroupedListStyle())
-    }
-}
-
-// MARK: - 故事列表项视图
-
-struct StoryListItemView: View {
-    let story: DreamStory
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+    private var generateButton: some View {
+        Button(action: {
+            showGenrePicker = true
+        }) {
             HStack {
-                Image(systemName: story.narrativeStyle.icon)
-                    .foregroundColor(.purple)
-                
-                Text(story.title)
-                    .font(.headline)
-                
-                Spacer()
-                
-                if story.isFavorite {
-                    Image(systemName: "heart.fill")
-                        .foregroundColor(.red)
-                }
+                Image(systemName: "wand.and.stars")
+                Text("创作新故事")
             }
-            
-            HStack {
-                Label(story.narrativeStyle.rawValue, systemImage: "text.book.closed")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                Label("\(story.wordCount)字", systemImage: "character.textbox")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Label(formatDate(story.createdAt), systemImage: "clock")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            if !story.themes.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 6) {
-                        ForEach(story.themes.prefix(5), id: \.self) { theme in
-                            Text(theme)
-                                .font(.caption2)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color.purple.opacity(0.1))
-                                .foregroundColor(.purple)
-                                .cornerRadius(4)
-                        }
-                    }
-                }
-            }
-        }
-        .padding(.vertical, 4)
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd"
-        return formatter.string(from: date)
-    }
-}
-
-// MARK: - 梦境选择器视图
-
-struct DreamPickerView: View {
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var dreamStore: DreamStore
-    @Binding var selectedDream: Dream?
-    var onSelect: (Dream?) -> Void
-    
-    @State private var searchText = ""
-    
-    var filteredDreams: [Dream] {
-        if searchText.isEmpty {
-            return dreamStore.dreams.sorted(by: { $0.createdAt > $1.createdAt })
-        } else {
-            return dreamStore.dreams.filter { dream in
-                dream.content.localizedCaseInsensitiveContains(searchText) ||
-                dream.title.localizedCaseInsensitiveContains(searchText) ||
-                dream.emotions.contains(where: { $0.localizedCaseInsensitiveContains(searchText) })
-            }
-            .sorted(by: { $0.createdAt > $1.createdAt })
-        }
-    }
-    
-    var body: some View {
-        NavigationView {
-            Group {
-                if filteredDreams.isEmpty {
-                    VStack(spacing: 16) {
-                        Image(systemName: "moon.zzz")
-                            .font(.system(size: 50))
-                            .foregroundColor(.secondary)
-                        Text("没有找到梦境")
-                            .font(.headline)
-                        Text("尝试搜索其他关键词")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(40)
-                } else {
-                    List(filteredDreams) { dream in
-                        DreamListItem(dream: dream)
-                            .onTapGesture {
-                                selectedDream = dream
-                                onSelect(dream)
-                                dismiss()
-                            }
-                    }
-                }
-            }
-            .searchable(text: $searchText, prompt: "搜索梦境内容")
-            .navigationTitle("选择梦境")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("取消") {
-                        onSelect(nil)
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-    
-    // MARK: - 梦境列表项
-    
-    private struct DreamListItem: View {
-        let dream: Dream
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text(dream.title.isEmpty ? "无题梦境" : dream.title)
-                        .font(.headline)
-                    Spacer()
-                    Text(formatDate(dream.createdAt))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                Text(dream.content.prefix(80))
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-                
-                if !dream.emotions.isEmpty {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 4) {
-                            ForEach(dream.emotions.prefix(5), id: \.self) { emotion in
-                                Text(emotion)
-                                    .font(.caption2)
-                                    .padding(.horizontal, 6)
-                                    .padding(.vertical, 2)
-                                    .background(Color.purple.opacity(0.1))
-                                    .foregroundColor(.purple)
-                                    .cornerRadius(4)
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.vertical, 4)
-        }
-        
-        private func formatDate(_ date: Date) -> String {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "MM/dd HH:mm"
-            return formatter.string(from: date)
-        }
-    }
-}
-
-// MARK: - 风格选择器视图
-
-struct StylePickerView: View {
-    @Environment(\.dismiss) var dismiss
-    let dream: Dream
-    @Binding var selectedStyle: DreamStory.NarrativeStyle
-    var onSelect: (DreamStory.NarrativeStyle) -> Void
-    
-    var body: some View {
-        NavigationView {
-            List(DreamStory.NarrativeStyle.allCases) { style in
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: style.icon)
-                            .foregroundColor(.purple)
-                            .frame(width: 30)
-                        
-                        VStack(alignment: .leading) {
-                            Text(style.rawValue)
-                                .font(.headline)
-                            Text(style.description)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                }
-                .padding(.vertical, 4)
-                .onTapGesture {
-                    selectedStyle = style
-                    onSelect(style)
-                    dismiss()
-                }
-            }
-            .navigationTitle("选择叙事风格")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("返回") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("取消") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-        .overlay {
-            // 梦境预览
-            VStack {
-                Spacer()
-                DreamPreviewCard(dream: dream, style: selectedStyle)
-                    .padding()
-            }
-        }
-    }
-}
-
-// MARK: - 梦境预览卡片
-
-struct DreamPreviewCard: View {
-    let dream: Dream
-    let style: DreamStory.NarrativeStyle
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "moon.stars.fill")
-                    .foregroundColor(.purple)
-                Text("梦境预览")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .foregroundColor(.purple)
-            }
-            
-            Text(dream.content.prefix(150))
-                .font(.caption)
-                .foregroundColor(.secondary)
-                .lineLimit(4)
-            
-            HStack {
-                Image(systemName: style.icon)
-                    .font(.caption)
-                Text("将使用 \(style.rawValue) 风格生成")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding(12)
-        .background(Color.purple.opacity(0.05))
-        .cornerRadius(10)
-    }
-}
-
-// MARK: - 故事详情视图
-
-struct StoryDetailView: View {
-    let story: DreamStory
-    @Environment(\.dismiss) var dismiss
-    @State private var showShareSheet = false
-    @State private var showExportOptions = false
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    // 标题和元信息
-                    headerSection
-                    
-                    Divider()
-                    
-                    // 章节内容
-                    chaptersSection
-                    
-                    Divider()
-                    
-                    // 尾声
-                    epilogueSection
-                    
-                    // 操作按钮
-                    actionButtons
-                }
-                .padding()
-            }
-            .navigationTitle("故事详情")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: { showExportOptions = true }) {
-                            Label("导出", systemImage: "square.and.arrow.up")
-                        }
-                        
-                        Button(action: { showShareSheet = true }) {
-                            Label("分享", systemImage: "square.and.arrow.up.on.square")
-                        }
-                        
-                        Button(action: {
-                            // 标记为收藏
-                        }) {
-                            Label(story.isFavorite ? "取消收藏" : "收藏", 
-                                  systemImage: story.isFavorite ? "heart.slash" : "heart")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-            }
-            .sheet(isPresented: $showShareSheet) {
-                ShareSheet(items: [story.content])
-            }
-            .actionSheet(isPresented: $showExportOptions) {
-                exportActionSheet
-            }
-        }
-    }
-    
-    // MARK: - 头部信息
-    
-    private var headerSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text(story.title)
-                .font(.largeTitle)
-                .fontWeight(.bold)
-            
-            HStack(spacing: 16) {
-                Label(story.narrativeStyle.rawValue, systemImage: "text.book.closed")
-                    .font(.subheadline)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.purple.opacity(0.1))
-                    .foregroundColor(.purple)
-                    .cornerRadius(8)
-                
-                Label("\(story.wordCount)字", systemImage: "character.textbox")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                
-                Label(formatDate(story.createdAt), systemImage: "clock")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-            }
-            
-            if !story.themes.isEmpty {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(story.themes, id: \.self) { theme in
-                            Text(theme)
-                                .font(.caption)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
-                                .cornerRadius(6)
-                        }
-                    }
-                }
-            }
-            
-            Text("情绪：\(story.mood)")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-    }
-    
-    // MARK: - 章节内容
-    
-    private var chaptersSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            ForEach(story.chapters) { chapter in
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(chapter.title)
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    
-                    Text(chapter.content)
-                        .font(.body)
-                        .lineSpacing(6)
-                    
-                    HStack {
-                        Spacer()
-                        Text("\(chapter.wordCount)字 · \(chapter.mood)")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding()
-                .background(Color.gray.opacity(0.05))
-                .cornerRadius(12)
-            }
-        }
-    }
-    
-    // MARK: - 尾声
-    
-    private var epilogueSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("尾声")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("这个梦境如同一面镜子，映照出内心深处的想法和情感。无论它是快乐的、恐惧的，还是神秘的，都是我们潜意识的一部分，值得我们去理解和珍惜。")
-                .font(.body)
-                .italic()
-                .foregroundColor(.secondary)
-            
-            Text("—— DreamLog 梦境故事生成")
-                .font(.caption)
-                .foregroundColor(.purple)
+            .font(.headline)
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [.purple, .blue]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(16)
         }
         .padding()
-        .background(Color.purple.opacity(0.05))
-        .cornerRadius(12)
     }
     
-    // MARK: - 操作按钮
+    // MARK: - Actions
     
-    private var actionButtons: some View {
-        HStack(spacing: 16) {
-            Button(action: {
-                copyToClipboard()
-            }) {
-                Label("复制", systemImage: "doc.on.doc")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.gray.opacity(0.1))
-                    .foregroundColor(.primary)
-                    .cornerRadius(10)
-            }
-            
-            Button(action: {
-                showExportOptions = true
-            }) {
-                Label("导出", systemImage: "square.and.arrow.up")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.purple)
-                    .foregroundColor(.white)
-                    .cornerRadius(10)
-            }
-        }
+    private func loadSavedStories() {
+        savedStories = DreamStoryService.shared.getAllStories()
     }
     
-    private func copyToClipboard() {
-        // 在实际 iOS 应用中，这里会使用 UIPasteboard
-        print("📋 已复制故事内容到剪贴板")
-        print("内容预览：\(story.content.prefix(100))...")
+    private func refreshStories() {
+        loadSavedStories()
     }
     
-    // MARK: - 导出选项
-    
-    private var exportActionSheet: ActionSheet {
-        ActionSheet(
-            title: Text("导出故事"),
-            message: Text("选择导出格式"),
-            buttons: [
-                .default(Text("纯文本 (.txt)")) {
-                    exportAsText()
-                },
-                .default(Text("Markdown (.md)")) {
-                    exportAsMarkdown()
-                },
-                .default(Text("EPUB")) {
-                    exportAsEPUB()
-                },
-                .cancel()
-            ]
-        )
-    }
-    
-    private func exportAsText() {
-        let text = DreamStoryService.shared.exportStoryAsText(story)
-        let fileName = "\(sanitizeFileName(story.title)).txt"
+    private func generateStory() {
+        isGeneratingStory = true
         
-        if let url = DreamStoryService.shared.saveExportedFile(content: text, fileName: fileName) {
-            showExportSuccess(message: "已保存至：\(url.lastPathComponent)")
-        } else {
-            showExportError(message: "导出失败")
-        }
-    }
-    
-    private func exportAsMarkdown() {
-        let md = DreamStoryService.shared.exportStoryAsMarkdown(story)
-        let fileName = "\(sanitizeFileName(story.title)).md"
+        // Get a random dream with sufficient content
+        let dreams = store.dreams.filter { $0.content.count > 50 }
         
-        if let url = DreamStoryService.shared.saveExportedFile(content: md, fileName: fileName) {
-            showExportSuccess(message: "已保存至：\(url.lastPathComponent)")
-        } else {
-            showExportError(message: "导出失败")
+        guard let dream = dreams.randomElement() else {
+            isGeneratingStory = false
+            return
         }
-    }
-    
-    private func exportAsEPUB() {
-        let epub = DreamStoryService.shared.exportStoryAsEPUB(story)
-        let fileName = "\(sanitizeFileName(story.title)).epub"
         
-        if let url = DreamStoryService.shared.saveExportedFile(content: epub, fileName: fileName) {
-            showExportSuccess(message: "已保存至：\(url.lastPathComponent)")
-        } else {
-            showExportError(message: "导出失败")
-        }
-    }
-    
-    private func showExportSuccess(message: String) {
-        // 在实际 iOS 应用中，这里会显示 Toast 或 Alert
-        print("✅ \(message)")
-    }
-    
-    private func showExportError(message: String) {
-        print("❌ \(message)")
-    }
-    
-    private func sanitizeFileName(_ name: String) -> String {
-        // 移除文件名中的非法字符
-        let illegalChars = CharacterSet(charactersIn: "/\\:*?\"<>|")
-        let sanitized = name.components(separatedBy: illegalChars).joined()
-        return sanitized.prefix(50).trimmingCharacters(in: .whitespaces)
-    }
-    
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy 年 MM 月 dd 日"
-        formatter.locale = Locale(identifier: "zh_CN")
-        return formatter.string(from: date)
-    }
-}
-
-// MARK: - 生成历史视图
-
-struct GenerationHistoryView: View {
-    @ObservedObject private var storyService = DreamStoryService.shared
-    @Environment(\.dismiss) var dismiss
-    @State private var showStatistics = false
-    
-    var body: some View {
-        NavigationView {
-            Group {
-                if storyService.generationHistory.isEmpty {
-                    emptyHistoryView
-                } else {
-                    historyListView
-                }
-            }
-            .navigationTitle("生成历史")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Menu {
-                        Button(action: { showStatistics = true }) {
-                            Label("查看统计", systemImage: "chart.bar")
-                        }
-                        
-                        Button(role: .destructive, action: {
-                            storyService.clearGenerationHistory()
-                        }) {
-                            Label("清除历史", systemImage: "trash")
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis.circle")
-                    }
-                }
-            }
-            .sheet(isPresented: $showStatistics) {
-                GenerationStatisticsView()
-            }
-        }
-    }
-    
-    private var emptyHistoryView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "clock.arrow.circlepath")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
-            Text("还没有生成记录")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("开始创作你的第一个梦境故事吧")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .padding(40)
-    }
-    
-    private var historyListView: some View {
-        List(storyService.generationHistory) { record in
-            HistoryRecordItem(record: record)
-        }
-        .listStyle(InsetGroupedListStyle())
-    }
-}
-
-// MARK: - 历史记录项
-
-struct HistoryRecordItem: View {
-    let record: DreamStoryService.GenerationRecord
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            // 状态图标
-            Image(systemName: record.isSuccess ? "checkmark.circle.fill" : "xmark.circle.fill")
-                .font(.title2)
-                .foregroundColor(record.isSuccess ? .green : .red)
-                .frame(width: 30)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(record.dreamTitle)
-                        .font(.headline)
-                    
-                    Spacer()
-                    
-                    Text(formatDate(record.createdAt))
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+        selectedDream = dream
+        
+        Task {
+            do {
+                let story = try await DreamStoryService.shared.generateStory(
+                    from: dream,
+                    genre: selectedGenre
+                )
                 
-                HStack(spacing: 12) {
-                    Label(record.style.rawValue, systemImage: "text.book.closed")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Label("\(record.wordCount)字", systemImage: "character.textbox")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Label(String(format: "%.1fs", record.duration), systemImage: "timer")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                if let errorMessage = record.errorMessage {
-                    Text(errorMessage)
-                        .font(.caption)
-                        .foregroundColor(.red)
-                        .lineLimit(2)
-                }
+                DreamStoryService.shared.saveStory(story)
+                generatedStory = story
+                readingStory = story
+                showStoryReader = true
+                loadSavedStories()
+            } catch {
+                print("Story generation failed: \(error)")
             }
+            
+            isGeneratingStory = false
         }
-        .padding(.vertical, 4)
     }
     
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd HH:mm"
-        return formatter.string(from: date)
+    private func deleteStory(id: UUID) {
+        DreamStoryService.shared.deleteStory(id: id)
+        loadSavedStories()
     }
 }
 
-// MARK: - 生成统计视图
+// MARK: - Stat View
 
-struct GenerationStatisticsView: View {
-    @ObservedObject private var storyService = DreamStoryService.shared
-    @Environment(\.dismiss) var dismiss
-    
-    private var stats: DreamStoryService.GenerationStatistics {
-        storyService.getGenerationStatistics()
-    }
-    
-    var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // 总览统计
-                    overviewSection
-                    
-                    Divider()
-                    
-                    // 风格分布
-                    styleDistributionSection
-                    
-                    Divider()
-                    
-                    // 详细信息
-                    detailsSection
-                }
-                .padding()
-            }
-            .navigationTitle("生成统计")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") {
-                        dismiss()
-                    }
-                }
-            }
-        }
-    }
-    
-    private var overviewSection: some View {
-        VStack(spacing: 16) {
-            Text("总览")
-                .font(.headline)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            HStack(spacing: 16) {
-                StatCard(title: "总生成次数", value: "\(stats.totalGenerations)", icon: "doc.text")
-                StatCard(title: "成功次数", value: "\(stats.successfulGenerations)", icon: "checkmark.circle")
-                StatCard(title: "成功率", value: String(format: "%.1f%%", stats.successRate), icon: "percent")
-                StatCard(title: "总字数", value: "\(stats.totalWords)", icon: "character.textbox")
-            }
-            
-            HStack(spacing: 16) {
-                StatCard(title: "平均耗时", value: String(format: "%.1fs", stats.averageDuration), icon: "timer")
-            }
-        }
-    }
-    
-    private var styleDistributionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("风格分布")
-                .font(.headline)
-            
-            ForEach(DreamStory.NarrativeStyle.allCases, id: \.self) { style in
-                let count = stats.styleCounts[style] ?? 0
-                let percentage = stats.totalGenerations > 0 ? Double(count) / Double(stats.totalGenerations) * 100 : 0
-                
-                HStack {
-                    Image(systemName: style.icon)
-                        .foregroundColor(.purple)
-                        .frame(width: 25)
-                    
-                    Text(style.rawValue)
-                        .font(.subheadline)
-                    
-                    Spacer()
-                    
-                    ProgressView(value: percentage / 100)
-                        .frame(width: 100)
-                    
-                    Text("\(count) (\(String(format: "%.1f", percentage))%)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .frame(width: 80, alignment: .trailing)
-                }
-            }
-        }
-    }
-    
-    private var detailsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("详细信息")
-                .font(.headline)
-            
-            VStack(alignment: .leading, spacing: 8) {
-                StatRow(label: "总生成次数", value: "\(stats.totalGenerations)")
-                StatRow(label: "成功生成", value: "\(stats.successfulGenerations)")
-                StatRow(label: "失败次数", value: "\(stats.totalGenerations - stats.successfulGenerations)")
-                StatRow(label: "成功率", value: String(format: "%.2f%%", stats.successRate))
-                StatRow(label: "总字数", value: "\(stats.totalWords)")
-                StatRow(label: "平均每次字数", value: "\(stats.totalGenerations > 0 ? stats.totalWords / stats.totalGenerations : 0)")
-                StatRow(label: "平均耗时", value: String(format: "%.2f 秒", stats.averageDuration))
-            }
-        }
-    }
-}
-
-// MARK: - 统计卡片
-
-struct StatCard: View {
-    let title: String
+struct StatView: View {
     let value: String
+    let label: String
     let icon: String
     
     var body: some View {
         VStack(spacing: 8) {
-            Image(systemName: icon)
+            Text(icon)
                 .font(.title2)
-                .foregroundColor(.purple)
             
             Text(value)
-                .font(.title2)
+                .font(.title)
                 .fontWeight(.bold)
             
-            Text(title)
+            Text(label)
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.purple.opacity(0.05))
-        .cornerRadius(10)
+        .frame(width: 100)
     }
 }
 
-// MARK: - 统计行
+// MARK: - Story Card View
 
-struct StatRow: View {
-    let label: String
-    let value: String
+struct StoryCardView: View {
+    let story: DreamStoryService.GeneratedStory
+    let onTap: () -> Void
     
     var body: some View {
-        HStack {
-            Text(label)
-                .font(.subheadline)
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Header
+                HStack {
+                    Text(story.genre.icon)
+                        .font(.title2)
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(story.title)
+                            .font(.headline)
+                            .lineLimit(1)
+                        
+                        Text(story.genre.rawValue)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
+                }
+                
+                Divider()
+                
+                // Info
+                HStack(spacing: 16) {
+                    Label("\(story.wordCount) 字", systemImage: "text.alignleft")
+                    Label("\(story.readingTime) 分钟", systemImage: "clock")
+                    
+                    Spacer()
+                    
+                    Text(story.createdAt, style: .date)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .font(.caption)
                 .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            Text(value)
-                .font(.subheadline)
-                .fontWeight(.semibold)
+                
+                // Tags
+                if !story.tags.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(story.tags.prefix(5), id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption2)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 4)
+                                    .background(Color.purple.opacity(0.1))
+                                    .foregroundColor(.purple)
+                                    .cornerRadius(8)
+                            }
+                        }
+                    }
+                }
+            }
+            .padding()
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: .purple.opacity(0.1), radius: 8, x: 0, y: 4)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Genre Picker View
+
+struct GenrePickerView: View {
+    @Binding var selectedGenre: DreamStoryService.StoryGenre
+    let onSelect: () -> Void
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 16) {
+                Text("选择故事风格")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                    .padding(.top)
+                
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(DreamStoryService.StoryGenre.allCases) { genre in
+                            GenreCard(
+                                genre: genre,
+                                isSelected: selectedGenre == genre
+                            ) {
+                                selectedGenre = genre
+                                onSelect()
+                            }
+                        }
+                    }
+                    .padding()
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("取消") {
+                        onSelect()
+                    }
+                }
+            }
         }
     }
 }
 
-// MARK: - 预览
+struct GenreCard: View {
+    let genre: DreamStoryService.StoryGenre
+    let isSelected: Bool
+    let onSelect: () -> Void
+    
+    var body: some View {
+        Button(action: onSelect) {
+            HStack(spacing: 16) {
+                // Icon
+                Text(genre.icon)
+                    .font(.system(size: 40))
+                    .frame(width: 60, height: 60)
+                    .background(
+                        isSelected ?
+                        LinearGradient(gradient: Gradient(colors: [.purple, .blue]), startPoint: .topLeading, endPoint: .bottomTrailing) :
+                        LinearGradient(gradient: Gradient(colors: [.gray.opacity(0.1), .gray.opacity(0.2)]), startPoint: .topLeading, endPoint: .bottomTrailing)
+                    )
+                    .cornerRadius(12)
+                
+                // Content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(genre.rawValue)
+                        .font(.headline)
+                        .foregroundColor(isSelected ? .white : .primary)
+                    
+                    Text(genre.description)
+                        .font(.caption)
+                        .foregroundColor(isSelected ? .white.opacity(0.8) : .secondary)
+                }
+                
+                Spacer()
+                
+                // Selection indicator
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.purple)
+                        .font(.title2)
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(isSelected ? Color.purple : Color.gray.opacity(0.2), lineWidth: 2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(isSelected ? Color.purple.opacity(0.1) : Color.clear)
+                    )
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
 
-#Preview {
-    DreamStoryView()
+// MARK: - Story Reader View
+
+struct StoryReaderView: View {
+    let story: DreamStoryService.GeneratedStory
+    let onDelete: (UUID) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var showShareSheet = false
+    @State private var showDeleteConfirm = false
+    @State private var fontSize: CGFloat = 18
+    @State private var isPlaying = false
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                // Background
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        Color.purple.opacity(0.05),
+                        Color.blue.opacity(0.05)
+                    ]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
+                        // Cover
+                        storyCoverSection
+                        
+                        // Story content
+                        storyContentSection
+                        
+                        // Actions
+                        storyActionsSection
+                    }
+                    .padding()
+                }
+            }
+            .navigationTitle("故事阅读")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("完成") {
+                        dismiss()
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    HStack(spacing: 16) {
+                        Menu {
+                            Button(action: { fontSize = max(14, fontSize - 2) }) {
+                                Label("缩小字体", systemImage: "textformat.size.smaller")
+                            }
+                            
+                            Button(action: { fontSize = min(28, fontSize + 2) }) {
+                                Label("放大字体", systemImage: "textformat.size.larger")
+                            }
+                        } label: {
+                            Image(systemName: "textformat.size")
+                        }
+                        
+                        Button(action: { showShareSheet = true }) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        
+                        Button(action: { showDeleteConfirm = true }) {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+            .confirmationDialog("删除故事", isPresented: $showDeleteConfirm) {
+                Button("删除", role: .destructive) {
+                    onDelete(story.id)
+                    dismiss()
+                }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("确定要删除这个故事吗？此操作不可撤销。")
+            }
+        }
+    }
+    
+    // MARK: - Cover Section
+    
+    private var storyCoverSection: some View {
+        VStack(spacing: 16) {
+            // Genre icon
+            Text(story.genre.icon)
+                .font(.system(size: 80))
+            
+            // Title
+            Text(story.title)
+                .font(.title)
+                .fontWeight(.bold)
+                .multilineTextAlignment(.center)
+            
+            // Metadata
+            HStack(spacing: 20) {
+                Label("\(story.wordCount) 字", systemImage: "text.alignleft")
+                Label("\(story.readingTime) 分钟阅读", systemImage: "clock")
+                Label(story.mood, systemImage: "heart")
+            }
+            .font(.caption)
+            .foregroundColor(.secondary)
+            
+            // Tags
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(story.tags, id: \.self) { tag in
+                        Text(tag)
+                            .font(.caption2)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 5)
+                            .background(Color.purple.opacity(0.1))
+                            .foregroundColor(.purple)
+                            .cornerRadius(10)
+                    }
+                }
+            }
+        }
+        .padding(24)
+        .background(Color.white)
+        .cornerRadius(20)
+        .shadow(color: .purple.opacity(0.15), radius: 12, x: 0, y: 6)
+    }
+    
+    // MARK: - Content Section
+    
+    private var storyContentSection: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            ForEach(story.sections, id: \.order) { section in
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(section.title)
+                        .font(.headline)
+                        .foregroundColor(.purple)
+                    
+                    Text(section.content)
+                        .font(.custom("Georgia", size: fontSize))
+                        .lineSpacing(6)
+                        .foregroundColor(.primary)
+                    
+                    if section.order < story.sections.count {
+                        Divider()
+                            .padding(.vertical, 8)
+                    }
+                }
+            }
+        }
+        .padding(20)
+        .background(Color.white)
+        .cornerRadius(20)
+        .shadow(color: .purple.opacity(0.1), radius: 8, x: 0, y: 4)
+    }
+    
+    // MARK: - Actions Section
+    
+    private var storyActionsSection: some View {
+        VStack(spacing: 12) {
+            // Play button
+            Button(action: togglePlayback) {
+                HStack {
+                    Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.title2)
+                    Text(isPlaying ? "停止朗读" : "朗读故事")
+                        .font(.headline)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        gradient: Gradient(colors: [.purple, .blue]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(16)
+            }
+            
+            // Share button
+            Button(action: { showShareSheet = true }) {
+                HStack {
+                    Image(systemName: "square.and.arrow.up")
+                    Text("分享故事")
+                        .font(.headline)
+                }
+                .foregroundColor(.purple)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.purple.opacity(0.1))
+                .cornerRadius(16)
+            }
+        }
+        .padding(.horizontal)
+    }
+    
+    // MARK: - Actions
+    
+    private func togglePlayback() {
+        isPlaying.toggle()
+        // TODO: Integrate with TTS service for story reading
+    }
+}
+
+// MARK: - Preview
+
+struct DreamStoryView_Previews: PreviewProvider {
+    static var previews: some View {
+        DreamStoryView()
+    }
 }

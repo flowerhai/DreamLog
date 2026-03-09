@@ -124,6 +124,13 @@ struct ContentView: View {
                     Text("设置")
                 }
                 .tag(15)
+            
+            DreamStoryView()
+                .tabItem {
+                    Image(systemName: "book.closed.fill")
+                    Text("故事")
+                }
+                .tag(16)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(

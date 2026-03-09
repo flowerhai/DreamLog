@@ -1,0 +1,138 @@
+// Localizable.strings
+// DreamLog - 한국어
+// Korean localization strings
+
+// General
+"save" = "저장";
+"cancel" = "취소";
+"delete" = "삭제";
+"done" = "완료";
+"edit" = "편집";
+"add" = "추가";
+"confirm" = "확인";
+"loading" = "로딩 중...";
+"success" = "성공";
+"error" = "오류";
+
+// Home
+"homeTitle" = "DreamLog 🌙";
+"whatDidYouDream" = "어젯밤 어떤 꿈을 꾸셨나요?";
+"holdToSpeak" = "눌러서 말하기";
+"releaseToEnd" = "놓아서 종료";
+"textInput" = "텍스트 입력";
+"searchDreams" = "꿈, 태그 검색...";
+"noDreamsYet" = "아직 기록된 꿈이 없습니다";
+"startRecording" = "첫 번째 꿈 기록하기";
+
+// Record
+"recordTitle" = "꿈 기록";
+"dreamContent" = "꿈 내용";
+"contentPlaceholder" = "꿈에 대해 설명해주세요...";
+"selectTags" = "태그 선택";
+"selectEmotions" = "감정 선택";
+"clarity" = "선명도";
+"intensity" = "강도";
+"lucidDream" = "자각몽";
+"aiAnalysis" = "AI 분석";
+"analyzing" = "분석 중...";
+
+// Insights
+"insightsTitle" = "인사이트";
+"dreamStats" = "꿈 통계";
+"totalDreams" = "총 꿈 개수";
+"thisWeek" = "이번 주";
+"avgClarity" = "평균 선명도";
+"avgIntensity" = "평균 강도";
+"emotionDistribution" = "감정 분포";
+"topTags" = "인기 태그";
+"timeDistribution" = "시간대 분포";
+
+// Gallery
+"galleryTitle" = "꿈 갤러리";
+"aiArt" = "AI 아트";
+"generateArt" = "아트 생성";
+"generatingArt" = "생성 중...";
+
+// Settings
+"settingsTitle" = "설정";
+"appearance" = "외관";
+"darkMode" = "다크 모드";
+"themeColor" = "테마 색상";
+"widgets" = "위젯";
+"addWidget" = "위젯 추가";
+"notifications" = "알림";
+"morningReminder" = "아침 알림";
+"reminderTime" = "알림 시간";
+"autoAnalysis" = "자동 AI 분석";
+"dataAndSync" = "데이터 및 동기화";
+"icloudSync" = "iCloud 동기화";
+"exportData" = "데이터 내보내기";
+"importData" = "데이터 가져오기";
+"deleteAll" = "모두 삭제";
+"feedback" = "피드백";
+"rateApp" = "앱 평가";
+"about" = "정보";
+"version" = "버전";
+
+// Siri Shortcuts
+"siriShortcuts" = "Siri 및 단축어";
+"setupSiri" = "Siri 단축어 설정";
+"voiceCommands" = "음성 명령";
+"recordMyDream" = "내 꿈 기록하기";
+"myDreamStats" = "내 꿈 통계";
+"recentDreams" = "최근 꿈";
+"siriTip" = "Siri 로 기록해보세요";
+"siriHint" = "또는 Siri 에게 \"내 꿈 기록하기\"라고 말하세요";
+
+// Dream Dictionary
+"dreamDictionary" = "꿈 사전";
+"searchSymbols" = "꿈 기호 검색";
+"categories" = "카테고리";
+"interpretation" = "해석";
+
+// Lucid Training
+"lucidTraining" = "자각몽 훈련";
+"realityChecks" = "현실 확인";
+"techniques" = "기법";
+"trainingPlan" = "훈련 계획";
+
+// Goals
+"goals" = "목표";
+"weeklyGoal" = "주간 목표";
+"streak" = "연속 기록";
+"achievements" = "업적";
+
+// Calendar
+"calendar" = "캘린더";
+"today" = "오늘";
+"thisMonth" = "이번 달";
+
+// Share
+"share" = "공유";
+"shareDream" = "꿈 공유";
+"saveToPhotos" = "사진에 저장";
+"cardStyle" = "카드 스타일 선택";
+"classic" = "클래식";
+"minimal" = "미니멀";
+"dreamy" = "드리미";
+"gradient" = "그라데이션";
+
+// Search
+"search" = "검색";
+"advancedSearch" = "고급 검색";
+"filter" = "필터";
+"resetFilters" = "필터 재설정";
+"dateRange" = "날짜 범위";
+"sortBy" = "정렬 기준";
+
+// Notifications
+"notificationsEnabled" = "알림이 활성화되었습니다";
+"notificationsDisabled" = "알림이 비활성화되었습니다";
+"permissionRequired" = "권한 필요";
+
+// Errors
+"noContent" = "내용을 입력해주세요";
+"saveFailed" = "저장 실패";
+"loadFailed" = "로딩 실패";
+"syncFailed" = "동기화 실패";
+"networkError" = "네트워크 오류";

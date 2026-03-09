@@ -1,0 +1,138 @@
+// Localizable.strings
+// DreamLog - 日本語
+// Japanese localization strings
+
+// General
+"save" = "保存";
+"cancel" = "キャンセル";
+"delete" = "削除";
+"done" = "完了";
+"edit" = "編集";
+"add" = "追加";
+"confirm" = "確認";
+"loading" = "読み込み中...";
+"success" = "成功";
+"error" = "エラー";
+
+// Home
+"homeTitle" = "DreamLog 🌙";
+"whatDidYouDream" = "昨夜どんな夢を見ましたか？";
+"holdToSpeak" = "押して話す";
+"releaseToEnd" = "離して終了";
+"textInput" = "テキスト入力";
+"searchDreams" = "夢、タグを検索...";
+"noDreamsYet" = "まだ夢の記録がありません";
+"startRecording" = "最初の夢を記録する";
+
+// Record
+"recordTitle" = "夢を記録";
+"dreamContent" = "夢の内容";
+"contentPlaceholder" = "夢について説明してください...";
+"selectTags" = "タグを選択";
+"selectEmotions" = "感情を選択";
+"clarity" = "鮮明度";
+"intensity" = "強度";
+"lucidDream" = "明晰夢";
+"aiAnalysis" = "AI 解析";
+"analyzing" = "解析中...";
+
+// Insights
+"insightsTitle" = "インサイト";
+"dreamStats" = "夢の統計";
+"totalDreams" = "総夢数";
+"thisWeek" = "今週";
+"avgClarity" = "平均鮮明度";
+"avgIntensity" = "平均強度";
+"emotionDistribution" = "感情分布";
+"topTags" = "人気タグ";
+"timeDistribution" = "時間分布";
+
+// Gallery
+"galleryTitle" = "夢ギャラリー";
+"aiArt" = "AI アート";
+"generateArt" = "アートを生成";
+"generatingArt" = "生成中...";
+
+// Settings
+"settingsTitle" = "設定";
+"appearance" = "外観";
+"darkMode" = "ダークモード";
+"themeColor" = "テーマカラー";
+"widgets" = "ウィジェット";
+"addWidget" = "ウィジェットを追加";
+"notifications" = "リマインダー";
+"morningReminder" = "モーニングリマインダー";
+"reminderTime" = "リマインダー時間";
+"autoAnalysis" = "自動 AI 解析";
+"dataAndSync" = "データと同期";
+"icloudSync" = "iCloud 同期";
+"exportData" = "データをエクスポート";
+"importData" = "データをインポート";
+"deleteAll" = "すべて削除";
+"feedback" = "フィードバック";
+"rateApp" = "アプリを評価";
+"about" = "について";
+"version" = "バージョン";
+
+// Siri Shortcuts
+"siriShortcuts" = "Siri とショートカット";
+"setupSiri" = "Siri ショートカットを設定";
+"voiceCommands" = "音声コマンド";
+"recordMyDream" = "私の夢を記録";
+"myDreamStats" = "私の夢の統計";
+"recentDreams" = "最近見た夢";
+"siriTip" = "Siri で記録を試す";
+"siriHint" = "または Siri に「私の夢を記録」と言ってください";
+
+// Dream Dictionary
+"dreamDictionary" = "夢事典";
+"searchSymbols" = "夢のシンボルを検索";
+"categories" = "カテゴリー";
+"interpretation" = "解釈";
+
+// Lucid Training
+"lucidTraining" = "明晰夢トレーニング";
+"realityChecks" = "現実確認";
+"techniques" = "テクニック";
+"trainingPlan" = "トレーニングプラン";
+
+// Goals
+"goals" = "目標";
+"weeklyGoal" = "週次目標";
+"streak" = "連続記録";
+"achievements" = "実績";
+
+// Calendar
+"calendar" = "カレンダー";
+"today" = "今日";
+"thisMonth" = "今月";
+
+// Share
+"share" = "共有";
+"shareDream" = "夢を共有";
+"saveToPhotos" = "写真に保存";
+"cardStyle" = "カードスタイルを選択";
+"classic" = "クラシック";
+"minimal" = "ミニマル";
+"dreamy" = "ドリーミー";
+"gradient" = "グラデーション";
+
+// Search
+"search" = "検索";
+"advancedSearch" = "詳細検索";
+"filter" = "フィルター";
+"resetFilters" = "フィルターをリセット";
+"dateRange" = "日付範囲";
+"sortBy" = "並び替え";
+
+// Notifications
+"notificationsEnabled" = "通知が有効です";
+"notificationsDisabled" = "通知が無効です";
+"permissionRequired" = "権限が必要です";
+
+// Errors
+"noContent" = "内容を入力してください";
+"saveFailed" = "保存に失敗しました";
+"loadFailed" = "読み込みに失敗しました";
+"syncFailed" = "同期に失敗しました";
+"networkError" = "ネットワークエラー";

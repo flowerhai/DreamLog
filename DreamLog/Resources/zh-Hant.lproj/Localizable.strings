@@ -1,0 +1,138 @@
+// Localizable.strings
+// DreamLog - 繁體中文
+// Traditional Chinese localization strings
+
+// General
+"save" = "儲存";
+"cancel" = "取消";
+"delete" = "刪除";
+"done" = "完成";
+"edit" = "編輯";
+"add" = "新增";
+"confirm" = "確認";
+"loading" = "載入中...";
+"success" = "成功";
+"error" = "錯誤";
+
+// Home
+"homeTitle" = "DreamLog 🌙";
+"whatDidYouDream" = "昨晚你夢見了什麼？";
+"holdToSpeak" = "按住說話";
+"releaseToEnd" = "鬆開結束";
+"textInput" = "文字輸入";
+"searchDreams" = "搜尋夢境、標籤...";
+"noDreamsYet" = "還沒有夢境記錄";
+"startRecording" = "開始記錄第一個夢";
+
+// Record
+"recordTitle" = "記錄夢境";
+"dreamContent" = "夢境內容";
+"contentPlaceholder" = "描述你的夢境...";
+"selectTags" = "選擇標籤";
+"selectEmotions" = "選擇情緒";
+"clarity" = "清晰度";
+"intensity" = "強度";
+"lucidDream" = "清醒夢";
+"aiAnalysis" = "AI 解析";
+"analyzing" = "分析中...";
+
+// Insights
+"insightsTitle" = "洞察";
+"dreamStats" = "夢境統計";
+"totalDreams" = "總夢境數";
+"thisWeek" = "本週";
+"avgClarity" = "平均清晰度";
+"avgIntensity" = "平均強度";
+"emotionDistribution" = "情緒分佈";
+"topTags" = "熱門標籤";
+"timeDistribution" = "時間段分佈";
+
+// Gallery
+"galleryTitle" = "夢境畫廊";
+"aiArt" = "AI 繪畫";
+"generateArt" = "生成畫作";
+"generatingArt" = "正在生成...";
+
+// Settings
+"settingsTitle" = "設定";
+"appearance" = "外觀";
+"darkMode" = "深色模式";
+"themeColor" = "主題色";
+"widgets" = "小組件";
+"addWidget" = "新增小組件";
+"notifications" = "提醒";
+"morningReminder" = "晨間提醒";
+"reminderTime" = "提醒時間";
+"autoAnalysis" = "自動 AI 解析";
+"dataAndSync" = "資料與同步";
+"icloudSync" = "iCloud 同步";
+"exportData" = "匯出資料";
+"importData" = "匯入資料";
+"deleteAll" = "刪除所有";
+"feedback" = "回饋";
+"rateApp" = "評分";
+"about" = "關於";
+"version" = "版本";
+
+// Siri Shortcuts
+"siriShortcuts" = "Siri 與捷徑";
+"setupSiri" = "設定 Siri 捷徑";
+"voiceCommands" = "可用語音命令";
+"recordMyDream" = "記錄我的夢境";
+"myDreamStats" = "我的夢境統計";
+"recentDreams" = "我最近做了什麼夢";
+"siriTip" = "試試用 Siri 記錄夢境";
+"siriHint" = "也可以對 Siri 說「記錄我的夢境」";
+
+// Dream Dictionary
+"dreamDictionary" = "夢境詞典";
+"searchSymbols" = "搜尋夢境符號";
+"categories" = "分類";
+"interpretation" = "解讀";
+
+// Lucid Training
+"lucidTraining" = "清醒夢訓練";
+"realityChecks" = "現實檢查";
+"techniques" = "技巧";
+"trainingPlan" = "訓練計劃";
+
+// Goals
+"goals" = "目標";
+"weeklyGoal" = "週目標";
+"streak" = "連續記錄";
+"achievements" = "成就";
+
+// Calendar
+"calendar" = "日曆";
+"today" = "今天";
+"thisMonth" = "本月";
+
+// Share
+"share" = "分享";
+"shareDream" = "分享夢境";
+"saveToPhotos" = "儲存到相簿";
+"cardStyle" = "選擇卡片樣式";
+"classic" = "經典";
+"minimal" = "簡約";
+"dreamy" = "夢幻";
+"gradient" = "漸變";
+
+// Search
+"search" = "搜尋";
+"advancedSearch" = "高級搜尋";
+"filter" = "過濾";
+"resetFilters" = "重置過濾器";
+"dateRange" = "日期範圍";
+"sortBy" = "排序";
+
+// Notifications
+"notificationsEnabled" = "通知已啟用";
+"notificationsDisabled" = "通知已禁用";
+"permissionRequired" = "需要通知權限";
+
+// Errors
+"noContent" = "內容不能為空";
+"saveFailed" = "儲存失敗";
+"loadFailed" = "載入失敗";
+"syncFailed" = "同步失敗";
+"networkError" = "網絡錯誤";
