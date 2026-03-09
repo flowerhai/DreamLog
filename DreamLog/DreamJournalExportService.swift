@@ -372,7 +372,9 @@ class DreamJournalExportService {
             style.primaryColor.cgColor,
             style.primaryColor.withAlphaComponent(0.3).cgColor
         ]
-        let gradient = CGGradient(colorsSpace: nil, colors: gradientColors as CFArray, locations: [0, 1])!
+        guard let gradient = CGGradient(colorsSpace: nil, colors: gradientColors as CFArray, locations: [0, 1]) else {
+            return
+        }
         context.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: 0, y: bounds.height), options: [])
         
         // 装饰元素

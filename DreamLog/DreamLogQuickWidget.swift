@@ -26,7 +26,7 @@ struct QuickRecordTimelineProvider: TimelineProvider {
         let entry = QuickRecordEntry(date: Date(), hasDreamsToday: hasDreamsToday)
         
         // 每 30 分钟更新一次
-        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
+        let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date().addingTimeInterval(30 * 60)
         let timeline = Timeline(entries: [entry], policy: .atEnd(nextUpdate))
         completion(timeline)
     }

@@ -335,9 +335,11 @@ class DreamPDFRenderer {
         
         // 背景渐变
         let colors = theme.gradientColors.map { UIColor(hex: $0) }
-        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                                   colors: colors.map { $0.cgColor } as CFArray,
-                                   locations: [0, 0.5, 1])!
+        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                         colors: colors.map { $0.cgColor } as CFArray,
+                                         locations: [0, 0.5, 1]) else {
+            return
+        }
         
         context.cgContext.drawLinearGradient(gradient,
                                               start: CGPoint(x: 0, y: 0),
@@ -569,9 +571,11 @@ class DreamPDFRenderer {
         
         // 背景
         let colors = theme.gradientColors.map { UIColor(hex: $0) }
-        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                                   colors: colors.map { $0.cgColor } as CFArray,
-                                   locations: [0, 0.5, 1])!
+        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                         colors: colors.map { $0.cgColor } as CFArray,
+                                         locations: [0, 0.5, 1]) else {
+            return
+        }
         
         context.cgContext.drawLinearGradient(gradient,
                                               start: CGPoint(x: 0, y: 0),

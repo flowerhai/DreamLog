@@ -167,7 +167,11 @@ class SleepQualityAnalysisService: ObservableObject {
             }
             
             let endDate = Date()
-            let startDate = Calendar.current.date(byAdding: .day, value: -periodDays, to: endDate)!
+            guard let startDate = Calendar.current.date(byAdding: .day, value: -periodDays, to: endDate) else {
+                errorMessage = "无法计算分析时间段"
+                isLoading = false
+                return
+            }
             let period = DateInterval(start: startDate, end: endDate)
             
             // 过滤时间段内的记录
@@ -461,7 +465,9 @@ class SleepQualityAnalysisService: ObservableObject {
         }
         
         // 睡眠时长建议
-        let avgHours = scheduleAnalysis.averageWakeTime.hour! - scheduleAnalysis.averageBedtime.hour!
+        let wakeHour = scheduleAnalysis.averageWakeTime.hour ?? 7
+        let bedtimeHour = scheduleAnalysis.averageBedtime.hour ?? 23
+        let avgHours = wakeHour >= bedtimeHour ? wakeHour - bedtimeHour : (24 - bedtimeHour) + wakeHour
         if avgHours < 7 {
             recommendations.append(SleepRecommendation(
                 category: .duration,

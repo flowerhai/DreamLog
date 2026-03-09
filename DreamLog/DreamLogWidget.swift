@@ -67,7 +67,7 @@ struct DreamTimelineProvider: TimelineProvider {
         )
         
         // 每小时更新一次
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date().addingTimeInterval(60 * 60)
         let timeline = Timeline(entries: [entry], policy: .atEnd(nextUpdate))
         completion(timeline)
     }

@@ -480,7 +480,9 @@ class AIArtService: ObservableObject {
             throw NSError(domain: "AIArtService", code: 401, userInfo: [NSLocalizedDescriptionKey: "未配置 Stability AI API Key"])
         }
         
-        let url = URL(string: "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image")!
+        guard let url = URL(string: "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image") else {
+            throw NSError(domain: "AIArtService", code: 500, userInfo: [NSLocalizedDescriptionKey: "无效的 API URL"])
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")

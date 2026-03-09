@@ -423,13 +423,17 @@ class DreamWrappedService: ObservableObject {
         let now = Date()
         
         // 今年的梦境
-        let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now))!
+        guard let startOfYear = calendar.date(from: calendar.dateComponents([.year], from: now)) else {
+            return nil
+        }
         let thisYearDreams = dreams.filter { $0.timestamp >= startOfYear }
         
         // 去年的梦境
         let lastYear = calendar.component(.year, from: now) - 1
-        let startOfLastYear = calendar.date(from: DateComponents(year: lastYear))!
-        let endOfLastYear = calendar.date(byAdding: .year, value: 1, to: startOfLastYear)!
+        guard let startOfLastYear = calendar.date(from: DateComponents(year: lastYear)),
+              let endOfLastYear = calendar.date(byAdding: .year, value: 1, to: startOfLastYear) else {
+            return nil
+        }
         let lastYearDreams = dreams.filter { $0.timestamp >= startOfLastYear && $0.timestamp < endOfLastYear }
         
         // 如果去年没有数据，返回 nil
@@ -460,11 +464,15 @@ class DreamWrappedService: ObservableObject {
         let now = Date()
         
         // 本月的梦境
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
+        guard let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) else {
+            return nil
+        }
         let thisMonthDreams = dreams.filter { $0.timestamp >= startOfMonth }
         
         // 上月的梦境
-        let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfMonth)!
+        guard let startOfLastMonth = calendar.date(byAdding: .month, value: -1, to: startOfMonth) else {
+            return nil
+        }
         let lastMonthDreams = dreams.filter { $0.timestamp >= startOfLastMonth && $0.timestamp < startOfMonth }
         
         // 如果上月没有数据，返回 nil

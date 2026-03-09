@@ -118,11 +118,14 @@ class HealthKitService: ObservableObject {
         }
         
         // 定义需要读取的数据类型
-        let typesToRead: Set<HKObjectType> = [
-            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!,
-            HKObjectType.quantityType(forIdentifier: .sleepDuration)!,
-            HKObjectType.quantityType(forIdentifier: .timeInBed)!
-        ]
+        guard let sleepAnalysisType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis),
+              let sleepDurationType = HKObjectType.quantityType(forIdentifier: .sleepDuration),
+              let timeInBedType = HKObjectType.quantityType(forIdentifier: .timeInBed) else {
+            errorMessage = "HealthKit 数据类型不可用"
+            return false
+        }
+        
+        let typesToRead: Set<HKObjectType> = [sleepAnalysisType, sleepDurationType, timeInBedType]
         
         do {
             try await healthStore.requestAuthorization(toShare: [], read: typesToRead)
@@ -143,7 +146,11 @@ class HealthKitService: ObservableObject {
             return
         }
         
-        let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
+        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
+            isAuthorized = false
+            return
+        }
+        
         let status = healthStore.authorizationStatus(for: sleepType)
         isAuthorized = (status == .sharingAuthorized)
     }
@@ -163,7 +170,11 @@ class HealthKitService: ObservableObject {
         
         do {
             let endDate = Date()
-            let startDate = Calendar.current.date(byAdding: .day, value: -days, to: endDate)!
+            guard let startDate = Calendar.current.date(byAdding: .day, value: -days, to: endDate) else {
+                errorMessage = "无法计算开始日期"
+                isLoading = false
+                return
+            }
             
             let records = try await fetchSleepSamples(from: startDate, to: endDate)
             sleepRecords = records.sorted { $0.startDate > $1.startDate }
@@ -179,7 +190,10 @@ class HealthKitService: ObservableObject {
     /// 获取睡眠样本
     private func fetchSleepSamples(from startDate: Date, to endDate: Date) async throws -> [SleepRecord] {
         try await withCheckedThrowingContinuation { continuation in
-            let sleepType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis)!
+            guard let sleepType = HKCategoryType.categoryType(forIdentifier: .sleepAnalysis) else {
+                continuation.resume(throwing: NSError(domain: "HealthKitService", code: 1, userInfo: [NSLocalizedDescriptionKey: "睡眠分析类型不可用"]))
+                return
+            }
             
             let predicate = HKQuery.predicateForSamples(
                 withStart: startDate,
@@ -341,7 +355,9 @@ class HealthKitService: ObservableObject {
     func findSleepRecord(for dream: Dream) -> SleepRecord? {
         // 查找梦境日期前一晚的睡眠记录
         let dreamDay = Calendar.current.startOfDay(for: dream.date)
-        let previousNight = Calendar.current.date(byAdding: .day, value: -1, to: dreamDay)!
+        guard let previousNight = Calendar.current.date(byAdding: .day, value: -1, to: dreamDay) else {
+            return nil
+        }
         
         return sleepRecords.first { record in
             let recordDay = Calendar.current.startOfDay(for: record.startDate)

@@ -63,7 +63,9 @@ class AudioSynthesisEngine {
     func synthesizeAudioLayer(_ layer: DreamMusic.AudioLayer, duration: Double, sampleRate: Double = 44100) -> AVAudioPCMBuffer? {
         guard let engine = audioEngine else { return nil }
         
-        let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2)!
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: sampleRate, channels: 2) else {
+            return nil
+        }
         let frameCount = AVAudioFrameCount(duration * sampleRate)
         guard let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount) else {
             return nil

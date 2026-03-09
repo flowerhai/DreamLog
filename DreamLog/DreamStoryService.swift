@@ -295,7 +295,9 @@ class DreamStoryService: ObservableObject {
             "现实与幻想的边界开始消融"
         ]
         
-        return timePhrases.randomElement()! + settingPhrases.randomElement()!
+        let timePhrase = timePhrases.randomElement() ?? timePhrases[0]
+        let settingPhrase = settingPhrases.randomElement() ?? settingPhrases[0]
+        return timePhrase + settingPhrase
     }
     
     /// 生成发展
@@ -308,7 +310,8 @@ class DreamStoryService: ObservableObject {
             "眼前的景象开始变化，"
         ]
         
-        return developmentTemplates.randomElement()! + " 梦境中的元素开始交织，形成一幅奇异的画面"
+        let template = developmentTemplates.randomElement() ?? developmentTemplates[0]
+        return template + " 梦境中的元素开始交织，形成一幅奇异的画面"
     }
     
     /// 生成高潮
@@ -321,7 +324,8 @@ class DreamStoryService: ObservableObject {
             "真相如闪电般划过脑海"
         ]
         
-        return climaxTemplates.randomElement()! + "，这是整个梦境最关键的时刻"
+        let template = climaxTemplates.randomElement() ?? climaxTemplates[0]
+        return template + "，这是整个梦境最关键的时刻"
     }
     
     /// 生成结局
@@ -334,7 +338,7 @@ class DreamStoryService: ObservableObject {
             "梦醒了，但故事还在继续"
         ]
         
-        return resolutionTemplates.randomElement()!
+        return resolutionTemplates.randomElement() ?? resolutionTemplates[0]
     }
     
     // MARK: - 故事结构生成
@@ -391,8 +395,9 @@ class DreamStoryService: ObservableObject {
             ["第一章", "第二章", "第三章", "第四章"]
         ]
         
-        let titleSet = titles.randomElement()!
-        return titleSet[index - 1]
+        let titleSet = titles.randomElement() ?? titles[0]
+        let safeIndex = max(0, min(index - 1, titleSet.count - 1))
+        return titleSet[safeIndex]
     }
     
     /// 构建章节内容
@@ -466,7 +471,7 @@ class DreamStoryService: ObservableObject {
             "梦境手记"
         ]
         
-        let baseTitle = baseTitles.randomElement()!
+        let baseTitle = baseTitles.randomElement() ?? baseTitles[0]
         
         // 根据梦境情绪添加副标题
         if !dream.emotions.isEmpty {

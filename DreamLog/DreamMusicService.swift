@@ -250,7 +250,12 @@ class DreamMusicService: ObservableObject {
             
             // Step 2: 确定节奏和乐器 (40%)
             await updateProgress(0.4)
-            let template = musicTemplates[mood] ?? musicTemplates[.peaceful]!
+            let template = musicTemplates[mood] ?? musicTemplates[.peaceful] ?? MusicTemplate(
+                mood: .peaceful,
+                tempo: .slow,
+                instruments: [.piano, .strings, .ambientPad],
+                baseDuration: 180
+            )
             let instruments = selectInstruments(for: dream, template: template)
             
             // Step 3: 生成音频层配置 (60%)
