@@ -17,14 +17,25 @@ struct DreamAssistantView: View {
     @State private var showingSearch = false
     @State private var showingLucidTraining = false
     @State private var showingMeditation = false
+    @State private var showingPredictions = false
     
     @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
+                // 预测洞察 (如果可用)
+                if !assistant.predictionInsights.isEmpty {
+                    predictionInsightsView
+                }
+                
                 // 聊天消息列表
                 messageList
+                
+                // 语音状态指示器
+                if assistant.isListening || assistant.isSpeaking {
+                    voiceStatusIndicator
+                }
                 
                 Divider()
                 
@@ -39,6 +50,29 @@ struct DreamAssistantView: View {
             .navigationTitle("AI 助手")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    // 语音模式切换
+                    Button(action: {
+                        withAnimation {
+                            assistant.enableVoiceMode(!assistant.voiceModeEnabled)
+                        }
+                    }) {
+                        Image(systemName: assistant.voiceModeEnabled ? "waveform" : "waveform.slash")
+                            .foregroundColor(assistant.voiceModeEnabled ? .green : .secondary)
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    // 预测洞察按钮
+                    Button(action: {
+                        assistant.generatePredictionInsights()
+                        showingPredictions = true
+                    }) {
+                        Image(systemName: "sparkles")
+                            .foregroundColor(.purple)
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
                         assistant.clearHistory()
@@ -73,6 +107,99 @@ struct DreamAssistantView: View {
         .sheet(isPresented: $showingMeditation) {
             MeditationView()
         }
+        .sheet(isPresented: $showingPredictions) {
+            PredictionInsightsSheet()
+        }
+    }
+    
+    // MARK: - Prediction Insights View
+    
+    private var predictionInsightsView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(assistant.predictionInsights.indices, id: \.self) { index in
+                    let insight = assistant.predictionInsights[index]
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Image(systemName: insight.icon)
+                                .font(.caption)
+                                .foregroundColor(.white)
+                            Text(insight.title)
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.white)
+                        }
+                        
+                        Text(insight.content)
+                            .font(.caption2)
+                            .foregroundColor(.white.opacity(0.9))
+                            .lineLimit(2)
+                        
+                        HStack {
+                            Spacer()
+                            Text(String(format: "%.0f%% 置信度", insight.confidence * 100))
+                                .font(.caption2)
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                    .padding(12)
+                    .frame(width: 160)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.purple, Color.blue],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .cornerRadius(12)
+                    .onTapGesture {
+                        // 点击显示详细分析
+                        showingPredictions = true
+                    }
+                }
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
+        }
+        .background(colorScheme == .dark ? Color.gray.opacity(0.1) : Color.gray.opacity(0.05))
+    }
+    
+    // MARK: - Voice Status Indicator
+    
+    private var voiceStatusIndicator: some View {
+        HStack {
+            if assistant.isListening {
+                HStack(spacing: 8) {
+                    Image(systemName: "mic.fill")
+                        .foregroundColor(.red)
+                    Text("正在聆听...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(16)
+                .transition(.scale.combined(with: .opacity))
+            }
+            
+            if assistant.isSpeaking {
+                HStack(spacing: 8) {
+                    Image(systemName: "speaker.wave.2.fill")
+                        .foregroundColor(.accentColor)
+                    Text("正在播放...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Color.accentColor.opacity(0.1))
+                .cornerRadius(16)
+                .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .padding(.horizontal)
+        .padding(.top, 8)
     }
     
     // MARK: - Message List
@@ -220,6 +347,21 @@ struct DreamAssistantView: View {
                     }
                 }
             
+            // 语音输入按钮
+            Button(action: {
+                if assistant.isListening {
+                    assistant.stopListening()
+                } else {
+                    assistant.startListening()
+                    // 实际 STT 由 UI 层处理，这里只是触发状态
+                }
+            }) {
+                Image(systemName: assistant.isListening ? "mic.slash.fill" : "mic.fill")
+                    .font(.system(size: 18))
+                    .foregroundColor(assistant.isListening ? .red : .accentColor)
+            }
+            .padding(.trailing, 4)
+            
             // 发送按钮
             Button(action: {
                 Task {
@@ -232,7 +374,6 @@ struct DreamAssistantView: View {
                     .foregroundColor(inputText.isEmpty || assistant.state == .thinking ? .gray : .accentColor)
             }
             .disabled(inputText.isEmpty || assistant.state == .thinking)
-            .padding(.trailing, 4)
         }
         .padding()
         .background(colorScheme == .dark ? Color.black : Color.white)
@@ -263,6 +404,271 @@ struct DreamAssistantView: View {
             Image(systemName: "plus.app")
                 .font(.system(size: 18))
                 .foregroundColor(.accentColor)
+        }
+    }
+}
+
+// MARK: - Prediction Insights Sheet
+
+struct PredictionInsightsSheet: View {
+    @StateObject private var assistant = DreamAssistantService.shared
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 16) {
+                    if assistant.predictionInsights.isEmpty {
+                        // 生成预测
+                        VStack(spacing: 20) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 60))
+                                .foregroundColor(.purple)
+                            
+                            Text("生成梦境预测")
+                                .font(.title2)
+                                .fontWeight(.semibold)
+                            
+                            Text("基于你的梦境记录，AI 将分析趋势并提供个性化洞察。")
+                                .font(.body)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                            
+                            Button(action: {
+                                assistant.generatePredictionInsights()
+                            }) {
+                                Text("生成预测")
+                                    .font(.headline)
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 30)
+                                    .padding(.vertical, 12)
+                                    .background(Color.purple)
+                                    .cornerRadius(12)
+                            }
+                        }
+                        .padding(.vertical, 60)
+                    } else {
+                        // 显示预测结果
+                        ForEach(assistant.predictionInsights.indices, id: \.self) { index in
+                            let insight = assistant.predictionInsights[index]
+                            PredictionCard(insight: insight)
+                        }
+                        
+                        // 深度分析报告
+                        DeepAnalysisCard()
+                    }
+                }
+                .padding()
+            }
+            .navigationTitle("梦境预测")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct PredictionCard: View {
+    let insight: DreamPrediction
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: insight.icon)
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .background(Color.purple)
+                    .cornerRadius(8)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(insight.title)
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Text(String(format: "置信度：%.0f%%", insight.confidence * 100))
+                        .font(.caption)
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                
+                Spacer()
+            }
+            
+            Text(insight.content)
+                .font(.body)
+                .foregroundColor(.white.opacity(0.9))
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.purple, Color.blue],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(16)
+    }
+}
+
+struct DeepAnalysisCard: View {
+    @StateObject private var assistant = DreamAssistantService.shared
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "chart.bar.fill")
+                    .font(.title2)
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .background(Color.blue)
+                    .cornerRadius(8)
+                
+                Text("深度分析报告")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+            }
+            
+            let report = assistant.performDeepAnalysis()
+            
+            VStack(spacing: 10) {
+                AnalysisRow(title: "总梦境数", value: "\(report.totalDreams) 个", icon: "moon.fill")
+                AnalysisRow(title: "平均清晰度", value: "\(report.avgClarity)/5", icon: "eye.fill")
+                AnalysisRow(title: "平均强度", value: "\(report.avgIntensity)/5", icon: "flame.fill")
+                AnalysisRow(title: "清醒梦比例", value: String(format: "%.1f%%", report.lucidRatio * 100), icon: "sparkles")
+                AnalysisRow(title: "记录频率", value: report.dreamFrequency, icon: "calendar")
+                AnalysisRow(title: "连续记录", value: "\(report.streakDays) 天", icon: "flame")
+                AnalysisRow(title: "最佳时间", value: report.bestRecordingTime, icon: "clock.fill")
+            }
+            
+            if !report.topTags.isEmpty {
+                Divider()
+                    .background(Color.white.opacity(0.3))
+                
+                Text("热门主题")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                
+                FlowLayout(spacing: 8) {
+                    ForEach(report.topTags, id: \.self) { tag in
+                        Text(tag)
+                            .font(.caption)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(12)
+                    }
+                }
+            }
+            
+            if !report.topEmotions.isEmpty {
+                Divider()
+                    .background(Color.white.opacity(0.3))
+                
+                Text("主要情绪")
+                    .font(.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.white)
+                
+                FlowLayout(spacing: 8) {
+                    ForEach(report.topEmotions, id: \.self) { emotion in
+                        Text(emotion)
+                            .font(.caption)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.white.opacity(0.2))
+                            .cornerRadius(12)
+                    }
+                }
+            }
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.blue, Color.purple],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+        .cornerRadius(16)
+    }
+}
+
+struct AnalysisRow: View {
+    let title: String
+    let value: String
+    let icon: String
+    
+    var body: some View {
+        HStack {
+            Image(systemName: icon)
+                .frame(width: 24)
+                .foregroundColor(.white.opacity(0.8))
+            
+            Text(title)
+                .font(.subheadline)
+                .foregroundColor(.white.opacity(0.9))
+            
+            Spacer()
+            
+            Text(value)
+                .font(.subheadline)
+                .fontWeight(.semibold)
+                .foregroundColor(.white)
+        }
+    }
+}
+
+// Simple FlowLayout for tags
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
+        return result.size
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
+        
+        for (index, subview) in subviews.enumerated() {
+            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
+                                       y: bounds.minY + result.positions[index].y),
+                         proposal: .unspecified)
+        }
+    }
+    
+    struct FlowResult {
+        var size: CGSize = .zero
+        var positions: [CGPoint] = []
+        
+        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
+            var x: CGFloat = 0
+            var y: CGFloat = 0
+            var rowHeight: CGFloat = 0
+            
+            for subview in subviews {
+                let size = subview.sizeThatFits(.unspecified)
+                
+                if x + size.width > maxWidth && x > 0 {
+                    x = 0
+                    y += rowHeight + spacing
+                    rowHeight = 0
+                }
+                
+                positions.append(CGPoint(x: x, y: y))
+                rowHeight = max(rowHeight, size.height)
+                x += size.width + spacing
+            }
+            
+            self.size = CGSize(width: maxWidth, height: y + rowHeight)
         }
     }
 }

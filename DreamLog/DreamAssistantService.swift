@@ -20,11 +20,18 @@ class DreamAssistantService: ObservableObject {
     @Published var suggestions: [SuggestionChip] = []
     @Published var quickActions: [QuickAction] = []
     @Published var isSpeaking: Bool = false
+    @Published var isListening: Bool = false
+    @Published var voiceModeEnabled: Bool = false
+    @Published var predictionInsights: [DreamPrediction] = []
     
     // MARK: - Properties
     
     private var dreamStore: DreamStore { DreamStore.shared }
+    private var speechService: SpeechSynthesisService { .shared }
+    private var trendService: DreamTrendService { .shared }
     private var cancellables = Set<AnyCancellable>()
+    private var speakQueue: [String] = []
+    private var isProcessingSpeech = false
     
     // MARK: - Initialization
     
@@ -513,4 +520,334 @@ class DreamAssistantService: ObservableObject {
             setupSuggestions()
         }
     }
+    
+    // MARK: - Voice Conversation
+    
+    /// 启用语音模式
+    func enableVoiceMode(_ enabled: Bool) {
+        voiceModeEnabled = enabled
+        if enabled {
+            loadDefaultGreeting()
+            speakMessage("你好，我是你的梦境助手。有什么可以帮你的吗？")
+        }
+    }
+    
+    /// 朗读消息 (TTS)
+    func speakMessage(_ text: String) {
+        guard voiceModeEnabled else { return }
+        
+        // 清理文本 (移除 markdown 格式)
+        let cleanText = text
+            .replacingOccurrences(of: #"\*\*"#, with: "")
+            .replacingOccurrences(of: #"•"#, with: "")
+            .replacingOccurrences(of: #"\n"#, with: " ")
+        
+        speakQueue.append(cleanText)
+        processSpeechQueue()
+    }
+    
+    /// 处理语音队列
+    private func processSpeechQueue() {
+        guard !isProcessingSpeech, !speakQueue.isEmpty else { return }
+        
+        isProcessingSpeech = true
+        let text = speakQueue.removeFirst()
+        
+        Task { @MainActor in
+            isSpeaking = true
+            speechService.speak(text)
+            
+            // 等待播放完成
+            try? await Task.sleep(nanoseconds: UInt64(Double(text.count) * 50_000_000))
+            
+            isSpeaking = false
+            isProcessingSpeech = false
+            
+            // 继续处理队列
+            if !speakQueue.isEmpty {
+                processSpeechQueue()
+            }
+        }
+    }
+    
+    /// 停止语音播放
+    func stopSpeaking() {
+        speechService.stop()
+        speakQueue.removeAll()
+        isSpeaking = false
+        isProcessingSpeech = false
+    }
+    
+    /// 开始语音输入 (STT)
+    func startListening() {
+        guard !isListening else { return }
+        isListening = true
+        state = .listening
+        // 实际 STT 由 UI 层调用 SpeechService 实现
+    }
+    
+    /// 停止语音输入
+    func stopListening() {
+        isListening = false
+        if state == .listening {
+            state = .idle
+        }
+    }
+    
+    /// 处理语音识别结果
+    func handleSpeechResult(_ text: String) async {
+        stopListening()
+        await sendMessage(text)
+    }
+    
+    // MARK: - Dream Prediction
+    
+    /// 生成梦境预测洞察
+    func generatePredictionInsights() {
+        let dreams = dreamStore.dreams
+        guard dreams.count >= 5 else {
+            predictionInsights = []
+            return
+        }
+        
+        var insights: [DreamPrediction] = []
+        
+        // 情绪趋势预测
+        if let emotionTrend = analyzeEmotionTrend() {
+            insights.append(DreamPrediction(
+                type: .emotionTrend,
+                title: "情绪趋势",
+                content: emotionTrend.description,
+                confidence: emotionTrend.confidence,
+                icon: "heart.fill"
+            ))
+        }
+        
+        // 主题趋势预测
+        if let themeTrend = analyzeThemeTrend() {
+            insights.append(DreamPrediction(
+                type: .themeTrend,
+                title: "主题趋势",
+                content: themeTrend.description,
+                confidence: themeTrend.confidence,
+                icon: "tag.fill"
+            ))
+        }
+        
+        // 清晰度预测
+        if let clarityPrediction = predictClarity() {
+            insights.append(DreamPrediction(
+                type: .clarity,
+                title: "清晰度预测",
+                content: clarityPrediction.description,
+                confidence: clarityPrediction.confidence,
+                icon: "eye.fill"
+            ))
+        }
+        
+        // 清醒梦预测
+        if let lucidPrediction = predictLucidDreams() {
+            insights.append(DreamPrediction(
+                type: .lucidDream,
+                title: "清醒梦机会",
+                content: lucidPrediction.description,
+                confidence: lucidPrediction.confidence,
+                icon: "sparkles"
+            ))
+        }
+        
+        predictionInsights = insights
+    }
+    
+    /// 分析情绪趋势
+    private func analyzeEmotionTrend() -> DreamPredictionInfo? {
+        let dreams = dreamStore.dreams.sorted { $0.date < $1.date }
+        guard dreams.count >= 10 else { return nil }
+        
+        let recentDreams = Array(dreams.suffix(10))
+        let olderDreams = Array(dreams.prefix(10))
+        
+        let recentEmotions = recentDreams.flatMap { $0.emotions }
+        let olderEmotions = olderDreams.flatMap { $0.emotions }
+        
+        // 检测情绪变化
+        let positiveEmotions = recentEmotions.filter { [.happy, .calm, .excited].contains($0) }.count
+        let oldPositiveCount = olderEmotions.filter { [.happy, .calm, .excited].contains($0) }.count
+        
+        let trend: String
+        let confidence: Double
+        
+        if positiveEmotions > oldPositiveCount + 2 {
+            trend = "你的梦境情绪正在变得更加积极，这通常反映生活状态改善。"
+            confidence = 0.75
+        } else if positiveEmotions < oldPositiveCount - 2 {
+            trend = "注意到梦境中负面情绪增加，可能需要关注压力管理。"
+            confidence = 0.70
+        } else {
+            trend = "梦境情绪保持稳定，这是心理健康的良好迹象。"
+            confidence = 0.65
+        }
+        
+        return DreamPredictionInfo(description: trend, confidence: confidence)
+    }
+    
+    /// 分析主题趋势
+    private func analyzeThemeTrend() -> DreamPredictionInfo? {
+        let dreams = dreamStore.dreams.sorted { $0.date < $1.date }
+        guard dreams.count >= 10 else { return nil }
+        
+        let recentDreams = Array(dreams.suffix(10))
+        let olderDreams = Array(dreams.prefix(10))
+        
+        let recentTags = Set(recentDreams.flatMap { $0.tags })
+        let olderTags = Set(olderDreams.flatMap { $0.tags })
+        
+        let newTags = recentTags.subtracting(olderTags)
+        
+        if !newTags.isEmpty {
+            let trend = "最近出现了新的梦境主题：\(newTags.prefix(3).joined(separator: "、"))，这可能反映新的生活体验。"
+            return DreamPredictionInfo(description: trend, confidence: 0.72)
+        }
+        
+        return nil
+    }
+    
+    /// 预测清晰度趋势
+    private func predictClarity() -> DreamPredictionInfo? {
+        let dreams = dreamStore.dreams.sorted { $0.date < $1.date }
+        guard dreams.count >= 7 else { return nil }
+        
+        let recentClarity = dreams.suffix(7).map { $0.clarity }.reduce(0, +) / 7
+        let olderClarity = dreams.prefix(7).map { $0.clarity }.reduce(0, +) / min(7, dreams.count)
+        
+        let trend: String
+        let confidence: Double
+        
+        if recentClarity > olderClarity + 0.5 {
+            trend = "梦境清晰度正在提升，继续保持早晨记录的习惯！"
+            confidence = 0.78
+        } else if recentClarity < olderClarity - 0.5 {
+            trend = "清晰度有所下降，尝试睡前放松练习可能有帮助。"
+            confidence = 0.68
+        } else {
+            trend = "梦境清晰度保持稳定。"
+            confidence = 0.60
+        }
+        
+        return DreamPredictionInfo(description: trend, confidence: confidence)
+    }
+    
+    /// 预测清醒梦机会
+    private func predictLucidDreams() -> DreamPredictionInfo? {
+        let dreams = dreamStore.dreams
+        guard dreams.count >= 5 else { return nil }
+        
+        let lucidCount = dreams.filter { $0.isLucid }.count
+        let lucidRatio = Double(lucidCount) / Double(dreams.count)
+        
+        let trend: String
+        let confidence: Double
+        
+        if lucidRatio > 0.3 {
+            trend = "清醒梦频率很高！你有很强的梦境意识，适合尝试进阶技巧。"
+            confidence = 0.82
+        } else if lucidRatio > 0.1 {
+            trend = "清醒梦比例不错，继续练习现实检查可以提高频率。"
+            confidence = 0.75
+        } else {
+            trend = "可以尝试清醒梦训练，从基本的现实检查开始。"
+            confidence = 0.70
+        }
+        
+        return DreamPredictionInfo(description: trend, confidence: confidence)
+    }
+    
+    // MARK: - Enhanced Pattern Analysis
+    
+    /// 深度模式分析
+    func performDeepAnalysis() -> DreamAnalysisReport {
+        let dreams = dreamStore.dreams
+        
+        return DreamAnalysisReport(
+            totalDreams: dreams.count,
+            avgClarity: dreams.map { $0.clarity }.reduce(0, +) / max(dreams.count, 1),
+            avgIntensity: dreams.map { $0.intensity }.reduce(0, +) / max(dreams.count, 1),
+            lucidRatio: Double(dreams.filter { $0.isLucid }.count) / Double(max(dreams.count, 1)),
+            topTags: Dictionary(grouping: dreams.flatMap { $0.tags }, by: { $0 })
+                .mapValues { $0.count }
+                .sorted { $0.value > $1.value }
+                .prefix(5)
+                .map { $0.key },
+            topEmotions: Dictionary(grouping: dreams.flatMap { $0.emotions }, by: { $0 })
+                .mapValues { $0.count }
+                .sorted { $0.value > $1.value }
+                .prefix(3)
+                .map { $0.key.displayName },
+            bestRecordingTime: findBestRecordingTime(),
+            dreamFrequency: calculateDreamFrequency(),
+            streakDays: calculateStreak()
+        )
+    }
+    
+    /// 找出最佳记录时间
+    private func findBestRecordingTime() -> String {
+        let dreams = dreamStore.dreams
+        let hourCounts = Dictionary(grouping: dreams, by: { Calendar.current.component(.hour, from: $0.date) })
+            .mapValues { $0.count }
+        
+        if let peakHour = hourCounts.max(by: { $0.value < $1.value })?.key {
+            return "\(peakHour):00"
+        }
+        return "早晨"
+    }
+    
+    /// 计算梦境频率
+    private func calculateDreamFrequency() -> String {
+        let dreams = dreamStore.dreams
+        guard let firstDate = dreams.map({ $0.date }).min(),
+              let lastDate = dreams.map({ $0.date }).max() else {
+            return "新开始"
+        }
+        
+        let days = Calendar.current.dateComponents([.day], from: firstDate, to: lastDate).day ?? 1
+        return String(format: "%.1f 梦/周", Double(dreams.count) / Double(days) * 7)
+    }
+}
+
+// MARK: - Prediction Models
+
+/// 梦境预测类型
+enum DreamPredictionType {
+    case emotionTrend
+    case themeTrend
+    case clarity
+    case lucidDream
+}
+
+/// 梦境预测信息
+struct DreamPrediction {
+    let type: DreamPredictionType
+    let title: String
+    let content: String
+    let confidence: Double
+    let icon: String
+}
+
+/// 预测信息详情
+struct DreamPredictionInfo {
+    let description: String
+    let confidence: Double
+}
+
+/// 梦境分析报告
+struct DreamAnalysisReport {
+    let totalDreams: Int
+    let avgClarity: Int
+    let avgIntensity: Int
+    let lucidRatio: Double
+    let topTags: [String]
+    let topEmotions: [String]
+    let bestRecordingTime: String
+    let dreamFrequency: String
+    let streakDays: Int
 }
