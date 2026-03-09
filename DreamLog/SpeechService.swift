@@ -160,12 +160,44 @@ extension Button {
     ) -> some View {
         self.simultaneousGesture(
             LongPressGesture(minimumDuration: 0.01)
-                .onChanged { _ in
-                    onPress()
-                }
                 .onEnded { _ in
-                    onRelease()
+                    onPress()
+                    // 使用延迟模拟释放
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        onRelease()
+                    }
                 }
         )
+    }
+}
+
+// MARK: - 长按手势修饰符 (支持 onPress/onRelease)
+struct LongPressButtonStyle: ButtonStyle {
+    let onPress: () -> Void
+    let onRelease: () -> Void
+    @State private var isPressed = false
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .onChange(of: configuration.isPressed) { _, newValue in
+                if newValue {
+                    isPressed = true
+                    onPress()
+                } else {
+                    isPressed = false
+                    onRelease()
+                }
+            }
+    }
+}
+
+extension Button {
+    /// 使用 ButtonStyle 实现的长按录音 (更可靠)
+    func longPressButtonAction(
+        onPress: @escaping () -> Void,
+        onRelease: @escaping () -> Void
+    ) -> some View {
+        self.buttonStyle(LongPressButtonStyle(onPress: onPress, onRelease: onRelease))
     }
 }

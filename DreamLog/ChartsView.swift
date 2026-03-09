@@ -59,7 +59,7 @@ struct EmotionPieChartSection: View {
             HStack(alignment: .top, spacing: 24) {
                 // 饼图
                 PieChartView(
-                    data: stats.emotionDistribution.map { item in
+                    data: stats.topEmotions.map { item in
                         PieChartData(
                             label: item.emotion.rawValue,
                             value: Double(item.count),
@@ -71,7 +71,7 @@ struct EmotionPieChartSection: View {
                 
                 // 图例
                 VStack(alignment: .leading, spacing: 8) {
-                    ForEach(stats.emotionDistribution.prefix(6), id: \.emotion) { item in
+                    ForEach(stats.topEmotions.prefix(6), id: \.emotion) { item in
                         HStack(spacing: 8) {
                             Circle()
                                 .fill(emotionColor(item.emotion))
@@ -194,6 +194,7 @@ struct PieChartData {
 
 // MARK: - 每周趋势折线图
 struct WeeklyTrendLineChartSection: View {
+    @EnvironmentObject var dreamStore: DreamStore
     let stats: DreamStatistics
     
     var weeklyData: [(day: String, count: Int)] {
@@ -204,7 +205,7 @@ struct WeeklyTrendLineChartSection: View {
         for i in (0..<7).reversed() {
             let date = calendar.date(byAdding: .day, value: -i, to: today) ?? today
             let dayName = date.formatted(.dateTime.weekday(.abbreviated))
-            let count = stats.dreamsLast7Days.filter { dream in
+            let count = dreamStore.dreams.filter { dream in
                 calendar.isDate(dream.date, inSameDayAs: date)
             }.count
             data.append((day: dayName, count: count))
@@ -388,7 +389,16 @@ struct TimeDistributionBarChartSection: View {
 
 // MARK: - 清晰度分布柱状图
 struct ClarityDistributionBarChartSection: View {
+    @EnvironmentObject var dreamStore: DreamStore
     let stats: DreamStatistics
+    
+    var clarityDistribution: [Int: Int] {
+        var distribution: [Int: Int] = [:]
+        for dream in dreamStore.dreams {
+            distribution[dream.clarity, default: 0] += 1
+        }
+        return distribution
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -398,8 +408,8 @@ struct ClarityDistributionBarChartSection: View {
             
             HStack(alignment: .bottom, spacing: 12) {
                 ForEach(1...5, id: \.self) { clarity in
-                    let count = stats.clarityDistribution[clarity] ?? 0
-                    let maxCount = stats.clarityDistribution.values.max() ?? 1
+                    let count = clarityDistribution[clarity] ?? 0
+                    let maxCount = clarityDistribution.values.max() ?? 1
                     let heightRatio = Double(count) / Double(max(maxCount, 1))
                     
                     VStack(spacing: 8) {

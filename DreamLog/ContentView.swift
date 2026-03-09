@@ -34,54 +34,96 @@ struct ContentView: View {
                 }
                 .tag(2)
             
-            CommunityView(dreamStore: dreamStore)
+            FriendsView(dreamStore: dreamStore)
                 .tabItem {
                     Image(systemName: "person.2.fill")
-                    Text("社区")
+                    Text("好友")
                 }
                 .tag(3)
+            
+            CommunityView(dreamStore: dreamStore)
+                .tabItem {
+                    Image(systemName: "globe")
+                    Text("社区")
+                }
+                .tag(4)
             
             SleepDataView()
                 .tabItem {
                     Image(systemName: "moon.stars.fill")
                     Text("睡眠")
                 }
-                .tag(4)
+                .tag(5)
+            
+            MeditationView()
+                .tabItem {
+                    Image(systemName: "music.note.house")
+                    Text("冥想")
+                }
+                .tag(6)
             
             DreamDictionaryView()
                 .tabItem {
                     Image(systemName: "text.book.closed.fill")
                     Text("词典")
                 }
-                .tag(5)
+                .tag(7)
             
             DreamsGoalView()
                 .tabItem {
                     Image(systemName: "target")
                     Text("目标")
                 }
-                .tag(6)
+                .tag(8)
             
             LucidTrainingView()
                 .tabItem {
                     Image(systemName: "brain.head.profile")
                     Text("训练")
                 }
-                .tag(7)
+                .tag(9)
             
             GalleryView()
                 .tabItem {
                     Image(systemName: "photo.on.rectangle")
                     Text("画廊")
                 }
-                .tag(8)
+                .tag(10)
+            
+            DreamGraphView()
+                .tabItem {
+                    Image(systemName: "network")
+                    Text("图谱")
+                }
+                .tag(11)
+            
+            DreamMusicView()
+                .tabItem {
+                    Image(systemName: "music.note.house.fill")
+                    Text("音乐")
+                }
+                .tag(12)
+            
+            DreamWrappedView()
+                .tabItem {
+                    Image(systemName: "sparkles")
+                    Text("回顾")
+                }
+                .tag(13)
+            
+            DreamAssistantView()
+                .tabItem {
+                    Image(systemName: "message.fill")
+                    Text("助手")
+                }
+                .tag(14)
             
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(9)
+                .tag(15)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(

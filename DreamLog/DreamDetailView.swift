@@ -13,13 +13,19 @@ struct DreamDetailView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dreamStore: DreamStore
     @StateObject private var shareService = ShareService()
-    @StateObject private var aiArtService = AIArtService.shared
+    @StateObject private var friendService = FriendService()
+    @ObservedObject private var aiArtService = AIArtService.shared
+    @ObservedObject private var speechService = SpeechSynthesisService.shared
+    @ObservedObject private var storyService = DreamStoryService.shared
     @State private var showingShareSheet = false
+    @State private var showingPrivateShareSheet = false
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
     @State private var showingGenerateArt = false
     @State private var showingArtGallery = false
     @State private var showingGenerateWallpaper = false
+    @State private var showingGenerateStory = false
+    @State private var showingStoryDetail = false
     
     var body: some View {
         ScrollView {
@@ -29,6 +35,9 @@ struct DreamDetailView: View {
                 
                 // 梦境内容
                 ContentSection(dream: dream)
+                
+                // 语音播放
+                AudioPlaybackSection(dreamContent: dream.content)
                 
                 // 标签和情绪
                 TagsAndEmotionsSection(dream: dream)
@@ -59,9 +68,16 @@ struct DreamDetailView: View {
                     onGenerate: { showingGenerateWallpaper = true }
                 )
                 
+                // 梦境故事
+                DreamStoryPromptSection(
+                    dream: dream,
+                    onGenerate: { showingGenerateStory = true }
+                )
+                
                 // 操作按钮
                 ActionButtons(
                     onShare: { showingShareSheet = true },
+                    onPrivateShare: { showingPrivateShareSheet = true },
                     onEdit: { showingEditSheet = true },
                     onDelete: { showingDeleteAlert = true }
                 )
@@ -81,7 +97,10 @@ struct DreamDetailView: View {
             }
         }
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(dream: dream)
+            ShareSheet(items: [dream.content])
+        }
+        .sheet(isPresented: $showingPrivateShareSheet) {
+            PrivateShareView(dream: dream, friendService: friendService)
         }
         .alert("删除梦境", isPresented: $showingDeleteAlert) {
             Button("取消", role: .cancel) {}
@@ -100,6 +119,14 @@ struct DreamDetailView: View {
         }
         .sheet(isPresented: $showingGenerateWallpaper) {
             DreamWallpaperView(dream: dream)
+        }
+        .sheet(isPresented: $showingGenerateStory) {
+            GenerateStorySheet(dream: dream, storyService: storyService)
+        }
+        .sheet(isPresented: $showingStoryDetail) {
+            if let story = storyService.currentStory {
+                StoryDetailView(story: story)
+            }
         }
     }
 }
@@ -167,6 +194,105 @@ struct ContentSection: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
         )
+    }
+}
+
+// MARK: - 语音播放区域
+struct AudioPlaybackSection: View {
+    let dreamContent: String
+    @ObservedObject private var speechService = SpeechSynthesisService.shared
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "speaker.wave.2.fill")
+                    .foregroundColor(.blue)
+                Text("🎧 聆听梦境")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+                
+                // 设置按钮
+                NavigationLink(destination: SpeechSettingsView()) {
+                    Image(systemName: "gear")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            // 播放控制
+            HStack(spacing: 16) {
+                // 播放/暂停按钮
+                Button(action: {
+                    if speechService.isSpeaking {
+                        speechService.togglePlayPause()
+                    } else {
+                        speechService.speak(dreamContent)
+                    }
+                }) {
+                    Image(systemName: speechService.isSpeaking && !speechService.isPaused ? "pause.circle.fill" : "play.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundColor(.accentColor)
+                }
+                
+                // 状态和进度
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(speechService.isSpeaking ? (speechService.isPaused ? "已暂停" : "播放中...") : "点击播放")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .animation(.easeInOut, value: speechService.isSpeaking)
+                    
+                    // 波形动画
+                    if speechService.isSpeaking && !speechService.isPaused {
+                        HStack(spacing: 2) {
+                            ForEach(0..<4) { i in
+                                RoundedRectangle(cornerRadius: 2)
+                                    .fill(Color.accentColor)
+                                    .frame(width: 3, height: CGFloat(8 + Int.random(in: 0...8)))
+                                    .animation(
+                                        Animation.easeInOut(duration: 0.4)
+                                            .repeatForever(autoreverses: true)
+                                            .delay(Double(i) * 0.1),
+                                        value: speechService.isSpeaking
+                                    )
+                            }
+                        }
+                        .frame(height: 20)
+                    }
+                }
+                
+                Spacer()
+                
+                // 停止按钮
+                if speechService.isSpeaking {
+                    Button(action: { speechService.stop() }) {
+                        Image(systemName: "stop.circle.fill")
+                            .font(.system(size: 32))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.blue.opacity(0.1))
+            )
+            
+            // 提示信息
+            Text("💡 睡前聆听梦境，探索潜意识深处。可在设置中调整语速、音调和语音。")
+                .font(.caption)
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 4)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.05))
+        )
+        .onDisappear {
+            speechService.stop()
+        }
     }
 }
 
@@ -313,36 +439,52 @@ struct AIAnalysisSection: View {
 // MARK: - 操作按钮
 struct ActionButtons: View {
     let onShare: () -> Void
+    let onPrivateShare: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: onShare) {
-                Label("分享", systemImage: "square.and.arrow.up")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.accentColor)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
+        VStack(spacing: 12) {
+            // 分享按钮行
+            HStack(spacing: 12) {
+                Button(action: onShare) {
+                    Label("公开分享", systemImage: "globe")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.accentColor)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                
+                Button(action: onPrivateShare) {
+                    Label("好友分享", systemImage: "person.2.fill")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.green.opacity(0.8))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
             }
             
-            Button(action: onEdit) {
-                Label("编辑", systemImage: "pencil")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.white.opacity(0.1))
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-            }
-            
-            Button(action: onDelete) {
-                Image(systemName: "trash")
-                    .font(.system(size: 18, weight: .semibold))
-                    .frame(width: 50, height: 50)
-                    .background(Color.red.opacity(0.2))
-                    .foregroundColor(.red)
-                    .cornerRadius(12)
+            // 编辑和删除按钮行
+            HStack(spacing: 12) {
+                Button(action: onEdit) {
+                    Label("编辑", systemImage: "pencil")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.white.opacity(0.1))
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                }
+                
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 18, weight: .semibold))
+                        .frame(width: 50, height: 50)
+                        .background(Color.red.opacity(0.2))
+                        .foregroundColor(.red)
+                        .cornerRadius(12)
+                }
             }
         }
     }
@@ -483,6 +625,181 @@ struct GenerateArtPromptSection: View {
                         .stroke(Color(hex: "6B4E9A").opacity(0.3), lineWidth: 1)
                 )
         )
+    }
+}
+
+// MARK: - 梦境故事提示区域
+
+struct DreamStoryPromptSection: View {
+    let dream: Dream
+    let onGenerate: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Image(systemName: "book.fill")
+                    .font(.title2)
+                    .foregroundColor(.purple)
+                
+                Text("梦境故事")
+                    .font(.headline)
+                    .foregroundColor(.white)
+                
+                Spacer()
+            }
+            
+            Text("将你的梦境扩展为精彩的故事，支持多种叙事风格")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+            
+            Button(action: onGenerate) {
+                HStack {
+                    Image(systemName: "sparkles")
+                    Text("生成梦境故事")
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(
+                    LinearGradient(
+                        colors: [Color(hex: "9D50DD"), Color(hex: "6B4E9A")],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .foregroundColor(.white)
+                .cornerRadius(12)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "6B4E9A").opacity(0.3), Color(hex: "9B7EBD").opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "6B4E9A").opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - 生成故事弹窗
+
+struct GenerateStorySheet: View {
+    let dream: Dream
+    @ObservedObject var storyService: DreamStoryService
+    @Environment(\.dismiss) var dismiss
+    @State private var selectedStyle: DreamStory.NarrativeStyle = .firstPerson
+    @State private var showStylePicker = false
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // 梦境预览
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("梦境预览")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Text(dream.content)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .lineLimit(5)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.white.opacity(0.05))
+                .cornerRadius(12)
+                
+                // 叙事风格选择
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("选择叙事风格")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                    
+                    Button(action: { showStylePicker = true }) {
+                        HStack {
+                            Image(systemName: selectedStyle.icon)
+                                .foregroundColor(.purple)
+                            Text(selectedStyle.rawValue)
+                                .foregroundColor(.white)
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(12)
+                    }
+                    
+                    Text(selectedStyle.description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.white.opacity(0.05))
+                .cornerRadius(12)
+                
+                // 生成按钮
+                Button(action: {
+                    Task {
+                        await storyService.generateStory(for: dream, style: selectedStyle)
+                        dismiss()
+                    }
+                }) {
+                    HStack {
+                        if storyService.isGenerating {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            Text("正在生成故事...")
+                        } else {
+                            Image(systemName: "sparkles")
+                            Text("开始生成")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(storyService.isGenerating ? Color.gray : Color.purple)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .disabled(storyService.isGenerating)
+                
+                if storyService.isGenerating {
+                    ProgressView(value: storyService.generationProgress)
+                        .progressViewStyle(LinearProgressViewStyle())
+                        .padding(.horizontal)
+                }
+                
+                Spacer()
+            }
+            .padding()
+            .navigationTitle("生成梦境故事")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("取消") {
+                        dismiss()
+                    }
+                }
+            }
+            .confirmationDialog("选择叙事风格", isPresented: $showStylePicker) {
+                ForEach(DreamStory.NarrativeStyle.allCases) { style in
+                    Button("\(style.icon) \(style.rawValue)") {
+                        selectedStyle = style
+                    }
+                }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("不同的叙事风格会带来不同的阅读体验")
+            }
+        }
     }
 }
 

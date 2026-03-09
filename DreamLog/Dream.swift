@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 /// 梦境记录模型
 class Dream: Identifiable, ObservableObject {

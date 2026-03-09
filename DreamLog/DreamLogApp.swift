@@ -15,6 +15,9 @@ struct DreamLogApp: App {
     @ObservedObject private var notificationService = NotificationService.shared
     @ObservedObject private var cloudSyncService = CloudSyncService.shared
     @ObservedObject private var healthKitService = HealthKitService.shared
+    @ObservedObject private var trendService = DreamTrendService.shared
+    @ObservedObject private var timelineService = DreamTimelineService.shared
+    @ObservedObject private var smartReminderService = SmartReminderService.shared
     
     var body: some Scene {
         WindowGroup {
@@ -25,6 +28,8 @@ struct DreamLogApp: App {
                 .environmentObject(notificationService)
                 .environmentObject(cloudSyncService)
                 .environmentObject(healthKitService)
+                .environmentObject(trendService)
+                .environmentObject(timelineService)
                 .onAppear {
                     // 初始化通知服务
                     notificationService.checkAuthorization()
@@ -37,6 +42,10 @@ struct DreamLogApp: App {
                     
                     // 检查 HealthKit 授权状态
                     healthKitService.checkAuthorizationStatus()
+                    
+                    // 初始化智能提醒服务
+                    smartReminderService.checkAuthorization()
+                    smartReminderService.updateAnalysis(from: dreamStore)
                 }
         }
     }

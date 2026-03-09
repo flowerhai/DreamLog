@@ -10,7 +10,7 @@ import SwiftUI
 // MARK: - 艺术画廊主视图
 
 struct DreamArtGalleryView: View {
-    @StateObject private var aiArtService = AIArtService.shared
+    @ObservedObject private var aiArtService = AIArtService.shared
     @State private var selectedStyle: DreamArt.ArtStyle = .dreamy
     @State private var showingGrid = true
     @State private var searchText = ""
@@ -432,28 +432,82 @@ struct InfoRow: View {
 struct GenerateArtSheet: View {
     let dream: Dream
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var aiArtService = AIArtService.shared
+    @ObservedObject private var aiArtService = AIArtService.shared
     @State private var selectedStyle: DreamArt.ArtStyle = .dreamy
+    @State private var selectedStyles: Set<DreamArt.ArtStyle> = [.dreamy]
     @State private var customPrompt: String = ""
     @State private var useCustomPrompt = false
+    @State private var isBatchMode = false
+    @State private var selectedAspectRatio: DreamArt.AspectRatio = .square
     
     var body: some View {
         NavigationView {
             Form {
+                // 生成模式切换
+                Section("生成模式") {
+                    Picker("模式", selection: $isBatchMode) {
+                        Text("单张").tag(false)
+                        Text("批量").tag(true)
+                    }
+                    .pickerStyle(.segmented)
+                }
+                
                 // 风格选择
-                Section("选择艺术风格") {
-                    Picker("风格", selection: $selectedStyle) {
+                if isBatchMode {
+                    Section("选择艺术风格 (\(selectedStyles.count) 个)") {
                         ForEach(DreamArt.ArtStyle.allCases, id: \.self) { style in
-                            VStack(alignment: .leading) {
+                            HStack {
                                 Text(style.rawValue)
-                                Text(style.description)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                                Spacer()
+                                if selectedStyles.contains(style) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.accentColor)
+                                }
                             }
-                            .tag(style)
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                if selectedStyles.contains(style) {
+                                    selectedStyles.remove(style)
+                                } else {
+                                    selectedStyles.insert(style)
+                                }
+                            }
                         }
                     }
-                    .pickerStyle(.navigationLink)
+                } else {
+                    Section("选择艺术风格") {
+                        Picker("风格", selection: $selectedStyle) {
+                            ForEach(DreamArt.ArtStyle.allCases, id: \.self) { style in
+                                VStack(alignment: .leading) {
+                                    Text(style.rawValue)
+                                    Text(style.description)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                .tag(style)
+                            }
+                        }
+                        .pickerStyle(.navigationLink)
+                    }
+                }
+                
+                // 宽高比选择 (仅批量模式)
+                if isBatchMode {
+                    Section("宽高比") {
+                        Picker("宽高比", selection: $selectedAspectRatio) {
+                            ForEach(DreamArt.AspectRatio.allCases, id: \.self) { ratio in
+                                Text(ratio.displayName).tag(ratio)
+                            }
+                        }
+                        .pickerStyle(.navigationLink)
+                        
+                        HStack {
+                            Image(systemName: "rectangle")
+                            Text("推荐：\(selectedAspectRatio.displayName) - \(selectedAspectRatio.dimensions.0)×\(selectedAspectRatio.dimensions.1)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
                 
                 // 自定义提示词
@@ -465,7 +519,7 @@ struct GenerateArtSheet: View {
                             .frame(height: 100)
                             .font(.body)
                     } else {
-                        Text(aiArtService.generatePrompt(from: dream, style: selectedStyle))
+                        Text(aiArtService.generatePrompt(from: dream, style: isBatchMode ? selectedStyle : selectedStyle))
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -490,14 +544,21 @@ struct GenerateArtSheet: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("生成") {
+                    Button(isBatchMode ? "批量生成" : "生成") {
                         Task {
-                            // 实际使用时传入自定义提示词或自动生成
-                            await aiArtService.generateArt(for: dream, style: selectedStyle)
+                            if isBatchMode && !selectedStyles.isEmpty {
+                                await aiArtService.generateBatchArt(
+                                    for: dream,
+                                    styles: Array(selectedStyles),
+                                    aspectRatio: selectedAspectRatio
+                                )
+                            } else {
+                                await aiArtService.generateArt(for: dream, style: selectedStyle)
+                            }
                             dismiss()
                         }
                     }
-                    .disabled(aiArtService.isGenerating)
+                    .disabled(aiArtService.isGenerating || (isBatchMode && selectedStyles.isEmpty))
                 }
             }
             

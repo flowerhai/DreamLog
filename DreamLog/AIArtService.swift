@@ -20,7 +20,7 @@ struct DreamArt: Identifiable, Codable, Equatable {
     var createdAt: Date
     var isFavorite: Bool = false
     
-    enum ArtStyle: String, Codable, CaseIterable {
+    enum ArtStyle: String, Codable, CaseIterable, Identifiable {
         case realistic = "写实风格"
         case impressionist = "印象派"
         case surreal = "超现实主义"
@@ -29,6 +29,15 @@ struct DreamArt: Identifiable, Codable, Equatable {
         case oil = "油画"
         case digital = "数字艺术"
         case dreamy = "梦幻风格"
+        // Phase 8 新增风格
+        case abstract = "抽象艺术"
+        case minimalist = "极简主义"
+        case cyberpunk = "赛博朋克"
+        case fantasy = "奇幻风格"
+        case noir = "黑色电影"
+        case popArt = "波普艺术"
+        
+        var id: String { rawValue }
         
         var description: String {
             switch self {
@@ -40,19 +49,129 @@ struct DreamArt: Identifiable, Codable, Equatable {
             case .oil: return "古典油画质感"
             case .digital: return "现代数字绘画"
             case .dreamy: return "朦胧梦幻的视觉效果"
+            case .abstract: return "抽象表现主义，色彩与形式的自由表达"
+            case .minimalist: return "极简构图，留白艺术"
+            case .cyberpunk: return "霓虹灯、高科技低生活、未来都市"
+            case .fantasy: return "魔法、龙、中世纪奇幻世界"
+            case .noir: return "黑白对比、阴影、神秘氛围"
+            case .popArt: return "鲜艳色彩、大众文化、安迪沃霍尔风格"
             }
         }
         
         var promptSuffix: String {
             switch self {
-            case .realistic: return ", photorealistic, highly detailed, 8k"
-            case .impressionist: return ", impressionist style, soft brushstrokes, Claude Monet style"
-            case .surreal: return ", surrealism, dreamlike, Salvador Dali style, bizarre"
-            case .anime: return ", anime style, Studio Ghibli, Makoto Shinkai"
-            case .watercolor: return ", watercolor painting, soft edges, pastel colors"
-            case .oil: return ", oil painting, textured brushstrokes, classical art"
-            case .digital: return ", digital art, concept art, ArtStation"
-            case .dreamy: return ", dreamy, ethereal, soft focus, pastel colors, magical"
+            case .realistic: return ", photorealistic, highly detailed, 8k, HDR"
+            case .impressionist: return ", impressionist style, soft brushstrokes, Claude Monet style, visible brushwork"
+            case .surreal: return ", surrealism, dreamlike, Salvador Dali style, bizarre, unexpected juxtapositions"
+            case .anime: return ", anime style, Studio Ghibli, Makoto Shinkai, cel shaded"
+            case .watercolor: return ", watercolor painting, soft edges, pastel colors, wet on wet technique"
+            case .oil: return ", oil painting, textured brushstrokes, classical art, impasto technique"
+            case .digital: return ", digital art, concept art, ArtStation, trending on CGSociety"
+            case .dreamy: return ", dreamy, ethereal, soft focus, pastel colors, magical, bokeh"
+            case .abstract: return ", abstract expressionism, bold colors, geometric shapes, Kandinsky style"
+            case .minimalist: return ", minimalist, clean composition, negative space, simple forms"
+            case .cyberpunk: return ", cyberpunk, neon lights, futuristic city, blade runner style, high tech low life"
+            case .fantasy: return ", fantasy art, magical, dragons, medieval, epic, Lord of the Rings style"
+            case .noir: return ", film noir, black and white, high contrast, dramatic shadows, mystery"
+            case .popArt: return ", pop art, vibrant colors, Andy Warhol style, comic book inspired"
+            }
+        }
+        
+        var negativePrompt: String {
+            switch self {
+            case .realistic: return "cartoon, anime, drawing, painting, blurry, low quality"
+            case .impressionist: return "photorealistic, sharp details, digital art, 3d render"
+            case .surreal: return "realistic, ordinary, mundane, boring, conventional"
+            case .anime: return "realistic, photo, 3d, western cartoon"
+            case .watercolor: return "digital, photo, sharp edges, vibrant saturated colors"
+            case .oil: return "digital, photo, watercolor, sketch"
+            case .digital: return "traditional art, photo, painting, low quality"
+            case .dreamy: return "sharp focus, harsh lighting, realistic, mundane"
+            case .abstract: return "realistic, representational, literal, clear subject"
+            case .minimalist: return "cluttered, complex, detailed, busy composition"
+            case .cyberpunk: return "medieval, fantasy, nature, rural, pastel colors"
+            case .fantasy: return "modern, technology, urban, realistic, sci-fi"
+            case .noir: return "colorful, bright, cheerful, cartoon, anime"
+            case .popArt: return "muted colors, realistic, minimalist, subtle"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .realistic: return "camera.fill"
+            case .impressionist: return "paintbrush.fill"
+            case .surreal: return "eye.fill"
+            case .anime: return "star.fill"
+            case .watercolor: return "drop.fill"
+            case .oil: return "palette.fill"
+            case .digital: return "display.fill"
+            case .dreamy: return "sparkles"
+            case .abstract: return "square.split.diagonal"
+            case .minimalist: return "square.dashed"
+            case .cyberpunk: return "bolt.fill"
+            case .fantasy: return "wand.and.stars"
+            case .noir: return "moon.fill"
+            case .popArt: return "circle.fill"
+            }
+        }
+        
+        var color: String {
+            switch self {
+            case .realistic: return "007AFF"
+            case .impressionist: return "FF9500"
+            case .surreal: return "AF52DE"
+            case .anime: return "FF2D55"
+            case .watercolor: return "5AC8FA"
+            case .oil: return "FFCC00"
+            case .digital: return "4CD964"
+            case .dreamy: return "FF6B9D"
+            case .abstract: return "FF3B30"
+            case .minimalist: return "8E8E93"
+            case .cyberpunk: return "00F0FF"
+            case .fantasy: return "9D50DD"
+            case .noir: return "1C1C1E"
+            case .popArt: return "FF9F0A"
+            }
+        }
+    }
+    
+    /// 图像宽高比
+    enum AspectRatio: String, Codable, CaseIterable, Identifiable {
+        case square = "1:1"
+        case portrait = "9:16"
+        case landscape = "16:9"
+        case portrait4x5 = "4:5"
+        case landscape4x3 = "4:3"
+        
+        var id: String { rawValue }
+        
+        var width: Int {
+            switch self {
+            case .square: return 1024
+            case .portrait: return 576
+            case .landscape: return 1024
+            case .portrait4x5: return 832
+            case .landscape4x3: return 1024
+            }
+        }
+        
+        var height: Int {
+            switch self {
+            case .square: return 1024
+            case .portrait: return 1024
+            case .landscape: return 576
+            case .portrait4x5: return 1040
+            case .landscape4x3: return 768
+            }
+        }
+        
+        var displayName: String {
+            switch self {
+            case .square: return "正方形 (1:1)"
+            case .portrait: return "竖屏 (9:16)"
+            case .landscape: return "横屏 (16:9)"
+            case .portrait4x5: return "肖像 (4:5)"
+            case .landscape4x3: return "风景 (4:3)"
             }
         }
     }
@@ -85,74 +204,101 @@ class AIArtService: ObservableObject {
     // MARK: - 生成提示词
     
     /// 从梦境内容生成 AI 绘画提示词
-    func generatePrompt(from dream: Dream, style: DreamArt.ArtStyle) -> String {
+    func generatePrompt(from dream: Dream, style: DreamArt.ArtStyle, aspectRatio: DreamArt.AspectRatio = .square) -> String {
         var promptComponents: [String] = []
         
-        // 标题
+        // 1. 主体描述（标题 + 核心内容）
         if !dream.title.isEmpty {
-            promptComponents.append(dream.title)
+            promptComponents.append("\"\(dream.title)\"")
         }
         
-        // 内容提取关键意象
+        // 2. 内容提取关键意象
         let contentKeywords = extractKeyImagery(from: dream.content)
         if !contentKeywords.isEmpty {
             promptComponents.append(contentsOf: contentKeywords)
         }
         
-        // 情绪氛围
+        // 3. 情绪氛围（权重增强）
         if !dream.emotions.isEmpty {
             let moodWords = dream.emotions.prefix(3).map { emotion in
                 switch emotion.lowercased() {
-                case "快乐", "开心", "兴奋": return "joyful, bright, vibrant"
-                case "恐惧", "害怕", "紧张": return "dark, mysterious, tense"
-                case "平静", "安宁", "放松": return "peaceful, calm, serene"
-                case "悲伤", "难过": return "melancholic, somber, moody"
-                case "惊讶", "惊奇": return "wondrous, magical, astonishing"
-                case "愤怒", "生气": return "intense, dramatic, fiery"
-                case "困惑", "迷茫": return "surreal, abstract, confusing"
-                case "期待", "希望": return "hopeful, uplifting, inspirational"
+                case "快乐", "开心", "兴奋": return "(joyful:1.3), bright, vibrant, energetic"
+                case "恐惧", "害怕", "紧张": return "(dark:1.2), mysterious, tense, ominous"
+                case "平静", "安宁", "放松": return "(peaceful:1.3), calm, serene, tranquil"
+                case "悲伤", "难过": return "(melancholic:1.2), somber, moody, introspective"
+                case "惊讶", "惊奇": return "(wondrous:1.3), magical, astonishing, awe-inspiring"
+                case "愤怒", "生气": return "(intense:1.3), dramatic, fiery, powerful"
+                case "困惑", "迷茫": return "(surreal:1.2), abstract, confusing, disorienting"
+                case "期待", "希望": return "(hopeful:1.3), uplifting, inspirational, radiant"
                 default: return "emotional, expressive"
                 }
             }
             promptComponents.append(moodWords.joined(separator: ", "))
         }
         
-        // 时间氛围
+        // 4. 时间氛围（带权重）
         switch dream.timeOfDay {
-        case .morning: promptComponents.append("morning light, sunrise, golden hour")
-        case .afternoon: promptComponents.append("afternoon, bright daylight")
-        case .evening: promptComponents.append("evening, sunset, warm colors")
-        case .night: promptComponents.append("night scene, moonlight, stars, dark atmosphere")
-        case .dawn: promptComponents.append("dawn, early morning, soft light")
-        case .dusk: promptComponents.append("dusk, twilight, purple sky")
+        case .morning: promptComponents.append("(morning light:1.2), sunrise, golden hour, fresh")
+        case .afternoon: promptComponents.append("afternoon, bright daylight, clear sky")
+        case .evening: promptComponents.append("(evening:1.2), sunset, warm colors, golden")
+        case .night: promptComponents.append("(night scene:1.3), moonlight, stars, dark atmosphere")
+        case .dawn: promptComponents.append("dawn, early morning, soft light, awakening")
+        case .dusk: promptComponents.append("dusk, twilight, purple sky, transition")
         }
         
-        // 梦境清晰度影响风格
+        // 5. 梦境清晰度影响风格
         if dream.clarity >= 4 {
-            promptComponents.append("clear, sharp details, vivid")
+            promptComponents.append("(crystal clear:1.3), sharp details, vivid, hyperdetailed")
         } else if dream.clarity <= 2 {
-            promptComponents.append("blurry, hazy, dreamlike, soft focus")
+            promptComponents.append("(dreamy blur:1.2), hazy, soft focus, ethereal mist")
+        } else {
+            promptComponents.append("balanced details, moderate clarity")
         }
         
-        // 强度影响色彩
+        // 6. 强度影响色彩
         if dream.intensity >= 4 {
-            promptComponents.append("vibrant colors, high contrast, dramatic")
+            promptComponents.append("(vibrant colors:1.3), high contrast, dramatic lighting, bold")
         } else if dream.intensity <= 2 {
-            promptComponents.append("muted colors, soft tones, gentle")
+            promptComponents.append("(muted colors:1.2), soft tones, gentle, pastel palette")
+        } else {
+            promptComponents.append("balanced colors, natural saturation")
         }
         
-        // 清醒梦特殊效果
+        // 7. 清醒梦特殊效果
         if dream.isLucid {
-            promptComponents.append("lucid dream, glowing elements, magical realism, consciousness")
+            promptComponents.append("(lucid dream:1.4), glowing elements, magical realism, consciousness awareness, surreal luminescence")
         }
         
-        // 基础质量词
-        promptComponents.append("masterpiece, best quality, high resolution")
+        // 8. 构图和视角
+        promptComponents.append("professional composition, rule of thirds, cinematic lighting")
         
-        // 风格后缀
+        // 9. 基础质量词（权重增强）
+        promptComponents.append("(masterpiece:1.4), (best quality:1.3), (high resolution:1.2), ultra detailed")
+        
+        // 10. 风格后缀
         promptComponents.append(style.promptSuffix)
         
+        // 11. 宽高比提示
+        if aspectRatio != .square {
+            promptComponents.append("aspect ratio \(aspectRatio.rawValue)")
+        }
+        
         return promptComponents.joined(separator: ", ")
+    }
+    
+    /// 生成负面提示词
+    func generateNegativePrompt(for style: DreamArt.ArtStyle) -> String {
+        var negativeComponents: [String] = [
+            "low quality", "worst quality", "blurry", "jpeg artifacts",
+            "cropped", "out of frame", "watermark", "signature",
+            "text", "username", "error", "missing fingers",
+            "extra limbs", "disfigured", "deformed", "malformed hands"
+        ]
+        
+        // 添加风格特定的负面提示
+        negativeComponents.append(style.negativePrompt)
+        
+        return negativeComponents.joined(separator: ", ")
     }
     
     /// 从梦境内容提取关键意象
@@ -224,7 +370,7 @@ class AIArtService: ObservableObject {
     // MARK: - 生成图像
     
     /// 为梦境生成 AI 图像
-    func generateArt(for dream: Dream, style: DreamArt.ArtStyle) async {
+    func generateArt(for dream: Dream, style: DreamArt.ArtStyle, aspectRatio: DreamArt.AspectRatio = .square) async {
         isGenerating = true
         generationProgress = 0.0
         errorMessage = nil
@@ -233,15 +379,17 @@ class AIArtService: ObservableObject {
             isGenerating = false
         }
         
-        // 生成提示词
-        let prompt = generatePrompt(from: dream, style: style)
-        print("🎨 生成提示词：\(prompt)")
+        // 生成提示词和负面提示词
+        let prompt = generatePrompt(from: dream, style: style, aspectRatio: aspectRatio)
+        let negativePrompt = generateNegativePrompt(for: style)
+        
+        print("🎨 正面提示词：\(prompt)")
+        print("🚫 负面提示词：\(negativePrompt)")
         
         // 模拟生成过程（实际使用时替换为真实 API 调用）
-        // 这里使用占位图服务作为示例
         let seed = Int(dream.id.hashValue) & 0x7FFFFFFF
-        let width = 1024
-        let height = 1024
+        let width = aspectRatio.width
+        let height = aspectRatio.height
         
         // 模拟进度更新
         for i in 1...5 {
@@ -250,12 +398,6 @@ class AIArtService: ObservableObject {
         }
         
         // 使用 Picsum 作为占位图（实际应使用 Stable Diffusion API）
-        // 真实实现时替换为：
-        // - Stability AI API
-        // - Midjourney API
-        // - DALL-E API
-        // - 本地 Stable Diffusion 模型
-        
         let imageUrl = "https://picsum.photos/seed/\(seed)/\(width)/\(height)"
         
         generationProgress = 1.0
@@ -273,7 +415,58 @@ class AIArtService: ObservableObject {
         dreamArts.insert(art, at: 0)
         saveDreamArts()
         
-        print("✅ 艺术作品生成完成")
+        print("✅ 艺术作品生成完成 - \(style.rawValue)")
+    }
+    
+    /// 批量生成多种风格的艺术作品
+    func generateBatchArt(for dream: Dream, styles: [DreamArt.ArtStyle], aspectRatio: DreamArt.AspectRatio = .square) async {
+        isGenerating = true
+        generationProgress = 0.0
+        errorMessage = nil
+        
+        let totalStyles = styles.count
+        
+        for (index, style) in styles.enumerated() {
+            generationProgress = Double(index) / Double(totalStyles)
+            
+            do {
+                try await generateSingleArt(for: dream, style: style, aspectRatio: aspectRatio)
+            } catch {
+                errorMessage = "生成 \(style.rawValue) 风格时出错：\(error.localizedDescription)"
+                print("❌ 生成失败 \(style.rawValue): \(error)")
+            }
+        }
+        
+        generationProgress = 1.0
+        isGenerating = false
+        
+        print("✅ 批量生成完成 - 共 \(dreamArts.prefix(totalStyles).count) 个艺术作品")
+    }
+    
+    /// 生成单个艺术作品（内部方法）
+    private func generateSingleArt(for dream: Dream, style: DreamArt.ArtStyle, aspectRatio: DreamArt.AspectRatio) async throws {
+        let prompt = generatePrompt(from: dream, style: style, aspectRatio: aspectRatio)
+        let negativePrompt = generateNegativePrompt(for: style)
+        
+        let seed = Int(dream.id.hashValue &+ style.hashValue) & 0x7FFFFFFF
+        let width = aspectRatio.width
+        let height = aspectRatio.height
+        
+        // 模拟 API 调用延迟
+        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 秒
+        
+        let imageUrl = "https://picsum.photos/seed/\(seed)/\(width)/\(height)"
+        
+        let art = DreamArt(
+            dreamId: dream.id,
+            imageUrl: imageUrl,
+            prompt: prompt,
+            style: style,
+            createdAt: Date()
+        )
+        
+        dreamArts.insert(art, at: 0)
+        saveDreamArts()
     }
     
     // MARK: - 真实 API 集成示例

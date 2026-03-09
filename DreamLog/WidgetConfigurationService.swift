@@ -74,6 +74,35 @@ struct WidgetTheme: Codable, Identifiable, Hashable {
             gradientColors: ["#B19CD9", "#C8A2C8"],
             iconSFSymbol: "flower.open",
             textColor: "#FFFFFF"
+        ),
+        // MARK: - Phase 6 新增主题
+        WidgetTheme(
+            id: "sakura",
+            name: "樱花粉",
+            gradientColors: ["#FFB7C5", "#FF69B4"],
+            iconSFSymbol: "flower.open",
+            textColor: "#FFFFFF"
+        ),
+        WidgetTheme(
+            id: "mint",
+            name: "薄荷绿",
+            gradientColors: ["#98FF98", "#3EB489"],
+            iconSFSymbol: "leaf.fill",
+            textColor: "#000000"
+        ),
+        WidgetTheme(
+            id: "lemon",
+            name: "柠檬黄",
+            gradientColors: ["#FFF700", "#FFD700"],
+            iconSFSymbol: "sun.max.fill",
+            textColor: "#000000"
+        ),
+        WidgetTheme(
+            id: "lavender_purple",
+            name: "薰衣草紫",
+            gradientColors: ["#E6E6FA", "#967BB6"],
+            iconSFSymbol: "moon.stars.fill",
+            textColor: "#000000"
         )
     ]
     
@@ -220,28 +249,4 @@ class WidgetConfigurationService {
 }
 
 // MARK: - Color Extension for HEX
-extension Color {
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255,
-            green: Double(g) / 255,
-            blue: Double(b) / 255,
-            opacity: Double(a) / 255
-        )
-    }
-}
+// Note: Color(hex:) is defined in Theme.swift to avoid redeclaration

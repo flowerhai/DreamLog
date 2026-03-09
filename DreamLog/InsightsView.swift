@@ -22,6 +22,194 @@ struct InsightsView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
+                    // AI 趋势分析入口 ✨ NEW
+                    NavigationLink(destination: DreamTrendView().environmentObject(dreamStore)) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.purple, Color.pink],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "crystal.ball.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("AI 梦境趋势")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Image(systemName: "sparkles")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                Text("发现你的梦境模式和未来预测")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // 梦境时间轴入口 ✨ NEW (Phase 6)
+                    NavigationLink(destination: DreamTimelineView().environmentObject(dreamStore)) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.green, Color.teal],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "timeline.selection")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("梦境时间轴")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Image(systemName: "sparkles")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                Text("可视化你的梦境分布和密度")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // 梦境关联图谱入口 ✨ NEW
+                    NavigationLink(destination: DreamGraphView().environmentObject(dreamStore)) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.blue, Color.purple],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "network")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("梦境关联图谱")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Image(systemName: "sparkles")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                Text("可视化梦境之间的隐藏关联")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
+                    // 睡眠质量深度分析入口 ✨ NEW
+                    NavigationLink(destination: SleepQualityAnalysisView()) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.blue, Color.green],
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
+                                        )
+                                    )
+                                    .frame(width: 50, height: 50)
+                                
+                                Image(systemName: "moon.zzz.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text("睡眠质量分析")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    
+                                    Image(systemName: "sparkles")
+                                        .font(.caption)
+                                        .foregroundColor(.yellow)
+                                }
+                                
+                                Text("HealthKit 深度分析与梦境关联")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 2)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    
                     // 统计卡片
                     StatsOverviewSection(stats: stats)
                     

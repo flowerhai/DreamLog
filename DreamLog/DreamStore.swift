@@ -9,6 +9,8 @@ import Foundation
 import Combine
 
 class DreamStore: ObservableObject {
+    static let shared = DreamStore()
+    
     @Published var dreams: [Dream] = []
     @Published var filteredDreams: [Dream] = []
     @Published var tags: [String] = []
@@ -461,7 +463,8 @@ extension DreamStore {
                 print("✅ 成功加载 \(dreams.count) 个梦境记录")
             } catch {
                 print("❌ 加载梦境失败：\(error)")
-                // 如果加载失败，使用示例数据
+                // 如果加载失败，清空数据并加载示例数据 (避免无限循环)
+                dreams = []
                 loadSampleDreams()
             }
         } else {

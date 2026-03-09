@@ -16,12 +16,15 @@ struct SettingsView: View {
     @AppStorage("autoAnalysis") private var autoAnalysis = true
     @AppStorage("darkMode") private var darkMode = true
     
+    @ObservedObject private var reminderService = SmartReminderService.shared
+    
     @State private var showingExportOptions = false
     @State private var showingImportPicker = false
     @State private var showingDeleteConfirm = false
     @State private var showingFeedbackSheet = false
     @State private var exportMessage: String?
     @State private var importMessage: String?
+    @State private var showingSmartReminderSettings = false
     
     // 同步状态颜色
     var statusColor: Color {
@@ -31,6 +34,7 @@ struct SettingsView: View {
         case .success: return .green
         case .failed: return .red
         case .unavailable: return .orange
+        case .conflict: return .orange
         }
     }
     
@@ -134,6 +138,36 @@ struct SettingsView: View {
                     }
                 }
                 
+                // 语音播放设置
+                Section(header: Label("语音播放", systemImage: "speaker.wave.3.fill")) {
+                    NavigationLink(destination: SpeechSettingsView()) {
+                        Label("🎙️ 语音设置", systemImage: "mic.fill")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("功能说明")
+                            .font(.subheadline)
+                            .fontWeight(.medium)
+                        
+                        Text("• 在梦境详情页点击播放按钮即可聆听梦境")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 支持调整语速、音调和音量")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 提供多种语音选择（中文/英文）")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 适合睡前回顾或无障碍访问")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
                 // Siri 快捷指令
                 Section(header: Label("Siri 与快捷指令", systemImage: "wand.and.stars")) {
                     NavigationLink(destination: SiriShortcutSettingsView()) {
@@ -173,6 +207,15 @@ struct SettingsView: View {
                     }
                     
                     Toggle("自动 AI 解析", isOn: $autoAnalysis)
+                    
+                    // 智能提醒系统入口
+                    NavigationLink(destination: SmartReminderSettingsView(service: reminderService, dreamStore: dreamStore)) {
+                        Label("🧠 智能提醒设置", systemImage: "brain.head.profile")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // 数据与同步
@@ -242,6 +285,15 @@ struct SettingsView: View {
                             Text("\(dreamStore.dreams.count) 条记录")
                                 .foregroundColor(.secondary)
                         }
+                    }
+                    
+                    // PDF 日记导出
+                    NavigationLink(destination: DreamJournalExportView().environmentObject(dreamStore)) {
+                        Label("📕 导出 PDF 日记", systemImage: "book.closed")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                     
                     // 导入功能
@@ -427,14 +479,18 @@ struct ExportOptionsView: View {
     @State private var exportFormat: ExportFormat = .json
     
     enum ExportFormat: String, CaseIterable, Identifiable {
+        case pdf = "PDF"
         case json = "JSON"
         case text = "文本"
+        case markdown = "Markdown"
         
         var id: String { rawValue }
         var icon: String {
             switch self {
+            case .pdf: return "doc.fill"
             case .json: return "doc.badge.gearshape"
             case .text: return "doc.text"
+            case .markdown: return "doc.richtext"
             }
         }
     }
@@ -534,10 +590,14 @@ struct ExportOptionsView: View {
     
     private func formatDescription(for format: ExportFormat) -> String {
         switch format {
+        case .pdf:
+            return "精美的 PDF 文档，适合打印和分享"
         case .json:
             return "包含所有数据和元数据，适合备份"
         case .text:
             return "纯文本格式，易于阅读和分享"
+        case .markdown:
+            return "Markdown 格式，支持富文本编辑"
         }
     }
     
@@ -548,40 +608,22 @@ struct ExportOptionsView: View {
             var success = false
             var message = ""
             
-            switch exportFormat {
-            case .json:
-                if let data = dreamStore.exportDreams() {
-                    // 保存到临时文件
-                    let tempDir = FileManager.default.temporaryDirectory
-                    let fileURL = tempDir.appendingPathComponent("dreamlog_export_\(Date().timeIntervalSince1970).json")
-                    try? data.write(to: fileURL)
-                    
-                    // 使用 UIActivityViewController 分享
-                    DispatchQueue.main.async {
-                        let activityVC = UIActivityViewController(
-                            activityItems: [fileURL],
-                            applicationActivities: nil
-                        )
-                        
-                        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-                           let rootViewController = windowScene.windows.first?.rootViewController {
-                            rootViewController.present(activityVC, animated: true)
-                        }
-                        success = true
-                        message = "成功导出 \(dreamStore.dreams.count) 个梦境"
-                    }
-                }
-                
-            case .text:
-                var allText = ""
-                for dream in dreamStore.dreams {
-                    allText += dreamStore.exportDream(dream)
-                    allText += "\n\n---\n\n"
-                }
-                
+            // 使用新的 DreamExportService
+            let exportService = DreamExportService.shared
+            let result = exportService.exportDreams(
+                dreams: dreamStore.dreams.sorted { $0.date > $1.date },
+                format: convertFormat(exportFormat),
+                includeAnalysis: true,
+                includeStats: exportFormat == .pdf,
+                theme: .starry
+            )
+            
+            switch result {
+            case .success(let data, let fileExtension):
                 let tempDir = FileManager.default.temporaryDirectory
-                let fileURL = tempDir.appendingPathComponent("dreamlog_export_\(Date().timeIntervalSince1970).txt")
-                try? allText.write(to: fileURL, atomically: true, encoding: .utf8)
+                let fileName = "dreamlog_export_\(Int(Date().timeIntervalSince1970)).\(fileExtension)"
+                let fileURL = tempDir.appendingPathComponent(fileName)
+                try? data.write(to: fileURL)
                 
                 DispatchQueue.main.async {
                     let activityVC = UIActivityViewController(
@@ -594,7 +636,12 @@ struct ExportOptionsView: View {
                         rootViewController.present(activityVC, animated: true)
                     }
                     success = true
-                    message = "成功导出 \(dreamStore.dreams.count) 个梦境"
+                    message = "成功导出 \(dreamStore.dreams.count) 个梦境为 \(exportFormat.rawValue) 格式"
+                }
+                
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    message = "导出失败：\(error)"
                 }
             }
             
@@ -606,6 +653,15 @@ struct ExportOptionsView: View {
             }
             
             isExporting = false
+        }
+    }
+    
+    private func convertFormat(_ format: ExportFormat) -> DreamExportService.ExportFormat {
+        switch format {
+        case .pdf: return .pdf
+        case .json: return .json
+        case .text: return .text
+        case .markdown: return .markdown
         }
     }
 }

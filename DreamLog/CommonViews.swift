@@ -107,6 +107,18 @@ struct ErrorStateView: View {
     }
 }
 
+// MARK: - 分享视图 (ShareSheet)
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
 // MARK: - 流式布局 (Reusable FlowLayout)
 struct FlowLayout: Layout {
     let spacing: CGFloat

@@ -11,7 +11,7 @@ import HealthKit
 // MARK: - 睡眠数据主视图
 
 struct SleepDataView: View {
-    @StateObject private var healthKitService = HealthKitService.shared
+    @ObservedObject private var healthKitService = HealthKitService.shared
     @State private var showingAuthRequest = false
     @State private var selectedRecord: SleepRecord?
     
@@ -128,7 +128,7 @@ struct BenefitRow: View {
 
 struct AuthRequestView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var healthKitService = HealthKitService.shared
+    @ObservedObject private var healthKitService = HealthKitService.shared
     @State private var isRequesting = false
     @State private var success = false
     
@@ -447,7 +447,7 @@ struct SleepRecordRow: View {
 struct SleepRecordDetailView: View {
     let record: SleepRecord
     @Environment(\.dismiss) var dismiss
-    @StateObject private var healthKitService = HealthKitService.shared
+    @ObservedObject private var healthKitService = HealthKitService.shared
     
     var body: some View {
         NavigationView {

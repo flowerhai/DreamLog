@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct WidgetCustomizationView: View {
-    @StateObject private var service = WidgetConfigurationService.shared
+    @ObservedObject private var service = WidgetConfigurationService.shared
     @State private var config: WidgetCustomizationConfig
     @State private var showingThemePreview = false
     @State private var selectedThemeIndex = 0

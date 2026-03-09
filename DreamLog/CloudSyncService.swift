@@ -504,15 +504,5 @@ struct SyncHistoryEntry: Codable, Identifiable {
     }
 }
 
-// MARK: - Dream 转 CKRecordValue 扩展
-
-extension Array: CKRecordValue where Element == String {
-    public var ckRecordValue: CKRecordValue {
-        self as CKRecordValue
-    }
-}
-
-extension Date: CKRecordValue {}
-extension String: CKRecordValue {}
-extension Int: CKRecordValue {}
-extension Bool: CKRecordValue {}
+// Note: Date, String, Int, Bool, and Array<String> already conform to CKRecordValue in CloudKit
+// No additional extensions needed

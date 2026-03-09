@@ -127,13 +127,36 @@ struct AccessibleColors {
         return (lighter + 0.05) / (darker + 0.05)
     }
     
-    /// 计算颜色的相对亮度
+    /// 计算颜色的相对亮度 (基于 WCAG 2.0)
     private static func getLuminance(for color: Color) -> CGFloat {
-        // 简化实现 - 实际应该使用 UIColor 的 getRed/green/blue/alpha
-        // 这里使用近似值
-        if color == .white { return 1.0 }
-        if color == .black { return 0.0 }
-        return 0.5  // 默认中间值
+        // 使用 UIColor 获取 RGB 值
+        let uiColor = UIColor(color)
+        var red: CGFloat = 0
+        var green: CGFloat = 0
+        var blue: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        // 尝试获取 RGBA 值
+        if uiColor.getRed(&red, green: &green, blue: &blue, alpha: &alpha) {
+            // 应用 gamma 校正
+            let r = linearize(red)
+            let g = linearize(green)
+            let b = linearize(blue)
+            // WCAG 2.0 亮度公式
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b
+        }
+        
+        // 无法解析时返回默认值
+        return 0.5
+    }
+    
+    /// 将 sRGB 值转换为线性值 (gamma 校正)
+    private static func linearize(_ value: CGFloat) -> CGFloat {
+        if value <= 0.03928 {
+            return value / 12.92
+        } else {
+            return pow((value + 0.055) / 1.055, 2.4)
+        }
     }
 }
 

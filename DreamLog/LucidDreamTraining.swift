@@ -384,7 +384,7 @@ class LucidTrainingService: ObservableObject {
 // MARK: - 视图组件
 
 struct LucidTrainingView: View {
-    @StateObject private var service = LucidTrainingService.shared
+    @ObservedObject private var service = LucidTrainingService.shared
     @State private var selectedTab = 0
     @State private var showingNewCheck = false
     @State private var selectedCheckType: RealityCheckType = .nosePinch
