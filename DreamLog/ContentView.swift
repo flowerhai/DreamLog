@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var dreamStore: DreamStore
+    @StateObject private var challengeService = DreamChallengeService.shared
     @State private var selectedTab = 0
     
     var body: some View {
@@ -138,6 +139,14 @@ struct ContentView: View {
                     Text("故事")
                 }
                 .tag(16)
+            
+            DreamChallengeView()
+                .environmentObject(challengeService)
+                .tabItem {
+                    Image(systemName: "trophy.fill")
+                    Text("挑战")
+                }
+                .tag(17)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
@@ -155,4 +164,5 @@ struct ContentView: View {
         .environmentObject(DreamStore())
         .environmentObject(SpeechService())
         .environmentObject(AIService())
+        .environmentObject(DreamChallengeService.shared)
 }
