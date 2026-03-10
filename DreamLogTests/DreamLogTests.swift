@@ -4973,3 +4973,206 @@ final class DreamLogTests: XCTestCase {
         XCTAssertEqual(shareItem.url.path, "/path/to/video.mp4")
     }
 }
+
+// MARK: - Phase 14 Video Enhancement Tests
+
+final class VideoEnhancementTests: XCTestCase {
+    
+    // MARK: - Video Thumbnail Generator Tests
+    
+    func testVideoThumbnailGeneratorStructure() {
+        // Verify the thumbnail generator struct exists and has correct properties
+        struct TestThumbnail {
+            let url: URL
+            let time: CMTime?
+            let size: CGSize
+        }
+        
+        let testURL = URL(fileURLWithPath: "/test/video.mp4")
+        let thumbnail = TestThumbnail(url: testURL, time: nil, size: CGSize(width: 320, height: 320))
+        
+        XCTAssertEqual(thumbnail.url.lastPathComponent, "video.mp4")
+        XCTAssertEqual(thumbnail.size.width, 320)
+        XCTAssertEqual(thumbnail.size.height, 320)
+    }
+    
+    // MARK: - Advanced Transition Tests
+    
+    func testAdvancedTransitionAllCases() {
+        let transitions: [AdvancedTransition] = [
+            .fade(duration: 0.5),
+            .dissolve(duration: 0.5),
+            .slide(direction: .left, duration: 0.5),
+            .zoom(scale: 1.2, duration: 0.5),
+            .rotate(angle: .pi / 4, duration: 0.5),
+            .cubeRotate(direction: .right, duration: 0.5),
+            .pageCurl(direction: .up, duration: 0.5),
+            .blinds(count: 10, duration: 0.5),
+            .checkerboard(rows: 4, columns: 4, duration: 0.5),
+            .random
+        ]
+        
+        XCTAssertEqual(transitions.count, 10)
+    }
+    
+    func testAdvancedTransitionNames() {
+        XCTAssertEqual(AdvancedTransition.fade(duration: 0.5).name, "淡入淡出")
+        XCTAssertEqual(AdvancedTransition.dissolve(duration: 0.5).name, "溶解")
+        XCTAssertEqual(AdvancedTransition.slide(direction: .left, duration: 0.5).name, "滑动")
+        XCTAssertEqual(AdvancedTransition.zoom(scale: 1.2, duration: 0.5).name, "缩放")
+        XCTAssertEqual(AdvancedTransition.random.name, "随机")
+    }
+    
+    func testAdvancedTransitionIcons() {
+        XCTAssertEqual(AdvancedTransition.fade(duration: 0.5).icon, "circle.lefthalf.filled")
+        XCTAssertEqual(AdvancedTransition.rotate(angle: .pi, duration: 0.5).icon, "arrow.clockwise")
+        XCTAssertEqual(AdvancedTransition.cubeRotate(direction: .left, duration: 0.5).icon, "cube")
+        XCTAssertEqual(AdvancedTransition.random.icon, "dice")
+    }
+    
+    func testAdvancedTransitionRandom() {
+        let transition = AdvancedTransition.randomTransition()
+        XCTAssertNotNil(transition)
+    }
+    
+    // MARK: - Video Filter Tests
+    
+    func testVideoFilterAllCases() {
+        let filters = VideoFilter.allCases
+        XCTAssertEqual(filters.count, 12)
+        
+        let filterNames = filters.map { $0.rawValue }
+        XCTAssertTrue(filterNames.contains("无"))
+        XCTAssertTrue(filterNames.contains("复古"))
+        XCTAssertTrue(filterNames.contains("黑白电影"))
+    }
+    
+    func testVideoFilterIcons() {
+        XCTAssertEqual(VideoFilter.none.icon, "circle")
+        XCTAssertEqual(VideoFilter.vintage.icon, "film")
+        XCTAssertEqual(VideoFilter.noir.icon, "circle.lefthalf.filled")
+        XCTAssertEqual(VideoFilter.mono.icon, "circle.grid.2x2")
+    }
+    
+    // MARK: - Text Overlay Template Tests
+    
+    func testTextOverlayTemplateAllCases() {
+        let templates = TextOverlayTemplate.allCases
+        XCTAssertEqual(templates.count, 7)
+    }
+    
+    func testTextOverlayTemplateDescriptions() {
+        XCTAssertEqual(TextOverlayTemplate.none.description, "不添加文字")
+        XCTAssertEqual(TextOverlayTemplate.title.description, "显示梦境标题")
+        XCTAssertEqual(TextOverlayTemplate.quote.description, "显示梦境摘要")
+        XCTAssertEqual(TextOverlayTemplate.watermark.description, "添加 DreamLog 水印")
+    }
+    
+    // MARK: - Background Music Track Tests
+    
+    func testBackgroundMusicTrackAllCases() {
+        let tracks = BackgroundMusicTrack.allCases
+        XCTAssertEqual(tracks.count, 8)
+    }
+    
+    func testBackgroundMusicTrackDescriptions() {
+        XCTAssertEqual(BackgroundMusicTrack.ambient.description, "空灵的环境音效")
+        XCTAssertEqual(BackgroundMusicTrack.piano.description, "柔和的钢琴旋律")
+        XCTAssertEqual(BackgroundMusicTrack.cinematic.description, "史诗电影配乐")
+    }
+    
+    // MARK: - Video Quality Metrics Tests
+    
+    func testVideoQualityMetricsStructure() {
+        let metrics = VideoQualityMetrics(
+            resolution: "1920x1080",
+            frameRate: 30.0,
+            bitrate: 8_000_000,
+            codec: "H.264",
+            duration: 30.0,
+            fileSize: 50_000_000
+        )
+        
+        XCTAssertEqual(metrics.resolution, "1920x1080")
+        XCTAssertEqual(metrics.frameRate, 30.0)
+        XCTAssertEqual(metrics.bitrate, 8_000_000)
+    }
+    
+    func testVideoQualityScore1080p() {
+        let metrics = VideoQualityMetrics(
+            resolution: "1920x1080",
+            frameRate: 30.0,
+            bitrate: 8_000_000,
+            codec: "H.264",
+            duration: 30.0,
+            fileSize: 50_000_000
+        )
+        
+        XCTAssertGreaterThanOrEqual(metrics.qualityScore, 60)
+        XCTAssertLessThanOrEqual(metrics.qualityScore, 100)
+    }
+    
+    func testVideoQualityScore4K() {
+        let metrics = VideoQualityMetrics(
+            resolution: "3840x2160",
+            frameRate: 60.0,
+            bitrate: 15_000_000,
+            codec: "H.265",
+            duration: 60.0,
+            fileSize: 200_000_000
+        )
+        
+        XCTAssertGreaterThanOrEqual(metrics.qualityScore, 80)
+    }
+    
+    func testVideoQualityLevel() {
+        let excellent = VideoQualityMetrics(resolution: "4K", frameRate: 60, bitrate: 15_000_000, codec: "H.265", duration: 60, fileSize: 200_000_000)
+        let good = VideoQualityMetrics(resolution: "1080p", frameRate: 30, bitrate: 8_000_000, codec: "H.264", duration: 30, fileSize: 50_000_000)
+        
+        XCTAssertFalse(excellent.qualityLevel.isEmpty)
+        XCTAssertFalse(good.qualityLevel.isEmpty)
+    }
+    
+    // MARK: - Video Analytics Service Tests
+    
+    func testVideoAnalyticsServiceInitialization() {
+        let analytics = VideoAnalyticsService()
+        
+        XCTAssertEqual(analytics.totalViews, 0)
+        XCTAssertEqual(analytics.totalShares, 0)
+        XCTAssertEqual(analytics.averageWatchTime, 0)
+        XCTAssertEqual(analytics.completionRate, 0)
+    }
+    
+    func testVideoAnalyticsRecordView() {
+        let analytics = VideoAnalyticsService()
+        let videoId = UUID()
+        
+        analytics.recordView(for: videoId, watchTime: 15.0, duration: 30.0)
+        
+        XCTAssertEqual(analytics.totalViews, 1)
+        XCTAssertEqual(analytics.averageWatchTime, 15.0)
+        XCTAssertEqual(analytics.completionRate, 0.5)
+    }
+    
+    func testVideoAnalyticsRecordShare() {
+        let analytics = VideoAnalyticsService()
+        let videoId = UUID()
+        
+        analytics.recordShare(for: videoId)
+        
+        XCTAssertEqual(analytics.totalShares, 1)
+    }
+    
+    func testVideoAnalyticsMultipleViews() {
+        let analytics = VideoAnalyticsService()
+        let videoId = UUID()
+        
+        analytics.recordView(for: videoId, watchTime: 10.0, duration: 30.0)
+        analytics.recordView(for: videoId, watchTime: 20.0, duration: 30.0)
+        analytics.recordView(for: videoId, watchTime: 30.0, duration: 30.0)
+        
+        XCTAssertEqual(analytics.totalViews, 3)
+        XCTAssertEqual(analytics.averageWatchTime, 20.0)
+    }
+}

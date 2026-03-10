@@ -405,3 +405,438 @@ extension VideoPlaylist {
     }
 }
 #endif
+
+// MARK: - 视频缩略图生成器 (Video Thumbnail Generator)
+
+/// 视频缩略图生成服务
+struct VideoThumbnailGenerator {
+    
+    /// 从视频生成缩略图
+    /// - Parameters:
+    ///   - videoURL: 视频文件 URL
+    ///   - time: 时间点 (默认取视频中间帧)
+    ///   - size: 缩略图尺寸
+    /// - Returns: UIImage 缩略图
+    static func generateThumbnail(from videoURL: URL, at time: CMTime? = nil, size: CGSize = CGSize(width: 320, height: 320)) async -> UIImage? {
+        let asset = AVAsset(url: videoURL)
+        
+        do {
+            let imageGenerator = AVAssetImageGenerator(asset: asset)
+            imageGenerator.appliesPreferredTrackTransform = true
+            imageGenerator.maximumSize = size
+            
+            let thumbnailTime = time ?? CMTime(seconds: Double(asset.duration.seconds) / 2.0, preferredTimescale: 600)
+            
+            let cgImage = try await imageGenerator.image(at: thumbnailTime).image
+            return UIImage(cgImage: cgImage)
+        } catch {
+            print("Thumbnail generation failed: \(error)")
+            return nil
+        }
+    }
+    
+    /// 批量生成视频缩略图
+    static func generateThumbnails(for videos: [DreamVideo], from directory: URL) async -> [UUID: UIImage] {
+        var thumbnails: [UUID: UIImage] = [:]
+        
+        await withTaskGroup(of: (UUID, UIImage?).self) { group in
+            for video in videos {
+                group.addTask {
+                    let videoURL = directory.appendingPathComponent("\(video.id.uuidString).mp4")
+                    let thumbnail = await generateThumbnail(from: videoURL)
+                    return (video.id, thumbnail)
+                }
+            }
+            
+            for await (id, thumbnail) in group {
+                if let thumbnail = thumbnail {
+                    thumbnails[id] = thumbnail
+                }
+            }
+        }
+        
+        return thumbnails
+    }
+}
+
+// MARK: - 视频转场效果库 (Video Transition Effects Library)
+
+/// 高级转场效果
+enum AdvancedTransition {
+    
+    /// 淡入淡出
+    case fade(duration: Double)
+    
+    /// 溶解
+    case dissolve(duration: Double)
+    
+    /// 滑动 (方向)
+    case slide(direction: SlideDirection, duration: Double)
+    
+    /// 缩放
+    case zoom(scale: CGFloat, duration: Double)
+    
+    /// 旋转
+    case rotate(angle: CGFloat, duration: Double)
+    
+    /// 立方体旋转
+    case cubeRotate(direction: SlideDirection, duration: Double)
+    
+    /// 页面翻转
+    case pageCurl(direction: SlideDirection, duration: Double)
+    
+    /// 百叶窗
+    case blinds(count: Int, duration: Double)
+    
+    /// 棋盘格
+    case checkerboard(rows: Int, columns: Int, duration: Double)
+    
+    /// 随机
+    case random
+    
+    enum SlideDirection {
+        case left
+        case right
+        case up
+        case down
+    }
+    
+    /// 获取转场名称
+    var name: String {
+        switch self {
+        case .fade: return "淡入淡出"
+        case .dissolve: return "溶解"
+        case .slide: return "滑动"
+        case .zoom: return "缩放"
+        case .rotate: return "旋转"
+        case .cubeRotate: return "立方体"
+        case .pageCurl: return "翻页"
+        case .blinds: return "百叶窗"
+        case .checkerboard: return "棋盘格"
+        case .random: return "随机"
+        }
+    }
+    
+    /// 获取转场图标
+    var icon: String {
+        switch self {
+        case .fade: return "circle.lefthalf.filled"
+        case .dissolve: return "circle.dashed"
+        case .slide: return "arrow.left.and.right"
+        case .zoom: return "arrow.up.left.and.arrow.down.right"
+        case .rotate: return "arrow.clockwise"
+        case .cubeRotate: return "cube"
+        case .pageCurl: return "doc.badge.plus"
+        case .blinds: return "square.split.3x3"
+        case .checkerboard: return "square.split.2x2"
+        case .random: return "dice"
+        }
+    }
+    
+    /// 随机选择一个转场
+    static func randomTransition() -> AdvancedTransition {
+        let transitions: [AdvancedTransition] = [
+            .fade(duration: 0.5),
+            .dissolve(duration: 0.5),
+            .slide(direction: .left, duration: 0.5),
+            .zoom(scale: 1.2, duration: 0.5),
+            .rotate(angle: .pi / 4, duration: 0.5)
+        ]
+        return transitions.randomElement() ?? .fade(duration: 0.5)
+    }
+}
+
+// MARK: - 视频滤镜效果 (Video Filter Effects)
+
+/// 视频滤镜
+enum VideoFilter: String, CaseIterable, Identifiable {
+    case none = "无"
+    case vintage = "复古"
+    case noir = "黑白电影"
+    case fade = "褪色"
+    case instant = "即时"
+    case process = "冲印"
+    case transfer = "转印"
+    case chrome = "铬色"
+    case mono = "单色"
+    case tonal = "色调"
+    case linear = "线性"
+    
+    var id: String { rawValue }
+    
+    /// 获取滤镜的 Core Image 名称
+    var filterName: String? {
+        switch self {
+        case .none: return nil
+        case .vintage: return "CIVintageCamera"
+        case .noir: return "CIPhotoEffectNoir"
+        case .fade: return "CIPhotoEffectFade"
+        case .instant: return "CIPhotoEffectInstant"
+        case .process: return "CIPhotoEffectProcess"
+        case .transfer: return "CIPhotoEffectTransfer"
+        case .chrome: return "CIPhotoEffectChrome"
+        case .mono: return "CIPhotoEffectMono"
+        case .tonal: return "CIPhotoEffectTonal"
+        case .linear: return "CIPhotoEffectLinear"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .none: return "circle"
+        case .vintage: return "film"
+        case .noir: return "circle.lefthalf.filled"
+        case .fade: return "sun.min"
+        case .instant: return "bolt"
+        case .process: return "gearshape"
+        case .transfer: return "arrow.triangle.2.circlepath"
+        case .chrome: return "circle.fill"
+        case .mono: return "circle.grid.2x2"
+        case .tonal: return "slider.horizontal.3"
+        case .linear: return "line.3.horizontal"
+        }
+    }
+}
+
+// MARK: - 视频文字模板 (Video Text Templates)
+
+/// 文字叠加模板
+enum TextOverlayTemplate: String, CaseIterable, Identifiable {
+    case none = "无"
+    case title = "标题"
+    case quote = "引用"
+    case caption = "说明"
+    case watermark = "水印"
+    case date = "日期"
+    case dream = "梦境"
+    
+    var id: String { rawValue }
+    
+    var description: String {
+        switch self {
+        case .none: return "不添加文字"
+        case .title: return "显示梦境标题"
+        case .quote: return "显示梦境摘要"
+        case .caption: return "显示时间和标签"
+        case .watermark: return "添加 DreamLog 水印"
+        case .date: return "显示记录日期"
+        case .dream: return "显示梦境关键词"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .none: return "textformat"
+        case .title: return "textformat.size"
+        case .quote: return "text.quote"
+        case .caption: return "text.alignleft"
+        case .watermark: return "star.fill"
+        case .date: return "calendar"
+        case .dream: return "brain.head.profile"
+        }
+    }
+}
+
+// MARK: - 视频背景音乐库 (Video Background Music Library)
+
+/// 视频背景音乐选项
+enum BackgroundMusicTrack: String, CaseIterable, Identifiable {
+    case ambient = "环境氛围"
+    case piano = "钢琴曲"
+    case strings = "弦乐"
+    case electronic = "电子"
+    case nature = "自然声音"
+    case meditation = "冥想"
+    case cinematic = "电影配乐"
+    case lofi = "Lo-Fi"
+    
+    var id: String { rawValue }
+    
+    var description: String {
+        switch self {
+        case .ambient: return "空灵的环境音效"
+        case .piano: return "柔和的钢琴旋律"
+        case .strings: return "温暖的弦乐合奏"
+        case .electronic: return "现代电子节拍"
+        case .nature: return "自然白噪音"
+        case .meditation: return "冥想引导音乐"
+        case .cinematic: return "史诗电影配乐"
+        case .lofi: return "放松的 Lo-Fi 节拍"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .ambient: return "waveform"
+        case .piano: return "music.note"
+        case .strings: return "guitars.fill"
+        case .electronic: return "waveform.path.ecg"
+        case .nature: return "leaf.fill"
+        case .meditation: return "figure.mind.and.body"
+        case .cinematic: return "film"
+        case .lofi: return "headphones"
+        }
+    }
+}
+
+// MARK: - 视频质量指标 (Video Quality Metrics)
+
+/// 视频质量评估
+struct VideoQualityMetrics {
+    var resolution: String
+    var frameRate: Double
+    var bitrate: Int
+    var codec: String
+    var duration: Double
+    var fileSize: Int64
+    
+    /// 质量评分 (0-100)
+    var qualityScore: Int {
+        var score = 0
+        
+        // 分辨率评分 (最高 30 分)
+        if resolution.contains("1080") { score += 30 }
+        else if resolution.contains("720") { score += 20 }
+        else { score += 10 }
+        
+        // 帧率评分 (最高 20 分)
+        if frameRate >= 60 { score += 20 }
+        else if frameRate >= 30 { score += 15 }
+        else { score += 10 }
+        
+        // 比特率评分 (最高 30 分)
+        if bitrate >= 10_000_000 { score += 30 }
+        else if bitrate >= 5_000_000 { score += 20 }
+        else { score += 10 }
+        
+        // 编码评分 (最高 20 分)
+        if codec.contains("H.265") || codec.contains("HEVC") { score += 20 }
+        else if codec.contains("H.264") { score += 15 }
+        else { score += 10 }
+        
+        return min(score, 100)
+    }
+    
+    /// 质量等级
+    var qualityLevel: String {
+        let score = qualityScore
+        if score >= 90 { return "优秀" }
+        else if score >= 75 { return "良好" }
+        else if score >= 60 { return "中等" }
+        else { return "一般" }
+    }
+    
+    /// 格式化文件大小
+    var formattedFileSize: String {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: fileSize)
+    }
+}
+
+// MARK: - 视频分析服务 (Video Analytics Service)
+
+/// 视频观看分析
+class VideoAnalyticsService: ObservableObject {
+    @Published var totalViews: Int = 0
+    @Published var totalShares: Int = 0
+    @Published var averageWatchTime: Double = 0
+    @Published var completionRate: Double = 0
+    
+    private let userDefaultsKey = "VideoAnalytics"
+    
+    init() {
+        loadAnalytics()
+    }
+    
+    /// 记录观看
+    func recordView(for videoId: UUID, watchTime: Double, duration: Double) {
+        totalViews += 1
+        averageWatchTime = (averageWatchTime * Double(totalViews - 1) + watchTime) / Double(totalViews)
+        completionRate = (completionRate * Double(totalViews - 1) + (watchTime / duration)) / Double(totalViews)
+        saveAnalytics()
+    }
+    
+    /// 记录分享
+    func recordShare(for videoId: UUID) {
+        totalShares += 1
+        saveAnalytics()
+    }
+    
+    private func loadAnalytics() {
+        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey),
+              let analytics = try? JSONDecoder().decode([String: AnyCodable].self, from: data) else { return }
+        
+        totalViews = analytics["totalViews"]?.value as? Int ?? 0
+        totalShares = analytics["totalShares"]?.value as? Int ?? 0
+        averageWatchTime = analytics["averageWatchTime"]?.value as? Double ?? 0
+        completionRate = analytics["completionRate"]?.value as? Double ?? 0
+    }
+    
+    private func saveAnalytics() {
+        let analytics: [String: Any] = [
+            "totalViews": totalViews,
+            "totalShares": totalShares,
+            "averageWatchTime": averageWatchTime,
+            "completionRate": completionRate
+        ]
+        
+        if let data = try? JSONEncoder().encode(AnyCodable(analytics)) {
+            UserDefaults.standard.set(data, forKey: userDefaultsKey)
+        }
+    }
+}
+
+// Codable 辅助类型
+struct AnyCodable: Codable {
+    let value: Any
+    
+    init(_ value: Any) {
+        self.value = value
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        if container.decodeNil() {
+            value = NSNull()
+        } else if let bool = try? container.decode(Bool.self) {
+            value = bool
+        } else if let int = try? container.decode(Int.self) {
+            value = int
+        } else if let double = try? container.decode(Double.self) {
+            value = double
+        } else if let string = try? container.decode(String.self) {
+            value = string
+        } else if let array = try? container.decode([AnyCodable].self) {
+            value = array.map { $0.value }
+        } else if let dictionary = try? container.decode([String: AnyCodable].self) {
+            value = dictionary.mapValues { $0.value }
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown type")
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        
+        switch value {
+        case is NSNull:
+            try container.encodeNil()
+        case let bool as Bool:
+            try container.encode(bool)
+        case let int as Int:
+            try container.encode(int)
+        case let double as Double:
+            try container.encode(double)
+        case let string as String:
+            try container.encode(string)
+        case let array as [Any]:
+            try container.encode(array.map { AnyCodable($0) })
+        case let dictionary as [String: Any]:
+            try container.encode(dictionary.mapValues { AnyCodable($0) })
+        default:
+            throw EncodingError.invalidValue(value, EncodingError.Context(codingPath: [], debugDescription: "Unknown type"))
+        }
+    }
+}
