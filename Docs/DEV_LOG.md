@@ -15,6 +15,84 @@
 
 ## 开发历史
 
+### 2026-03-10 08:14 (Session - dreamlog-dev) - Phase 15 启动 - 梦境挑战系统
+
+#### ✅ 已完成
+
+- [x] **梦境挑战系统数据模型** - DreamChallengeModels.swift (580 行)
+  - `DreamChallengeType`: 6 种挑战类型 (记录/清醒梦/情绪/主题/创意/正念)
+  - `DreamChallengeDifficulty`: 4 种难度 (简单/中等/困难/专家)
+  - `DreamChallengePeriod`: 4 种周期 (每日/每周/双周/每月)
+  - `DreamChallengeGoal`: 8 种目标类型 (记录数/清醒梦数/情绪多样性等)
+  - `DreamChallengeReward`: 5 种奖励类型 (积分/徽章/连续加成/主题/功能)
+  - `UserChallengeProgress`: 用户进度追踪
+  - `ChallengeBadge`: 16 种预设徽章，分 6 个类别
+  - `DreamChallengeTemplate`: 预设挑战模板生成器
+  - `ChallengeStatistics`: 挑战统计数据
+
+- [x] **梦境挑战服务** - DreamChallengeService.swift (420 行)
+  - 挑战自动激活和过期管理
+  - 进度实时计算和更新
+  - 奖励发放和徽章解锁
+  - 每日/每周/每月挑战重置
+  - 梦境记录触发器集成
+  - 数据持久化 (UserDefaults)
+  - 统计数据和等级系统
+
+- [x] **挑战系统 UI** - DreamChallengeView.swift (510 行)
+  - 挑战列表视图 (全部/进行中/已完成/徽章)
+  - 挑战卡片组件 (进度条/奖励/截止时间)
+  - 徽章收藏展示 (按类别分组)
+  - 统计概览 (连续天数/完成数/总积分)
+  - 等级进度条
+  - 筛选和排序功能
+  - 空状态和加载状态处理
+
+- [x] **主界面集成** - ContentView.swift
+  - 添加「挑战」标签页 (第 17 个 tab)
+  - 图标：trophy.fill
+  - 顶部显示积分和等级
+
+#### 📊 代码统计
+
+| 文件 | 变更类型 | 行数 |
+|------|---------|------|
+| DreamChallengeModels.swift | 新增 | +580 |
+| DreamChallengeService.swift | 新增 | +420 |
+| DreamChallengeView.swift | 新增 | +510 |
+| ContentView.swift | 修改 | +10 |
+| **总计** | | **+1,520** |
+
+#### 🎯 Phase 15 进度
+
+| 功能 | 状态 |
+|------|------|
+| 数据模型 | ✅ 完成 |
+| 服务层 | ✅ 完成 |
+| UI 界面 | ✅ 完成 |
+| 与 DreamStore 集成 | ⏳ 待完善 |
+| 通知提醒 | ⏳ 待添加 |
+| 单元测试 | ⏳ 待添加 |
+
+**Phase 15 完成度：60%** 📈
+
+#### 🔧 待完善功能
+
+- [ ] **DreamStore 集成**: 实现进度计算方法 (calculateRecordCount 等)
+- [ ] **通知系统**: 挑战即将到期提醒
+- [ ] **单元测试**: 挑战服务测试用例
+- [ ] **动画效果**: 完成挑战时的庆祝动画
+- [ ] **分享功能**: 挑战和徽章分享
+
+#### 📝 下一步计划
+
+- [ ] 完善 DreamStore 数据集成
+- [ ] 添加挑战通知
+- [ ] 编写单元测试
+- [ ] 优化 UI 动画效果
+
+---
+
 ### 2026-03-10 04:19 (Session - dreamlog-dev) - Phase 14 完善 - 音乐分享/模板扩展/社交媒体预设
 
 #### ✅ 已完成
