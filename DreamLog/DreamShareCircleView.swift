@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct DreamShareCircleView: View {
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     @State private var showingCreateSheet = false
     @State private var showingInviteSheet = false
     @State private var showingSettingsSheet = false
@@ -189,7 +189,7 @@ struct CircleRowView: View {
 
 struct InvitationRowView: View {
     let invitation: CircleInvitation
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -242,7 +242,7 @@ struct InvitationRowView: View {
 
 struct CreateCircleSheet: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     let onError: (String) -> Void
     
     @State private var name: String = ""
@@ -325,7 +325,7 @@ struct CreateCircleSheet: View {
 
 struct InviteMemberSheet: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     let circleId: String?
     let onError: (String) -> Void
     
@@ -398,7 +398,7 @@ struct InviteMemberSheet: View {
 
 struct CircleSettingsSheet: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     
     let circleId: String?
     @State private var settings: CircleSettings = .init()
@@ -466,7 +466,7 @@ struct CircleSettingsSheet: View {
 
 struct SharedDreamDetailView: View {
     let sharedDream: SharedDream
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     @State private var newCommentText: String = ""
     @State private var showingReactionPicker = false
     
@@ -581,7 +581,7 @@ struct DreamContentCard: View {
 
 struct ReactionBar: View {
     let dream: SharedDream
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     
     var body: some View {
         HStack(spacing: 12) {
@@ -616,7 +616,7 @@ struct ReactionBar: View {
 
 struct CommentSection: View {
     let dream: SharedDream
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     @State private var newCommentText: String = ""
     
     var body: some View {
@@ -696,7 +696,7 @@ struct CommentRow: View {
 
 struct CircleDetailView: View {
     let circle: ShareCircle
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     @State private var selectedTab = 0
     @State private var showingInviteSheet = false
     @State private var showingSettingsSheet = false
@@ -860,7 +860,7 @@ struct StatItem: View {
 
 struct SharedDreamsList: View {
     let circleId: String
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     
     var filteredDreams: [SharedDream] {
         service.sharedDreams.filter { $0.circleId == circleId }
@@ -1075,7 +1075,7 @@ struct MemberRow: View {
 
 struct CircleActivityFeed: View {
     let circleId: String
-    @StateObject private var service = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamShareCircleService.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1125,8 +1125,8 @@ struct ActivityRow: View {
 
 struct ShareDreamSheet: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = DreamStore.shared
-    @StateObject private var circleService = DreamShareCircleService.shared
+    @ObservedObject private var service = DreamStore.shared
+    @ObservedObject private var circleService = DreamShareCircleService.shared
     
     let circleId: String
     @State private var selectedDreamId: String?

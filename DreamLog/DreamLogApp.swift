@@ -9,7 +9,7 @@ import SwiftUI
 
 @main
 struct DreamLogApp: App {
-    @StateObject private var dreamStore = DreamStore()
+    @ObservedObject private var dreamStore = DreamStore.shared
     @StateObject private var speechService = SpeechService()
     @StateObject private var aiService = AIService()
     @ObservedObject private var notificationService = NotificationService.shared

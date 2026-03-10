@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var dreamStore: DreamStore
-    @StateObject private var challengeService = DreamChallengeService.shared
+    @ObservedObject private var challengeService = DreamChallengeService.shared
     @State private var selectedTab = 0
     
     var body: some View {

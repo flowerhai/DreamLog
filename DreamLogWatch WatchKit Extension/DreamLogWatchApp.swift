@@ -10,8 +10,8 @@ import WatchKit
 
 @main
 struct DreamLogWatchApp: App {
-    @StateObject private var dreamStore = DreamStore()
-    @StateObject private var hapticFeedback = HapticFeedback.shared
+    @ObservedObject private var dreamStore = DreamStore.shared
+    @ObservedObject private var hapticFeedback = HapticFeedback.shared
     
     var body: some Scene {
         WindowGroup {

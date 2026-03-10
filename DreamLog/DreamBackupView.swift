@@ -10,8 +10,8 @@ import SwiftUI
 // MARK: - 备份主视图
 
 struct DreamBackupView: View {
-    @StateObject private var backupService = DreamBackupService.shared
-    @StateObject private var dreamStore = DreamStore.shared
+    @ObservedObject private var backupService = DreamBackupService.shared
+    @ObservedObject private var dreamStore = DreamStore.shared
     
     @State private var showingBackupConfig = false
     @State private var showingRestorePicker = false

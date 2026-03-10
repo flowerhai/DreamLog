@@ -11,7 +11,7 @@ import UIKit
 // MARK: - 主视图
 
 struct DreamWrappedView: View {
-    @StateObject private var wrappedService = DreamWrappedService.shared
+    @ObservedObject private var wrappedService = DreamWrappedService.shared
     @EnvironmentObject var dreamStore: DreamStore
     
     @State private var selectedPeriod: WrappedPeriod = .year
@@ -939,7 +939,7 @@ struct UniqueStatItem: View {
 
 struct YearComparisonCard: View {
     let data: DreamWrappedData
-    @StateObject private var wrappedService = DreamWrappedService.shared
+    @ObservedObject private var wrappedService = DreamWrappedService.shared
     @EnvironmentObject var dreamStore: DreamStore
     
     @State private var comparisonData: YearComparisonData?

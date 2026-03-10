@@ -13,9 +13,9 @@ import Photos
 // MARK: - 梦境视频主界面
 
 struct DreamVideoView: View {
-    @StateObject private var videoService = DreamVideoService.shared
+    @ObservedObject private var videoService = DreamVideoService.shared
     @EnvironmentObject var dreamStore: DreamStore
-    @StateObject private var templateMarket = DreamVideoTemplateMarket.shared
+    @ObservedObject private var templateMarket = DreamVideoTemplateMarket.shared
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedDream: Dream?
@@ -542,9 +542,9 @@ struct ShareSheet: UIViewControllerRepresentable {
 // MARK: - 模板市场视图
 
 struct TemplateMarketView: View {
-    @StateObject private var templateMarket = DreamVideoTemplateMarket.shared
-    @StateObject private var videoService = DreamVideoService.shared
-    @StateObject private var dreamStore = DreamStore.shared
+    @ObservedObject private var templateMarket = DreamVideoTemplateMarket.shared
+    @ObservedObject private var videoService = DreamVideoService.shared
+    @ObservedObject private var dreamStore = DreamStore.shared
     
     @State private var selectedTemplate: VideoTemplate?
     @State private var showingTemplateDetail = false

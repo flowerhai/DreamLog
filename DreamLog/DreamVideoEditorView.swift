@@ -12,8 +12,8 @@ import AVKit
 // MARK: - 视频编辑器主界面
 
 struct DreamVideoEditorView: View {
-    @StateObject private var editor = DreamVideoEditor.shared
-    @StateObject private var templateMarket = DreamVideoTemplateMarket.shared
+    @ObservedObject private var editor = DreamVideoEditor.shared
+    @ObservedObject private var templateMarket = DreamVideoTemplateMarket.shared
     
     let sourceVideoURL: URL
     let onExportComplete: (URL) -> Void
@@ -634,7 +634,7 @@ struct TemplatePickerView: View {
     
     @Environment(\.dismiss) private var dismiss
     
-    @StateObject private var templateMarket = DreamVideoTemplateMarket.shared
+    @ObservedObject private var templateMarket = DreamVideoTemplateMarket.shared
     
     var body: some View {
         NavigationView {

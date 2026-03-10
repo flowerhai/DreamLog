@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - 梦境音乐主视图
 
 struct DreamMusicView: View {
-    @StateObject private var musicService = DreamMusicService.shared
+    @ObservedObject private var musicService = DreamMusicService.shared
     @State private var selectedDream: Dream?
     @State private var showingGenerator = false
     @State private var generatedMusic: DreamMusic?
@@ -299,7 +299,7 @@ struct RecentDreamsPicker: View {
 struct MusicListItemView: View {
     let music: DreamMusic
     let onTap: () -> Void
-    @StateObject private var musicService = DreamMusicService.shared
+    @ObservedObject private var musicService = DreamMusicService.shared
     
     var body: some View {
         Button(action: onTap) {
@@ -477,7 +477,7 @@ struct MoodCardView: View {
 
 struct DreamMusicGeneratorView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var musicService = DreamMusicService.shared
+    @ObservedObject private var musicService = DreamMusicService.shared
     let dream: Dream?
     
     var body: some View {
@@ -789,7 +789,7 @@ struct DreamMusicGeneratorView: View {
 
 struct DreamMusicPlayerView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var musicService = DreamMusicService.shared
+    @ObservedObject private var musicService = DreamMusicService.shared
     let music: DreamMusic
     @State private var isPlaying = false
     @State private var currentTime: TimeInterval = 0

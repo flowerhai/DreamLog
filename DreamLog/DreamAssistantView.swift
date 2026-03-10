@@ -9,7 +9,7 @@
 import SwiftUI
 
 struct DreamAssistantView: View {
-    @StateObject private var assistant = DreamAssistantService.shared
+    @ObservedObject private var assistant = DreamAssistantService.shared
     @State private var inputText = ""
     @State private var showingRecordView = false
     @State private var showingStats = false
@@ -411,7 +411,7 @@ struct DreamAssistantView: View {
 // MARK: - Prediction Insights Sheet
 
 struct PredictionInsightsSheet: View {
-    @StateObject private var assistant = DreamAssistantService.shared
+    @ObservedObject private var assistant = DreamAssistantService.shared
     @Environment(\.dismiss) var dismiss
     
     var body: some View {
@@ -516,7 +516,7 @@ struct PredictionCard: View {
 }
 
 struct DeepAnalysisCard: View {
-    @StateObject private var assistant = DreamAssistantService.shared
+    @ObservedObject private var assistant = DreamAssistantService.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {

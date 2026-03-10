@@ -13,7 +13,7 @@ import Combine
 
 struct DreamChallengeView: View {
     @EnvironmentObject var dreamStore: DreamStore
-    @StateObject private var challengeService = DreamChallengeService.shared
+    @ObservedObject private var challengeService = DreamChallengeService.shared
     @State private var selectedFilter: ChallengeFilter = .all
     @State private var showingBadgeDetail = false
     @State private var selectedBadge: ChallengeBadge?

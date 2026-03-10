@@ -124,7 +124,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     // MARK: - Template Creation
     
     private func createModularSmallTemplate() -> CLKComplicationTemplate {
-        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill") ?? UIImage()
         let imageProvider = CLKImageProvider(onePieceImage: image)
         let template = CLKComplicationTemplateModularSmallRingImage()
         template.imageProvider = imageProvider
@@ -135,7 +135,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createUtilitarianSmallTemplate() -> CLKComplicationTemplate {
-        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill") ?? UIImage()
         let imageProvider = CLKImageProvider(onePieceImage: image)
         let template = CLKComplicationTemplateUtilitarianSmallSquare()
         template.imageProvider = imageProvider
@@ -144,7 +144,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createCircularSmallTemplate() -> CLKComplicationTemplate {
-        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill") ?? UIImage()
         let imageProvider = CLKImageProvider(onePieceImage: image)
         let template = CLKComplicationTemplateCircularSmallSimpleImage()
         template.imageProvider = imageProvider
@@ -162,7 +162,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createGraphicCornerTemplate() -> CLKComplicationTemplate {
-        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill") ?? UIImage()
         let imageProvider = CLKFullColorImageProvider(fullColorImage: image)
         let template = CLKComplicationTemplateGraphicCornerStackText()
         template.imageProvider = imageProvider
@@ -173,7 +173,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createGraphicCircularTemplate() -> CLKComplicationTemplate {
-        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill") ?? UIImage()
         let imageProvider = CLKFullColorImageProvider(fullColorImage: image)
         let template = CLKComplicationTemplateGraphicCircularOpenGaugeRange()
         template.imageProvider = imageProvider
@@ -188,7 +188,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     
     private func createGraphicRectangularTemplate() -> CLKComplicationTemplate {
         let textProvider = CLKSimpleTextProvider(text: "记录梦境")
-        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill") ?? UIImage()
         let template = CLKComplicationTemplateGraphicRectangularStandardImage()
         template.imageProvider = CLKFullColorImageProvider(fullColorImage: image)
         template.textProvider = textProvider
