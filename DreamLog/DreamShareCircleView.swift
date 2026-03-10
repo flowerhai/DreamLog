@@ -18,6 +18,8 @@ struct DreamShareCircleView: View {
     @State private var showingReactionPicker = false
     @State private var selectedDreamId: String?
     @State private var navigateToCircleDetail = false
+    @State private var errorMessage: String?
+    @State private var showingError = false
     
     var body: some View {
         NavigationView {
@@ -37,20 +39,30 @@ struct DreamShareCircleView: View {
                 }
             }
             .sheet(isPresented: $showingCreateSheet) {
-                CreateCircleSheet()
+                CreateCircleSheet(onError: showError)
             }
             .sheet(isPresented: $showingInviteSheet) {
-                InviteMemberSheet(circleId: selectedCircleId)
+                InviteMemberSheet(circleId: selectedCircleId, onError: showError)
             }
             .sheet(isPresented: $showingSettingsSheet) {
-                CircleSettingsSheet(circleId: selectedCircleId)
+                CircleSettingsSheet(circleId: selectedCircleId, onError: showError)
             }
             .navigationDestination(isPresented: $navigateToCircleDetail) {
                 if let circle = service.currentCircle {
-                    CircleDetailView(circle: circle)
+                    CircleDetailView(circle: circle, onError: showError)
                 }
             }
+            .alert("错误", isPresented: $showingError) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(errorMessage ?? "未知错误")
+            }
         }
+    }
+    
+    private func showError(_ message: String) {
+        errorMessage = message
+        showingError = true
     }
     
     // MARK: - 空状态视图
@@ -231,11 +243,13 @@ struct InvitationRowView: View {
 struct CreateCircleSheet: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var service = DreamShareCircleService.shared
+    let onError: (String) -> Void
     
     @State private var name: String = ""
     @State private var selectedType: ShareCircleType = .closeFriends
     @State private var description: String = ""
     @State private var isPrivate: Bool = true
+    @State private var isLoading = false
     
     var body: some View {
         NavigationView {
@@ -278,17 +292,29 @@ struct CreateCircleSheet: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("创建") {
+                    Button {
                         Task {
-                            try? await service.createCircle(
-                                name: name,
-                                type: selectedType,
-                                description: description.isEmpty ? nil : description
-                            )
-                            dismiss()
+                            isLoading = true
+                            do {
+                                try await service.createCircle(
+                                    name: name.trimmingCharacters(in: .whitespaces),
+                                    type: selectedType,
+                                    description: description.isEmpty ? nil : description
+                                )
+                                dismiss()
+                            } catch {
+                                onError(error.localizedDescription)
+                            }
+                            isLoading = false
+                        }
+                    } label: {
+                        if isLoading {
+                            ProgressView()
+                        } else {
+                            Text("创建")
                         }
                     }
-                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
                 }
             }
         }
@@ -300,10 +326,12 @@ struct CreateCircleSheet: View {
 struct InviteMemberSheet: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var service = DreamShareCircleService.shared
-    
     let circleId: String?
+    let onError: (String) -> Void
+    
     @State private var email: String = ""
     @State private var message: String = ""
+    @State private var isLoading = false
     
     var body: some View {
         NavigationView {
@@ -337,17 +365,29 @@ struct InviteMemberSheet: View {
                 }
                 
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("发送邀请") {
+                    Button {
                         Task {
-                            try? await service.inviteMember(
-                                circleId: circleId ?? "",
-                                email: email,
-                                message: message.isEmpty ? nil : message
-                            )
-                            dismiss()
+                            isLoading = true
+                            do {
+                                try await service.inviteMember(
+                                    circleId: circleId ?? "",
+                                    email: email.trimmingCharacters(in: .whitespaces),
+                                    message: message.isEmpty ? nil : message
+                                )
+                                dismiss()
+                            } catch {
+                                onError(error.localizedDescription)
+                            }
+                            isLoading = false
+                        }
+                    } label: {
+                        if isLoading {
+                            ProgressView()
+                        } else {
+                            Text("发送邀请")
                         }
                     }
-                    .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .disabled(email.trimmingCharacters(in: .whitespaces).isEmpty || isLoading)
                 }
             }
         }
