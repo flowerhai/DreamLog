@@ -4686,4 +4686,174 @@ final class DreamLogTests: XCTestCase {
             XCTAssertFalse(trend.color.isEmpty)
         }
     }
+    
+    // MARK: - Phase 14 梦境视频测试
+    
+    func testDreamVideoConfig() throws {
+        let dreamId = UUID()
+        let config = DreamVideoConfig(
+            dreamId: dreamId,
+            style: .cinematic,
+            duration: .medium,
+            includeMusic: true,
+            includeTextOverlay: true,
+            aspectRatio: .portrait,
+            transitionStyle: .fade
+        )
+        
+        XCTAssertEqual(config.dreamId, dreamId)
+        XCTAssertEqual(config.style, .cinematic)
+        XCTAssertEqual(config.duration, .medium)
+        XCTAssertEqual(config.duration.seconds, 30)
+        XCTAssertEqual(config.aspectRatio, .portrait)
+        XCTAssertEqual(config.transitionStyle, .fade)
+        XCTAssertTrue(config.includeMusic)
+        XCTAssertTrue(config.includeTextOverlay)
+    }
+    
+    func testVideoStyleEnum() throws {
+        let allStyles = DreamVideoConfig.VideoStyle.allCases
+        XCTAssertEqual(allStyles.count, 4)
+        
+        for style in allStyles {
+            XCTAssertFalse(style.rawValue.isEmpty)
+            XCTAssertFalse(style.id.isEmpty)
+            XCTAssertFalse(style.description.isEmpty)
+            XCTAssertFalse(style.icon.isEmpty)
+        }
+        
+        XCTAssertEqual(DreamVideoConfig.VideoStyle.cinematic.description, "电影级转场效果，专业质感")
+        XCTAssertEqual(DreamVideoConfig.VideoStyle.kenBurns.icon, "arrow.up.left.and.arrow.down.right")
+    }
+    
+    func testVideoDurationEnum() throws {
+        let allDurations = DreamVideoConfig.VideoDuration.allCases
+        XCTAssertEqual(allDurations.count, 3)
+        
+        XCTAssertEqual(DreamVideoConfig.VideoDuration.short.seconds, 15)
+        XCTAssertEqual(DreamVideoConfig.VideoDuration.medium.seconds, 30)
+        XCTAssertEqual(DreamVideoConfig.VideoDuration.long.seconds, 60)
+        
+        for duration in allDurations {
+            XCTAssertFalse(duration.rawValue.isEmpty)
+            XCTAssertFalse(duration.id.isEmpty)
+        }
+    }
+    
+    func testAspectRatioEnum() throws {
+        let allAspects = DreamVideoConfig.AspectRatio.allCases
+        XCTAssertEqual(allAspects.count, 4)
+        
+        XCTAssertEqual(DreamVideoConfig.AspectRatio.square.size, CGSize(width: 1080, height: 1080))
+        XCTAssertEqual(DreamVideoConfig.AspectRatio.portrait.size, CGSize(width: 1080, height: 1920))
+        XCTAssertEqual(DreamVideoConfig.AspectRatio.landscape.size, CGSize(width: 1920, height: 1080))
+        XCTAssertEqual(DreamVideoConfig.AspectRatio.story.size, CGSize(width: 1080, height: 1350))
+        
+        for aspect in allAspects {
+            XCTAssertFalse(aspect.rawValue.isEmpty)
+            XCTAssertFalse(aspect.id.isEmpty)
+        }
+    }
+    
+    func testTransitionStyleEnum() throws {
+        let allTransitions = DreamVideoConfig.TransitionStyle.allCases
+        XCTAssertEqual(allTransitions.count, 4)
+        
+        for transition in allTransitions {
+            XCTAssertFalse(transition.rawValue.isEmpty)
+            XCTAssertFalse(transition.id.isEmpty)
+        }
+    }
+    
+    func testDreamVideoModel() throws {
+        let video = DreamVideo(
+            dreamId: UUID(),
+            title: "测试梦境视频",
+            filePath: "/path/to/video.mp4",
+            thumbnailPath: "/path/to/thumbnail.jpg",
+            duration: 30.0,
+            style: "电影感",
+            aspectRatio: "9:16 (竖屏)",
+            createdAt: Date(),
+            fileSize: 1024 * 1024 * 5
+        )
+        
+        XCTAssertNotNil(video.id)
+        XCTAssertEqual(video.title, "测试梦境视频")
+        XCTAssertEqual(video.duration, 30.0)
+        XCTAssertEqual(video.style, "电影感")
+        XCTAssertEqual(video.fileSize, 5 * 1024 * 1024)
+        XCTAssertFalse(video.isFavorite)
+    }
+    
+    func testDreamVideoCodable() throws {
+        let video = DreamVideo(
+            dreamId: UUID(),
+            title: "编码测试视频",
+            filePath: "/path/to/video.mp4",
+            thumbnailPath: "/path/to/thumbnail.jpg",
+            duration: 60.0,
+            style: "幻灯片",
+            aspectRatio: "16:9 (横屏)",
+            createdAt: Date(),
+            fileSize: 1024 * 1024 * 10
+        )
+        
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        let data = try encoder.encode(video)
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let decodedVideo = try decoder.decode(DreamVideo.self, from: data)
+        
+        XCTAssertEqual(decodedVideo.title, video.title)
+        XCTAssertEqual(decodedVideo.duration, video.duration)
+        XCTAssertEqual(decodedVideo.style, video.style)
+        XCTAssertEqual(decodedVideo.fileSize, video.fileSize)
+    }
+    
+    func testVideoErrorEnum() throws {
+        let errors: [VideoError] = [.alreadyGenerating, .noImages, .writerCreationFailed, .renderingFailed("测试错误"), .audioLoadFailed]
+        
+        for error in errors {
+            XCTAssertFalse(error.errorDescription?.isEmpty ?? true)
+        }
+        
+        XCTAssertEqual(VideoError.alreadyGenerating.errorDescription, "正在生成另一个视频，请稍候")
+        XCTAssertEqual(VideoError.noImages.errorDescription, "没有找到梦境图片，请先生成 AI 绘画")
+        XCTAssertEqual(VideoError.renderingFailed("原因").errorDescription, "视频渲染失败：原因")
+    }
+    
+    func testVideoServiceSingleton() throws {
+        let service1 = DreamVideoService.shared
+        let service2 = DreamVideoService.shared
+        
+        XCTAssertIdentical(service1, service2)
+        XCTAssertFalse(service1.isGenerating)
+        XCTAssertEqual(service1.generationProgress, 0.0)
+        XCTAssertNil(service1.lastError)
+    }
+    
+    func testVideoServiceState() throws {
+        let service = DreamVideoService.shared
+        
+        XCTAssertFalse(service.isGenerating)
+        XCTAssertEqual(service.generationProgress, 0.0)
+        XCTAssertEqual(service.generationStatus, "")
+        XCTAssertNil(service.lastError)
+        XCTAssertNotNil(service.videos)
+    }
+    
+    func testNSShadowExtension() throws {
+        let shadow = NSShadow.shadowWith(
+            color: .black,
+            offset: CGSize(width: 2, height: 2),
+            blurRadius: 4
+        )
+        
+        XCTAssertEqual(shadow.shadowColor as? UIColor, .black)
+        XCTAssertEqual(shadow.shadowOffset, CGSize(width: 2, height: 2))
+        XCTAssertEqual(shadow.shadowBlurRadius, 4)
+    }
 }
