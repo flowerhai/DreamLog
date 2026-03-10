@@ -15,6 +15,108 @@
 
 ## 开发历史
 
+### 2026-03-10 16:21 (Session - dreamlog-dev) - Phase 16 启动 - 梦境备份与恢复系统
+
+#### ✅ 已完成
+
+- [x] **备份系统数据模型** - DreamBackupModels.swift (371 行)
+  - `BackupType`: 3 种备份类型 (完整/部分/增量)
+  - `BackupEncryption`: 3 种加密方式 (不加密/密码/生物识别)
+  - `BackupConfig`: 备份配置 (类型/加密/包含内容/自动备份)
+  - `BackupMetadata`: 备份文件元数据 (ID/版本/设备/大小/校验和)
+  - `BackupData`: 备份数据容器 (梦境/标签/设置/统计/AI 历史)
+  - `ConflictResolution`: 5 种冲突解决策略
+  - `RestoreConfig`: 恢复配置
+  - `BackupProgress`: 备份进度追踪
+  - `BackupResult`/`RestoreResult`: 操作结果
+  - `BackupError`: 备份错误类型 (10 种错误)
+  - `BackupHistory`: 备份历史记录
+
+- [x] **备份服务核心功能** - DreamBackupService.swift (520 行)
+  - `createBackup()`: 创建备份 (5 步骤流程)
+  - `restoreBackup()`: 恢复备份 (4 步骤流程)
+  - 数据收集与序列化
+  - 加密/解密支持 (占位实现)
+  - 校验和计算与验证
+  - 自动备份定时器
+  - 备份历史管理
+  - 备份文件管理 (删除/导出/导入)
+  - 旧备份清理 (保留最近 10 个)
+  - 备份大小预估
+
+- [x] **备份 UI 界面** - DreamBackupView.swift (420 行)
+  - 备份状态概览 (上次备份时间/数量/总大小)
+  - 立即备份按钮 (带进度显示)
+  - 恢复备份文件选择器
+  - 备份历史列表 (可删除/恢复)
+  - 备份配置 Sheet (类型/加密/包含内容/自动备份)
+  - 进度覆盖层 (实时显示备份/恢复进度)
+  - 备份历史行组件
+  - 结果提示 Sheet
+
+- [x] **主应用集成** - ContentView.swift
+  - 添加「备份」标签页 (第 19 个 tab)
+  - 图标：externaldrive.fill
+  - 标签索引：18
+
+- [x] **单元测试** - DreamLogTests.swift (+212 行)
+  - 备份类型测试 (4 个)
+  - 加密方式测试 (3 个)
+  - 配置测试 (5 个)
+  - 冲突解决测试 (3 个)
+  - 进度/结果测试 (4 个)
+  - 错误类型测试 (2 个)
+  - 历史记录测试 (2 个)
+  - 服务测试 (5 个)
+  - 总测试用例：28 个
+
+#### 📊 代码统计
+
+| 文件 | 变更类型 | 行数 |
+|------|---------|------|
+| DreamBackupModels.swift | 新增 | +371 |
+| DreamBackupService.swift | 新增 | +520 |
+| DreamBackupView.swift | 新增 | +420 |
+| ContentView.swift | 修改 | +10 |
+| DreamLogTests.swift | 新增 | +212 |
+| **总计** | | **+1,533** |
+
+#### 🎯 Phase 16 进度
+
+| 功能 | 状态 |
+|------|------|
+| 数据模型 | ✅ 完成 |
+| 服务层 | ✅ 完成 |
+| UI 界面 | ✅ 完成 |
+| 主应用集成 | ✅ 完成 |
+| 单元测试 | ✅ 完成 |
+| iCloud 同步 | ⏳ 待添加 |
+| 实际加密实现 | ⏳ 待完善 |
+| 文档完善 | ⏳ 待添加 |
+
+**Phase 16 完成度：70%** 📈
+
+#### 🔧 待完善功能
+
+- [ ] **iCloud 同步**: 支持备份文件同步到 iCloud Drive
+- [ ] **实际加密**: 使用 CryptoKit 实现 AES 加密
+- [ ] ** Face ID/Touch ID**: 集成 LocalAuthentication 进行生物识别
+- [ ] **后台备份**: 使用 BackgroundTasks 框架
+- [ ] **压缩优化**: 实现实际的数据压缩算法
+- [ ] **增量备份**: 完善增量备份的差异检测
+- [ ] **备份预览**: 查看备份内容详情
+- [ ] **批量操作**: 批量删除/导出备份
+
+#### 📝 下一步计划
+
+- [ ] 完善加密实现 (CryptoKit)
+- [ ] 添加 iCloud 同步支持
+- [ ] 实现后台备份任务
+- [ ] 添加备份预览功能
+- [ ] 编写 Phase 16 完成报告
+
+---
+
 ### 2026-03-10 08:14 (Session - dreamlog-dev) - Phase 15 启动 - 梦境挑战系统
 
 #### ✅ 已完成
