@@ -184,44 +184,77 @@ class DreamChallengeService: ObservableObject {
     // MARK: - 进度计算辅助方法
     
     private func calculateRecordCount(since date: Date) -> Int {
-        // 从 DreamStore 获取梦境数量
-        // 这里简化处理，实际应该查询数据库
-        return 0
+        let dreamStore = DreamStore.shared
+        return dreamStore.dreams.filter { $0.date >= date }.count
     }
     
     private func calculateLucidCount(since date: Date) -> Int {
-        // 获取清醒梦数量
-        return 0
+        let dreamStore = DreamStore.shared
+        return dreamStore.dreams.filter { $0.isLucid && $0.date >= date }.count
     }
     
     private func calculateEmotionVariety(since date: Date) -> Int {
-        // 获取情绪种类数
-        return 0
+        let dreamStore = DreamStore.shared
+        var emotionSet = Set<Emotion>()
+        for dream in dreamStore.dreams where dream.date >= date {
+            emotionSet.formUnion(dream.emotions)
+        }
+        return emotionSet.count
     }
     
     private func calculateThemeCount(since date: Date) -> Int {
-        // 获取主题数量
-        return 0
+        let dreamStore = DreamStore.shared
+        var tagSet = Set<String>()
+        for dream in dreamStore.dreams where dream.date >= date {
+            tagSet.formUnion(dream.tags)
+        }
+        return tagSet.count
     }
     
     private func calculateAverageClarity(since date: Date) -> Double {
-        // 计算平均清晰度
-        return 0.0
+        let dreamStore = DreamStore.shared
+        let dreams = dreamStore.dreams.filter { $0.date >= date }
+        guard !dreams.isEmpty else { return 0.0 }
+        let total = dreams.reduce(0) { $0 + $1.clarity }
+        return Double(total) / Double(dreams.count)
     }
     
     private func calculateConsecutiveDays() -> Int {
-        // 计算连续记录天数
-        return 0
+        let dreamStore = DreamStore.shared
+        guard !dreamStore.dreams.isEmpty else { return 0 }
+        
+        let calendar = Calendar.current
+        let sortedDreams = dreamStore.dreams.sorted { $0.date > $1.date }
+        var streak = 1
+        var lastDate = calendar.startOfDay(for: sortedDreams[0].date)
+        
+        for i in 1..<sortedDreams.count {
+            let currentDate = calendar.startOfDay(for: sortedDreams[i].date)
+            let daysDiff = calendar.dateComponents([.day], from: currentDate, to: lastDate).day ?? 0
+            
+            if daysDiff == 1 {
+                streak += 1
+                lastDate = currentDate
+            } else if daysDiff > 1 {
+                break
+            }
+            // daysDiff == 0 表示同一天，跳过
+        }
+        
+        return streak
     }
     
     private func calculateRealityChecks(since date: Date) -> Int {
-        // 获取现实检查次数
-        return 0
+        // TODO: 需要从 LucidDreamTrainingService 获取现实检查次数
+        // 暂时返回清醒梦数量作为替代
+        return calculateLucidCount(since: date)
     }
     
     private func calculateTotalDreamLength(since date: Date) -> Int {
-        // 计算梦境总长度
-        return 0
+        let dreamStore = DreamStore.shared
+        let dreams = dreamStore.dreams.filter { $0.date >= date }
+        // 估算：每个梦境平均字数 / 100 作为长度单位
+        return dreams.reduce(0) { $0 + ($1.content.count / 100) }
     }
     
     // MARK: - 挑战完成
