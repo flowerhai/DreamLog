@@ -14,7 +14,7 @@ import Photos
 
 struct DreamVideoView: View {
     @StateObject private var videoService = DreamVideoService.shared
-    @StateObject private var dreamStore = DreamStore.shared
+    @EnvironmentObject var dreamStore: DreamStore
     @StateObject private var templateMarket = DreamVideoTemplateMarket.shared
     @Environment(\.dismiss) private var dismiss
     

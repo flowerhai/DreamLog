@@ -103,42 +103,42 @@ struct ContentView: View {
                     Image(systemName: "network")
                     Text("图谱")
                 }
-                .tag(11)
+                .tag(12)
             
             DreamMusicView()
                 .tabItem {
                     Image(systemName: "music.note.house.fill")
                     Text("音乐")
                 }
-                .tag(12)
+                .tag(13)
             
             DreamWrappedView()
                 .tabItem {
                     Image(systemName: "sparkles")
                     Text("回顾")
                 }
-                .tag(13)
+                .tag(14)
             
             DreamAssistantView()
                 .tabItem {
                     Image(systemName: "message.fill")
                     Text("助手")
                 }
-                .tag(14)
+                .tag(15)
             
             SettingsView()
                 .tabItem {
                     Image(systemName: "gearshape.fill")
                     Text("设置")
                 }
-                .tag(15)
+                .tag(16)
             
             DreamStoryView()
                 .tabItem {
                     Image(systemName: "book.closed.fill")
                     Text("故事")
                 }
-                .tag(16)
+                .tag(17)
             
             DreamChallengeView()
                 .environmentObject(challengeService)
@@ -146,14 +146,14 @@ struct ContentView: View {
                     Image(systemName: "trophy.fill")
                     Text("挑战")
                 }
-                .tag(17)
+                .tag(18)
             
             DreamBackupView()
                 .tabItem {
                     Image(systemName: "externaldrive.fill")
                     Text("备份")
                 }
-                .tag(18)
+                .tag(19)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(

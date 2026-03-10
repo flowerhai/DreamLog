@@ -254,7 +254,7 @@ struct DreamMusicView: View {
 
 struct RecentDreamsPicker: View {
     @Binding var selectedDream: Dream?
-    @StateObject private var dreamStore = DreamStore.shared
+    @EnvironmentObject var dreamStore: DreamStore
     
     var recentDreams: [Dream] {
         Array(dreamStore.dreams.prefix(5))

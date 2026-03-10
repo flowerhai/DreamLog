@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Dream Story View - Main container
 struct DreamStoryView: View {
-    @StateObject private var store = DreamStore.shared
+    @EnvironmentObject var store: DreamStore
     @State private var selectedDream: Dream?
     @State private var isGeneratingStory = false
     @State private var generatedStory: DreamStoryService.GeneratedStory?
