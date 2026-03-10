@@ -412,6 +412,183 @@ extension VideoTemplate {
                 music: .cinematic,
                 kenBurns: false,
                 tags: ["时空", "穿梭", "炫酷", "特效"]
+            ),
+            
+            // 社交媒体系列 - 抖音/TikTok
+            VideoTemplate.builtin(
+                name: "抖音热门",
+                description: "竖屏快节奏，适合抖音/ TikTok 分享",
+                category: .social,
+                duration: 15,
+                aspectRatio: .portrait,
+                transition: .slide(direction: .left, duration: 0.4),
+                filter: VideoFilterConfig(filterType: .instant, intensity: 0.7),
+                textOverlays: [
+                    VideoTextOverlay.titleStyle(text: "#梦境记录", duration: 15)
+                ],
+                music: .lofi,
+                kenBurns: false,
+                tags: ["抖音", "TikTok", "竖屏", "快节奏", "社交"]
+            ),
+            
+            VideoTemplate.builtin(
+                name: "小红书风格",
+                description: "清新治愈，小红书爆款风格",
+                category: .social,
+                duration: 20,
+                aspectRatio: .portrait,
+                transition: .fade(duration: 0.8),
+                filter: VideoFilterConfig(filterType: .fade, intensity: 0.6),
+                textOverlays: [
+                    VideoTextOverlay.captionStyle(text: "昨晚的梦✨", startTime: 0, endTime: 20)
+                ],
+                music: .piano,
+                kenBurns: true,
+                tags: ["小红书", "清新", "治愈", "社交"]
+            ),
+            
+            VideoTemplate.builtin(
+                name: "Instagram 故事",
+                description: "16:9 横屏，适合 IG 故事分享",
+                category: .social,
+                duration: 15,
+                aspectRatio: .landscape,
+                transition: .dissolve(duration: 0.6),
+                filter: VideoFilterConfig(filterType: .process, intensity: 0.5),
+                textOverlays: [],
+                music: .ambient,
+                kenBurns: true,
+                tags: ["Instagram", "故事", "横屏", "社交"]
+            ),
+            
+            // 回忆系列 - 新增
+            VideoTemplate.builtin(
+                name: "时光倒流",
+                description: "倒放效果，仿佛时间倒流",
+                category: .memory,
+                duration: 25,
+                aspectRatio: .portrait,
+                transition: .fade(duration: 1.0),
+                filter: VideoFilterConfig(filterType: .vintage, intensity: 0.8),
+                textOverlays: [
+                    VideoTextOverlay.titleStyle(text: "回忆", duration: 25)
+                ],
+                music: .piano,
+                kenBurns: false,
+                tags: ["回忆", "倒放", "怀旧", "时光"]
+            ),
+            
+            VideoTemplate.builtin(
+                name: "珍贵瞬间",
+                description: "温馨回忆风格，记录美好梦境",
+                category: .memory,
+                duration: 30,
+                aspectRatio: .square,
+                transition: .fade(duration: 1.5),
+                filter: VideoFilterConfig(filterType: .warm, intensity: 0.7),
+                textOverlays: [
+                    VideoTextOverlay.captionStyle(text: "珍贵的梦", startTime: 0, endTime: 30)
+                ],
+                music: .strings,
+                kenBurns: true,
+                tags: ["珍贵", "温馨", "回忆", "美好"]
+            ),
+            
+            // 节日特别系列
+            VideoTemplate.builtin(
+                name: "新年梦境",
+                description: "喜庆红色主题，新年特别版",
+                category: .seasonal,
+                duration: 20,
+                aspectRatio: .portrait,
+                transition: .fade(duration: 1.0),
+                filter: VideoFilterConfig(filterType: .warm, intensity: 0.9),
+                textOverlays: [
+                    VideoTextOverlay.titleStyle(text: "新年好梦", duration: 20)
+                ],
+                music: .cinematic,
+                kenBurns: true,
+                tags: ["新年", "节日", "喜庆", "红色"]
+            ),
+            
+            VideoTemplate.builtin(
+                name: "情人节梦境",
+                description: "浪漫粉色主题，情人节特别版",
+                category: .seasonal,
+                duration: 20,
+                aspectRatio: .portrait,
+                transition: .fade(duration: 1.2),
+                filter: VideoFilterConfig(filterType: .warm, intensity: 0.6),
+                textOverlays: [
+                    VideoTextOverlay.titleStyle(text: "爱的梦境💕", duration: 20)
+                ],
+                music: .piano,
+                kenBurns: true,
+                tags: ["情人节", "浪漫", "粉色", "爱情"]
+            ),
+            
+            // 艺术实验系列
+            VideoTemplate.builtin(
+                name: "抽象艺术",
+                description: "抽象视觉效果，艺术实验风格",
+                category: .artistic,
+                difficulty: .advanced,
+                duration: 30,
+                aspectRatio: .square,
+                transition: .checkerboard(rows: 4, columns: 4, duration: 1.0),
+                filter: VideoFilterConfig(filterType: .tonal, intensity: 0.9),
+                textOverlays: [],
+                music: .electronic,
+                kenBurns: false,
+                tags: ["抽象", "艺术", "实验", "视觉"]
+            ),
+            
+            VideoTemplate.builtin(
+                name: "赛博朋克",
+                description: "霓虹色彩，未来科技感",
+                category: .artistic,
+                difficulty: .advanced,
+                duration: 25,
+                aspectRatio: .landscape,
+                transition: .slide(direction: .right, duration: 0.5),
+                filter: VideoFilterConfig(filterType: .cool, intensity: 0.9),
+                textOverlays: [
+                    VideoTextOverlay.titleStyle(text: "赛博梦境", duration: 25)
+                ],
+                music: .electronic,
+                kenBurns: false,
+                tags: ["赛博朋克", "霓虹", "未来", "科技"]
+            ),
+            
+            // 冥想放松系列
+            VideoTemplate.builtin(
+                name: "深度放松",
+                description: "舒缓节奏，帮助放松入眠",
+                category: .minimal,
+                duration: 60,
+                aspectRatio: .landscape,
+                transition: .fade(duration: 3.0),
+                filter: VideoFilterConfig(filterType: .fade, intensity: 0.4),
+                textOverlays: [],
+                music: .ambient,
+                kenBurns: true,
+                tags: ["放松", "冥想", "助眠", "舒缓"]
+            ),
+            
+            VideoTemplate.builtin(
+                name: "清晨唤醒",
+                description: "清新明亮，晨间唤醒能量",
+                category: .minimal,
+                duration: 30,
+                aspectRatio: .portrait,
+                transition: .fade(duration: 1.5),
+                filter: VideoFilterConfig(filterType: .warm, intensity: 0.6),
+                textOverlays: [
+                    VideoTextOverlay.captionStyle(text: "早安☀️", startTime: 0, endTime: 30)
+                ],
+                music: .piano,
+                kenBurns: true,
+                tags: ["清晨", "唤醒", "能量", "阳光"]
             )
         ]
     }

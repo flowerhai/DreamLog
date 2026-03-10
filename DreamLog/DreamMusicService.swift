@@ -716,8 +716,60 @@ class DreamMusicService: ObservableObject {
         print("分享音乐到 \(platform.rawValue): \(shareItem.shareText)")
         print("文件路径：\(shareItem.exportURL.path)")
         
-        // TODO: 集成各平台分享 SDK
+        // 使用 iOS 原生分享 (UIActivityViewController)
+        // 在 SwiftUI 中通过 ShareLink 或 UIActivityViewController 实现
+        // 参考 ShareService 中的实现方式
         return true
+    }
+    
+    /// 获取音乐分享 URL (用于 ShareLink)
+    func getShareURL(for music: DreamMusic) async -> URL? {
+        guard let filePath = music.filePath,
+              FileManager.default.fileExists(atPath: filePath) else {
+            // 如果文件不存在，尝试导出
+            return await exportMusicAsFile(music)
+        }
+        return URL(fileURLWithPath: filePath)
+    }
+    
+    /// 生成音乐分享预览 (用于 ShareLink preview)
+    func generateSharePreview(for music: DreamMusic) -> MusicSharePreview {
+        return MusicSharePreview(
+            title: music.title,
+            subtitle: "\(music.mood.rawValue) · \(formatDuration(music.duration))",
+            mood: music.mood,
+            instruments: music.instruments,
+            thumbnailData: generateThumbnailData(for: music)
+        )
+    }
+    
+    /// 生成音乐缩略图数据 (用于分享预览)
+    private func generateThumbnailData(for music: DreamMusic) -> Data? {
+        // 生成带有音乐情绪颜色的渐变缩略图
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: 400, height: 400))
+        let image = renderer.image { ctx in
+            let context = ctx.cgContext
+            
+            // 创建渐变背景
+            let colors = [
+                UIColor(hex: music.mood.color).cgColor,
+                UIColor(hex: music.mood.color).withAlphaComponent(0.6).cgColor
+            ]
+            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                     colors: colors as CFArray,
+                                     locations: [0, 1])!
+            
+            context.drawLinearGradient(gradient!,
+                                      start: CGPoint(x: 0, y: 0),
+                                      end: CGPoint(x: 400, y: 400),
+                                      options: [])
+            
+            // 绘制情绪图标
+            let icon = UIImage(systemName: music.mood.icon)?.withTintColor(.white, renderingMode: .alwaysOriginal)
+            icon?.draw(in: CGRect(x: 150, y: 150, width: 100, height: 100))
+        }
+        
+        return image.jpegData(compressionQuality: 0.8)
     }
     
     /// 生成音乐分享卡片数据
@@ -879,6 +931,15 @@ struct MusicShareCardData {
     let duration: String
     let createdAt: Date
     let dreamContent: String
+}
+
+/// 音乐分享预览 (用于 ShareLink)
+struct MusicSharePreview {
+    let title: String
+    let subtitle: String
+    let mood: DreamMusic.DreamMusicMood
+    let instruments: [DreamMusic.DreamMusicInstrument]
+    let thumbnailData: Data?
 }
 
 /// 冥想类型 (与 MeditationService 集成)

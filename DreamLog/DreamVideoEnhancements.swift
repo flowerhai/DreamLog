@@ -110,6 +110,192 @@ struct VideoExportConfig {
     }
 }
 
+// MARK: - 社交媒体导出预设
+
+/// 社交媒体平台视频导出预设
+struct SocialMediaPreset {
+    let platform: VideoSharePlatform
+    let name: String
+    let aspectRatio: DreamVideoConfig.AspectRatio
+    let maxDuration: Double  // 秒
+    let resolution: CGSize
+    let frameRate: Int
+    let bitrate: Int
+    let format: VideoExportConfig.ExportFormat
+    let recommendations: [String]  // 最佳实践建议
+    
+    /// 获取所有预设
+    static var allPresets: [SocialMediaPreset] {
+        [
+            // 抖音/TikTok
+            SocialMediaPreset(
+                platform: .tiktok,
+                name: "抖音/TikTok",
+                aspectRatio: .portrait,  // 9:16
+                maxDuration: 60,
+                resolution: CGSize(width: 1080, height: 1920),
+                frameRate: 30,
+                bitrate: 5_000_000,
+                format: .mp4,
+                recommendations: [
+                    "使用竖屏 9:16 比例",
+                    "前 3 秒吸引注意力",
+                    "添加热门音乐",
+                    "使用快节奏转场",
+                    "添加文字说明"
+                ]
+            ),
+            
+            // Instagram Reels
+            SocialMediaPreset(
+                platform: .instagram,
+                name: "Instagram Reels",
+                aspectRatio: .portrait,  // 9:16
+                maxDuration: 90,
+                resolution: CGSize(width: 1080, height: 1920),
+                frameRate: 30,
+                bitrate: 5_000_000,
+                format: .mp4,
+                recommendations: [
+                    "竖屏 9:16 最佳",
+                    "使用流行音乐",
+                    "添加相关标签",
+                    "保持内容有趣",
+                    "使用滤镜增强效果"
+                ]
+            ),
+            
+            // Instagram Stories
+            SocialMediaPreset(
+                platform: .instagram,
+                name: "Instagram Stories",
+                aspectRatio: .portrait,  // 9:16
+                maxDuration: 15,
+                resolution: CGSize(width: 1080, height: 1920),
+                frameRate: 30,
+                bitrate: 4_000_000,
+                format: .mp4,
+                recommendations: [
+                    "每条最多 15 秒",
+                    "竖屏拍摄",
+                    "添加互动贴纸",
+                    "使用标签和位置",
+                    "保持真实自然"
+                ]
+            ),
+            
+            // 微信朋友圈
+            SocialMediaPreset(
+                platform: .wechatMoments,
+                name: "微信朋友圈",
+                aspectRatio: .portrait,  // 9:16 或 1:1
+                maxDuration: 30,
+                resolution: CGSize(width: 1080, height: 1920),
+                frameRate: 30,
+                bitrate: 4_000_000,
+                format: .mp4,
+                recommendations: [
+                    "支持竖屏和正方形",
+                    "时长不超过 30 秒",
+                    "添加有趣文案",
+                    "选择合适可见范围",
+                    "避免过度编辑"
+                ]
+            ),
+            
+            // 微博
+            SocialMediaPreset(
+                platform: .weibo,
+                name: "微博",
+                aspectRatio: .landscape,  // 16:9
+                maxDuration: 120,
+                resolution: CGSize(width: 1920, height: 1080),
+                frameRate: 30,
+                bitrate: 5_000_000,
+                format: .mp4,
+                recommendations: [
+                    "横屏 16:9 最佳",
+                    "可上传长视频",
+                    "添加话题标签",
+                    "配合文字说明",
+                    "@相关账号增加曝光"
+                ]
+            ),
+            
+            // YouTube Shorts
+            SocialMediaPreset(
+                platform: .tiktok,  // 复用图标
+                name: "YouTube Shorts",
+                aspectRatio: .portrait,  // 9:16
+                maxDuration: 60,
+                resolution: CGSize(width: 1080, height: 1920),
+                frameRate: 30,
+                bitrate: 5_000_000,
+                format: .mp4,
+                recommendations: [
+                    "竖屏 9:16",
+                    "时长 60 秒内",
+                    "添加#Shorts 标签",
+                    "使用热门音乐",
+                    "前 5 秒抓住观众"
+                ]
+            ),
+            
+            // Telegram
+            SocialMediaPreset(
+                platform: .telegram,
+                name: "Telegram",
+                aspectRatio: .landscape,  // 16:9
+                maxDuration: 60,  // 免压缩限制
+                resolution: CGSize(width: 1920, height: 1080),
+                frameRate: 30,
+                bitrate: 5_000_000,
+                format: .mp4,
+                recommendations: [
+                    "支持多种格式",
+                    "文件<50MB 免压缩",
+                    "可发送原画质量",
+                    "支持 GIF 动图",
+                    "可添加到收藏夹"
+                ]
+            ),
+            
+            // QQ
+            SocialMediaPreset(
+                platform: .qq,
+                name: "QQ",
+                aspectRatio: .portrait,
+                maxDuration: 30,
+                resolution: CGSize(width: 1080, height: 1920),
+                frameRate: 30,
+                bitrate: 4_000_000,
+                format: .mp4,
+                recommendations: [
+                    "支持竖屏视频",
+                    "时长适中",
+                    "添加趣味表情",
+                    "分享给好友或群",
+                    "可设置为动态"
+                ]
+            )
+        ]
+    }
+    
+    /// 根据平台获取预设
+    static func preset(for platform: VideoSharePlatform) -> SocialMediaPreset? {
+        allPresets.first { $0.platform == platform }
+    }
+    
+    /// 获取推荐配置
+    func recommendedConfig() -> DreamVideoConfig {
+        DreamVideoConfig(
+            style: .cinematic,
+            duration: min(maxDuration, 30),  // 默认 30 秒或平台最大值
+            aspectRatio: aspectRatio
+        )
+    }
+}
+
 // MARK: - 视频增强服务
 
 /// 梦境视频增强服务
