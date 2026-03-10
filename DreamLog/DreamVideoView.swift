@@ -15,6 +15,7 @@ import Photos
 struct DreamVideoView: View {
     @StateObject private var videoService = DreamVideoService.shared
     @StateObject private var dreamStore = DreamStore.shared
+    @StateObject private var templateMarket = DreamVideoTemplateMarket.shared
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedDream: Dream?
@@ -24,22 +25,44 @@ struct DreamVideoView: View {
     @State private var videoConfig: DreamVideoConfig?
     @State private var showingShareSheet = false
     @State private var shareURL: URL?
+    @State private var selectedTab = 0
+    @State private var showingEditor = false
+    @State private var showingTemplates = false
+    @State private var videoToEdit: DreamVideo?
     
     var body: some View {
         NavigationView {
-            Group {
-                if videoService.videos.isEmpty {
-                    emptyStateView
+            VStack(spacing: 0) {
+                // 分段控制器
+                Picker("标签", selection: $selectedTab) {
+                    Text("我的视频").tag(0)
+                    Text("模板市场").tag(1)
+                }
+                .pickerStyle(.segmented)
+                .padding()
+                
+                if selectedTab == 0 {
+                    // 我的视频
+                    Group {
+                        if videoService.videos.isEmpty {
+                            emptyStateView
+                        } else {
+                            videoGridView
+                        }
+                    }
                 } else {
-                    videoGridView
+                    // 模板市场
+                    TemplateMarketView()
                 }
             }
             .navigationTitle("梦境视频")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingConfigSheet = true }) {
-                        Label("新建", systemImage: "plus")
+                    if selectedTab == 0 {
+                        Button(action: { showingConfigSheet = true }) {
+                            Label("新建", systemImage: "plus")
+                        }
                     }
                 }
             }
@@ -514,6 +537,424 @@ struct ShareSheet: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
+}
+
+// MARK: - 模板市场视图
+
+struct TemplateMarketView: View {
+    @StateObject private var templateMarket = DreamVideoTemplateMarket.shared
+    @StateObject private var videoService = DreamVideoService.shared
+    @StateObject private var dreamStore = DreamStore.shared
+    
+    @State private var selectedTemplate: VideoTemplate?
+    @State private var showingTemplateDetail = false
+    @State private var showingConfigSheet = false
+    @State private var selectedDream: Dream?
+    
+    var body: some View {
+        Group {
+            if templateMarket.isLoading {
+                ProgressView("加载模板中...")
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        // 分类选择
+                        categorySelector
+                        
+                        // 搜索框
+                        searchField
+                        
+                        // 模板网格
+                        templateGrid
+                    }
+                    .padding()
+                }
+            }
+        }
+        .sheet(isPresented: $showingTemplateDetail) {
+            if let template = selectedTemplate {
+                TemplateDetailView(
+                    template: template,
+                    isDownloaded: templateMarket.isDownloaded(template.id),
+                    isFavorite: templateMarket.isFavorite(template.id),
+                    onDownload: {
+                        Task {
+                            try? await templateMarket.downloadTemplate(template)
+                        }
+                    },
+                    onToggleFavorite: {
+                        templateMarket.toggleFavorite(template)
+                    },
+                    onUseTemplate: {
+                        selectedTemplate = template
+                        showingTemplateDetail = false
+                        showingConfigSheet = true
+                    }
+                )
+            }
+        }
+        .sheet(isPresented: $showingConfigSheet) {
+            VideoConfigSheet(
+                dreamStore: dreamStore,
+                selectedDream: $selectedDream,
+                config: $videoConfig,
+                onStartGeneration: {
+                    showingConfigSheet = false
+                    // 应用模板配置
+                    startVideoGenerationWithTemplate()
+                }
+            )
+        }
+    }
+    
+    private var categorySelector: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(VideoTemplateCategory.allCases) { category in
+                    Button(action: {
+                        withAnimation {
+                            templateMarket.selectedCategory = category
+                        }
+                    }) {
+                        VStack(spacing: 4) {
+                            Image(systemName: category.icon)
+                                .font(.title2)
+                            Text(category.rawValue)
+                                .font(.caption)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(templateMarket.selectedCategory == category ? Color.purple : Color.gray.opacity(0.2))
+                        )
+                        .foregroundColor(templateMarket.selectedCategory == category ? .white : .primary)
+                    }
+                }
+            }
+        }
+    }
+    
+    private var searchField: some View {
+        HStack {
+            Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+            
+            TextField("搜索模板...", text: $templateMarket.searchQuery)
+                .textFieldStyle(.plain)
+            
+            if !templateMarket.searchQuery.isEmpty {
+                Button(action: {
+                    templateMarket.searchQuery = ""
+                }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(12)
+        .background(Color.gray.opacity(0.1))
+        .cornerRadius(10)
+    }
+    
+    private var templateGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+            ForEach(templateMarket.filteredTemplates) { template in
+                TemplateCard(
+                    template: template,
+                    isDownloaded: templateMarket.isDownloaded(template.id),
+                    isFavorite: templateMarket.isFavorite(template.id),
+                    onTap: {
+                        selectedTemplate = template
+                        showingTemplateDetail = true
+                    },
+                    onToggleFavorite: {
+                        templateMarket.toggleFavorite(template)
+                    }
+                )
+            }
+        }
+    }
+    
+    private func startVideoGenerationWithTemplate() {
+        // 使用模板配置生成视频
+        Task {
+            if let dream = selectedDream, let config = videoConfig {
+                try? await videoService.generateVideo(for: dream, config: config)
+            }
+        }
+    }
+}
+
+// MARK: - 模板卡片
+
+struct TemplateCard: View {
+    let template: VideoTemplate
+    let isDownloaded: Bool
+    let isFavorite: Bool
+    let onTap: () -> Void
+    let onToggleFavorite: () -> Void
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // 缩略图
+            ZStack(alignment: .topTrailing) {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(gradientForCategory(template.category))
+                    .aspectRatio(0.75, contentMode: .fit)
+                    .overlay(
+                        Image(systemName: template.isPremium ? "star.fill" : "film")
+                            .font(.system(size: 40))
+                            .foregroundColor(.white.opacity(0.5))
+                    )
+                
+                // 收藏按钮
+                Button(action: onToggleFavorite) {
+                    Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        .foregroundColor(isFavorite ? .red : .white)
+                        .padding(8)
+                        .background(Circle().fill(Color.black.opacity(0.3)))
+                }
+                
+                // 已下载标记
+                if isDownloaded {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .padding(8)
+                        .background(Circle().fill(Color.white))
+                        .offset(x: -50, y: 0)
+                }
+            }
+            
+            // 信息
+            VStack(alignment: .leading, spacing: 4) {
+                Text(template.name)
+                    .font(.subheadline.bold())
+                    .lineLimit(1)
+                
+                Text(template.description)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+                
+                HStack {
+                    Label("\(template.duration, specifier: "%.0f")s", systemImage: "clock")
+                    Spacer()
+                    Image(systemName: template.difficulty.icon)
+                        .font(.caption)
+                }
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            }
+        }
+        .contentShape(Rectangle())
+        .onTapGesture(perform: onTap)
+    }
+    
+    private func gradientForCategory(_ category: VideoTemplateCategory) -> LinearGradient {
+        switch category {
+        case .featured:
+            return LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .cinematic:
+            return LinearGradient(colors: [.black, .gray], startPoint: .top, endPoint: .bottom)
+        case .minimal:
+            return LinearGradient(colors: [.white, .gray.opacity(0.3)], startPoint: .top, endPoint: .bottom)
+        case .artistic:
+            return LinearGradient(colors: [.orange, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .social:
+            return LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom)
+        case .memory:
+            return LinearGradient(colors: [.pink, .red], startPoint: .top, endPoint: .bottom)
+        case .seasonal:
+            return LinearGradient(colors: [.green, .yellow], startPoint: .top, endPoint: .bottom)
+        }
+    }
+}
+
+// MARK: - 模板详情视图
+
+struct TemplateDetailView: View {
+    let template: VideoTemplate
+    let isDownloaded: Bool
+    let isFavorite: Bool
+    let onDownload: () -> Void
+    let onToggleFavorite: () -> Void
+    let onUseTemplate: () -> Void
+    
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // 预览图
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(gradientForCategory(template.category))
+                        .aspectRatio(0.75, contentMode: .fit)
+                        .overlay(
+                            VStack {
+                                Image(systemName: template.isPremium ? "star.fill" : "film")
+                                    .font(.system(size: 60))
+                                    .foregroundColor(.white.opacity(0.5))
+                                Text(template.name)
+                                    .font(.title.bold())
+                                    .foregroundColor(.white)
+                                    .padding(.top, 8)
+                            }
+                        )
+                        .padding()
+                    
+                    // 信息
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(template.description)
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                        
+                        // 标签
+                        FlowLayout {
+                            ForEach(template.tags, id: \.self) { tag in
+                                Text(tag)
+                                    .font(.caption)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Capsule().fill(Color.purple.opacity(0.2)))
+                                    .foregroundColor(.purple)
+                            }
+                        }
+                        
+                        Divider()
+                        
+                        // 详情
+                        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 12) {
+                            GridRow {
+                                Label("时长", systemImage: "clock")
+                                Text("\(template.duration, specifier: "%.0f") 秒")
+                            }
+                            GridRow {
+                                Label("比例", systemImage: "aspectratio")
+                                Text(template.aspectRatio.rawValue)
+                            }
+                            GridRow {
+                                Label("难度", systemImage: template.difficulty.icon)
+                                Text(template.difficulty.rawValue)
+                            }
+                            GridRow {
+                                Label("转场", systemImage: "arrow.triangle.2.circlepath")
+                                Text(template.transitionStyle.name)
+                            }
+                            if let music = template.musicTrack {
+                                GridRow {
+                                    Label("音乐", systemImage: "music.note")
+                                    Text(music.rawValue)
+                                }
+                            }
+                        }
+                        .font(.subheadline)
+                    }
+                    .padding(.horizontal)
+                    
+                    // 按钮
+                    HStack(spacing: 16) {
+                        Button(action: onToggleFavorite) {
+                            Label(
+                                isFavorite ? "已收藏" : "收藏",
+                                systemImage: isFavorite ? "heart.fill" : "heart"
+                            )
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.gray.opacity(0.2))
+                            .cornerRadius(12)
+                        }
+                        
+                        if isDownloaded {
+                            Button(action: onUseTemplate) {
+                                Label("使用模板", systemImage: "wand.and.stars")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.purple)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(12)
+                            }
+                        } else {
+                            Button(action: onDownload) {
+                                Label("下载", systemImage: "arrow.down.circle")
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color.purple)
+                                    .foregroundColor(.white)
+                                    .cornerRadius(12)
+                            }
+                        }
+                    }
+                    .padding(.horizontal)
+                }
+            }
+            .navigationTitle("模板详情")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+    
+    private func gradientForCategory(_ category: VideoTemplateCategory) -> LinearGradient {
+        switch category {
+        case .featured: return LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .cinematic: return LinearGradient(colors: [.black, .gray], startPoint: .top, endPoint: .bottom)
+        case .minimal: return LinearGradient(colors: [.white, .gray.opacity(0.3)], startPoint: .top, endPoint: .bottom)
+        case .artistic: return LinearGradient(colors: [.orange, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .social: return LinearGradient(colors: [.blue, .purple], startPoint: .top, endPoint: .bottom)
+        case .memory: return LinearGradient(colors: [.pink, .red], startPoint: .top, endPoint: .bottom)
+        case .seasonal: return LinearGradient(colors: [.green, .yellow], startPoint: .top, endPoint: .bottom)
+        }
+    }
+}
+
+// MARK: - 流式布局
+
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 8
+    
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
+        return result.size
+    }
+    
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
+        
+        for (index, subview) in subviews.enumerated() {
+            let origin = CGPoint(
+                x: bounds.minX + result.positions[index].x,
+                y: bounds.minY + result.positions[index].y
+            )
+            subview.place(at: origin, proposal: .unspecified)
+        }
+    }
+    
+    struct FlowResult {
+        var size: CGSize = .zero
+        var positions: [CGPoint] = []
+        
+        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
+            var x: CGFloat = 0
+            var y: CGFloat = 0
+            var rowHeight: CGFloat = 0
+            
+            for subview in subviews {
+                let size = subview.sizeThatFits(.unspecified)
+                
+                if x + size.width > maxWidth && x > 0 {
+                    x = 0
+                    y += rowHeight + spacing
+                    rowHeight = 0
+                }
+                
+                positions.append(CGPoint(x: x, y: y))
+                rowHeight = max(rowHeight, size.height)
+                x += size.width + spacing
+            }
+            
+            self.size = CGSize(width: maxWidth, height: y + rowHeight)
+        }
+    }
 }
 
 // MARK: - 预览

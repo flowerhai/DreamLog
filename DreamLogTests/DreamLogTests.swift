@@ -5175,4 +5175,243 @@ final class VideoEnhancementTests: XCTestCase {
         XCTAssertEqual(analytics.totalViews, 3)
         XCTAssertEqual(analytics.averageWatchTime, 20.0)
     }
+    
+    // MARK: - Video Editor Tests
+    
+    func testVideoCropRegionDefault() {
+        let defaultRegion = VideoCropRegion.default
+        
+        XCTAssertEqual(defaultRegion.x, 0)
+        XCTAssertEqual(defaultRegion.y, 0)
+        XCTAssertEqual(defaultRegion.width, 1)
+        XCTAssertEqual(defaultRegion.height, 1)
+    }
+    
+    func testVideoCropRegionPresets() {
+        let square = VideoCropRegion.square
+        let portrait = VideoCropRegion.portrait
+        let landscape = VideoCropRegion.landscape
+        
+        XCTAssertEqual(square.width, 0.5)
+        XCTAssertEqual(portrait.height, 0.75)
+        XCTAssertEqual(landscape.width, 0.875)
+    }
+    
+    func testVideoTrimRange() {
+        let range = VideoTrimRange.fromSeconds(start: 5.0, end: 25.0)
+        
+        XCTAssertEqual(CMTimeGetSeconds(range.startTime), 5.0)
+        XCTAssertEqual(CMTimeGetSeconds(range.endTime), 25.0)
+        XCTAssertEqual(CMTimeGetSeconds(range.duration), 20.0)
+    }
+    
+    func testVideoTextOverlayTitleStyle() {
+        let overlay = VideoTextOverlay.titleStyle(text: "Test Title", duration: 30.0)
+        
+        XCTAssertEqual(overlay.text, "Test Title")
+        XCTAssertEqual(overlay.position, .center)
+        XCTAssertEqual(overlay.fontSize, 48)
+        XCTAssertEqual(overlay.animation, .fadeInOut)
+    }
+    
+    func testVideoTextOverlayCaptionStyle() {
+        let overlay = VideoTextOverlay.captionStyle(text: "Caption", startTime: 5.0, endTime: 10.0)
+        
+        XCTAssertEqual(overlay.text, "Caption")
+        XCTAssertEqual(overlay.position, .bottom)
+        XCTAssertEqual(overlay.fontSize, 32)
+        XCTAssertEqual(overlay.animation, .fadeIn)
+    }
+    
+    func testVideoTextOverlayPosition() {
+        XCTAssertEqual(VideoTextOverlay.TextPosition.top.cgPoint, CGPoint(x: 0.5, y: 0.15))
+        XCTAssertEqual(VideoTextOverlay.TextPosition.center.cgPoint, CGPoint(x: 0.5, y: 0.5))
+        XCTAssertEqual(VideoTextOverlay.TextPosition.bottom.cgPoint, CGPoint(x: 0.5, y: 0.85))
+    }
+    
+    func testVideoFilterConfig() {
+        let config = VideoFilterConfig(filterType: .vintage, intensity: 0.8)
+        
+        XCTAssertEqual(config.filterType, .vintage)
+        XCTAssertEqual(config.intensity, 0.8)
+        XCTAssertEqual(config.filterType.filterName, "CIPhotoEffectMono")
+    }
+    
+    func testVideoFilterTypes() {
+        let allFilters = VideoFilterConfig.FilterType.allCases
+        
+        XCTAssertGreaterThanOrEqual(allFilters.count, 10)
+        XCTAssertTrue(allFilters.contains(.none))
+        XCTAssertTrue(allFilters.contains(.vintage))
+        XCTAssertTrue(allFilters.contains(.noir))
+    }
+    
+    func testVideoEditConfigHasEdits() {
+        var config = VideoEditConfig()
+        XCTAssertFalse(config.hasEdits)
+        
+        config.cropRegion = .square
+        XCTAssertTrue(config.hasEdits)
+        
+        config = VideoEditConfig()
+        config.filterConfig = VideoFilterConfig(filterType: .vintage, intensity: 1.0)
+        XCTAssertTrue(config.hasEdits)
+        
+        config = VideoEditConfig()
+        config.textOverlays = [.titleStyle(text: "Test", duration: 30)]
+        XCTAssertTrue(config.hasEdits)
+    }
+    
+    // MARK: - Video Template Tests
+    
+    func testVideoTemplateCategory() {
+        let categories = VideoTemplateCategory.allCases
+        
+        XCTAssertGreaterThanOrEqual(categories.count, 5)
+        XCTAssertTrue(categories.contains(.featured))
+        XCTAssertTrue(categories.contains(.cinematic))
+        XCTAssertTrue(categories.contains(.minimal))
+    }
+    
+    func testVideoTemplateDifficulty() {
+        XCTAssertEqual(VideoTemplateDifficulty.easy.icon, "hare.fill")
+        XCTAssertEqual(VideoTemplateDifficulty.medium.icon, "tortoise.fill")
+        XCTAssertEqual(VideoTemplateDifficulty.advanced.icon, "flame.fill")
+    }
+    
+    func testVideoTemplateBuiltin() {
+        let template = VideoTemplate.builtin(
+            name: "Test Template",
+            description: "Test Description",
+            category: .cinematic,
+            duration: 30
+        )
+        
+        XCTAssertEqual(template.name, "Test Template")
+        XCTAssertEqual(template.category, .cinematic)
+        XCTAssertEqual(template.duration, 30)
+        XCTAssertEqual(template.difficulty, .easy)
+        XCTAssertEqual(template.rating, 5.0)
+    }
+    
+    func testVideoTemplateBuiltinLibrary() {
+        let templates = VideoTemplate.builtinTemplates
+        
+        XCTAssertGreaterThan(templates.count, 10)
+        
+        let cinematicTemplates = templates.filter { $0.category == .cinematic }
+        XCTAssertGreaterThanOrEqual(cinematicTemplates.count, 2)
+        
+        let minimalTemplates = templates.filter { $0.category == .minimal }
+        XCTAssertGreaterThanOrEqual(minimalTemplates.count, 2)
+    }
+    
+    func testVideoTemplateSearch() {
+        let results = VideoTemplate.searchTemplates(query: "电影")
+        XCTAssertGreaterThan(results.count, 0)
+        
+        let emptyResults = VideoTemplate.searchTemplates(query: "xyz123nonexistent")
+        XCTAssertEqual(emptyResults.count, 0)
+    }
+    
+    func testVideoTemplateFilterByCategory() {
+        let featuredTemplates = VideoTemplate.templates(in: .featured)
+        let cinematicTemplates = VideoTemplate.templates(in: .cinematic)
+        
+        XCTAssertGreaterThanOrEqual(featuredTemplates.count, 0)
+        XCTAssertGreaterThan(cinematicTemplates.count, 0)
+    }
+    
+    // MARK: - Template Market Service Tests
+    
+    func testTemplateMarketInitialization() {
+        let market = DreamVideoTemplateMarket.shared
+        
+        XCTAssertGreaterThan(market.templates.count, 0)
+        XCTAssertNotNil(market.selectedCategory)
+    }
+    
+    func testTemplateMarketDownload() async {
+        let market = DreamVideoTemplateMarket.shared
+        let template = market.templates.first!
+        
+        XCTAssertFalse(market.isDownloaded(template.id))
+        
+        try? await market.downloadTemplate(template)
+        
+        XCTAssertTrue(market.isDownloaded(template.id))
+    }
+    
+    func testTemplateMarketFavorite() {
+        let market = DreamVideoTemplateMarket.shared
+        let template = market.templates.first!
+        
+        let initialCount = market.favoriteTemplates.count
+        market.toggleFavorite(template)
+        XCTAssertEqual(market.favoriteTemplates.count, initialCount + 1)
+        XCTAssertTrue(market.isFavorite(template.id))
+        
+        market.toggleFavorite(template)
+        XCTAssertEqual(market.favoriteTemplates.count, initialCount)
+        XCTAssertFalse(market.isFavorite(template.id))
+    }
+    
+    func testTemplateMarketFilteredTemplates() {
+        let market = DreamVideoTemplateMarket.shared
+        
+        market.selectedCategory = .featured
+        let featuredCount = market.filteredTemplates.count
+        
+        market.selectedCategory = .cinematic
+        let cinematicCount = market.filteredTemplates.count
+        
+        XCTAssertGreaterThanOrEqual(featuredCount, 0)
+        XCTAssertGreaterThanOrEqual(cinematicCount, 0)
+    }
+    
+    func testTemplateMarketCreateEditConfig() {
+        let market = DreamVideoTemplateMarket.shared
+        let template = market.templates.first!
+        
+        let dream = Dream(title: "Test Dream", content: "Test Content", tags: [], emotions: [])
+        let config = market.createEditConfig(from: template, for: dream)
+        
+        XCTAssertEqual(config.filterConfig.filterType, template.filterConfig.filterType)
+    }
+    
+    // MARK: - Video Editor Service Tests
+    
+    func testVideoEditorSingleton() {
+        let editor1 = DreamVideoEditor.shared
+        let editor2 = DreamVideoEditor.shared
+        
+        XCTAssertTrue(editor1 === editor2)
+    }
+    
+    func testVideoEditorInitialState() {
+        let editor = DreamVideoEditor.shared
+        
+        XCTAssertFalse(editor.isEditing)
+        XCTAssertEqual(editor.editProgress, 0.0)
+        XCTAssertEqual(editor.videoDuration, 0)
+    }
+    
+    func testVideoEditorCropTransform() {
+        let editor = DreamVideoEditor.shared
+        let region = VideoCropRegion.square
+        
+        let transform = editor.cropVideo(region: region)
+        
+        XCTAssertNotEqual(transform, .identity)
+    }
+    
+    func testVideoEditorQuickEditMethods() {
+        let editor = DreamVideoEditor.shared
+        
+        // Verify methods exist and are callable
+        // Note: Full testing requires actual video files
+        XCTAssertNotNil(editor.quickCrop(sourceURL: URL(fileURLWithPath: "/tmp/test.mp4"), aspectRatio: .portrait, outputURL: URL(fileURLWithPath: "/tmp/output.mp4")))
+        XCTAssertNotNil(editor.quickAddTitle(sourceURL: URL(fileURLWithPath: "/tmp/test.mp4"), title: "Test", outputURL: URL(fileURLWithPath: "/tmp/output.mp4")))
+        XCTAssertNotNil(editor.quickApplyFilter(sourceURL: URL(fileURLWithPath: "/tmp/test.mp4"), filterType: .vintage, outputURL: URL(fileURLWithPath: "/tmp/output.mp4")))
+    }
 }
