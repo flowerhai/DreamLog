@@ -389,7 +389,9 @@ class DreamVideoService: ObservableObject {
         UIGraphicsBeginImageContextWithOptions(size, false, 0)
         defer { UIGraphicsEndImageContext() }
         
-        let context = UIGraphicsGetCurrentContext()!
+        guard let context = UIGraphicsGetCurrentContext() else {
+            return image
+        }
         
         // 背景色
         UIColor.black.setFill()
@@ -517,13 +519,17 @@ class DreamVideoService: ObservableObject {
         defer { UIGraphicsEndImageContext() }
         
         // 渐变背景
-        let context = UIGraphicsGetCurrentContext()!
+        guard let context = UIGraphicsGetCurrentContext() else {
+            return UIImage()
+        }
         let colors = [
             UIColor.systemIndigo.withAlphaComponent(0.9).cgColor,
             UIColor.systemPurple.withAlphaComponent(0.9).cgColor,
             UIColor.systemPink.withAlphaComponent(0.9).cgColor
         ]
-        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 0.5, 1])!
+        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors as CFArray, locations: [0, 0.5, 1]) else {
+            return UIImage()
+        }
         
         context.drawLinearGradient(gradient, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 0, y: size.height), options: [])
         

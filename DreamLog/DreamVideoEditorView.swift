@@ -284,7 +284,8 @@ struct DreamVideoEditorView: View {
     }
     
     private func getOutputURL() -> URL {
-        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first ?? 
+                        FileManager.default.temporaryDirectory
         let filename = "edited_video_\(Date().timeIntervalSince1970).mp4"
         return documents.appendingPathComponent(filename)
     }

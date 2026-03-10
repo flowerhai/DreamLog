@@ -263,7 +263,7 @@ class DreamStoryService: ObservableObject {
         ]
         
         let prefixes = genrePrefixes[genre] ?? [""]
-        return prefixes.randomElement()! + baseTitle
+        return (prefixes.randomElement() ?? "") + baseTitle
     }
     
     private func applyGenreStyle(to content: String, genre: StoryGenre, dream: Dream) -> String {
@@ -323,7 +323,7 @@ class DreamStoryService: ObservableObject {
         ]
         
         let descriptions = climaxDescriptions[genre] ?? ["高潮时刻"]
-        return descriptions.randomElement()! + "。" + (dream.aiAnalysis?.prefix(100) ?? "一切都达到了最强烈的状态")
+        return (descriptions.randomElement() ?? "高潮时刻") + "。" + (dream.aiAnalysis?.prefix(100) ?? "一切都达到了最强烈的状态")
     }
     
     private func generateInsight(from dream: Dream, genre: StoryGenre) -> String {

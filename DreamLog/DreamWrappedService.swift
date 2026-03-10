@@ -323,7 +323,7 @@ class DreamWrappedService: ObservableObject {
         
         return monthGroups.map { (month, dreams) in
             let avgClarity = dreams.reduce(0) { $0 + $1.clarity } / dreams.count
-            let monthName = calendar.date(from: monthFormatter.date(from: month)!)?.formatted(.dateTime.month(.abbreviated)) ?? month
+            let monthName = monthFormatter.date(from: month).flatMap { calendar.date(from: $0) }?.formatted(.dateTime.month(.abbreviated)) ?? month
             
             return DreamWrappedData.MonthStat(
                 month: monthName,

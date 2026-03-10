@@ -63,8 +63,8 @@ enum SharePlatform: String, CaseIterable, Identifiable {
     }
     
     func canOpen() -> Bool {
-        guard let scheme = urlScheme else { return false }
-        return UIApplication.shared.canOpenURL(URL(string: scheme)!)
+        guard let scheme = urlScheme, let url = URL(string: scheme) else { return false }
+        return UIApplication.shared.canOpenURL(url)
     }
 }
 

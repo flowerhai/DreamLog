@@ -457,7 +457,10 @@ class DreamVideoEditor: ObservableObject {
         ]
         
         let reader = try AVAssetReader(asset: asset)
-        let readerOutput = AVAssetReaderTrackOutput(track: try await asset.tracks(withMediaType: .video).first!,
+        guard let videoTrack = try await asset.tracks(withMediaType: .video).first else {
+            throw VideoEditError.failedToLoadVideo
+        }
+        let readerOutput = AVAssetReaderTrackOutput(track: videoTrack,
                                                       outputSettings: readerOutputSettings)
         reader.add(readerOutput)
         

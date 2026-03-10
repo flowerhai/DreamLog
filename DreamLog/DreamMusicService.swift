@@ -755,11 +755,16 @@ class DreamMusicService: ObservableObject {
                 UIColor(hex: music.mood.color).cgColor,
                 UIColor(hex: music.mood.color).withAlphaComponent(0.6).cgColor
             ]
-            let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+            guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
                                      colors: colors as CFArray,
-                                     locations: [0, 1])!
+                                     locations: [0, 1]) else {
+                // Fallback: draw solid color
+                UIColor(hex: music.mood.color).setFill()
+                context.fill(CGRect(origin: .zero, size: CGSize(width: 400, height: 400)))
+                return
+            }
             
-            context.drawLinearGradient(gradient!,
+            context.drawLinearGradient(gradient,
                                       start: CGPoint(x: 0, y: 0),
                                       end: CGPoint(x: 400, y: 400),
                                       options: [])
