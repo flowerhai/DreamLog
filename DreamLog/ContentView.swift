@@ -147,6 +147,13 @@ struct ContentView: View {
                     Text("挑战")
                 }
                 .tag(17)
+            
+            DreamBackupView()
+                .tabItem {
+                    Image(systemName: "externaldrive.fill")
+                    Text("备份")
+                }
+                .tag(18)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
