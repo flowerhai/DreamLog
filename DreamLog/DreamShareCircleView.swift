@@ -17,6 +17,7 @@ struct DreamShareCircleView: View {
     @State private var newCommentText: String = ""
     @State private var showingReactionPicker = false
     @State private var selectedDreamId: String?
+    @State private var navigateToCircleDetail = false
     
     var body: some View {
         NavigationView {
@@ -43,6 +44,11 @@ struct DreamShareCircleView: View {
             }
             .sheet(isPresented: $showingSettingsSheet) {
                 CircleSettingsSheet(circleId: selectedCircleId)
+            }
+            .navigationDestination(isPresented: $navigateToCircleDetail) {
+                if let circle = service.currentCircle {
+                    CircleDetailView(circle: circle)
+                }
             }
         }
     }
@@ -85,12 +91,22 @@ struct DreamShareCircleView: View {
             // 我的分享圈
             Section("我的分享圈") {
                 ForEach(service.circles) { circle in
-                    CircleRowView(circle: circle)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            selectedCircleId = circle.id
-                            service.currentCircle = circle
-                        }
+                    NavigationLink(value: circle) {
+                        CircleRowView(circle: circle)
+                    }
+                }
+            }
+            
+            // 快捷操作
+            Section("快捷操作") {
+                Button(action: { showingCreateSheet = true }) {
+                    Label("创建新分享圈", systemImage: "plus.circle.fill")
+                        .foregroundColor(.purple)
+                }
+                
+                if !service.invitations.isEmpty {
+                    Label("待处理邀请 (\(service.invitations.filter { $0.status == .pending }.count))", systemImage: "envelope.open.fill")
+                        .foregroundColor(.orange)
                 }
             }
             
@@ -104,6 +120,10 @@ struct DreamShareCircleView: View {
             }
         }
         .listStyle(.insetGrouped)
+        .navigationDestination(for: ShareCircle.self) { circle in
+            service.currentCircle = circle
+            CircleDetailView(circle: circle)
+        }
     }
 }
 
@@ -629,6 +649,505 @@ struct CommentRow: View {
             }
         }
         .padding(.vertical, 4)
+    }
+}
+
+// MARK: - 分享圈详情视图
+
+struct CircleDetailView: View {
+    let circle: ShareCircle
+    @StateObject private var service = DreamShareCircleService.shared
+    @State private var selectedTab = 0
+    @State private var showingInviteSheet = false
+    @State private var showingSettingsSheet = false
+    @State private var showingShareDreamSheet = false
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                // 头部信息
+                CircleHeader(circle: circle)
+                
+                // 统计卡片
+                CircleStatsCard(circle: circle)
+                
+                // 分段控制器
+                Picker("内容", selection: $selectedTab) {
+                    Text("梦境").tag(0)
+                    Text("成员").tag(1)
+                    Text("动态").tag(2)
+                }
+                .pickerStyle(.segmented)
+                .padding()
+                
+                // 内容区域
+                switch selectedTab {
+                case 0:
+                    SharedDreamsList(circleId: circle.id)
+                case 1:
+                    CircleMembersList(circle: circle)
+                case 2:
+                    CircleActivityFeed(circleId: circle.id)
+                default:
+                    EmptyView()
+                }
+            }
+        }
+        .navigationTitle(circle.name)
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { showingSettingsSheet = true }) {
+                    Image(systemName: "gearshape")
+                }
+            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack(spacing: 16) {
+                    Button(action: { showingInviteSheet = true }) {
+                        Image(systemName: "person.badge.plus")
+                    }
+                    
+                    Button(action: { showingShareDreamSheet = true }) {
+                        Image(systemName: "plus.app")
+                    }
+                }
+            }
+        }
+        .sheet(isPresented: $showingInviteSheet) {
+            InviteMemberSheet(circleId: circle.id)
+        }
+        .sheet(isPresented: $showingSettingsSheet) {
+            CircleSettingsSheet(circleId: circle.id)
+        }
+        .sheet(isPresented: $showingShareDreamSheet) {
+            ShareDreamSheet(circleId: circle.id)
+        }
+    }
+}
+
+// MARK: - 分享圈头部
+
+struct CircleHeader: View {
+    let circle: ShareCircle
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // 封面图/图标
+            ZStack {
+                Circle()
+                    .fill(circle.type.color.gradient)
+                    .frame(width: 100, height: 100)
+                
+                Image(systemName: circle.type.icon)
+                    .font(.system(size: 50))
+                    .foregroundColor(.white)
+            }
+            .padding(.top, 20)
+            
+            // 名称和描述
+            VStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    Text(circle.name)
+                        .font(.title)
+                        .fontWeight(.bold)
+                    
+                    if circle.isPrivate {
+                        Image(systemName: "lock.fill")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                if let description = circle.description {
+                    Text(description)
+                        .font(.body)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                
+                Text("创建于 \(circle.createdAt.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.bottom, 20)
+    }
+}
+
+// MARK: - 统计卡片
+
+struct CircleStatsCard: View {
+    let circle: ShareCircle
+    
+    var body: some View {
+        HStack(spacing: 20) {
+            StatItem(icon: "person.3.fill", value: "\(circle.memberCount)", label: "成员")
+            StatItem(icon: "doc.text.fill", value: "\(circle.totalSharedDreams)", label: "梦境")
+            StatItem(icon: "star.fill", value: "\(circle.members.reduce(0) { $0 + $1.commentCount })", label: "评论")
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+        .padding(.horizontal)
+    }
+}
+
+struct StatItem: View {
+    let icon: String
+    let value: String
+    let label: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(.purple)
+            
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text(label)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - 共享梦境列表
+
+struct SharedDreamsList: View {
+    let circleId: String
+    @StateObject private var service = DreamShareCircleService.shared
+    
+    var filteredDreams: [SharedDream] {
+        service.sharedDreams.filter { $0.circleId == circleId }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if filteredDreams.isEmpty {
+                VStack(spacing: 16) {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.system(size: 50))
+                        .foregroundColor(.secondary)
+                    
+                    Text("暂无分享的梦境")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    Text("点击上方 + 按钮分享你的第一个梦境")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, minHeight: 200)
+            } else {
+                ForEach(filteredDreams) { dream in
+                    SharedDreamCard(dream: dream)
+                }
+            }
+        }
+        .padding()
+    }
+}
+
+// MARK: - 共享梦境卡片
+
+struct SharedDreamCard: View {
+    let dream: SharedDream
+    @State private var showingDetail = false
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // 头部
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(dream.title)
+                        .font(.headline)
+                    
+                    Text("由 \(dream.sharedBy.userName) 分享")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Text(dream.sharedAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            // 内容预览
+            Text(dream.content)
+                .font(.body)
+                .lineLimit(3)
+                .foregroundColor(.secondary)
+            
+            // 标签
+            if !dream.tags.isEmpty {
+                FlowLayout(spacing: 6) {
+                    ForEach(dream.tags.prefix(5), id: \.self) { tag in
+                        Text("#\(tag)")
+                            .font(.caption2)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 2)
+                            .background(Color.purple.opacity(0.1))
+                            .foregroundColor(.purple)
+                            .cornerRadius(8)
+                    }
+                }
+            }
+            
+            Divider()
+            
+            // 底部操作
+            HStack {
+                HStack(spacing: 4) {
+                    Image(systemName: "heart.fill")
+                        .foregroundColor(.red)
+                    Text("\(dream.reactionCount)")
+                        .font(.caption)
+                }
+                
+                HStack(spacing: 4) {
+                    Image(systemName: "message.fill")
+                        .foregroundColor(.blue)
+                    Text("\(dream.commentCount)")
+                        .font(.caption)
+                }
+                
+                Spacer()
+                
+                if dream.isLucid {
+                    Label("清醒梦", systemImage: "brain.head.profile")
+                        .font(.caption2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundColor(.blue)
+                        .cornerRadius(8)
+                }
+                
+                Text("清晰度：\(dream.clarity)/5")
+                    .font(.caption2)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Color.orange.opacity(0.1))
+                    .foregroundColor(.orange)
+                    .cornerRadius(8)
+            }
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .onTapGesture {
+            showingDetail = true
+        }
+        .sheet(isPresented: $showingDetail) {
+            SharedDreamDetailView(sharedDream: dream)
+        }
+    }
+}
+
+// MARK: - 成员列表
+
+struct CircleMembersList: View {
+    let circle: ShareCircle
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(circle.members.sorted(by: { $0.role.rawValue < $1.role.rawValue })) { member in
+                MemberRow(member: member, isOwner: member.userId == circle.owner.userId)
+            }
+        }
+        .padding()
+    }
+}
+
+struct MemberRow: View {
+    let member: CircleMember
+    let isOwner: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // 头像
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [.purple, .blue],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 44, height: 44)
+                .overlay(
+                    Text(member.userName.prefix(1).uppercased())
+                        .font(.headline)
+                        .foregroundColor(.white)
+                )
+            
+            // 信息
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    Text(member.userName)
+                        .font(.headline)
+                    
+                    if isOwner {
+                        Text("圈主")
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1)
+                            .background(Color.orange)
+                            .foregroundColor(.white)
+                            .cornerRadius(4)
+                    } else {
+                        Text(member.role.displayName)
+                            .font(.caption2)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 1)
+                            .background(Color.secondary.opacity(0.2))
+                            .foregroundColor(.secondary)
+                            .cornerRadius(4)
+                    }
+                }
+                
+                HStack(spacing: 12) {
+                    Label("\(member.sharedDreamCount)", systemImage: "doc.text.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    
+                    Label("\(member.commentCount)", systemImage: "message.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - 动态列表
+
+struct CircleActivityFeed: View {
+    let circleId: String
+    @StateObject private var service = DreamShareCircleService.shared
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("最近活动")
+                .font(.headline)
+                .padding(.bottom, 8)
+            
+            // 示例活动 (实际应从服务获取)
+            ForEach(0..<3, id: \.self) { _ in
+                ActivityRow()
+            }
+            
+            if service.activities.isEmpty {
+                Text("暂无活动记录")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .padding(.top, 20)
+            }
+        }
+        .padding()
+    }
+}
+
+struct ActivityRow: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "star.fill")
+                .font(.title3)
+                .foregroundColor(.yellow)
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text("用户分享了梦境")
+                    .font(.subheadline)
+                
+                Text("2 小时前")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+        }
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - 分享梦境表单
+
+struct ShareDreamSheet: View {
+    @Environment(\.dismiss) var dismiss
+    @StateObject private var service = DreamStore.shared
+    @StateObject private var circleService = DreamShareCircleService.shared
+    
+    let circleId: String
+    @State private var selectedDreamId: String?
+    
+    var availableDreams: [Dream] {
+        service.dreams.filter { dream in
+            !circleService.sharedDreams.contains { $0.dreamId == dream.id }
+        }
+    }
+    
+    var body: some View {
+        NavigationView {
+            List(availableDreams) { dream in
+                Button(action: {
+                    selectedDreamId = dream.id
+                    Task {
+                        try? await circleService.shareDream(dream, to: circleId)
+                        dismiss()
+                    }
+                }) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(dream.title ?? "无标题")
+                            .font(.headline)
+                        
+                        Text(dream.content.prefix(100))
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                        
+                        HStack {
+                            Text(dream.date.formatted(date: .abbreviated, time: .omitted))
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                            
+                            if dream.isLucid {
+                                Label("清醒梦", systemImage: "brain.head.profile")
+                                    .font(.caption2)
+                                    .foregroundColor(.blue)
+                            }
+                        }
+                    }
+                }
+            }
+            .navigationTitle("选择梦境")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("取消") {
+                        dismiss()
+                    }
+                }
+            }
+            
+            if availableDreams.isEmpty {
+                ContentUnavailableView(
+                    "暂无梦境",
+                    systemImage: "doc.text.magnifyingglass",
+                    description: Text("先记录一些梦境再来分享吧")
+                )
+            }
+        }
     }
 }
 
