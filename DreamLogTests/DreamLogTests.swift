@@ -4856,4 +4856,120 @@ final class DreamLogTests: XCTestCase {
         XCTAssertEqual(shadow.shadowOffset, CGSize(width: 2, height: 2))
         XCTAssertEqual(shadow.shadowBlurRadius, 4)
     }
+    
+    // MARK: - Phase 14 视频增强功能测试
+    
+    func testVideoSharePlatform() throws {
+        let allPlatforms = VideoSharePlatform.allCases
+        XCTAssertEqual(allPlatforms.count, 8)
+        
+        for platform in allPlatforms {
+            XCTAssertFalse(platform.rawValue.isEmpty)
+            XCTAssertFalse(platform.id.isEmpty)
+            XCTAssertFalse(platform.icon.isEmpty)
+            XCTAssertFalse(platform.color.isEmpty)
+        }
+        
+        XCTAssertEqual(VideoSharePlatform.wechat.icon, "message.fill")
+        XCTAssertEqual(VideoSharePlatform.instagram.color, "E44056")
+        XCTAssertEqual(VideoSharePlatform.copyLink.rawValue, "复制链接")
+    }
+    
+    func testVideoPlaylist() throws {
+        let playlist = VideoPlaylist(
+            title: "测试播放列表",
+            description: "这是一个测试播放列表",
+            videoIds: [UUID(), UUID()],
+            createdAt: Date(),
+            isFavorite: true,
+            coverVideoId: UUID()
+        )
+        
+        XCTAssertNotNil(playlist.id)
+        XCTAssertEqual(playlist.title, "测试播放列表")
+        XCTAssertEqual(playlist.videoCount, 2)
+        XCTAssertTrue(playlist.isFavorite)
+    }
+    
+    func testVideoExportConfig() throws {
+        let config = VideoExportConfig(
+            format: .mp4,
+            quality: .high,
+            includeMetadata: true,
+            compressSize: false
+        )
+        
+        XCTAssertEqual(config.format, .mp4)
+        XCTAssertEqual(config.format.fileExtension, "mp4")
+        XCTAssertEqual(config.quality, .high)
+        XCTAssertEqual(config.quality.bitrate, 5_000_000)
+        XCTAssertTrue(config.includeMetadata)
+        XCTAssertFalse(config.compressSize)
+    }
+    
+    func testExportFormatEnum() throws {
+        let allFormats = VideoExportConfig.ExportFormat.allCases
+        XCTAssertEqual(allFormats.count, 3)
+        
+        XCTAssertEqual(VideoExportConfig.ExportFormat.mp4.fileExtension, "mp4")
+        XCTAssertEqual(VideoExportConfig.ExportFormat.mov.fileExtension, "mov")
+        XCTAssertEqual(VideoExportConfig.ExportFormat.gif.fileExtension, "gif")
+        
+        for format in allFormats {
+            XCTAssertFalse(format.rawValue.isEmpty)
+            XCTAssertFalse(format.id.isEmpty)
+        }
+    }
+    
+    func testExportQualityEnum() throws {
+        let allQualities = VideoExportConfig.ExportQuality.allCases
+        XCTAssertEqual(allQualities.count, 4)
+        
+        XCTAssertEqual(VideoExportConfig.ExportQuality.low.bitrate, 1_000_000)
+        XCTAssertEqual(VideoExportConfig.ExportQuality.medium.bitrate, 2_500_000)
+        XCTAssertEqual(VideoExportConfig.ExportQuality.high.bitrate, 5_000_000)
+        XCTAssertEqual(VideoExportConfig.ExportQuality.original.bitrate, 10_000_000)
+        
+        for quality in allQualities {
+            XCTAssertFalse(quality.rawValue.isEmpty)
+            XCTAssertFalse(quality.id.isEmpty)
+        }
+    }
+    
+    func testVideoEnhancementServiceSingleton() throws {
+        let service1 = DreamVideoEnhancementService.shared
+        let service2 = DreamVideoEnhancementService.shared
+        
+        XCTAssertIdentical(service1, service2)
+        XCTAssertFalse(service1.isExporting)
+        XCTAssertEqual(service1.exportProgress, 0.0)
+        XCTAssertNil(service1.lastExportURL)
+        XCTAssertNotNil(service1.playlists)
+    }
+    
+    func testVideoEnhancementErrorEnum() throws {
+        let errors: [VideoEnhancementError] = [.alreadyExporting, .fileNotFound, .exportFailed("测试"), .playlistNotFound, .invalidFormat]
+        
+        for error in errors {
+            XCTAssertFalse(error.errorDescription?.isEmpty ?? true)
+        }
+        
+        XCTAssertEqual(VideoEnhancementError.alreadyExporting.errorDescription, "正在导出另一个视频，请稍候")
+        XCTAssertEqual(VideoEnhancementError.fileNotFound.errorDescription, "视频文件不存在")
+        XCTAssertEqual(VideoEnhancementError.exportFailed("原因").errorDescription, "导出失败：原因")
+    }
+    
+    func testShareItem() throws {
+        let shareItem = ShareItem(
+            title: "分享标题",
+            message: "分享消息",
+            url: URL(fileURLWithPath: "/path/to/video.mp4"),
+            platform: .wechat
+        )
+        
+        XCTAssertEqual(shareItem.title, "分享标题")
+        XCTAssertEqual(shareItem.message, "分享消息")
+        XCTAssertEqual(shareItem.platform, .wechat)
+        XCTAssertEqual(shareItem.url.path, "/path/to/video.mp4")
+    }
 }
