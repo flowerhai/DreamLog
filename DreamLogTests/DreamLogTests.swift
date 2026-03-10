@@ -5414,4 +5414,216 @@ final class VideoEnhancementTests: XCTestCase {
         XCTAssertNotNil(editor.quickAddTitle(sourceURL: URL(fileURLWithPath: "/tmp/test.mp4"), title: "Test", outputURL: URL(fileURLWithPath: "/tmp/output.mp4")))
         XCTAssertNotNil(editor.quickApplyFilter(sourceURL: URL(fileURLWithPath: "/tmp/test.mp4"), filterType: .vintage, outputURL: URL(fileURLWithPath: "/tmp/output.mp4")))
     }
+    
+    // MARK: - Phase 16 备份系统测试
+    
+    func testBackupTypeRawValues() {
+        XCTAssertEqual(BackupType.full.rawValue, "完整备份")
+        XCTAssertEqual(BackupType.partial.rawValue, "部分备份")
+        XCTAssertEqual(BackupType.incremental.rawValue, "增量备份")
+    }
+    
+    func testBackupTypeIcons() {
+        XCTAssertEqual(BackupType.full.icon, "square.stack.3d.up.fill")
+        XCTAssertEqual(BackupType.partial.icon, "square.split.1x2")
+        XCTAssertEqual(BackupType.incremental.icon, "arrow.triangle.2.circlepath")
+    }
+    
+    func testBackupEncryptionRawValues() {
+        XCTAssertEqual(BackupEncryption.none.rawValue, "不加密")
+        XCTAssertEqual(BackupEncryption.password.rawValue, "密码保护")
+        XCTAssertEqual(BackupEncryption.faceID.rawValue, "Face ID / Touch ID")
+    }
+    
+    func testBackupEncryptionIcons() {
+        XCTAssertEqual(BackupEncryption.none.icon, "lock.open")
+        XCTAssertEqual(BackupEncryption.password.icon, "lock.fill")
+        XCTAssertEqual(BackupEncryption.faceID.icon, "faceid")
+    }
+    
+    func testBackupConfigDefaultValues() {
+        let config = BackupConfig()
+        XCTAssertEqual(config.backupType, .full)
+        XCTAssertEqual(config.encryption, .password)
+        XCTAssertTrue(config.includeSettings)
+        XCTAssertTrue(config.includeStatistics)
+        XCTAssertFalse(config.includeAIHistory)
+        XCTAssertTrue(config.compressData)
+        XCTAssertFalse(config.autoBackup)
+    }
+    
+    func testAutoBackupIntervalDays() {
+        XCTAssertEqual(BackupConfig.AutoBackupInterval.daily.days, 1)
+        XCTAssertEqual(BackupConfig.AutoBackupInterval.weekly.days, 7)
+        XCTAssertEqual(BackupConfig.AutoBackupInterval.monthly.days, 30)
+    }
+    
+    func testBackupConfigEstimatedSize() {
+        var config = BackupConfig()
+        config.backupType = .full
+        XCTAssertEqual(config.estimatedSize, "~50-200 MB")
+        
+        config.backupType = .partial
+        XCTAssertEqual(config.estimatedSize, "~10-50 MB")
+        
+        config.backupType = .incremental
+        XCTAssertEqual(config.estimatedSize, "~5-20 MB")
+    }
+    
+    func testConflictResolutionRawValues() {
+        XCTAssertEqual(ConflictResolution.keepBoth.rawValue, "保留两者")
+        XCTAssertEqual(ConflictResolution.keepNewer.rawValue, "保留较新的")
+        XCTAssertEqual(ConflictResolution.keepOlder.rawValue, "保留较旧的")
+        XCTAssertEqual(ConflictResolution.skip.rawValue, "跳过")
+        XCTAssertEqual(ConflictResolution.overwrite.rawValue, "覆盖现有")
+    }
+    
+    func testConflictResolutionIcons() {
+        XCTAssertEqual(ConflictResolution.keepBoth.icon, "doc.on.doc")
+        XCTAssertEqual(ConflictResolution.keepNewer.icon, "clock.fill")
+        XCTAssertEqual(ConflictResolution.skip.icon, "xmark.circle")
+    }
+    
+    func testRestoreConfigDefaultValues() {
+        let config = RestoreConfig()
+        XCTAssertEqual(config.conflictResolution, .keepNewer)
+        XCTAssertTrue(config.restoreDreams)
+        XCTAssertTrue(config.restoreTags)
+        XCTAssertFalse(config.restoreSettings)
+        XCTAssertFalse(config.restoreStatistics)
+        XCTAssertFalse(config.dryRun)
+    }
+    
+    func testRestoreConfigSummary() {
+        var config = RestoreConfig()
+        config.restoreDreams = true
+        config.restoreTags = true
+        config.restoreSettings = false
+        config.restoreStatistics = false
+        XCTAssertEqual(config.summary, "梦境、标签")
+    }
+    
+    func testBackupProgressCalculation() {
+        let progress = BackupProgress(
+            currentStep: "测试",
+            totalSteps: 10,
+            currentStepIndex: 5
+        )
+        XCTAssertEqual(progress.progress, 0.5)
+    }
+    
+    func testBackupResultSuccess() {
+        let result = BackupResult(
+            success: true,
+            filePath: "/path/to/backup.dreambackup",
+            metadata: nil,
+            error: nil,
+            warnings: []
+        )
+        XCTAssertTrue(result.success)
+        XCTAssertNil(result.errorMessage)
+    }
+    
+    func testBackupResultError() {
+        let result = BackupResult(
+            success: false,
+            filePath: nil,
+            metadata: nil,
+            error: .fileAccessError("/invalid/path"),
+            warnings: []
+        )
+        XCTAssertFalse(result.success)
+        XCTAssertNotNil(result.errorMessage)
+    }
+    
+    func testRestoreResultSummary() {
+        let result = RestoreResult(
+            success: true,
+            dreamsRestored: 10,
+            tagsRestored: 5,
+            conflictsResolved: 2,
+            error: nil,
+            warnings: []
+        )
+        XCTAssertEqual(result.summary, "10 个梦境，5 个标签，解决 2 个冲突")
+    }
+    
+    func testBackupErrorDescriptions() {
+        let errors: [BackupError] = [
+            .fileAccessError("/path"),
+            .encryptionError("reason"),
+            .checksumMismatch,
+            .cancelled
+        ]
+        
+        for error in errors {
+            XCTAssertNotNil(error.errorDescription)
+        }
+    }
+    
+    func testBackupHistoryCalculations() {
+        let metadata1 = BackupMetadata(
+            backupType: .full,
+            encryption: .none,
+            dreamCount: 10,
+            fileSize: 1024 * 1024, // 1MB
+            checksum: "abc123"
+        )
+        
+        let metadata2 = BackupMetadata(
+            backupType: .full,
+            encryption: .none,
+            dreamCount: 5,
+            fileSize: 512 * 1024, // 0.5MB
+            checksum: "def456"
+        )
+        
+        let history = BackupHistory(backups: [metadata1, metadata2])
+        
+        XCTAssertEqual(history.totalBackups, 2)
+        XCTAssertEqual(history.totalSize, 1.5 * 1024 * 1024)
+        XCTAssertFalse(history.formattedTotalSize.isEmpty)
+    }
+    
+    func testBackupServiceSingleton() {
+        let service1 = DreamBackupService.shared
+        let service2 = DreamBackupService.shared
+        XCTAssertIdentical(service1, service2)
+    }
+    
+    func testBackupServiceInitialState() async {
+        let service = DreamBackupService.shared
+        
+        XCTAssertFalse(service.isBackingUp)
+        XCTAssertFalse(service.isRestoring)
+        XCTAssertNil(service.backupProgress)
+        XCTAssertNil(service.currentBackupError)
+    }
+    
+    func testBackupServiceConfigPersistence() {
+        let service = DreamBackupService.shared
+        
+        var config = BackupConfig()
+        config.backupType = .partial
+        config.autoBackup = true
+        config.autoBackupInterval = .weekly
+        
+        service.saveConfig(config)
+        
+        let loadedConfig = service.getConfig()
+        XCTAssertEqual(loadedConfig.backupType, .partial)
+        XCTAssertTrue(loadedConfig.autoBackup)
+        XCTAssertEqual(loadedConfig.autoBackupInterval, .weekly)
+    }
+    
+    func testBackupServiceEstimateSize() async {
+        let service = DreamBackupService.shared
+        
+        var config = BackupConfig()
+        config.backupType = .full
+        config.compressData = true
+        
+        let size = service.estimateBackupSize(config: config)
+        XCTAssertGreaterThanOrEqual(size, 0)
+    }
 }
