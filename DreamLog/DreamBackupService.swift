@@ -9,6 +9,9 @@
 import Foundation
 import Combine
 import UniformTypeIdentifiers
+import CryptoKit
+import LocalAuthentication
+import UIKit
 
 // MARK: - 备份服务
 
@@ -36,8 +39,68 @@ class DreamBackupService: ObservableObject {
     private let configKey = "dreamlog.backup.config"
     private let historyKey = "dreamlog.backup.history"
     private let lastBackupKey = "dreamlog.backup.lastDate"
+    private let encryptionKeyKey = "dreamlog.backup.encryptionKey"
+    private let saltKey = "dreamlog.backup.salt"
     
     private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - 加密密钥管理
+    
+    /// 获取或创建加密密钥
+    /// - Parameter password: 用于派生密钥的密码
+    /// - Returns: 对称加密密钥
+    /// - Note: 使用 PBKDF2-SHA256 进行密钥派生，100000 次迭代
+    internal func getEncryptionKey(password: String) throws -> SymmetricKey {
+        // 获取或生成盐值
+        let salt: Data
+        if let existingSalt = userDefaults.data(forKey: saltKey) {
+            salt = existingSalt
+        } else {
+            // 生成新的随机盐值 (16 字节)
+            salt = Data((0..<16).map { _ in UInt8.random(in: 0...255) })
+            userDefaults.set(salt, forKey: saltKey)
+        }
+        
+        // 使用 PBKDF2 从密码派生密钥
+        let passwordData = Data(password.utf8)
+        let keyData = try! PBKDF2<SHA256>.deriveKey(
+            password: passwordData,
+            salt: salt,
+            iterations: 100000,
+            byteCount: 32
+        )
+        
+        return SymmetricKey(data: keyData)
+    }
+    
+    /// 验证 Face ID/Touch ID
+    private func authenticateWithBiometrics() async throws -> Bool {
+        let context = LAContext()
+        var error: NSError?
+        
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            throw BackupError.biometricUnavailable
+        }
+        
+        let success = try await context.evaluatePolicy(
+            .deviceOwnerAuthenticationWithBiometrics,
+            localizedReason: "使用生物识别验证以解密备份"
+        )
+        
+        return success
+    }
+    
+    /// 获取生物识别密钥 (从 Keychain 获取)
+    private func getBiometricKey() throws -> SymmetricKey? {
+        // 简化实现：实际应从 Keychain 获取
+        // 这里使用设备标识符生成密钥
+        guard let deviceId = UIDevice.current.identifierForVendor?.uuidString.data(using: .utf8) else {
+            return nil
+        }
+        
+        let hash = SHA256.hash(data: deviceId)
+        return SymmetricKey(data: Data(hash))
+    }
     
     // MARK: - Init
     
@@ -287,26 +350,117 @@ class DreamBackupService: ObservableObject {
     
     /// 加密数据
     private func encryptData(_ data: Data, config: BackupConfig) throws -> Data {
-        // 简化版本：实际应使用 CommonCrypto 或 CryptoKit 进行加密
-        // 这里仅做占位实现
         switch config.encryption {
         case .none:
             return data
-        case .password, .faceID:
-            // TODO: 实现实际加密逻辑
-            return data
+            
+        case .password:
+            guard let password = config.password, !password.isEmpty else {
+                throw BackupError.invalidPassword
+            }
+            
+            let key = try getEncryptionKey(password: password)
+            let nonce = AES.GCM.Nonce()
+            
+            // 使用 AES-GCM 加密
+            let sealedBox = try AES.GCM.seal(data, using: key, nonce: nonce)
+            
+            // 组合：nonce + ciphertext + tag
+            var encryptedData = Data(nonce)
+            encryptedData.append(sealedBox.ciphertext)
+            encryptedData.append(sealedBox.tag)
+            
+            return encryptedData
+            
+        case .faceID:
+            guard let key = try getBiometricKey() else {
+                throw BackupError.biometricUnavailable
+            }
+            
+            let nonce = AES.GCM.Nonce()
+            
+            // 使用 AES-GCM 加密
+            let sealedBox = try AES.GCM.seal(data, using: key, nonce: nonce)
+            
+            // 组合：nonce + ciphertext + tag
+            var encryptedData = Data(nonce)
+            encryptedData.append(sealedBox.ciphertext)
+            encryptedData.append(sealedBox.tag)
+            
+            return encryptedData
         }
     }
     
     /// 解密数据
     private func decryptData(_ data: Data, config: BackupConfig) throws -> Data {
-        // 简化版本：实际应使用 CommonCrypto 或 CryptoKit 进行解密
         switch config.encryption {
         case .none:
             return data
-        case .password, .faceID:
-            // TODO: 实现实际解密逻辑
-            return data
+            
+        case .password:
+            guard let password = config.password, !password.isEmpty else {
+                throw BackupError.invalidPassword
+            }
+            
+            let key = try getEncryptionKey(password: password)
+            
+            // 提取 nonce (前 12 字节)
+            guard data.count > 28 else {
+                throw BackupError.corruptedBackup
+            }
+            
+            let nonceData = data.prefix(12)
+            let ciphertextAndTag = data.dropFirst(12)
+            
+            guard let nonce = AES.GCM.Nonce(data: nonceData) else {
+                throw BackupError.corruptedBackup
+            }
+            
+            // 分离 ciphertext 和 tag (最后 16 字节)
+            let ciphertext = ciphertextAndTag.dropLast(16)
+            let tag = ciphertextAndTag.suffix(16)
+            
+            let sealedBox = try AES.GCM.SealedBox(
+                nonce: nonce,
+                ciphertext: Data(ciphertext),
+                tag: Data(tag)
+            )
+            
+            return try AES.GCM.open(sealedBox, using: key)
+            
+        case .faceID:
+            // 首先验证生物识别
+            guard try await authenticateWithBiometrics() else {
+                throw BackupError.authenticationFailed
+            }
+            
+            guard let key = try getBiometricKey() else {
+                throw BackupError.biometricUnavailable
+            }
+            
+            // 提取 nonce (前 12 字节)
+            guard data.count > 28 else {
+                throw BackupError.corruptedBackup
+            }
+            
+            let nonceData = data.prefix(12)
+            let ciphertextAndTag = data.dropFirst(12)
+            
+            guard let nonce = AES.GCM.Nonce(data: nonceData) else {
+                throw BackupError.corruptedBackup
+            }
+            
+            // 分离 ciphertext 和 tag (最后 16 字节)
+            let ciphertext = ciphertextAndTag.dropLast(16)
+            let tag = ciphertextAndTag.suffix(16)
+            
+            let sealedBox = try AES.GCM.SealedBox(
+                nonce: nonce,
+                ciphertext: Data(ciphertext),
+                tag: Data(tag)
+            )
+            
+            return try AES.GCM.open(sealedBox, using: key)
         }
     }
     

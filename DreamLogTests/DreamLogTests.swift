@@ -5626,4 +5626,149 @@ final class VideoEnhancementTests: XCTestCase {
         let size = service.estimateBackupSize(config: config)
         XCTAssertGreaterThanOrEqual(size, 0)
     }
+    
+    // MARK: - 加密功能测试
+    
+    func testEncryptionKeyDerivation() throws {
+        let service = DreamBackupService.shared
+        
+        // 测试相同密码生成相同密钥
+        let key1 = try service.getEncryptionKey(password: "testPassword123")
+        let key2 = try service.getEncryptionKey(password: "testPassword123")
+        
+        // 密钥应该相同 (因为盐值相同)
+        XCTAssertEqual(key1.withUnsafeBytes { Data($0) }, key2.withUnsafeBytes { Data($0) })
+        
+        // 不同密码应该生成不同密钥
+        let key3 = try service.getEncryptionKey(password: "differentPassword")
+        XCTAssertNotEqual(key1.withUnsafeBytes { Data($0) }, key3.withUnsafeBytes { Data($0) })
+    }
+    
+    func testPasswordEncryptionDecryption() throws {
+        let service = DreamBackupService.shared
+        
+        // 准备测试数据
+        let originalData = Data("这是测试梦境数据".utf8)
+        
+        var config = BackupConfig()
+        config.encryption = .password
+        config.password = "testPassword123"
+        
+        // 加密
+        let encryptedData = try service.encryptData(originalData, config: config)
+        
+        // 加密后的数据应该比原始数据大 (包含 nonce 和 tag)
+        XCTAssertGreaterThan(encryptedData.count, originalData.count)
+        
+        // 加密后的数据应该不同于原始数据
+        XCTAssertNotEqual(encryptedData, originalData)
+        
+        // 解密
+        let decryptedData = try service.decryptData(encryptedData, config: config)
+        
+        // 解密后应该恢复原始数据
+        XCTAssertEqual(decryptedData, originalData)
+    }
+    
+    func testEncryptionWithEmptyPassword() throws {
+        let service = DreamBackupService.shared
+        
+        let originalData = Data("测试数据".utf8)
+        
+        var config = BackupConfig()
+        config.encryption = .password
+        config.password = ""
+        
+        // 空密码应该抛出错误
+        XCTAssertThrowsError(try service.encryptData(originalData, config: config)) { error in
+            guard let backupError = error as? BackupError else {
+                XCTFail("Expected BackupError")
+                return
+            }
+            XCTAssertEqual(backupError, .invalidPassword)
+        }
+    }
+    
+    func testDecryptionWithWrongPassword() throws {
+        let service = DreamBackupService.shared
+        
+        let originalData = Data("测试数据".utf8)
+        
+        // 用正确密码加密
+        var encryptConfig = BackupConfig()
+        encryptConfig.encryption = .password
+        encryptConfig.password = "correctPassword"
+        
+        let encryptedData = try service.encryptData(originalData, config: encryptConfig)
+        
+        // 用错误密码解密
+        var decryptConfig = BackupConfig()
+        decryptConfig.encryption = .password
+        decryptConfig.password = "wrongPassword"
+        
+        XCTAssertThrowsError(try service.decryptData(encryptedData, config: decryptConfig))
+    }
+    
+    func testNoEncryptionPassthrough() throws {
+        let service = DreamBackupService.shared
+        
+        let originalData = Data("测试数据".utf8)
+        
+        var config = BackupConfig()
+        config.encryption = .none
+        
+        // 不加密时，数据应该原样返回
+        let encryptedData = try service.encryptData(originalData, config: config)
+        XCTAssertEqual(encryptedData, originalData)
+        
+        let decryptedData = try service.decryptData(encryptedData, config: config)
+        XCTAssertEqual(decryptedData, originalData)
+    }
+    
+    func testEncryptionDataIntegrity() throws {
+        let service = DreamBackupService.shared
+        
+        // 测试不同大小的数据
+        let testCases = [
+            Data(),  // 空数据
+            Data([0x01]),  // 单字节
+            Data((0..<100).map { UInt8($0) }),  // 100 字节
+            Data((0..<1000).map { UInt8($0 % 256) }),  // 1000 字节
+            Data("这是一段较长的测试数据，包含中文字符和特殊符号！@#$%^&*()".utf8)  // 中文数据
+        ]
+        
+        var config = BackupConfig()
+        config.encryption = .password
+        config.password = "integrityTest"
+        
+        for originalData in testCases {
+            let encryptedData = try service.encryptData(originalData, config: config)
+            let decryptedData = try service.decryptData(encryptedData, config: config)
+            
+            XCTAssertEqual(decryptedData, originalData, "数据完整性测试失败")
+        }
+    }
+    
+    func testBiometricEncryptionConfig() {
+        var config = BackupConfig()
+        config.encryption = .faceID
+        
+        XCTAssertEqual(config.encryption, .faceID)
+        XCTAssertNil(config.password)  // 生物识别不需要密码
+    }
+    
+    func testBackupErrorCases() {
+        // 测试新增的错误类型
+        let errors: [BackupError] = [
+            .invalidPassword,
+            .biometricUnavailable,
+            .authenticationFailed,
+            .corruptedBackup
+        ]
+        
+        for error in errors {
+            XCTAssertNotNil(error.errorDescription)
+            XCTAssertFalse(error.errorDescription!.isEmpty)
+        }
+    }
 }

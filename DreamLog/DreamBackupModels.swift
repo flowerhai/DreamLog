@@ -317,6 +317,10 @@ enum BackupError: LocalizedError {
     case insufficientSpace(Int64, Int64)
     case cancelled
     case unknown(Error)
+    case invalidPassword
+    case biometricUnavailable
+    case authenticationFailed
+    case corruptedBackup
     
     var errorDescription: String? {
         switch self {
@@ -342,6 +346,14 @@ enum BackupError: LocalizedError {
             return "操作已取消"
         case .unknown(let error):
             return "发生错误：\(error.localizedDescription)"
+        case .invalidPassword:
+            return "密码无效或为空"
+        case .biometricUnavailable:
+            return "生物识别不可用，请检查设备设置"
+        case .authenticationFailed:
+            return "生物识别验证失败"
+        case .corruptedBackup:
+            return "备份文件已损坏，无法解密"
         }
     }
 }
