@@ -154,6 +154,13 @@ struct ContentView: View {
                     Text("备份")
                 }
                 .tag(19)
+            
+            DreamShareCircleView()
+                .tabItem {
+                    Image(systemName: "person.3.fill")
+                    Text("分享圈")
+                }
+                .tag(20)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
