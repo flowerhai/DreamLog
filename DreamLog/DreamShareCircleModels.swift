@@ -374,6 +374,7 @@ enum ShareCircleError: LocalizedError {
     case circleFull
     case networkError
     case syncError
+    case dreamAlreadyShared
     
     var errorDescription: String? {
         switch self {
@@ -386,6 +387,17 @@ enum ShareCircleError: LocalizedError {
         case .circleFull: return "分享圈已满"
         case .networkError: return "网络错误"
         case .syncError: return "同步失败"
+        case .dreamAlreadyShared: return "该梦境已分享到此圈子"
         }
     }
+}
+
+// MARK: - 简要统计
+
+/// 分享圈简要统计
+struct CircleStats {
+    var totalDreams: Int
+    var totalComments: Int
+    var totalReactions: Int
+    var recentDreamCount: Int
 }

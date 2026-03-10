@@ -236,6 +236,11 @@ class DreamShareCircleService: ObservableObject {
             throw ShareCircleError.insufficientPermissions
         }
         
+        // 检查是否已经分享过
+        if sharedDreams.contains(where: { $0.dreamId == dream.id && $0.circleId == circleId }) {
+            throw ShareCircleError.dreamAlreadyShared
+        }
+        
         let sharedDream = SharedDream(
             dreamId: dream.id,
             circleId: circleId,
@@ -273,6 +278,26 @@ class DreamShareCircleService: ObservableObject {
         }
         
         sharedDreams.remove(at: index)
+    }
+    
+    /// 获取分享圈的共享梦境
+    func getSharedDreams(for circleId: String) -> [SharedDream] {
+        return sharedDreams.filter { $0.circleId == circleId }
+            .sorted { $0.sharedAt > $1.sharedAt }
+    }
+    
+    /// 获取分享圈的统计信息
+    func getCircleStats(circleId: String) -> CircleStats {
+        let circleDreams = getSharedDreams(for: circleId)
+        let totalComments = circleDreams.reduce(0) { $0 + $1.commentCount }
+        let totalReactions = circleDreams.reduce(0) { $0 + $1.reactionCount }
+        
+        return CircleStats(
+            totalDreams: circleDreams.count,
+            totalComments: totalComments,
+            totalReactions: totalReactions,
+            recentDreamCount: circleDreams.filter { Calendar.current.isDate($0.sharedAt, in: .today, to: Date()) }.count
+        )
     }
     
     // MARK: - 评论功能
