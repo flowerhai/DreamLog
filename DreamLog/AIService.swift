@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class AIService: ObservableObject {
     @Published var isAnalyzing: Bool = false
     @Published var isGeneratingImage: Bool = false

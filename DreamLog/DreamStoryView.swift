@@ -436,6 +436,7 @@ struct StoryReaderView: View {
     @State private var showDeleteConfirm = false
     @State private var fontSize: CGFloat = 18
     @State private var isPlaying = false
+    @ObservedObject private var speechService = SpeechSynthesisService.shared
     
     var body: some View {
         NavigationView {
@@ -506,6 +507,11 @@ struct StoryReaderView: View {
                 Button("取消", role: .cancel) {}
             } message: {
                 Text("确定要删除这个故事吗？此操作不可撤销。")
+            }
+            .onDisappear {
+                // 视图消失时停止播放
+                speechService.stop()
+                isPlaying = false
             }
         }
     }
@@ -589,9 +595,9 @@ struct StoryReaderView: View {
             // Play button
             Button(action: togglePlayback) {
                 HStack {
-                    Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                    Image(systemName: playbackIcon)
                         .font(.title2)
-                    Text(isPlaying ? "停止朗读" : "朗读故事")
+                    Text(playbackButtonText)
                         .font(.headline)
                 }
                 .foregroundColor(.white)
@@ -606,6 +612,7 @@ struct StoryReaderView: View {
                 )
                 .cornerRadius(16)
             }
+            .disabled(speechService.isSpeaking && !speechService.isPaused && isPlaying == false)
             
             // Share button
             Button(action: { showShareSheet = true }) {
@@ -624,11 +631,57 @@ struct StoryReaderView: View {
         .padding(.horizontal)
     }
     
+    // MARK: - Computed Properties
+    
+    private var playbackIcon: String {
+        if speechService.isPaused {
+            return "play.circle.fill"
+        } else if speechService.isSpeaking && isPlaying {
+            return "pause.circle.fill"
+        } else {
+            return "play.circle.fill"
+        }
+    }
+    
+    private var playbackButtonText: String {
+        if speechService.isPaused {
+            return "继续朗读"
+        } else if speechService.isSpeaking && isPlaying {
+            return "暂停朗读"
+        } else {
+            return "朗读故事"
+        }
+    }
+    
     // MARK: - Actions
     
     private func togglePlayback() {
-        isPlaying.toggle()
-        // TODO: Integrate with TTS service for story reading
+        if speechService.isSpeaking {
+            if speechService.isPaused {
+                // 继续播放
+                speechService.resume()
+                isPlaying = true
+            } else if isPlaying {
+                // 暂停播放
+                speechService.pause()
+            } else {
+                // 停止播放
+                speechService.stop()
+                isPlaying = false
+            }
+        } else {
+            // 组合所有章节内容进行朗读
+            let fullStoryText = story.sections
+                .sorted { $0.order < $1.order }
+                .map { "\($0.title)。\($0.content)" }
+                .joined(separator: " ")
+            
+            speechService.speak(fullStoryText) { [weak self] in
+                // 播放完成回调
+                self?.isPlaying = false
+            }
+            isPlaying = true
+        }
     }
 }
 

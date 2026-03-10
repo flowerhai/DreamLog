@@ -273,7 +273,7 @@ class DreamTrendService: ObservableObject {
                     themeData[tag] = (count: 0, first: dream.date, last: dream.date, recent: 0, previous: 0)
                 }
                 
-                var data = themeData[tag]!
+                var data = themeData[tag] ?? (count: 0, first: dream.date, last: dream.date, recent: 0, previous: 0)
                 data.count += 1
                 if dream.date < data.first { data.first = dream.date }
                 if dream.date > data.last { data.last = dream.date }

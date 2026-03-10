@@ -90,6 +90,13 @@ struct ContentView: View {
                 }
                 .tag(10)
             
+            DreamVideoView()
+                .tabItem {
+                    Image(systemName: "film")
+                    Text("视频")
+                }
+                .tag(11)
+            
             DreamGraphView()
                 .tabItem {
                     Image(systemName: "network")

@@ -339,7 +339,7 @@ class DreamStoryService: ObservableObject {
         ]
         
         let genreInsights = insights[genre] ?? ["梦境教会我们一些东西"]
-        return genreInsights.randomElement()!
+        return genreInsights.randomElement() ?? "梦境教会我们一些东西"
     }
     
     private func describeAftermath(from dream: Dream, genre: StoryGenre) -> String {
@@ -355,7 +355,7 @@ class DreamStoryService: ObservableObject {
         ]
         
         let genreAftermaths = aftermaths[genre] ?? ["梦境的印记"]
-        return genreAftermaths.randomElement()!
+        return genreAftermaths.randomElement() ?? "梦境的印记"
     }
     
     private func generatePhilosophicalReflection(from dream: Dream, genre: StoryGenre) -> String {
@@ -421,8 +421,8 @@ class DreamStoryService: ObservableObject {
     }
     
     private func extractKeyElement(from dream: Dream) -> String {
-        if !dream.tags.isEmpty {
-            return dream.tags.first!
+        if let firstTag = dream.tags.first {
+            return firstTag
         }
         let words = dream.content.components(separatedBy: .whitespacesAndNewlines)
             .filter { $0.count > 2 }
