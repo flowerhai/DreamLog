@@ -7,6 +7,7 @@
 //
 
 import SwiftUI
+import Combine
 
 // MARK: - 主挑战视图
 
@@ -16,6 +17,10 @@ struct DreamChallengeView: View {
     @State private var selectedFilter: ChallengeFilter = .all
     @State private var showingBadgeDetail = false
     @State private var selectedBadge: ChallengeBadge?
+    @State private var showingConfetti = false
+    @State private var showingShareSheet = false
+    @State private var shareChallenge: DreamChallenge?
+    private var cancellables = Set<AnyCancellable>()
     
     enum ChallengeFilter: String, CaseIterable {
         case all = "全部"
@@ -31,6 +36,12 @@ struct DreamChallengeView: View {
                     LoadingView()
                 } else {
                     challengeContent
+                }
+                
+                // 庆祝动画
+                if showingConfetti {
+                    ConfettiView(isActive: true)
+                        .ignoresSafeArea()
                 }
             }
             .navigationTitle("🎯 挑战")
@@ -60,6 +71,15 @@ struct DreamChallengeView: View {
         .onAppear {
             challengeService.checkAndActivateChallenges()
             challengeService.resetDailyChallenges()
+            challengeService.scheduleChallengeReminders()
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            if let challenge = shareChallenge {
+                ShareChallengeSheet(
+                    challenge: challenge,
+                    progress: challengeService.getProgress(for: challenge.id)
+                )
+            }
         }
     }
     
@@ -121,10 +141,15 @@ struct DreamChallengeView: View {
                     ForEach(challengeService.activeChallenges) { challenge in
                         ChallengeCard(
                             challenge: challenge,
-                            progress: challengeService.getProgress(for: challenge.id)
-                        ) {
-                            claimReward(challenge)
-                        }
+                            progress: challengeService.getProgress(for: challenge.id),
+                            onClaimReward: {
+                                claimReward(challenge)
+                            },
+                            onShare: {
+                                shareChallenge = challenge
+                                showingShareSheet = true
+                            }
+                        )
                     }
                 }
             }
@@ -257,10 +282,15 @@ struct DreamChallengeView: View {
             ForEach(challengeService.activeChallenges) { challenge in
                 ChallengeCard(
                     challenge: challenge,
-                    progress: challengeService.getProgress(for: challenge.id)
-                ) {
-                    claimReward(challenge)
-                }
+                    progress: challengeService.getProgress(for: challenge.id),
+                    onClaimReward: {
+                        claimReward(challenge)
+                    },
+                    onShare: {
+                        shareChallenge = challenge
+                        showingShareSheet = true
+                    }
+                )
             }
         }
     }
@@ -336,7 +366,166 @@ struct DreamChallengeView: View {
     
     func claimReward(_ challenge: DreamChallenge) {
         if challengeService.claimReward(for: challenge.id) {
-            // 显示成功提示
+            // 显示庆祝动画
+            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
+                showingConfetti = true
+            }
+            
+            // 3 秒后隐藏
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                withAnimation {
+                    showingConfetti = false
+                }
+            }
+            
+            // 发送通知
+            challengeService.sendChallengeCompletedNotification(challenge)
+        }
+    }
+}
+
+// MARK: - 庆祝动画组件
+
+struct ConfettiView: View {
+    let isActive: Bool
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                if isActive {
+                    ForEach(0..<50, id: \.self) { index in
+                        ConfettiParticle(index: index, size: geometry.size)
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
+struct ConfettiParticle: View {
+    let index: Int
+    let size: CGSize
+    @State private var offset = CGSize.zero
+    @State private var opacity = 1.0
+    
+    let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink]
+    
+    var body: some View {
+        Circle()
+            .fill(colors[index % colors.count])
+            .frame(width: CGFloat.random(in: 8...12), height: CGFloat.random(in: 8...12))
+            .position(
+                x: CGFloat.random(in: 0...size.width),
+                y: CGFloat.random(in: -50...0)
+            )
+            .opacity(opacity)
+            .onAppear {
+                withAnimation(.easeOut(duration: Double.random(in: 2...4))) {
+                    offset = CGSize(
+                        width: CGFloat.random(in: -100...100),
+                        height: size.height + 100
+                    )
+                    opacity = 0
+                }
+            }
+    }
+}
+
+// MARK: - 分享 Sheet
+
+struct ShareChallengeSheet: View {
+    let challenge: DreamChallenge
+    let progress: UserChallengeProgress?
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 20) {
+                // 挑战卡片预览
+                VStack(spacing: 12) {
+                    Image(systemName: challenge.type.icon)
+                        .font(.system(size: 60))
+                        .foregroundColor(.purple)
+                    
+                    Text(challenge.title)
+                        .font(.title2)
+                        .fontWeight(.bold)
+                    
+                    Text(challenge.description)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                    
+                    // 进度
+                    if let progress = progress {
+                        VStack(spacing: 8) {
+                            ProgressView(value: Double(progress.currentTotal), total: Double(challenge.goal.targetValue))
+                                .progressViewStyle(LinearProgressViewStyle(tint: .purple))
+                            
+                            Text("\(progress.currentTotal) / \(challenge.goal.targetValue) \(challenge.goal.unit)")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // 奖励
+                    HStack(spacing: 8) {
+                        Image(systemName: challenge.reward.icon)
+                            .foregroundColor(.yellow)
+                        Text(challenge.reward.description)
+                            .fontWeight(.semibold)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.yellow.opacity(0.2))
+                    .cornerRadius(8)
+                }
+                .padding(30)
+                .background(
+                    LinearGradient(
+                        colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.3)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .cornerRadius(16)
+                .padding()
+                
+                // 分享按钮
+                ShareLink(
+                    item: Text("我正在参与 DreamLog 挑战：「\(challenge.title)」！\(challenge.reward.description)"),
+                    subject: Text("DreamLog 梦境挑战"),
+                    message: Text("加入我，一起记录梦境，探索潜意识！")
+                ) {
+                    HStack {
+                        Image(systemName: "square.and.arrow.up")
+                        Text("分享挑战")
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.purple)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                
+                Button(action: { dismiss() }) {
+                    Text("关闭")
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.gray.opacity(0.2))
+                        .foregroundColor(.primary)
+                        .cornerRadius(12)
+                }
+            }
+            .navigationTitle("分享挑战")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") { dismiss() }
+                }
+            }
         }
     }
 }
@@ -347,6 +536,14 @@ struct ChallengeCard: View {
     let challenge: DreamChallenge
     let progress: UserChallengeProgress?
     let onClaimReward: () -> Void
+    let onShare: (() -> Void)?
+    
+    init(challenge: DreamChallenge, progress: UserChallengeProgress?, onClaimReward: @escaping () -> Void, onShare: (() -> Void)? = nil) {
+        self.challenge = challenge
+        self.progress = progress
+        self.onClaimReward = onClaimReward
+        self.onShare = onShare
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -367,13 +564,27 @@ struct ChallengeCard: View {
                 
                 Spacer()
                 
-                // 难度标签
-                Text(challenge.difficulty.displayName)
-                    .font(.caption2)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color(challenge.difficulty.color).opacity(0.2))
-                    .cornerRadius(8)
+                HStack(spacing: 8) {
+                    // 分享按钮
+                    if let onShare = onShare {
+                        Button(action: onShare) {
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.caption)
+                                .foregroundColor(.purple)
+                                .padding(6)
+                                .background(Color.purple.opacity(0.2))
+                                .cornerRadius(6)
+                        }
+                    }
+                    
+                    // 难度标签
+                    Text(challenge.difficulty.displayName)
+                        .font(.caption2)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(challenge.difficulty.color).opacity(0.2))
+                        .cornerRadius(8)
+                }
             }
             
             // 描述

@@ -8,6 +8,7 @@
 
 import Foundation
 import Combine
+import UserNotifications
 
 /// 梦境挑战服务
 @MainActor
@@ -245,9 +246,10 @@ class DreamChallengeService: ObservableObject {
     }
     
     private func calculateRealityChecks(since date: Date) -> Int {
-        // TODO: 需要从 LucidDreamTrainingService 获取现实检查次数
-        // 暂时返回清醒梦数量作为替代
-        return calculateLucidCount(since: date)
+        // 从 LucidTrainingService 获取现实检查次数
+        let trainingService = LucidTrainingService.shared
+        let stats = trainingService.getRealityCheckStats()
+        return stats.total
     }
     
     private func calculateTotalDreamLength(since date: Date) -> Int {
@@ -535,5 +537,136 @@ extension DreamChallengeService {
     func setupDreamListener() {
         // 这里可以监听 DreamStore 的变化
         // 当新梦境添加时自动更新挑战进度
+    }
+}
+
+// MARK: - 扩展：通知支持
+
+extension DreamChallengeService {
+    
+    /// 安排挑战提醒通知
+    func scheduleChallengeReminders() {
+        let now = Date()
+        let calendar = Calendar.current
+        
+        for challenge in activeChallenges {
+            // 计算剩余时间
+            let timeRemaining = challenge.endDate.timeIntervalSince(now)
+            
+            // 如果挑战将在 24 小时内到期，发送提醒
+            if timeRemaining > 0 && timeRemaining < 86400 {
+                scheduleExpiringChallengeNotification(challenge)
+            }
+            
+            // 每日挑战在晚上 8 点提醒
+            if challenge.period == .daily {
+                scheduleDailyChallengeReminder(challenge)
+            }
+        }
+    }
+    
+    /// 安排即将到期挑战的通知
+    private func scheduleExpiringChallengeNotification(_ challenge: DreamChallenge) {
+        let content = UNMutableNotificationContent()
+        content.title = "⏰ 挑战即将到期"
+        content.body = "「\(challenge.title)」将在 24 小时内结束，加油！"
+        content.sound = .default
+        content.badge = NSNumber(value: challengeServiceUnreadCount())
+        content.userInfo = ["challengeId": challenge.id.uuidString, "type": "expiring"]
+        
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3600, repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "challenge_expiring_\(challenge.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ 安排挑战到期通知失败：\(error)")
+            } else {
+                print("✅ 已安排挑战到期提醒：\(challenge.title)")
+            }
+        }
+    }
+    
+    /// 安排每日挑战提醒
+    private func scheduleDailyChallengeReminder(_ challenge: DreamChallenge) {
+        let content = UNMutableNotificationContent()
+        content.title = "📝 每日挑战"
+        content.body = "今天的挑战「\(challenge.title)」完成了吗？记录梦境来获取积分吧！"
+        content.sound = .default
+        content.categoryIdentifier = "dream_record"
+        content.userInfo = ["challengeId": challenge.id.uuidString, "type": "daily"]
+        
+        // 每天晚上 8 点提醒
+        var dateComponents = DateComponents()
+        dateComponents.hour = 20
+        dateComponents.minute = 0
+        
+        let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        let request = UNNotificationRequest(
+            identifier: "daily_challenge_\(challenge.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ 安排每日挑战提醒失败：\(error)")
+            } else {
+                print("✅ 已安排每日挑战提醒")
+            }
+        }
+    }
+    
+    /// 发送挑战完成庆祝通知
+    func sendChallengeCompletedNotification(_ challenge: DreamChallenge) {
+        let content = UNMutableNotificationContent()
+        content.title = "🎉 挑战完成！"
+        content.body = "恭喜你完成「\(challenge.title)」！获得 \(challenge.reward.description)"
+        content.sound = .default
+        content.userInfo = ["challengeId": challenge.id.uuidString, "type": "completed"]
+        
+        let request = UNNotificationRequest(
+            identifier: "challenge_completed_\(challenge.id.uuidString)",
+            content: content,
+            trigger: nil // 立即发送
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ 发送挑战完成通知失败：\(error)")
+            }
+        }
+    }
+    
+    /// 发送徽章解锁通知
+    func sendBadgeUnlockedNotification(_ badge: ChallengeBadge) {
+        let content = UNMutableNotificationContent()
+        content.title = "🏅 新徽章解锁！"
+        content.body = "恭喜你获得「\(badge.name)」徽章！+ \(badge.points) 积分"
+        content.sound = .default
+        content.userInfo = ["badgeId": badge.id, "type": "badge"]
+        
+        let request = UNNotificationRequest(
+            identifier: "badge_unlocked_\(badge.id)",
+            content: content,
+            trigger: nil // 立即发送
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let error = error {
+                print("❌ 发送徽章解锁通知失败：\(error)")
+            }
+        }
+    }
+    
+    /// 计算未读挑战通知数量
+    private func challengeServiceUnreadCount() -> Int {
+        return activeChallenges.filter { challenge in
+            guard let progress = userProgress[challenge.id] else { return false }
+            return progress.isCompleted && !progress.claimedReward
+        }.count
     }
 }
