@@ -269,7 +269,7 @@ struct WatchStatsView: View {
     
     var thisWeek: Int {
         let calendar = Calendar.current
-        let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date())!
+        let weekAgo = calendar.date(byAdding: .day, value: -7, to: Date()) ?? Date().addingTimeInterval(-7 * 24 * 60 * 60)
         return dreamStore.dreams.filter { $0.date >= weekAgo }.count
     }
     

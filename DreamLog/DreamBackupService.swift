@@ -63,7 +63,7 @@ class DreamBackupService: ObservableObject {
         
         // 使用 PBKDF2 从密码派生密钥
         let passwordData = Data(password.utf8)
-        let keyData = try! PBKDF2<SHA256>.deriveKey(
+        let keyData = try PBKDF2<SHA256>.deriveKey(
             password: passwordData,
             salt: salt,
             iterations: 100000,
@@ -106,7 +106,14 @@ class DreamBackupService: ObservableObject {
     
     init() {
         // 获取 Documents 目录
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsPath: URL
+        if let url = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
+            documentsPath = url
+        } else if let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first {
+            documentsPath = URL(fileURLWithPath: path)
+        } else {
+            documentsPath = URL(fileURLWithPath: NSTemporaryDirectory())
+        }
         backupsDirectory = documentsPath.appendingPathComponent("DreamBackups", isDirectory: true)
         
         // 创建备份目录

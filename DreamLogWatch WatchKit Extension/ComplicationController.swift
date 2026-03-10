@@ -51,7 +51,7 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
         
         // 提供未来 24 小时的条目
         for hourOffset in 1..<min(limit, 24) {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: Date())!
+            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: Date()) ?? Date().addingTimeInterval(TimeInterval(hourOffset * 3600))
             let template = getTemplate(for: complication)
             let entry = CLKComplicationTimelineEntry(
                 date: entryDate,
@@ -124,7 +124,8 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     // MARK: - Template Creation
     
     private func createModularSmallTemplate() -> CLKComplicationTemplate {
-        let imageProvider = CLKImageProvider(onePieceImage: UIImage(named: "ComplicationIcon")!)
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let imageProvider = CLKImageProvider(onePieceImage: image)
         let template = CLKComplicationTemplateModularSmallRingImage()
         template.imageProvider = imageProvider
         template.fillFraction = 0.7
@@ -134,7 +135,8 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createUtilitarianSmallTemplate() -> CLKComplicationTemplate {
-        let imageProvider = CLKImageProvider(onePieceImage: UIImage(named: "ComplicationIcon")!)
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let imageProvider = CLKImageProvider(onePieceImage: image)
         let template = CLKComplicationTemplateUtilitarianSmallSquare()
         template.imageProvider = imageProvider
         
@@ -142,7 +144,8 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createCircularSmallTemplate() -> CLKComplicationTemplate {
-        let imageProvider = CLKImageProvider(onePieceImage: UIImage(named: "ComplicationIcon")!)
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let imageProvider = CLKImageProvider(onePieceImage: image)
         let template = CLKComplicationTemplateCircularSmallSimpleImage()
         template.imageProvider = imageProvider
         
@@ -159,7 +162,8 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createGraphicCornerTemplate() -> CLKComplicationTemplate {
-        let imageProvider = CLKFullColorImageProvider(fullColorImage: UIImage(named: "ComplicationIcon")!)
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let imageProvider = CLKFullColorImageProvider(fullColorImage: image)
         let template = CLKComplicationTemplateGraphicCornerStackText()
         template.imageProvider = imageProvider
         template.innerTextProvider = CLKSimpleTextProvider(text: "DreamLog")
@@ -169,7 +173,8 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     }
     
     private func createGraphicCircularTemplate() -> CLKComplicationTemplate {
-        let imageProvider = CLKFullColorImageProvider(fullColorImage: UIImage(named: "ComplicationIcon")!)
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
+        let imageProvider = CLKFullColorImageProvider(fullColorImage: image)
         let template = CLKComplicationTemplateGraphicCircularOpenGaugeRange()
         template.imageProvider = imageProvider
         template.centerTextProvider = CLKSimpleTextProvider(text: "7")
@@ -183,8 +188,9 @@ class ComplicationController: NSObject, CLKComplicationDataSource {
     
     private func createGraphicRectangularTemplate() -> CLKComplicationTemplate {
         let textProvider = CLKSimpleTextProvider(text: "记录梦境")
+        let image = UIImage(named: "ComplicationIcon") ?? UIImage(systemName: "moon.fill")!
         let template = CLKComplicationTemplateGraphicRectangularStandardImage()
-        template.imageProvider = CLKFullColorImageProvider(fullColorImage: UIImage(named: "ComplicationIcon")!)
+        template.imageProvider = CLKFullColorImageProvider(fullColorImage: image)
         template.textProvider = textProvider
         
         return template

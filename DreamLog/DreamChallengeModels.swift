@@ -295,7 +295,7 @@ struct DreamChallengeTemplate {
     /// 生成每日挑战
     static func dailyChallenges() -> [DreamChallenge] {
         let today = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: today)!
+        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? Date().addingTimeInterval(24 * 60 * 60)
         
         return [
             DreamChallenge(
@@ -337,7 +337,7 @@ struct DreamChallengeTemplate {
     /// 生成每周挑战
     static func weeklyChallenges() -> [DreamChallenge] {
         let today = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: 7, to: today)!
+        let endDate = Calendar.current.date(byAdding: .day, value: 7, to: today) ?? Date().addingTimeInterval(7 * 24 * 60 * 60)
         
         return [
             DreamChallenge(
@@ -379,7 +379,7 @@ struct DreamChallengeTemplate {
     /// 生成每月挑战
     static func monthlyChallenges() -> [DreamChallenge] {
         let today = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: 30, to: today)!
+        let endDate = Calendar.current.date(byAdding: .day, value: 30, to: today) ?? Date().addingTimeInterval(30 * 24 * 60 * 60)
         
         return [
             DreamChallenge(
