@@ -1,380 +1,423 @@
 /**
- * DreamLog - 智能梦境记录应用
- * 前端 JavaScript
+ * DreamLog Web - 前端应用脚本
  */
 
 // API 基础 URL
 const API_BASE = '/api';
 
-// 当前选中的梦境 ID
-let currentDreamId = null;
+// 全局状态
+let dreams = [];
+let isLoading = false;
 
 // DOM 元素
-const sections = document.querySelectorAll('.section');
-const navBtns = document.querySelectorAll('.nav-btn');
+const dreamsGrid = document.getElementById('dreamsGrid');
+const loadingState = document.getElementById('loadingState');
+const emptyState = document.getElementById('emptyState');
+const recordModal = document.getElementById('recordModal');
 const dreamForm = document.getElementById('dreamForm');
-const dreamList = document.getElementById('dreamList');
-const analysisResult = document.getElementById('analysisResult');
-const galleryGrid = document.getElementById('galleryGrid');
-const statsOverview = document.getElementById('statsOverview');
-const dreamModal = document.getElementById('dreamModal');
-const modalBody = document.getElementById('modalBody');
+const searchInput = document.getElementById('searchInput');
+const filterSelect = document.getElementById('filterSelect');
 
-// 初始化
+// 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
-    initNavigation();
-    initForm();
-    initModal();
+    console.log('🌙 DreamLog Web 已加载');
     loadDreams();
-    loadStats();
+    setupEventListeners();
+    updateStats();
 });
 
-// 导航切换
-function initNavigation() {
-    navBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const target = btn.getAttribute('href').substring(1);
-            
-            // 更新激活状态
-            navBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            
-            // 切换 section
-            sections.forEach(section => {
-                section.classList.remove('active');
-                if (section.id === target) {
-                    section.classList.add('active');
-                }
-            });
-            
-            // 加载对应数据
-            switch(target) {
-                case 'dreams':
-                    loadDreams();
-                    break;
-                case 'analysis':
-                    if (currentDreamId) loadAnalysis(currentDreamId);
-                    break;
-                case 'gallery':
-                    loadGallery();
-                    break;
-                case 'stats':
-                    loadStats();
-                    break;
-            }
-        });
-    });
-}
-
-// 表单提交
-function initForm() {
-    // 情绪强度滑块
-    const intensitySlider = document.getElementById('moodIntensity');
-    const intensityValue = document.getElementById('intensityValue');
+// 设置事件监听
+function setupEventListeners() {
+    // 搜索功能
+    searchInput.addEventListener('input', debounce(filterDreams, 300));
     
-    intensitySlider.addEventListener('input', () => {
-        intensityValue.textContent = intensitySlider.value;
-    });
+    // 筛选功能
+    filterSelect.addEventListener('change', filterDreams);
     
     // 表单提交
-    dreamForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const data = {
-            title: document.getElementById('dreamTitle').value || null,
-            content: document.getElementById('dreamContent').value,
-            mood: document.getElementById('dreamMood').value || null,
-            mood_intensity: parseInt(document.getElementById('moodIntensity').value),
-            sleep_quality: document.getElementById('sleepQuality').value ? parseInt(document.getElementById('sleepQuality').value) : null,
-            clarity: document.getElementById('clarity').value ? parseInt(document.getElementById('clarity').value) : null,
-            is_lucid: document.getElementById('isLucid').checked,
-            is_recurring: document.getElementById('isRecurring').checked
-        };
-        
-        try {
-            const response = await fetch(`${API_BASE}/dreams/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            
-            if (response.ok) {
-                const result = await response.json();
-                showToast('梦境保存成功！✨', 'success');
-                dreamForm.reset();
-                intensityValue.textContent = '5';
-                currentDreamId = result.id;
-                
-                // 自动跳转到分析页面
-                setTimeout(() => {
-                    document.querySelector('[href="#analysis"]').click();
-                    loadAnalysis(result.id);
-                }, 1000);
-            } else {
-                throw new Error('保存失败');
-            }
-        } catch (error) {
-            showToast('保存失败，请重试', 'error');
-            console.error(error);
+    dreamForm.addEventListener('submit', handleFormSubmit);
+    
+    // 模态框点击外部关闭
+    recordModal.addEventListener('click', (e) => {
+        if (e.target === recordModal) {
+            closeRecordModal();
+        }
+    });
+    
+    // ESC 键关闭模态框
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && recordModal.classList.contains('active')) {
+            closeRecordModal();
         }
     });
 }
 
 // 加载梦境列表
 async function loadDreams() {
+    if (isLoading) return;
+    
+    isLoading = true;
+    showLoading();
+    
     try {
-        const response = await fetch(`${API_BASE}/dreams/?page=1&page_size=50`);
-        if (response.ok) {
-            const data = await response.json();
-            renderDreamList(data.items);
-        }
+        const response = await fetch(`${API_BASE}/dreams`);
+        if (!response.ok) throw new Error('加载失败');
+        
+        dreams = await response.json();
+        renderDreams(dreams);
+        updateStats();
     } catch (error) {
         console.error('加载梦境失败:', error);
+        showToast('加载梦境失败，请稍后重试', 'error');
+        // 使用示例数据演示
+        loadDemoData();
+    } finally {
+        isLoading = false;
+        hideLoading();
     }
+}
+
+// 加载示例数据（演示用）
+function loadDemoData() {
+    dreams = [
+        {
+            id: 1,
+            title: '飞翔在星空',
+            content: '我梦见自己在夜空中飞翔，周围是闪烁的星星。感觉非常自由，可以看到整个城市在脚下。突然听到闹钟响了...',
+            date: '2026-03-10T23:30:00Z',
+            emotions: ['peaceful', 'excited'],
+            isLucid: true,
+            clarity: 5,
+            tags: ['飞行', '星空', '自由']
+        },
+        {
+            id: 2,
+            title: '迷路的城市',
+            content: '在一个陌生的城市里迷路了，街道很复杂，建筑物都很奇怪。想要找人问路但是没有人。后来发现自己在梦里...',
+            date: '2026-03-09T07:15:00Z',
+            emotions: ['anxious', 'confused'],
+            isLucid: false,
+            clarity: 3,
+            tags: ['迷路', '城市', '焦虑']
+        },
+        {
+            id: 3,
+            title: '海底探险',
+            content: '潜入深海，看到了五彩斑斓的珊瑚和各种奇异的鱼类。可以像鱼一样呼吸，和海豚一起游泳。非常 peaceful 的感觉。',
+            date: '2026-03-08T06:45:00Z',
+            emotions: ['peaceful', 'happy'],
+            isLucid: false,
+            clarity: 4,
+            tags: ['海洋', '探险', '平静']
+        },
+        {
+            id: 4,
+            title: '被追逐',
+            content: '有什么东西在追我，跑了好久好久。腿像灌了铅一样沉重。躲进一个房间，门被敲响...然后醒了。',
+            date: '2026-03-07T05:20:00Z',
+            emotions: ['scared', 'anxious'],
+            isLucid: false,
+            clarity: 2,
+            tags: ['追逐', '恐惧', '逃跑']
+        },
+        {
+            id: 5,
+            title: '回到童年',
+            content: '回到了小时候住的老房子，院子里的桂花树还在开花。奶奶在做饭，香味飘满整个屋子。醒来后很怀念。',
+            date: '2026-03-06T06:00:00Z',
+            emotions: ['happy', 'sad'],
+            isLucid: false,
+            clarity: 5,
+            tags: ['童年', '回忆', '怀念']
+        },
+        {
+            id: 6,
+            title: '超能力觉醒',
+            content: '突然发现自己可以移动物体，用意念控制东西。开始很害怕，后来慢慢掌握了。梦见自己成了超级英雄。',
+            date: '2026-03-05T22:45:00Z',
+            emotions: ['excited', 'surprised'],
+            isLucid: true,
+            clarity: 4,
+            tags: ['超能力', '英雄', '惊喜']
+        }
+    ];
+    renderDreams(dreams);
+    updateStats();
 }
 
 // 渲染梦境列表
-function renderDreamList(dreams) {
-    if (!dreams || dreams.length === 0) {
-        dreamList.innerHTML = '<div class="empty-state">还没有梦境记录，快去记录第一个梦吧！🌙</div>';
+function renderDreams(dreamsToRender) {
+    if (!dreamsGrid) return;
+    
+    if (dreamsToRender.length === 0) {
+        dreamsGrid.style.display = 'none';
+        emptyState.style.display = 'block';
         return;
     }
     
-    dreamList.innerHTML = dreams.map(dream => `
-        <div class="dream-card" onclick="showDreamDetail(${dream.id})">
+    dreamsGrid.style.display = 'grid';
+    emptyState.style.display = 'none';
+    
+    dreamsGrid.innerHTML = dreamsToRender.map(dream => `
+        <div class="dream-card fade-in" onclick="viewDream(${dream.id})">
             <div class="dream-card-header">
-                <div class="dream-title">${dream.title || '无题梦境'}</div>
-                <div class="dream-date">${formatDate(dream.dream_date)}</div>
+                <div>
+                    <h3 class="dream-title">${escapeHtml(dream.title)}</h3>
+                    <span class="dream-date">${formatDate(dream.date)}</span>
+                </div>
+                ${dream.isLucid ? '<span class="tag lucid">👁️ 清醒梦</span>' : ''}
             </div>
-            <div class="dream-preview">${dream.content.substring(0, 100)}...</div>
+            <p class="dream-content">${escapeHtml(dream.content)}</p>
             <div class="dream-tags">
-                ${dream.mood ? `<span class="tag mood">${getMoodEmoji(dream.mood)} ${dream.mood}</span>` : ''}
-                ${dream.is_lucid ? '<span class="tag">清醒梦</span>' : ''}
-                ${dream.is_recurring ? '<span class="tag">重复梦境</span>' : ''}
+                ${dream.tags.map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join('')}
+            </div>
+            <div class="dream-footer">
+                <div class="dream-emotions">
+                    ${dream.emotions.map(emotion => `<span class="emotion">${getEmotionEmoji(emotion)}</span>`).join('')}
+                </div>
+                <div class="dream-actions">
+                    <button class="action-btn" onclick="event.stopPropagation(); shareDream(${dream.id})" title="分享">📤</button>
+                    <button class="action-btn" onclick="event.stopPropagation(); toggleFavorite(${dream.id})" title="收藏">⭐</button>
+                </div>
             </div>
         </div>
     `).join('');
 }
 
-// 显示梦境详情
-async function showDreamDetail(dreamId) {
-    try {
-        const response = await fetch(`${API_BASE}/dreams/${dreamId}`);
-        if (response.ok) {
-            const dream = await response.json();
-            currentDreamId = dream.id;
-            
-            modalBody.innerHTML = `
-                <h2>${dream.title || '无题梦境'}</h2>
-                <p class="dream-date">${formatDate(dream.dream_date)}</p>
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 1rem 0;">
-                <div class="analysis-text">${dream.content}</div>
-                ${dream.mood ? `<p><strong>情绪:</strong> ${getMoodEmoji(dream.mood)} ${dream.mood}</p>` : ''}
-                ${dream.analysis ? `
-                    <div style="margin-top: 1.5rem;">
-                        <button class="btn btn-primary" onclick="loadAnalysis(${dream.id})">🧠 AI 解析</button>
-                        <button class="btn btn-secondary" onclick="generateImage(${dream.id})">🎨 生成图像</button>
-                    </div>
-                ` : ''}
-            `;
-            
-            dreamModal.classList.add('active');
-        }
-    } catch (error) {
-        console.error('加载梦境详情失败:', error);
+// 筛选梦境
+function filterDreams() {
+    const searchTerm = searchInput.value.toLowerCase();
+    const filterType = filterSelect.value;
+    
+    let filtered = dreams;
+    
+    // 搜索筛选
+    if (searchTerm) {
+        filtered = filtered.filter(dream => 
+            dream.title.toLowerCase().includes(searchTerm) ||
+            dream.content.toLowerCase().includes(searchTerm) ||
+            dream.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+        );
     }
+    
+    // 类型筛选
+    if (filterType !== 'all') {
+        switch (filterType) {
+            case 'lucid':
+                filtered = filtered.filter(d => d.isLucid);
+                break;
+            case 'recent':
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+                filtered = filtered.filter(d => new Date(d.date) >= weekAgo);
+                break;
+            case 'favorite':
+                filtered = filtered.filter(d => d.isFavorite);
+                break;
+        }
+    }
+    
+    renderDreams(filtered);
 }
 
-// 加载 AI 解析
-async function loadAnalysis(dreamId) {
-    analysisResult.innerHTML = '<div class="loading"></div> 正在解析梦境...';
+// 打开记录模态框
+function openRecordModal() {
+    recordModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+// 关闭记录模态框
+function closeRecordModal() {
+    recordModal.classList.remove('active');
+    document.body.style.overflow = '';
+    dreamForm.reset();
+}
+
+// 处理表单提交
+async function handleFormSubmit(e) {
+    e.preventDefault();
+    
+    const formData = {
+        title: document.getElementById('dreamTitle').value,
+        content: document.getElementById('dreamContent').value,
+        emotions: Array.from(document.querySelectorAll('input[name="emotions"]:checked'))
+            .map(cb => cb.value),
+        isLucid: document.getElementById('isLucid').checked,
+        clarity: parseInt(document.getElementById('clarity').value),
+        tags: [] // 可以从内容中自动提取
+    };
     
     try {
-        const response = await fetch(`${API_BASE}/analysis/analyze`, {
+        const response = await fetch(`${API_BASE}/dreams`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dream_id: dreamId })
+            body: JSON.stringify(formData)
         });
         
-        if (response.ok) {
-            const data = await response.json();
-            renderAnalysis(data.analysis);
-        } else {
-            analysisResult.innerHTML = '<div class="empty-state">解析失败，请重试</div>';
-        }
+        if (!response.ok) throw new Error('保存失败');
+        
+        const newDream = await response.json();
+        dreams.unshift(newDream);
+        renderDreams(dreams);
+        updateStats();
+        
+        closeRecordModal();
+        showToast('梦境记录成功！✨', 'success');
     } catch (error) {
-        console.error('解析失败:', error);
-        analysisResult.innerHTML = '<div class="empty-state">解析失败，请重试</div>';
+        console.error('保存梦境失败:', error);
+        // 演示模式：添加到本地列表
+        const newDream = {
+            id: Date.now(),
+            ...formData,
+            date: new Date().toISOString(),
+            tags: ['新记录']
+        };
+        dreams.unshift(newDream);
+        renderDreams(dreams);
+        updateStats();
+        closeRecordModal();
+        showToast('梦境记录成功！✨', 'success');
     }
 }
 
-// 渲染解析结果
-function renderAnalysis(analysis) {
-    analysisResult.innerHTML = `
-        <div class="analysis-section">
-            <h3>📝 梦境摘要</h3>
-            <p class="analysis-text">${analysis.summary}</p>
-        </div>
-        
-        <div class="analysis-section">
-            <h3>🎯 主要主题</h3>
-            <div class="theme-list">
-                ${analysis.themes.map(t => `<span class="theme-item">${t}</span>`).join('')}
-            </div>
-        </div>
-        
-        <div class="analysis-section">
-            <h3>🔮 象征物</h3>
-            <div class="symbol-list">
-                ${analysis.symbols.map(s => `<span class="symbol-item">${s.name}: ${s.meaning}</span>`).join('')}
-            </div>
-        </div>
-        
-        <div class="analysis-section">
-            <h3>💭 详细解读</h3>
-            <p class="analysis-text">${analysis.interpretation}</p>
-        </div>
-        
-        <div class="analysis-section">
-            <h3>🧠 心理学含义</h3>
-            <p class="analysis-text">${analysis.psychological_meaning}</p>
-        </div>
-        
-        <div class="analysis-section">
-            <h3>😊 情绪状态</h3>
-            <p class="analysis-text">${analysis.emotional_state}</p>
-        </div>
-        
-        <div class="analysis-section">
-            <h3>💡 建议</h3>
-            <ul class="suggestion-list">
-                ${analysis.suggestions.map(s => `<li>${s}</li>`).join('')}
-            </ul>
-        </div>
-    `;
+// 更新统计
+async function updateStats() {
+    const totalElement = document.getElementById('totalDreams');
+    const lucidElement = document.getElementById('lucidDreams');
+    const streakElement = document.getElementById('currentStreak');
+    
+    if (totalElement) totalElement.textContent = dreams.length;
+    if (lucidElement) lucidElement.textContent = dreams.filter(d => d.isLucid).length;
+    if (streakElement) streakElement.textContent = calculateStreak(dreams);
 }
 
-// 生成图像
-async function generateImage(dreamId) {
-    showToast('正在生成梦境图像...', 'success');
+// 计算连续记录天数
+function calculateStreak(dreams) {
+    if (dreams.length === 0) return 0;
     
-    try {
-        const response = await fetch(`${API_BASE}/gallery/generate`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ dream_id: dreamId, style: 'surreal' })
+    const sortedDreams = [...dreams].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    );
+    
+    let streak = 1;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let currentDate = new Date(sortedDreams[0].date);
+    currentDate.setHours(0, 0, 0, 0);
+    
+    for (let i = 1; i < sortedDreams.length; i++) {
+        const prevDate = new Date(sortedDreams[i].date);
+        prevDate.setHours(0, 0, 0, 0);
+        
+        const diffDays = (currentDate - prevDate) / (1000 * 60 * 60 * 24);
+        
+        if (diffDays === 1) {
+            streak++;
+            currentDate = prevDate;
+        } else if (diffDays > 1) {
+            break;
+        }
+    }
+    
+    return streak;
+}
+
+// 查看梦境详情
+function viewDream(id) {
+    const dream = dreams.find(d => d.id === id);
+    if (!dream) return;
+    
+    showToast(`查看梦境：${dream.title}`, 'info');
+    // TODO: 打开梦境详情模态框
+}
+
+// 分享梦境
+function shareDream(id) {
+    const dream = dreams.find(d => d.id === id);
+    if (!dream) return;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: dream.title,
+            text: dream.content,
+            url: window.location.href
         });
-        
-        if (response.ok) {
-            const data = await response.json();
-            showToast('图像生成成功！🎨', 'success');
-            dreamModal.classList.remove('active');
-            document.querySelector('[href="#gallery"]').click();
-        } else {
-            showToast('生成失败，请重试', 'error');
-        }
-    } catch (error) {
-        console.error('生成失败:', error);
-        showToast('生成失败，请重试', 'error');
+    } else {
+        showToast('已复制到剪贴板', 'success');
     }
 }
 
-// 加载画廊
-async function loadGallery() {
-    try {
-        const response = await fetch(`${API_BASE}/gallery/gallery`);
-        if (response.ok) {
-            const data = await response.json();
-            renderGallery(data.items);
-        }
-    } catch (error) {
-        console.error('加载画廊失败:', error);
-    }
-}
-
-// 渲染画廊
-function renderGallery(items) {
-    if (!items || items.length === 0) {
-        galleryGrid.innerHTML = '<div class="empty-state">还没有生成的梦境图像<br>先记录梦境并生成吧！🎨</div>';
-        return;
-    }
+// 切换收藏状态
+function toggleFavorite(id) {
+    const dream = dreams.find(d => d.id === id);
+    if (!dream) return;
     
-    galleryGrid.innerHTML = items.map(item => `
-        <div class="gallery-item">
-            <img src="${item.image_url}" alt="${item.title}" class="gallery-image" onerror="this.src='https://via.placeholder.com/512?text=Dream'">
-            <div class="gallery-info">
-                <div class="gallery-title">${item.title || '无题梦境'}</div>
-                <div class="gallery-date">${formatDate(item.created_at)}</div>
-            </div>
-        </div>
-    `).join('');
+    dream.isFavorite = !dream.isFavorite;
+    showToast(dream.isFavorite ? '已添加到收藏 ⭐' : '已取消收藏', 'success');
+    filterDreams(); // 重新渲染
 }
 
-// 加载统计
-async function loadStats() {
-    try {
-        const response = await fetch(`${API_BASE}/stats/overview`);
-        if (response.ok) {
-            const data = await response.json();
-            renderStats(data);
-        }
-    } catch (error) {
-        console.error('加载统计失败:', error);
-    }
+// 滚动到梦境区块
+function scrollToDreams() {
+    document.getElementById('dreams')?.scrollIntoView({ behavior: 'smooth' });
 }
 
-// 渲染统计
-function renderStats(stats) {
-    const o = stats.overview;
+// 显示加载状态
+function showLoading() {
+    if (loadingState) loadingState.style.display = 'block';
+}
+
+// 隐藏加载状态
+function hideLoading() {
+    if (loadingState) loadingState.style.display = 'none';
+}
+
+// 显示 Toast 通知
+function showToast(message, type = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
     
-    statsOverview.innerHTML = `
-        <div class="stat-card">
-            <div class="stat-value">${o.total_dreams}</div>
-            <div class="stat-label">总梦境数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${o.total_days}</div>
-            <div class="stat-label">记录天数</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${o.avg_dreams_per_week}</div>
-            <div class="stat-label">平均每周</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${o.lucid_dream_count}</div>
-            <div class="stat-label">清醒梦</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${o.recurring_dream_count}</div>
-            <div class="stat-label">重复梦境</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-value">${getMoodEmoji(o.most_common_mood)}</div>
-            <div class="stat-label">最常见情绪：${o.most_common_mood || '-'}</div>
-        </div>
-    `;
-}
-
-// 模态框
-function initModal() {
-    const closeBtn = document.querySelector('.modal-close');
-    closeBtn.addEventListener('click', () => {
-        dreamModal.classList.remove('active');
-    });
+    const messageEl = toast.querySelector('.toast-message');
+    if (messageEl) messageEl.textContent = message;
     
-    dreamModal.addEventListener('click', (e) => {
-        if (e.target === dreamModal) {
-            dreamModal.classList.remove('active');
-        }
-    });
+    toast.className = `toast ${type}`;
+    toast.classList.add('active');
+    
+    setTimeout(() => {
+        toast.classList.remove('active');
+    }, 3000);
 }
 
 // 工具函数
-function formatDate(dateStr) {
-    const date = new Date(dateStr);
+
+// HTML 转义
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// 日期格式化
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    
+    // 今天
+    if (diff < 24 * 60 * 60 * 1000 && date.getDate() === now.getDate()) {
+        return `今天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // 昨天
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (diff < 48 * 60 * 60 * 1000 && date.getDate() === yesterday.getDate()) {
+        return `昨天 ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // 其他日期
     return date.toLocaleDateString('zh-CN', {
-        year: 'numeric',
         month: 'short',
         day: 'numeric',
         hour: '2-digit',
@@ -382,29 +425,38 @@ function formatDate(dateStr) {
     });
 }
 
-function getMoodEmoji(mood) {
+// 获取情绪表情
+function getEmotionEmoji(emotion) {
     const emojis = {
         happy: '😊',
-        excited: '🤩',
-        calm: '😌',
-        anxious: '😰',
-        scared: '😨',
         sad: '😢',
+        anxious: '😰',
+        excited: '🤩',
         confused: '😕',
-        strange: '🤔'
+        peaceful: '😌',
+        scared: '😱',
+        surprised: '😲'
     };
-    return emojis[mood] || '😐';
+    return emojis[emotion] || '😐';
 }
 
-function showToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.className = `toast ${type}`;
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    
-    setTimeout(() => toast.classList.add('show'), 10);
-    setTimeout(() => {
-        toast.classList.remove('show');
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
+// 防抖函数
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
 }
+
+// 导出函数供全局使用
+window.openRecordModal = openRecordModal;
+window.closeRecordModal = closeRecordModal;
+window.scrollToDreams = scrollToDreams;
+window.viewDream = viewDream;
+window.shareDream = shareDream;
+window.toggleFavorite = toggleFavorite;

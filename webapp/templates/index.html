@@ -3,174 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DreamLog - 智能梦境记录</title>
+    <meta name="theme-color" content="#6B4C9A">
+    <meta name="description" content="DreamLog - 智能梦境记录应用，捕捉醒来即逝的梦境，用 AI 解析其中的象征意义">
+    <title>DreamLog 🌙 - 智能梦境记录</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/images/moon.svg">
+    <link rel="manifest" href="/static/manifest.json">
 </head>
 <body>
-    <div class="app">
-        <!-- 头部 -->
-        <header class="header">
-            <div class="logo">
-                <span class="logo-icon">🌙</span>
-                <h1>DreamLog</h1>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span class="logo">🌙</span>
+                <span class="brand-name">DreamLog</span>
+            </a>
+            <div class="nav-links">
+                <a href="#dreams" class="nav-link">梦境</a>
+                <a href="#analysis" class="nav-link">分析</a>
+                <a href="#gallery" class="nav-link">画廊</a>
+                <a href="#stats" class="nav-link">统计</a>
             </div>
-            <nav class="nav">
-                <a href="#record" class="nav-btn active">记录</a>
-                <a href="#dreams" class="nav-btn">梦境</a>
-                <a href="#analysis" class="nav-btn">分析</a>
-                <a href="#gallery" class="nav-btn">画廊</a>
-                <a href="#stats" class="nav-btn">统计</a>
-            </nav>
-        </header>
-
-        <!-- 主内容区 -->
-        <main class="main">
-            <!-- 记录梦境 -->
-            <section id="record" class="section active">
-                <div class="record-container">
-                    <h2>✨ 快速记录梦境</h2>
-                    <p class="subtitle">醒来后 30 秒内完成记录，捕捉稍纵即逝的梦境</p>
-                    
-                    <form id="dreamForm" class="dream-form">
-                        <div class="form-group">
-                            <label for="dreamTitle">梦境标题（可选）</label>
-                            <input type="text" id="dreamTitle" placeholder="给梦境起个名字...">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="dreamContent">梦境内容 *</label>
-                            <textarea id="dreamContent" placeholder="尽可能详细地描述你的梦境..." required rows="6"></textarea>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="dreamMood">情绪</label>
-                                <select id="dreamMood">
-                                    <option value="">选择情绪...</option>
-                                    <option value="happy">😊 快乐</option>
-                                    <option value="excited">🤩 兴奋</option>
-                                    <option value="calm">😌 平静</option>
-                                    <option value="anxious">😰 焦虑</option>
-                                    <option value="scared">😨 恐惧</option>
-                                    <option value="sad">😢 悲伤</option>
-                                    <option value="confused">😕 困惑</option>
-                                    <option value="strange">🤔 奇怪</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="moodIntensity">情绪强度</label>
-                                <input type="range" id="moodIntensity" min="1" max="10" value="5">
-                                <span id="intensityValue">5</span>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label for="sleepQuality">睡眠质量</label>
-                                <select id="sleepQuality">
-                                    <option value="">选择...</option>
-                                    <option value="1">😴 很差</option>
-                                    <option value="2">😕 较差</option>
-                                    <option value="3">😐 一般</option>
-                                    <option value="4">🙂 较好</option>
-                                    <option value="5">😁 很好</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="clarity">梦境清晰度</label>
-                                <select id="clarity">
-                                    <option value="">选择...</option>
-                                    <option value="1">🌫️ 模糊</option>
-                                    <option value="2">💭 不太清晰</option>
-                                    <option value="3">🔍 一般</option>
-                                    <option value="4">👁️ 清晰</option>
-                                    <option value="5">✨ 非常清晰</option>
-                                </select>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="isLucid">
-                                <span>这是清醒梦（知道自己在做梦）</span>
-                            </label>
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="isRecurring">
-                                <span>这是重复出现的梦境</span>
-                            </label>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-large">
-                            🌟 保存梦境
-                        </button>
-                    </form>
-                </div>
-            </section>
-
-            <!-- 梦境列表 -->
-            <section id="dreams" class="section">
-                <div class="dreams-container">
-                    <h2>📖 我的梦境</h2>
-                    <div class="filter-bar">
-                        <input type="text" class="search-input" placeholder="搜索梦境...">
-                        <select class="filter-select">
-                            <option value="">全部情绪</option>
-                            <option value="happy">快乐</option>
-                            <option value="scared">恐惧</option>
-                            <option value="anxious">焦虑</option>
-                        </select>
-                    </div>
-                    <div id="dreamList" class="dream-list">
-                        <!-- 梦境卡片将通过 JS 动态加载 -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- AI 分析 -->
-            <section id="analysis" class="section">
-                <div class="analysis-container">
-                    <h2>🧠 AI 梦境解析</h2>
-                    <p class="subtitle">探索梦境背后的象征意义和心理学含义</p>
-                    <div id="analysisResult" class="analysis-result">
-                        <p class="empty-state">选择一个梦境开始解析...</p>
-                    </div>
-                </div>
-            </section>
-
-            <!-- 梦境画廊 -->
-            <section id="gallery" class="section">
-                <div class="gallery-container">
-                    <h2>🎨 梦境画廊</h2>
-                    <p class="subtitle">AI 将你的梦境转化为视觉艺术</p>
-                    <div id="galleryGrid" class="gallery-grid">
-                        <!-- 画廊图片将通过 JS 动态加载 -->
-                    </div>
-                </div>
-            </section>
-
-            <!-- 统计分析 -->
-            <section id="stats" class="section">
-                <div class="stats-container">
-                    <h2>📊 梦境统计</h2>
-                    <div id="statsOverview" class="stats-overview">
-                        <!-- 统计数据将通过 JS 动态加载 -->
-                    </div>
-                    <div id="statsCharts" class="stats-charts">
-                        <!-- 图表将通过 JS 动态加载 -->
-                    </div>
-                </div>
-            </section>
-        </main>
-
-        <!-- 梦境详情模态框 -->
-        <div id="dreamModal" class="modal">
-            <div class="modal-content">
-                <span class="modal-close">&times;</span>
-                <div id="modalBody"></div>
+            <div class="nav-actions">
+                <button class="btn btn-primary" onclick="openRecordModal()">
+                    <span>✨</span> 记录梦境
+                </button>
             </div>
         </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <!-- 英雄区 -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    <span class="gradient-text">记录你的梦</span>
+                    <br>
+                    发现潜意识的秘密
+                </h1>
+                <p class="hero-subtitle">
+                    95% 的梦在醒来 5 分钟内被遗忘。<br>
+                    DreamLog 帮你捕捉那些珍贵瞬间，用 AI 解析梦境背后的含义。
+                </p>
+                <div class="hero-actions">
+                    <button class="btn btn-primary btn-lg" onclick="openRecordModal()">
+                        🎤 快速记录
+                    </button>
+                    <button class="btn btn-secondary btn-lg" onclick="scrollToDreams()">
+                        📖 查看梦境
+                    </button>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" id="totalDreams">0</span>
+                        <span class="stat-label">已记录梦境</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="lucidDreams">0</span>
+                        <span class="stat-label">清醒梦</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number" id="currentStreak">0</span>
+                        <span class="stat-label">连续记录天数</span>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="floating-moon">🌙</div>
+                <div class="floating-stars">
+                    <span class="star" style="--delay: 0s">✨</span>
+                    <span class="star" style="--delay: 1s">⭐</span>
+                    <span class="star" style="--delay: 2s">✨</span>
+                    <span class="star" style="--delay: 3s">💫</span>
+                    <span class="star" style="--delay: 4s">⭐</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 梦境列表 -->
+        <section id="dreams" class="dreams-section">
+            <div class="section-header">
+                <h2 class="section-title">我的梦境</h2>
+                <div class="section-actions">
+                    <input type="text" class="search-input" placeholder="搜索梦境..." id="searchInput">
+                    <select class="filter-select" id="filterSelect">
+                        <option value="all">全部梦境</option>
+                        <option value="lucid">清醒梦</option>
+                        <option value="recent">最近 7 天</option>
+                        <option value="favorite">收藏</option>
+                    </select>
+                </div>
+            </div>
+            <div class="dreams-grid" id="dreamsGrid">
+                <!-- 梦境卡片将通过 JS 动态加载 -->
+            </div>
+            <div class="loading-state" id="loadingState">
+                <div class="spinner"></div>
+                <p>加载梦境中...</p>
+            </div>
+            <div class="empty-state" id="emptyState" style="display: none;">
+                <div class="empty-icon">🌙</div>
+                <h3>还没有梦境记录</h3>
+                <p>开始记录你的第一个梦吧！</p>
+                <button class="btn btn-primary" onclick="openRecordModal()">记录梦境</button>
+            </div>
+        </section>
+
+        <!-- AI 分析 -->
+        <section id="analysis" class="analysis-section">
+            <div class="section-header">
+                <h2 class="section-title">AI 梦境解析</h2>
+                <p class="section-subtitle">探索梦境背后的深层含义</p>
+            </div>
+            <div class="analysis-cards">
+                <div class="analysis-card">
+                    <div class="analysis-icon">🧠</div>
+                    <h3>象征意义</h3>
+                    <p>解析梦境中的符号和隐喻</p>
+                </div>
+                <div class="analysis-card">
+                    <div class="analysis-icon">💖</div>
+                    <h3>情绪分析</h3>
+                    <p>识别梦境中的情绪模式</p>
+                </div>
+                <div class="analysis-card">
+                    <div class="analysis-icon">🔍</div>
+                    <h3>模式发现</h3>
+                    <p>发现重复出现的主题</p>
+                </div>
+                <div class="analysis-card">
+                    <div class="analysis-icon">💡</div>
+                    <h3>洞察建议</h3>
+                    <p>获得个性化建议</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 梦境画廊 -->
+        <section id="gallery" class="gallery-section">
+            <div class="section-header">
+                <h2 class="section-title">梦境画廊</h2>
+                <p class="section-subtitle">AI 绘画让梦境可视化</p>
+            </div>
+            <div class="gallery-grid" id="galleryGrid">
+                <!-- 画廊图片将通过 JS 动态加载 -->
+            </div>
+        </section>
+
+        <!-- 统计 -->
+        <section id="stats" class="stats-section">
+            <div class="section-header">
+                <h2 class="section-title">梦境统计</h2>
+                <p class="section-subtitle">了解你的梦境模式</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>情绪分布</h3>
+                    <div class="chart-container" id="emotionChart">
+                        <!-- 图表将通过 JS 渲染 -->
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>梦境趋势</h3>
+                    <div class="chart-container" id="trendChart">
+                        <!-- 图表将通过 JS 渲染 -->
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>热门标签</h3>
+                    <div class="tag-cloud" id="tagCloud">
+                        <!-- 标签云将通过 JS 渲染 -->
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>时间段分布</h3>
+                    <div class="time-distribution" id="timeDistribution">
+                        <!-- 时间分布将通过 JS 渲染 -->
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 记录梦境模态框 -->
+    <div class="modal" id="recordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>记录梦境</h2>
+                <button class="modal-close" onclick="closeRecordModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="dreamForm">
+                    <div class="form-group">
+                        <label for="dreamTitle">梦境标题</label>
+                        <input type="text" id="dreamTitle" class="form-control" placeholder="给你的梦起个名字" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dreamContent">梦境内容</label>
+                        <textarea id="dreamContent" class="form-control" rows="6" placeholder="描述你的梦境..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>情绪标签</label>
+                        <div class="emotion-tags">
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="happy"> 😊 快乐
+                            </label>
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="sad"> 😢 悲伤
+                            </label>
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="anxious"> 😰 焦虑
+                            </label>
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="excited"> 🤩 兴奋
+                            </label>
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="confused"> 😕 困惑
+                            </label>
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="peaceful"> 😌 平静
+                            </label>
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="scared"> 😱 恐惧
+                            </label>
+                            <label class="emotion-tag">
+                                <input type="checkbox" name="emotions" value="surprised"> 😲 惊讶
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isLucid">
+                            <span>这是清醒梦 (知道自己在做梦)</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="clarity">清晰度</label>
+                        <input type="range" id="clarity" class="form-range" min="1" max="5" value="3">
+                        <div class="range-labels">
+                            <span>模糊</span>
+                            <span>一般</span>
+                            <span>清晰</span>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeRecordModal()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存梦境</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>DreamLog 🌙</h4>
+                <p>记录你的梦，发现潜意识的秘密</p>
+            </div>
+            <div class="footer-section">
+                <h4>链接</h4>
+                <a href="#dreams">梦境</a>
+                <a href="#analysis">分析</a>
+                <a href="#gallery">画廊</a>
+                <a href="#stats">统计</a>
+            </div>
+            <div class="footer-section">
+                <h4>关于</h4>
+                <a href="#">隐私政策</a>
+                <a href="#">使用条款</a>
+                <a href="#">联系我们</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 DreamLog. Made with ❤️</p>
+        </div>
+    </footer>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast">
+        <span class="toast-message"></span>
     </div>
 
     <script src="/static/js/app.js"></script>
