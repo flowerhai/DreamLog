@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime, timedelta
 from collections import Counter
+from typing import Optional
 
 from src.utils.database import get_db
 from src.models.dream import DreamModel, TagModel
@@ -223,4 +224,241 @@ async def export_data(db: AsyncSession = Depends(get_db)):
         "count": len(export_data),
         "exported_at": datetime.utcnow().isoformat(),
         "data": export_data
+    }
+
+
+@router.get("/weekly-report", summary="获取梦境周报")
+async def get_weekly_report(
+    year: Optional[int] = None,
+    week: Optional[int] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取梦境周报数据
+    
+    包括:
+    - 基础统计（梦境总数/清醒梦/平均清晰度/连续记录）
+    - 情绪分析（情绪分布/情绪趋势）
+    - 主题分析（热门标签/新兴主题）
+    - 时间分析（时间段分布/最活跃日期）
+    - 亮点梦境（本周最佳梦境）
+    - 智能洞察与建议
+    
+    参数:
+    - year: 年份（可选，默认当前年）
+    - week: 周数 1-53（可选，默认当前周）
+    """
+    # 确定目标周
+    now = datetime.utcnow()
+    target_year = year or now.year
+    target_week = week or now.isocalendar()[1]
+    
+    # 计算周的起止日期（周一到周日）
+    # ISO 周的第一天是周一
+    jan_4 = datetime(target_year, 1, 4)
+    start_of_week1 = jan_4 - timedelta(days=jan_4.isocalendar()[2] - 1)
+    week_start = start_of_week1 + timedelta(weeks=target_week - 1)
+    week_end = week_start + timedelta(days=6, hours=23, minutes=59, seconds=59)
+    
+    # 获取本周梦境
+    result = await db.execute(
+        select(DreamModel).where(
+            DreamModel.dream_date >= week_start,
+            DreamModel.dream_date <= week_end
+        )
+    )
+    dreams = result.scalars().all()
+    
+    total_dreams = len(dreams)
+    
+    # 基础统计
+    lucid_count = sum(1 for d in dreams if d.is_lucid)
+    avg_clarity = round(sum(d.clarity or 3 for d in dreams) / total_dreams, 2) if total_dreams > 0 else 0
+    avg_intensity = round(sum(d.mood_intensity or 5 for d in dreams) / total_dreams, 2) if total_dreams > 0 else 0
+    
+    # 计算连续记录天数
+    recording_streak = 0
+    if dreams:
+        dream_dates = sorted(set(d.dream_date.date() for d in dreams))
+        streak = 1
+        for i in range(1, len(dream_dates)):
+            if (dream_dates[i] - dream_dates[i-1]).days == 1:
+                streak += 1
+            else:
+                streak = 1
+        recording_streak = streak
+    
+    # 情绪分布
+    mood_counts = Counter(d.mood for d in dreams if d.mood)
+    emotion_distribution = dict(mood_counts)
+    dominant_emotion = mood_counts.most_common(1)[0][0] if mood_counts else "未标记"
+    
+    # 情绪趋势（简化版：基于本周情绪评分）
+    mood_trend = "stable"
+    if dreams:
+        positive_moods = ["happy", "excited", "peaceful"]
+        negative_moods = ["sad", "anxious", "scared"]
+        positive_count = sum(1 for d in dreams if d.mood in positive_moods)
+        negative_count = sum(1 for d in dreams if d.mood in negative_moods)
+        if positive_count > negative_count * 1.5:
+            mood_trend = "improving"
+        elif negative_count > positive_count * 1.5:
+            mood_trend = "declining"
+        elif abs(positive_count - negative_count) > 2:
+            mood_trend = "fluctuating"
+    
+    # 主题分析
+    all_tags = []
+    for dream in dreams:
+        if dream.tags:
+            all_tags.extend([tag.name for tag in dream.tags])
+    tag_counts = Counter(all_tags)
+    top_tags = [{"tag": tag, "count": count} for tag, count in tag_counts.most_common(5)]
+    
+    # 时间分析
+    dreams_by_time = {"清晨 (5-8 点)": 0, "上午 (8-12 点)": 0, "下午 (12-18 点)": 0, "夜晚 (18-23 点)": 0, "深夜 (23-5 点)": 0}
+    dreams_by_weekday = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}
+    
+    for dream in dreams:
+        hour = dream.dream_date.hour
+        if 5 <= hour < 8:
+            dreams_by_time["清晨 (5-8 点)"] += 1
+        elif 8 <= hour < 12:
+            dreams_by_time["上午 (8-12 点)"] += 1
+        elif 12 <= hour < 18:
+            dreams_by_time["下午 (12-18 点)"] += 1
+        elif 18 <= hour < 23:
+            dreams_by_time["夜晚 (18-23 点)"] += 1
+        else:
+            dreams_by_time["深夜 (23-5 点)"] += 1
+        
+        weekday = dream.dream_date.isocalendar()[2]
+        dreams_by_weekday[weekday] = dreams_by_weekday.get(weekday, 0) + 1
+    
+    most_active_day = max(dreams_by_weekday, key=dreams_by_weekday.get) if dreams_by_weekday else 1
+    best_recall_hour = 7  # 简化：默认清晨
+    
+    # 亮点梦境
+    highlight_dreams = []
+    if dreams:
+        # 最清晰的梦
+        clearest = max(dreams, key=lambda d: d.clarity or 0)
+        highlight_dreams.append({
+            "id": str(clearest.id),
+            "title": clearest.title or clearest.content[:30],
+            "date": clearest.dream_date.isoformat(),
+            "type": "highestClarity",
+            "reason": f"清晰度：{clearest.clarity}/5"
+        })
+        
+        # 如果有清醒梦
+        lucid_dreams = [d for d in dreams if d.is_lucid]
+        if lucid_dreams:
+            highlight_dreams.append({
+                "id": str(lucid_dreams[0].id),
+                "title": lucid_dreams[0].title or lucid_dreams[0].content[:30],
+                "date": lucid_dreams[0].dream_date.isoformat(),
+                "type": "mostLucid",
+                "reason": "清醒梦体验"
+            })
+    
+    # 智能洞察
+    insights = []
+    if total_dreams > 0:
+        if lucid_count > 0:
+            insights.append({
+                "type": "achievement",
+                "title": "清醒梦成就",
+                "description": f"本周记录了 {lucid_count} 个清醒梦，继续保持！",
+                "icon": "👁️",
+                "confidence": 0.9
+            })
+        
+        if recording_streak >= 7:
+            insights.append({
+                "type": "achievement",
+                "title": "连续记录",
+                "description": f"已连续记录 {recording_streak} 天，养成好习惯！",
+                "icon": "🔥",
+                "confidence": 0.95
+            })
+        
+        if len(top_tags) > 0:
+            insights.append({
+                "type": "pattern",
+                "title": "主题模式",
+                "description": f"本周最常出现的主题：{top_tags[0]['tag']} ({top_tags[0]['count']}次)",
+                "icon": "🔍",
+                "confidence": 0.8
+            })
+    
+    # 个性化建议
+    suggestions = []
+    if total_dreams == 0:
+        suggestions.append("本周还没有记录梦境，开始记录你的第一个梦吧！")
+    else:
+        if avg_clarity < 3:
+            suggestions.append("尝试在醒来后立即记录，可以提高梦境清晰度")
+        if lucid_count == 0 and total_dreams >= 3:
+            suggestions.append("试试在睡前进行现实检查，可能帮助实现清醒梦")
+        if recording_streak < 3:
+            suggestions.append("设定固定时间记录梦境，有助于养成习惯")
+        suggestions.append("继续保持良好的记录习惯！")
+    
+    # 与上周对比（简化版）
+    last_week_start = week_start - timedelta(days=7)
+    last_week_end = week_start - timedelta(seconds=1)
+    last_week_result = await db.execute(
+        select(DreamModel).where(
+            DreamModel.dream_date >= last_week_start,
+            DreamModel.dream_date <= last_week_end
+        )
+    )
+    last_week_dreams = last_week_result.scalars().all()
+    last_week_count = len(last_week_dreams)
+    
+    dreams_change = total_dreams - last_week_count
+    dreams_change_percent = round((dreams_change / last_week_count * 100) if last_week_count > 0 else 0, 1)
+    
+    comparison = None
+    if last_week_count > 0:
+        comparison = {
+            "dreamsChange": dreams_change,
+            "dreamsChangePercent": dreams_change_percent,
+            "clarityChange": 0,
+            "lucidChange": 0,
+            "streakChange": 0,
+            "isBetter": dreams_change >= 0
+        }
+    
+    # 构建周报数据
+    weekly_report = {
+        "id": f"{target_year}-W{target_week:02d}",
+        "weekStartDate": week_start.isoformat(),
+        "weekEndDate": week_end.isoformat(),
+        "generatedAt": now.isoformat(),
+        "totalDreams": total_dreams,
+        "lucidDreams": lucid_count,
+        "averageClarity": avg_clarity,
+        "averageIntensity": avg_intensity,
+        "recordingStreak": recording_streak,
+        "emotionDistribution": emotion_distribution,
+        "dominantEmotion": dominant_emotion,
+        "moodTrend": mood_trend,
+        "topTags": top_tags,
+        "emergingThemes": [],
+        "fadingThemes": [],
+        "dreamsByTimeOfDay": dreams_by_time,
+        "dreamsByWeekday": dreams_by_weekday,
+        "mostActiveDay": most_active_day,
+        "bestRecallHour": best_recall_hour,
+        "highlightDreams": highlight_dreams,
+        "insights": insights,
+        "suggestions": suggestions,
+        "lastWeekComparison": comparison
+    }
+    
+    return {
+        "success": True,
+        "data": weekly_report
     }
