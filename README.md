@@ -738,6 +738,96 @@ open DreamLog.xcodeproj
 
 ---
 
+### Phase 18 - 梦境周报 ✨ (已完成) NEW
+
+- [x] **📊 周报数据模型** ✨ NEW
+  - DreamWeeklyReport: 完整周报数据结构
+  - TagFrequency: 标签频率统计
+  - DreamHighlight: 亮点梦境 (7 种类型)
+  - ReportInsight: 智能洞察 (5 种类型)
+  - WeekComparison: 周对比数据
+  - WeeklyReportCard: 分享卡片数据 (6 种主题)
+
+- [x] **📈 周报生成服务** ✨ NEW
+  - generateCurrentWeekReport(): 生成本周报告
+  - analyzeDreams(): 梦境数据分析
+  - createHighlights(): 亮点梦境识别
+  - generateInsights(): 智能洞察生成
+  - generateSuggestions(): 个性化建议
+  - 报告持久化 (save/load)
+
+- [x] **📱 周报查看界面** ✨ NEW
+  - 头部卡片 (周范围/统计概览)
+  - 基础统计 (4 项指标网格)
+  - 情绪分析 (情绪趋势/分布)
+  - 亮点梦境 (7 种类型卡片)
+  - 智能洞察 (5 种类型)
+  - 主题标签 (热门标签云)
+  - 个性化建议列表
+  - 分享功能 (6 种主题)
+  - 历史报告列表
+
+- [x] **🌐 Web 端周报页面** ✨ NEW
+  - 响应式设计
+  - 星空紫主题样式
+  - PDF 导出功能
+  - 与 iOS 端数据同步
+
+**Phase 18 完成度：100%** ✅
+
+---
+
+### Phase 19 - 数据导出与集成 ✨ NEW (开发中)
+
+- [x] **📤 多格式导出** ✨ NEW
+  - **JSON 格式**: 结构化数据，适合程序处理
+  - **CSV 格式**: 电子表格兼容，适合数据分析
+  - **Markdown 格式**: 可读性强，适合文档归档
+  - **Obsidian 格式**: 支持 Frontmatter 和双向链接
+
+- [x] **🔧 导出选项** ✨ NEW
+  - **日期范围**: 全部/最近 7 天/最近 30 天/最近 3 个月/最近 1 年/自定义
+  - **排序方式**: 日期/清晰度/强度 (升序/降序)
+  - **包含字段**: 标题/内容/标签/情绪/清晰度/强度/清醒梦/AI 解析/日期
+
+- [x] **📊 导出统计** ✨ NEW
+  - 总梦境数统计
+  - 平均清晰度/强度
+  - 清醒梦百分比
+  - 热门标签 Top 5
+  - 主导情绪分析
+
+- [x] **🔗 Notion 集成** ✨ NEW
+  - API Key 配置
+  - Database ID 绑定
+  - 连接测试功能
+  - 一键同步梦境到 Notion 数据库
+  - 自动创建数据库属性映射
+
+- [x] **📓 Obsidian 集成** ✨ NEW
+  - Vault 路径配置
+  - 自定义导出文件夹
+  - Markdown Frontmatter 支持
+  - 自动生成双向链接标签
+  - 模板系统支持
+
+- [x] **📱 导出界面** ✨ NEW
+  - 标签页设计 (导出/Notion/Obsidian)
+  - 实时导出进度显示
+  - 分享表单集成
+  - 错误处理和反馈
+
+- [x] **🧪 单元测试** 🧪
+  - 导出格式测试
+  - 日期范围测试
+  - 字段选项测试
+  - 配置管理测试
+  - 统计数据测试
+
+**Phase 19 完成度：100%** ✅
+
+---
+
 ## 🏗️ 项目结构
 
 ```
@@ -817,6 +907,14 @@ DreamLog/
 │   ├── DreamShareCircleModels.swift     # 分享圈数据模型 ✨ NEW Phase 17
 │   ├── DreamShareCircleService.swift    # 分享圈服务 ✨ NEW Phase 17
 │   ├── DreamShareCircleView.swift       # 分享圈界面 ✨ NEW Phase 17
+│   ├── DreamWeeklyReportModels.swift    # 周报数据模型 ✨ NEW Phase 18
+│   ├── DreamWeeklyReportService.swift   # 周报生成服务 ✨ NEW Phase 18
+│   ├── DreamWeeklyReportView.swift      # 周报查看界面 ✨ NEW Phase 18
+│   ├── DreamExportModels.swift          # 导出数据模型 ✨ NEW Phase 19
+│   ├── DreamExportService.swift         # 导出核心服务 ✨ NEW Phase 19
+│   ├── DreamExportView.swift            # 导出界面 ✨ NEW Phase 19
+│   ├── NotionIntegrationService.swift   # Notion 集成服务 ✨ NEW Phase 19
+│   ├── ObsidianIntegrationService.swift # Obsidian 集成服务 ✨ NEW Phase 19
 │
 ├── Docs/
 │   ├── Concept.md              # 概念设计

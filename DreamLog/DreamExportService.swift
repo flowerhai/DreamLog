@@ -2,658 +2,372 @@
 //  DreamExportService.swift
 //  DreamLog
 //
-//  梦境导出服务 - 支持 PDF、JSON、文本格式
-//  Phase 6 - 个性化体验
+//  Phase 19 - Dream Data Export & Integration
+//  Core export service for multiple formats
 //
 
 import Foundation
-import SwiftUI
+import SwiftData
 
-#if canImport(UIKit)
-import UIKit
-#endif
-
+@MainActor
 class DreamExportService {
+    
     static let shared = DreamExportService()
     
-    private init() {}
+    private let modelContext: ModelContext?
     
-    // MARK: - 导出格式枚举
-    
-    enum ExportFormat: String, CaseIterable {
-        case pdf = "PDF"
-        case json = "JSON"
-        case text = "文本"
-        case markdown = "Markdown"
-        
-        var icon: String {
-            switch self {
-            case .pdf: return "doc.fill"
-            case .json: return "doc.badge.gearshape"
-            case .text: return "doc.text"
-            case .markdown: return "doc.richtext"
-            }
-        }
-        
-        var description: String {
-            switch self {
-            case .pdf: return "精美的 PDF 文档，适合打印和分享"
-            case .json: return "结构化数据，适合备份和迁移"
-            case .text: return "纯文本格式，通用兼容"
-            case .markdown: return "Markdown 格式，支持富文本编辑"
-            }
-        }
-        
-        var fileExtension: String {
-            switch self {
-            case .pdf: return "pdf"
-            case .json: return "json"
-            case .text: return "txt"
-            case .markdown: return "md"
-            }
-        }
+    init(modelContext: ModelContext? = nil) {
+        self.modelContext = modelContext
     }
     
-    // MARK: - PDF 导出
+    // MARK: - Export Dreams
     
-    /// 导出梦境为 PDF
-    /// - Parameters:
-    ///   - dreams: 要导出的梦境列表
-    ///   - includeAnalysis: 是否包含 AI 解析
-    ///   - includeStats: 是否包含统计信息
-    ///   - theme: PDF 主题风格
-    /// - Returns: PDF 数据
-    func exportToPDF(
-        dreams: [Dream],
-        includeAnalysis: Bool = true,
-        includeStats: Bool = true,
-        theme: PDFTheme = .starry
-    ) -> Data? {
-        #if canImport(UIKit)
-        let renderer = DreamPDFRenderer(theme: theme)
-        return renderer.renderPDF(
-            dreams: dreams,
-            includeAnalysis: includeAnalysis,
-            includeStats: includeStats
-        )
-        #else
-        return nil
-        #endif
-    }
-    
-    // MARK: - JSON 导出
-    
-    /// 导出梦境为 JSON
-    func exportToJSON(dreams: [Dream]) -> Data? {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        encoder.dateEncodingStrategy = .iso8601
-        
-        do {
-            return try encoder.encode(dreams)
-        } catch {
-            print("❌ JSON 导出失败：\(error)")
-            return nil
-        }
-    }
-    
-    // MARK: - 文本导出
-    
-    /// 导出梦境为纯文本
-    func exportToText(dreams: [Dream], includeAnalysis: Bool = true) -> String {
-        var output = ""
-        output += "═══════════════════════════════════════\n"
-        output += "         DreamLog 梦境日记\n"
-        output += "═══════════════════════════════════════\n\n"
-        output += "导出时间：\(Date().formatted(.dateTime.year().month().day().hour().minute()))\n"
-        output += "梦境数量：\(dreams.count)\n\n"
-        
-        for (index, dream) in dreams.enumerated() {
-            output += "───────────────────────────────────────\n"
-            output += "【梦境 \(index + 1)】\n\n"
-            output += "📅 日期：\(dream.date.formatted(.dateTime.year().month().day().hour().minute()))\n"
-            output += "🏷️ 标题：\(dream.title)\n"
-            
-            if !dream.tags.isEmpty {
-                output += "🏷️ 标签：\(dream.tags.joined(separator: ", "))\n"
-            }
-            
-            if !dream.emotions.isEmpty {
-                let emotionNames = dream.emotions.map { $0.rawValue }.joined(separator: ", ")
-                output += "😊 情绪：\(emotionNames)\n"
-            }
-            
-            output += "⭐ 清晰度：\(dream.clarity)/5\n"
-            output += "💪 强度：\(dream.intensity)/5\n"
-            
-            if dream.isLucid {
-                output += "🌟 清醒梦：是\n"
-            }
-            
-            output += "\n📝 内容：\n\(dream.content)\n"
-            
-            if includeAnalysis, let analysis = dream.aiAnalysis {
-                output += "\n🧠 AI 解析：\n\(analysis)\n"
-            }
-            
-            output += "\n"
-        }
-        
-        output += "═══════════════════════════════════════\n"
-        output += "          感谢使用 DreamLog 🌙\n"
-        output += "═══════════════════════════════════════\n"
-        
-        return output
-    }
-    
-    // MARK: - Markdown 导出
-    
-    /// 导出梦境为 Markdown
-    func exportToMarkdown(dreams: [Dream], includeAnalysis: Bool = true) -> String {
-        var output = ""
-        output += "# DreamLog 梦境日记 🌙\n\n"
-        output += "**导出时间**: \(Date().formatted(.dateTime.year().month().day().hour().minute()))\n"
-        output += "**梦境数量**: \(dreams.count)\n\n"
-        output += "---\n\n"
-        
-        for (index, dream) in dreams.enumerated() {
-            output += "## 梦境 \(index + 1): \(dream.title)\n\n"
-            output += "### 📋 基本信息\n\n"
-            output += "- **日期**: \(dream.date.formatted(.dateTime.year().month().day().hour().minute()))\n"
-            
-            if !dream.tags.isEmpty {
-                output += "- **标签**: \(dream.tags.map { "#\($0)" }.joined(separator: " "))\n"
-            }
-            
-            if !dream.emotions.isEmpty {
-                let emotionNames = dream.emotions.map { $0.rawValue }.joined(separator: ", ")
-                output += "- **情绪**: \(emotionNames)\n"
-            }
-            
-            output += "- **清晰度**: \(String(repeating: "⭐", count: dream.clarity))\n"
-            output += "- **强度**: \(String(repeating: "💪", count: dream.intensity))\n"
-            
-            if dream.isLucid {
-                output += "- **清醒梦**: 🌟 是\n"
-            }
-            
-            output += "\n### 📝 梦境内容\n\n"
-            output += "\(dream.content)\n\n"
-            
-            if includeAnalysis, let analysis = dream.aiAnalysis {
-                output += "### 🧠 AI 解析\n\n"
-                output += "\(analysis)\n\n"
-            }
-            
-            output += "---\n\n"
-        }
-        
-        output += "\n*感谢使用 DreamLog*\n"
-        
-        return output
-    }
-    
-    // MARK: - 批量导出
-    
-    /// 批量导出梦境
     func exportDreams(
-        dreams: [Dream],
-        format: ExportFormat,
-        includeAnalysis: Bool = true,
-        includeStats: Bool = true,
-        theme: PDFTheme = .starry
-    ) -> ExportResult {
-        switch format {
-        case .pdf:
-            guard let data = exportToPDF(
-                dreams: dreams,
-                includeAnalysis: includeAnalysis,
-                includeStats: includeStats,
-                theme: theme
-            ) else {
-                return .failure("PDF 生成失败")
-            }
-            return .success(data: data, extension: format.fileExtension)
+        options: ExportOptions,
+        customDateRange: (start: Date, end: Date)? = nil
+    ) async -> ExportResult {
+        do {
+            // Fetch dreams based on options
+            let dreams = try fetchDreams(options: options, customDateRange: customDateRange)
             
-        case .json:
-            guard let data = exportToJSON(dreams: dreams) else {
-                return .failure("JSON 导出失败")
-            }
-            return .success(data: data, extension: format.fileExtension)
-            
-        case .text:
-            let text = exportToText(dreams: dreams, includeAnalysis: includeAnalysis)
-            guard let data = text.data(using: .utf8) else {
-                return .failure("文本编码失败")
-            }
-            return .success(data: data, extension: format.fileExtension)
-            
-        case .markdown:
-            let text = exportToMarkdown(dreams: dreams, includeAnalysis: includeAnalysis)
-            guard let data = text.data(using: .utf8) else {
-                return .failure("Markdown 编码失败")
-            }
-            return .success(data: data, extension: format.fileExtension)
-        }
-    }
-}
-
-// MARK: - 导出结果
-
-enum ExportResult {
-    case success(data: Data, extension: String)
-    case failure(String)
-    
-    var isSuccess: Bool {
-        if case .success = self { return true }
-        return false
-    }
-    
-    var errorMessage: String? {
-        if case .failure(let message) = self { return message }
-        return nil
-    }
-}
-
-// MARK: - PDF 主题
-
-enum PDFTheme: String, CaseIterable {
-    case starry = "星空紫"
-    case sunset = "日落橙"
-    case forest = "森林绿"
-    case ocean = "海洋蓝"
-    case minimal = "简约黑"
-    
-    var primaryColor: String {
-        switch self {
-        case .starry: return "9B7EBD"
-        case .sunset: return "FF6B35"
-        case .forest: return "2D6A4F"
-        case .ocean: return "0077B6"
-        case .minimal: return "1A1A1A"
-        }
-    }
-    
-    var gradientColors: [String] {
-        switch self {
-        case .starry: return ["1A1A2E", "16213E", "0F3460"]
-        case .sunset: return ["FF6B35", "F7C548", "F15BB5"]
-        case .forest: return ["1B4332", "2D6A4F", "40916C"]
-        case .ocean: return ["03045E", "0077B6", "90E0EF"]
-        case .minimal: return ["1A1A1A", "2D2D2D", "404040"]
-        }
-    }
-}
-
-// MARK: - PDF 渲染器
-
-#if canImport(UIKit)
-class DreamPDFRenderer {
-    private let theme: PDFTheme
-    
-    init(theme: PDFTheme) {
-        self.theme = theme
-    }
-    
-    func renderPDF(
-        dreams: [Dream],
-        includeAnalysis: Bool,
-        includeStats: Bool
-    ) -> Data? {
-        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: 595, height: 842),
-                                              format: UIGraphicsPDFRendererFormat())
-        
-        let data = renderer.pdfData { context in
-            // 封面页
-            renderCoverPage(context: context, dreamCount: dreams.count)
-            
-            // 统计页 (可选)
-            if includeStats && !dreams.isEmpty {
-                context.beginPage()
-                renderStatsPage(context: context, dreams: dreams)
+            guard !dreams.isEmpty else {
+                return ExportResult(
+                    success: false,
+                    errorMessage: "没有找到符合条件的梦境"
+                )
             }
             
-            // 梦境内容页
-            for (index, dream) in dreams.enumerated() {
-                if index > 0 || includeStats {
-                    context.beginPage()
-                }
-                renderDreamPage(context: context, dream: dream, index: index, includeAnalysis: includeAnalysis)
+            // Generate export content based on format
+            let content: String
+            switch options.format {
+            case .json:
+                content = try generateJSON(dreams: dreams, options: options)
+            case .csv:
+                content = try generateCSV(dreams: dreams, options: options)
+            case .markdown:
+                content = generateMarkdown(dreams: dreams, options: options)
+            case .obsidian:
+                content = generateObsidianMarkdown(dreams: dreams, options: options)
+            case .notion:
+                content = try generateCSV(dreams: dreams, options: options) // Notion uses CSV
             }
             
-            // 封底页
-            context.beginPage()
-            renderBackPage(context: context)
-        }
-        
-        return data
-    }
-    
-    private func renderCoverPage(context: UIGraphicsPDFRendererContext, dreamCount: Int) {
-        context.beginPage()
-        let bounds = context.format.bounds
-        
-        // 背景渐变
-        let colors = theme.gradientColors.map { UIColor(hex: $0) }
-        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                                         colors: colors.map { $0.cgColor } as CFArray,
-                                         locations: [0, 0.5, 1]) else {
-            return
-        }
-        
-        context.cgContext.drawLinearGradient(gradient,
-                                              start: CGPoint(x: 0, y: 0),
-                                              end: CGPoint(x: 0, y: bounds.height),
-                                              options: [])
-        
-        // 标题
-        let title = "DreamLog"
-        let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 48, weight: .bold),
-            .foregroundColor: UIColor.white
-        ]
-        let titleSize = title.size(withAttributes: titleAttributes)
-        title.draw(at: CGPoint(x: (bounds.width - titleSize.width) / 2, y: bounds.height / 2 - 40),
-                   withAttributes: titleAttributes)
-        
-        // 副标题
-        let subtitle = "梦境日记"
-        let subtitleAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 24, weight: .light),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.8)
-        ]
-        let subtitleSize = subtitle.size(withAttributes: subtitleAttributes)
-        subtitle.draw(at: CGPoint(x: (bounds.width - subtitleSize.width) / 2, y: bounds.height / 2 + 10),
-                      withAttributes: subtitleAttributes)
-        
-        // 梦境数量
-        let countText = "共 \(dreamCount) 个梦境"
-        let countAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 18, weight: .regular),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.6)
-        ]
-        let countSize = countText.size(withAttributes: countAttributes)
-        countText.draw(at: CGPoint(x: (bounds.width - countSize.width) / 2, y: bounds.height / 2 + 60),
-                       withAttributes: countAttributes)
-        
-        // 日期
-        let dateText = Date().formatted(.dateTime.year().month().day())
-        let dateAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 14, weight: .light),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.4)
-        ]
-        let dateSize = dateText.size(withAttributes: dateAttributes)
-        dateText.draw(at: CGPoint(x: (bounds.width - dateSize.width) / 2, y: bounds.height - 80),
-                      withAttributes: dateAttributes)
-    }
-    
-    private func renderStatsPage(context: UIGraphicsPDFRendererContext, dreams: [Dream]) {
-        let bounds = context.format.bounds
-        var yOffset: CGFloat = 80
-        
-        // 页面标题
-        let title = "📊 梦境统计"
-        let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 32, weight: .bold),
-            .foregroundColor: UIColor(hex: theme.primaryColor)
-        ]
-        title.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: titleAttributes)
-        yOffset += 60
-        
-        // 统计信息
-        let stats = calculateStats(dreams: dreams)
-        
-        let statItems: [(String, String)] = [
-            ("总梦境数", "\(stats.totalCount)"),
-            ("清醒梦", "\(stats.lucidCount)"),
-            ("平均清晰度", "\(String(format: "%.1f", stats.avgClarity))/5"),
-            ("平均强度", "\(String(format: "%.1f", stats.avgIntensity))/5"),
-            ("记录天数", "\(stats.recordingDays)"),
-            ("标签数量", "\(stats.totalTags)"),
-        ]
-        
-        for (label, value) in statItems {
-            let labelAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 16, weight: .regular),
-                .foregroundColor: UIColor.black
-            ]
-            let valueAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 16, weight: .bold),
-                .foregroundColor: UIColor(hex: theme.primaryColor)
-            ]
+            // Write to temporary file
+            let fileURL = try writeToFile(content: content, format: options.format)
             
-            let labelSize = label.size(withAttributes: labelAttributes)
-            let valueSize = value.size(withAttributes: valueAttributes)
+            // Calculate file size
+            let fileSize = ByteCountFormatter.string(fromByteCount: Int64(content.count), countStyle: .file)
             
-            label.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: labelAttributes)
-            value.draw(at: CGPoint(x: bounds.width - 60 - valueSize.width, y: yOffset),
-                       withAttributes: valueAttributes)
+            return ExportResult(
+                success: true,
+                fileURL: fileURL,
+                dreamCount: dreams.count,
+                fileSize: fileSize,
+                exportedAt: Date()
+            )
             
-            yOffset += 35
-        }
-        
-        // 情绪分布
-        yOffset += 20
-        let emotionTitle = "😊 情绪分布"
-        let emotionAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 20, weight: .semibold),
-            .foregroundColor: UIColor.black
-        ]
-        emotionTitle.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: emotionAttributes)
-        yOffset += 40
-        
-        for (emotion, count) in stats.emotionDistribution.prefix(5) {
-            let emotionText = "\(emotion): \(count) 次"
-            let emotionAttr: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 14, weight: .regular),
-                .foregroundColor: UIColor.darkGray
-            ]
-            emotionText.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: emotionAttr)
-            yOffset += 25
+        } catch {
+            return ExportResult(
+                success: false,
+                errorMessage: "导出失败：\(error.localizedDescription)"
+            )
         }
     }
     
-    private func renderDreamPage(
-        context: UIGraphicsPDFRendererContext,
-        dream: Dream,
-        index: Int,
-        includeAnalysis: Bool
-    ) {
-        let bounds = context.format.bounds
-        var yOffset: CGFloat = 60
-        
-        // 梦境标题
-        let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 24, weight: .bold),
-            .foregroundColor: UIColor(hex: theme.primaryColor)
-        ]
-        let title = "🌙 \(dream.title)"
-        title.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: titleAttributes)
-        yOffset += 40
-        
-        // 日期
-        let dateText = dream.date.formatted(.dateTime.year().month().day().hour().minute())
-        let dateAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 14, weight: .light),
-            .foregroundColor: UIColor.gray
-        ]
-        dateText.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: dateAttributes)
-        yOffset += 30
-        
-        // 标签和情绪
-        if !dream.tags.isEmpty || !dream.emotions.isEmpty {
-            let metaText = [
-                dream.tags.isEmpty ? nil : "🏷️ " + dream.tags.joined(separator: " "),
-                dream.emotions.isEmpty ? nil : "😊 " + dream.emotions.map { $0.rawValue }.joined(separator: ", ")
-            ].compactMap { $0 }.joined(separator: "  |  ")
-            
-            let metaAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 12, weight: .regular),
-                .foregroundColor: UIColor.darkGray
-            ]
-            metaText.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: metaAttributes)
-            yOffset += 25
+    // MARK: - Fetch Dreams
+    
+    private func fetchDreams(
+        options: ExportOptions,
+        customDateRange: (start: Date, end: Date)? = nil
+    ) throws -> [Dream] {
+        guard let modelContext = modelContext else {
+            throw NSError(domain: "DreamExport", code: 1, userInfo: [NSLocalizedDescriptionKey: "Model context not available"])
         }
         
-        // 清晰度和强度
-        let ratingText = "⭐ 清晰度：\(String(repeating: "★", count: dream.clarity) + String(repeating: "☆", count: 5 - dream.clarity))  " +
-                        "💪 强度：\(String(repeating: "★", count: dream.intensity) + String(repeating: "☆", count: 5 - dream.intensity))"
-        let ratingAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 12, weight: .regular),
-            .foregroundColor: UIColor.darkGray
-        ]
-        ratingText.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: ratingAttributes)
-        yOffset += 30
+        var sortDescriptor = SortDescriptor(\Dream.date, order: .reverse)
         
-        // 梦境内容
-        let contentAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 14, weight: .regular),
-            .foregroundColor: UIColor.black
-        ]
-        
-        let contentParagraphStyle = NSMutableParagraphStyle()
-        contentParagraphStyle.lineSpacing = 6
-        
-        let contentAttributesWithParagraph: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 14, weight: .regular),
-            .foregroundColor: UIColor.black,
-            .paragraphStyle: contentParagraphStyle
-        ]
-        
-        dream.content.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: contentAttributesWithParagraph)
-        
-        // 计算内容高度并更新 yOffset
-        let contentSize = dream.content.boundingRect(
-            with: CGSize(width: bounds.width - 120, height: CGFloat.greatestFiniteMagnitude),
-            options: [.usesLineFragmentOrigin, .usesFontLeading],
-            attributes: contentAttributesWithParagraph,
-            context: nil
-        )
-        yOffset += contentSize.height + 20
-        
-        // AI 解析 (可选)
-        if includeAnalysis, let analysis = dream.aiAnalysis {
-            // 分隔线
-            let lineRect = CGRect(x: 60, y: yOffset, width: bounds.width - 120, height: 1)
-            context.cgContext.setFillColor(UIColor.lightGray.cgColor)
-            context.cgContext.fill(lineRect)
-            yOffset += 30
-            
-            let aiTitle = "🧠 AI 解析"
-            let aiTitleAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 18, weight: .semibold),
-                .foregroundColor: UIColor(hex: theme.primaryColor)
-            ]
-            aiTitle.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: aiTitleAttributes)
-            yOffset += 25
-            
-            let analysisAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 13, weight: .regular),
-                .foregroundColor: UIColor.darkGray,
-                .paragraphStyle: contentParagraphStyle
-            ]
-            analysis.draw(at: CGPoint(x: 60, y: yOffset), withAttributes: analysisAttributes)
+        switch options.sortOrder {
+        case .dateDescending:
+            sortDescriptor = SortDescriptor(\Dream.date, order: .reverse)
+        case .dateAscending:
+            sortDescriptor = SortDescriptor(\Dream.date, order: .forward)
+        case .clarityDescending:
+            sortDescriptor = SortDescriptor(\Dream.clarity, order: .reverse)
+        case .intensityDescending:
+            sortDescriptor = SortDescriptor(\Dream.intensity, order: .reverse)
         }
         
-        // 页码
-        let pageNum = "\(index + 1)"
-        let pageAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 12, weight: .light),
-            .foregroundColor: UIColor.lightGray
-        ]
-        let pageSize = pageNum.size(withAttributes: pageAttributes)
-        pageNum.draw(at: CGPoint(x: bounds.width - 60 - pageSize.width, y: bounds.height - 40),
-                     withAttributes: pageAttributes)
+        var fetchDescriptor = FetchDescriptor<Dream>(sortBy: [sortDescriptor])
+        
+        // Apply date range filter
+        if let dateRange = options.dateRange.dateRange() ?? customDateRange {
+            fetchDescriptor.predicate = #Predicate<Dream> { dream in
+                dream.date >= dateRange.start && dream.date <= dateRange.end
+            }
+        }
+        
+        return try modelContext.fetch(fetchDescriptor)
     }
     
-    private func renderBackPage(context: UIGraphicsPDFRendererContext) {
-        let bounds = context.format.bounds
+    // MARK: - Generate JSON
+    
+    private func generateJSON(dreams: [Dream], options: ExportOptions) throws -> String {
+        var exportData: [[String: Any]] = []
         
-        // 背景
-        let colors = theme.gradientColors.map { UIColor(hex: $0) }
-        guard let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
-                                         colors: colors.map { $0.cgColor } as CFArray,
-                                         locations: [0, 0.5, 1]) else {
-            return
+        for dream in dreams {
+            var dreamDict: [String: Any] = [:]
+            
+            if options.includeFields.contains(.title) {
+                dreamDict["title"] = dream.title
+            }
+            if options.includeFields.contains(.content) {
+                dreamDict["content"] = dream.content
+            }
+            if options.includeFields.contains(.tags) {
+                dreamDict["tags"] = dream.tags
+            }
+            if options.includeFields.contains(.emotions) {
+                dreamDict["emotions"] = dream.emotions.map { $0.rawValue }
+            }
+            if options.includeFields.contains(.clarity) {
+                dreamDict["clarity"] = dream.clarity
+            }
+            if options.includeFields.contains(.intensity) {
+                dreamDict["intensity"] = dream.intensity
+            }
+            if options.includeFields.contains(.isLucid) {
+                dreamDict["isLucid"] = dream.isLucid
+            }
+            if options.includeFields.contains(.aiAnalysis) {
+                dreamDict["aiAnalysis"] = dream.aiAnalysis
+            }
+            if options.includeFields.contains(.date) {
+                dreamDict["date"] = ISO8601DateFormatter().string(from: dream.date)
+            }
+            
+            exportData.append(dreamDict)
         }
         
-        context.cgContext.drawLinearGradient(gradient,
-                                              start: CGPoint(x: 0, y: 0),
-                                              end: CGPoint(x: 0, y: bounds.height),
-                                              options: [])
+        let jsonData = try JSONSerialization.data(withJSONObject: exportData, options: .prettyPrinted)
+        guard let jsonString = String(data: jsonData, encoding: .utf8) else {
+            throw NSError(domain: "DreamExport", code: 2, userInfo: [NSLocalizedDescriptionKey: "Failed to serialize JSON"])
+        }
         
-        // 感谢语
-        let thanksText = "感谢使用 DreamLog"
-        let thanksAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 24, weight: .light),
-            .foregroundColor: UIColor.white
-        ]
-        let thanksSize = thanksText.size(withAttributes: thanksAttributes)
-        thanksText.draw(at: CGPoint(x: (bounds.width - thanksSize.width) / 2, y: bounds.height / 2 - 20),
-                        withAttributes: thanksAttributes)
-        
-        // 标语
-        let slogan = "记录你的梦，发现潜意识的秘密"
-        let sloganAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 16, weight: .light),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.7)
-        ]
-        let sloganSize = slogan.size(withAttributes: sloganAttributes)
-        slogan.draw(at: CGPoint(x: (bounds.width - sloganSize.width) / 2, y: bounds.height / 2 + 20),
-                    withAttributes: sloganAttributes)
-        
-        // 日期
-        let dateText = Date().formatted(.dateTime.year().month().day())
-        let dateAttributes: [NSAttributedString.Key: Any] = [
-            .font: UIFont.systemFont(ofSize: 12, weight: .light),
-            .foregroundColor: UIColor.white.withAlphaComponent(0.4)
-        ]
-        let dateSize = dateText.size(withAttributes: dateAttributes)
-        dateText.draw(at: CGPoint(x: (bounds.width - dateSize.width) / 2, y: bounds.height - 80),
-                      withAttributes: dateAttributes)
+        return jsonString
     }
     
-    private func calculateStats(dreams: [Dream]) -> DreamStats {
-        let totalCount = dreams.count
+    // MARK: - Generate CSV
+    
+    private func generateCSV(dreams: [Dream], options: ExportOptions) throws -> String {
+        var csvRows: [String] = []
+        
+        // Header row
+        var headers: [String] = []
+        if options.includeFields.contains(.date) { headers.append("Date") }
+        if options.includeFields.contains(.title) { headers.append("Title") }
+        if options.includeFields.contains(.content) { headers.append("Content") }
+        if options.includeFields.contains(.tags) { headers.append("Tags") }
+        if options.includeFields.contains(.emotions) { headers.append("Emotions") }
+        if options.includeFields.contains(.clarity) { headers.append("Clarity") }
+        if options.includeFields.contains(.intensity) { headers.append("Intensity") }
+        if options.includeFields.contains(.isLucid) { headers.append("Is Lucid") }
+        if options.includeFields.contains(.aiAnalysis) { headers.append("AI Analysis") }
+        
+        csvRows.append(headers.map { escapeCSV($0) }.joined(separator: ","))
+        
+        // Data rows
+        for dream in dreams {
+            var row: [String] = []
+            
+            if options.includeFields.contains(.date) {
+                row.append(ISO8601DateFormatter().string(from: dream.date))
+            }
+            if options.includeFields.contains(.title) {
+                row.append(escapeCSV(dream.title))
+            }
+            if options.includeFields.contains(.content) {
+                row.append(escapeCSV(dream.content.replacingOccurrences(of: "\n", with: " ")))
+            }
+            if options.includeFields.contains(.tags) {
+                row.append(escapeCSV(dream.tags.joined(separator: "; ")))
+            }
+            if options.includeFields.contains(.emotions) {
+                row.append(escapeCSV(dream.emotions.map { $0.rawValue }.joined(separator: "; ")))
+            }
+            if options.includeFields.contains(.clarity) {
+                row.append(String(dream.clarity))
+            }
+            if options.includeFields.contains(.intensity) {
+                row.append(String(dream.intensity))
+            }
+            if options.includeFields.contains(.isLucid) {
+                row.append(dream.isLucid ? "Yes" : "No")
+            }
+            if options.includeFields.contains(.aiAnalysis) {
+                row.append(escapeCSV((dream.aiAnalysis ?? "").replacingOccurrences(of: "\n", with: " ")))
+            }
+            
+            csvRows.append(row.joined(separator: ","))
+        }
+        
+        return csvRows.joined(separator: "\n")
+    }
+    
+    private func escapeCSV(_ value: String) -> String {
+        let escaped = value.replacingOccurrences(of: "\"", with: "\"\"")
+        if escaped.contains(",") || escaped.contains("\n") || escaped.contains("\"") {
+            return "\"\(escaped)\""
+        }
+        return escaped
+    }
+    
+    // MARK: - Generate Markdown
+    
+    private func generateMarkdown(dreams: [Dream], options: ExportOptions) -> String {
+        var markdown = "# 梦境导出\n\n"
+        markdown += "导出时间：\(formatDate(Date()))\n"
+        markdown += "梦境数量：\(dreams.count)\n\n"
+        markdown += "---\n\n"
+        
+        for (index, dream) in dreams.enumerated() {
+            markdown += "## \(index + 1). \(dream.title)\n\n"
+            
+            if options.includeFields.contains(.date) {
+                markdown += "**日期**: \(formatDate(dream.date))\n\n"
+            }
+            
+            if options.includeFields.contains(.content) {
+                markdown += "### 内容\n\n\(dream.content)\n\n"
+            }
+            
+            if options.includeFields.contains(.tags) && !dream.tags.isEmpty {
+                markdown += "**标签**: \(dream.tags.map { "#\($0)" }.joined(separator: " "))\n\n"
+            }
+            
+            if options.includeFields.contains(.emotions) && !dream.emotions.isEmpty {
+                markdown += "**情绪**: \(dream.emotions.map { $0.rawValue }.joined(separator: ", "))\n\n"
+            }
+            
+            if options.includeFields.contains(.clarity) {
+                markdown += "**清晰度**: \(String(repeating: "⭐️", count: dream.clarity))\n\n"
+            }
+            
+            if options.includeFields.contains(.intensity) {
+                markdown += "**强度**: \(String(repeating: "💪", count: dream.intensity))\n\n"
+            }
+            
+            if options.includeFields.contains(.isLucid) {
+                markdown += "**清醒梦**: \(dream.isLucid ? "✅ 是" : "❌ 否")\n\n"
+            }
+            
+            if options.includeFields.contains(.aiAnalysis), let analysis = dream.aiAnalysis {
+                markdown += "### AI 解析\n\n\(analysis)\n\n"
+            }
+            
+            markdown += "---\n\n"
+        }
+        
+        markdown += "\n*由 DreamLog 导出*"
+        
+        return markdown
+    }
+    
+    // MARK: - Generate Obsidian Markdown
+    
+    private func generateObsidianMarkdown(dreams: [Dream], options: ExportOptions) -> String {
+        var markdown = ""
+        
+        for dream in dreams {
+            markdown += "---\n"
+            markdown += "tags: [\(dream.tags.joined(separator: ", "))]\n"
+            
+            if !dream.emotions.isEmpty {
+                markdown += "emotions: [\(dream.emotions.map { $0.rawValue }.joined(separator: ", "))]\n"
+            }
+            
+            markdown += "clarity: \(dream.clarity)\n"
+            markdown += "intensity: \(dream.intensity)\n"
+            markdown += "lucid: \(dream.isLucid)\n"
+            markdown += "date: \(formatDateForObsidian(dream.date))\n"
+            markdown += "---\n\n"
+            
+            markdown += "# \(dream.title)\n\n"
+            markdown += "\(dream.content)\n\n"
+            
+            if let analysis = dream.aiAnalysis {
+                markdown += "## AI 解析\n\n\(analysis)\n\n"
+            }
+            
+            markdown += "\n---\n\n"
+        }
+        
+        return markdown
+    }
+    
+    // MARK: - File Operations
+    
+    private func writeToFile(content: String, format: ExportFormat) throws -> URL {
+        let tempDir = FileManager.default.temporaryDirectory
+        let timestamp = ISO8601DateFormatter().string(from: Date()).replacingOccurrences(of: ":", with: "-")
+        let filename = "DreamLog_Export_\(timestamp).\(format.fileExtension)"
+        let fileURL = tempDir.appendingPathComponent(filename)
+        
+        try content.write(to: fileURL, atomically: true, encoding: .utf8)
+        
+        return fileURL
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "zh_CN")
+        return formatter.string(from: date)
+    }
+    
+    private func formatDateForObsidian(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: date)
+    }
+    
+    // MARK: - Export Statistics
+    
+    func calculateStatistics(dreams: [Dream]) -> ExportStatistics {
+        guard !dreams.isEmpty else {
+            return ExportStatistics()
+        }
+        
+        let totalDreams = dreams.count
+        let averageClarity = dreams.map { Double($0.clarity) }.reduce(0, +) / Double(totalDreams)
+        let averageIntensity = dreams.map { Double($0.intensity) }.reduce(0, +) / Double(totalDreams)
         let lucidCount = dreams.filter { $0.isLucid }.count
-        let avgClarity = dreams.isEmpty ? 0 : Double(dreams.reduce(0) { $0 + $1.clarity }) / Double(totalCount)
-        let avgIntensity = dreams.isEmpty ? 0 : Double(dreams.reduce(0) { $0 + $1.intensity }) / Double(totalCount)
+        let lucidDreamPercentage = (Double(lucidCount) / Double(totalDreams)) * 100
         
-        let dates = Set(dreams.map { Calendar.current.startOfDay(for: $0.date) })
-        let recordingDays = dates.count
+        // Top tags
+        let tagCounts = Dictionary(grouping: dreams.flatMap { $0.tags }) { $0 }
+            .mapValues { $0.count }
+            .sorted { $0.value > $1.value }
+            .prefix(5)
+            .map { $0.key }
         
-        let allTags = dreams.flatMap { $0.tags }
-        let totalTags = allTags.count
+        // Dominant emotions
+        let emotionCounts = Dictionary(grouping: dreams.flatMap { $0.emotions }) { $0.rawValue }
+            .mapValues { $0.count }
+            .sorted { $0.value > $1.value }
+            .prefix(3)
+            .map { $0.key }
         
-        var emotionCount: [String: Int] = [:]
-        dreams.forEach { dream in
-            dream.emotions.forEach { emotion in
-                emotionCount[emotion.rawValue, default: 0] += 1
-            }
-        }
-        
-        return DreamStats(
-            totalCount: totalCount,
-            lucidCount: lucidCount,
-            avgClarity: avgClarity,
-            avgIntensity: avgIntensity,
-            recordingDays: recordingDays,
-            totalTags: totalTags,
-            emotionDistribution: emotionCount.sorted { $0.value > $1.value }
+        return ExportStatistics(
+            totalDreams: totalDreams,
+            dateRange: "\(totalDreams) 个梦境",
+            averageClarity: averageClarity,
+            averageIntensity: averageIntensity,
+            lucidDreamPercentage: lucidDreamPercentage,
+            topTags: tagCounts,
+            dominantEmotions: emotionCounts
         )
     }
 }
-
-struct DreamStats {
-    let totalCount: Int
-    let lucidCount: Int
-    let avgClarity: Double
-    let avgIntensity: Double
-    let recordingDays: Int
-    let totalTags: Int
-    let emotionDistribution: [(String, Int)]
-}
-#endif
-
-// MARK: - UIColor 扩展
-// Note: UIColor(hex:) is defined in Theme.swift to avoid redeclaration
