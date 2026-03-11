@@ -7,176 +7,230 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		5DD2FB43 /* AIArtService.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC5E826F; };
-		133B72E4 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC712C26; };
-		60C248BD /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = A07D60F8; };
-		AFA725E9 /* AddFriendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AEE4C897; };
-		BC44A7AC /* AdvancedSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B6B42A4; };
-		CB3AAA55 /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = F3AF71CD; };
-		876B3BCE /* AudioSynthesisEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9C6EC38; };
-		6F82BEC5 /* CachedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CD0E46C; };
-		5918F0CD /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC0C49BF; };
-		A2611FFD /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4EC4084C; };
-		20EF7C3E /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0633864E; };
-		52D94062 /* CommonViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDE76736; };
-		02DFE93F /* CommunityPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B719EB3C; };
-		5A632FCB /* CommunityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4630453F; };
-		DDA499F8 /* CommunityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 664B2642; };
-		E94A8338 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E8161FD; };
-		E5E87CD1 /* Dream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 92B7B25A; };
-		3C454D07 /* DreamArtGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61640BAA; };
-		D40FC631 /* DreamAssistantModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3080B5D; };
-		DAF94955 /* DreamAssistantService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02909A0B; };
-		6F6CC97F /* DreamAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6489F804; };
-		7CC4A027 /* DreamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53F97FA6; };
-		4A027A5E /* DreamDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FAECA69; };
-		5BF05DA1 /* DreamExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B86727C9; };
-		25FBCCC3 /* DreamGraphService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3C411D7; };
-		A84D3280 /* DreamGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15265E37; };
-		E3B8E6A3 /* DreamJournalExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACE2512D; };
-		E6CB8D45 /* DreamJournalExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F86A86B4; };
-		298D50C4 /* DreamLogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62FB6D1E; };
-		AF9D5DC6 /* DreamLogQuickWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B80F6AD; };
-		3FD0A979 /* DreamLogWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 41B24AC3; };
-		3D95478B /* DreamMusicService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36A1300C; };
-		F703A556 /* DreamMusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A82EF2B5; };
-		9E890571 /* DreamSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B06FF09; };
-		BB19F5DC /* DreamShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2C8485AF; };
-		43B4392A /* DreamStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 010704B0; };
-		69E51559 /* DreamStoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5C70EE3; };
-		0F227254 /* DreamStoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2054A8CC; };
-		10AF7968 /* DreamTimelineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6F6BF1F; };
-		D982ABE9 /* DreamTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3903BB74; };
-		A9279768 /* DreamTrendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D664E0; };
-		6B29AF86 /* DreamTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CC6DD17; };
-		DB9A9DA4 /* DreamWallpaperService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4415CF41; };
-		11DD11B6 /* DreamWallpaperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C20DFA9F; };
-		A3D366C4 /* DreamWrappedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BC9D796; };
-		B9D31FB3 /* DreamWrappedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 21FF1C2E; };
-		1063ECDB /* DreamsGoalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C26A112; };
-		EC3B0A93 /* EnhancedShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 89E9C6B4; };
-		7843AB8B /* FriendProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2CF7D88E; };
-		9C3681E3 /* FriendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A028F59C; };
-		077E0746 /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3EC0322A; };
-		32A2C9CF /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7EE10A41; };
-		FC7FE36F /* HapticFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4459B2A7; };
-		7C4AF685 /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D412F16; };
-		BA20D10D /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F056A20; };
-		3A815487 /* ImageCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9017216; };
-		6F83D47A /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C06ADD3; };
-		0667A113 /* LucidDreamTraining.swift in Sources */ = {isa = PBXBuildFile; fileRef = 082DE947; };
-		BC0BCA98 /* MeditationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E34A787; };
-		E0736F76 /* MeditationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E1EC4FB9; };
-		6E523F36 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1691EC2; };
-		AA689729 /* OnThisDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FBF854A; };
-		48BFC5B1 /* PrivateShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 812239DD; };
-		A17726A2 /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5F5D576; };
-		02D293F8 /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D95175BA; };
-		59971535 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2E4E731; };
-		7C4A90D6 /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42FADBEA; };
-		A6F43750 /* SiriShortcutViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 415745CF; };
-		2B0FF9B7 /* SiriShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4F69238; };
-		A095679E /* SleepDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E2B9D51; };
-		D1108BBB /* SleepQualityAnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26276DDE; };
-		B7954CC4 /* SleepQualityAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7FB490F; };
-		9FE3395A /* SmartReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83CF399C; };
-		57118995 /* SmartReminderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E47E289C; };
-		6019ED51 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90D47189; };
-		E6718905 /* SpeechSynthesisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C010B53E; };
-		C91B00CD /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DFC5DC2F; };
-		2E375EAC /* ViewImageRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06997BE6; };
-		3F9188C0 /* WidgetConfigurationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52C06538; };
-		DD967946 /* WidgetCustomizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E5F6E67; };
-		68C79FCF /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0AE65CB9; };
+		DBE6C420 /* AIArtService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F73FD1F; };
+		A98D1BB1 /* AIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE626979; };
+		298DCDFD /* Accessibility.swift in Sources */ = {isa = PBXBuildFile; fileRef = 059958C7; };
+		801E4F06 /* AddFriendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7C0C85E; };
+		A4FE4860 /* AdvancedDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99213ED7; };
+		1ACBA95A /* AdvancedSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5C918D3; };
+		707B9714 /* Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B13EE2FB; };
+		CFF6517D /* AssistantAnimations.swift in Sources */ = {isa = PBXBuildFile; fileRef = 966A91D9; };
+		BCF87AC5 /* AudioSynthesisEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B064386; };
+		7EFEDECD /* CachedImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C42B906; };
+		32FABB55 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EA24DFD; };
+		524ECB56 /* ChartsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D39DD892; };
+		DFD93952 /* CloudSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55758D3C; };
+		02CBF6A9 /* CommonViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AFCCEA8; };
+		0D828C3F /* CommunityPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 19BFFAA2; };
+		33DB712C /* CommunityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 697C9CDD; };
+		F714C889 /* CommunityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34D921E5; };
+		92F8192A /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D548AEB; };
+		78017C85 /* Dream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 256181BC; };
+		04D99140 /* DreamArtGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BEC505C; };
+		24743DFE /* DreamAssistantModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C94D536; };
+		22472D4E /* DreamAssistantService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4CF81F4; };
+		111C0C5F /* DreamAssistantView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AC9632A; };
+		A32CA80D /* DreamBackupModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54E97DF7; };
+		4EB6A00C /* DreamBackupService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED4F6EC9; };
+		F8811480 /* DreamBackupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC4F7AF; };
+		EECC525F /* DreamChallengeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51AE29BC; };
+		A28F4A73 /* DreamChallengeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4691CFF9; };
+		84000261 /* DreamChallengeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E3180E75; };
+		9771A376 /* DreamCorrelationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 116B4496; };
+		59FC3535 /* DreamDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C6306D1; };
+		DE17A0A0 /* DreamDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42306EA4; };
+		C7B6FC7D /* DreamExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D1AB880; };
+		1E1C94CD /* DreamExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8B3A723; };
+		65E369E1 /* DreamExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 677B55CA; };
+		A59A1FF3 /* DreamGraphService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0746B07D; };
+		C24C7014 /* DreamGraphView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26B4935C; };
+		310832F5 /* DreamJournalExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2735ED69; };
+		B893DC71 /* DreamJournalExportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3FF0D98F; };
+		46374000 /* DreamLogApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 847C1738; };
+		A51F4856 /* DreamLogQuickWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC29D6FB; };
+		DF79706D /* DreamLogWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFC74105; };
+		A37FF21B /* DreamMusicService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69D10447; };
+		D1315347 /* DreamMusicView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA80D184; };
+		1825C20D /* DreamReportExportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 157F4A99; };
+		5788AD53 /* DreamSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF17227C; };
+		62F75E13 /* DreamShareCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 539300B4; };
+		CDB35931 /* DreamShareCircleModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BF3054; };
+		17292F53 /* DreamShareCircleService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB071612; };
+		E2850BE6 /* DreamShareCircleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94DB0086; };
+		FE94D10E /* DreamStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C158FF51; };
+		6401A5FA /* DreamStoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B249430D; };
+		38FF025A /* DreamStoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C0D875C; };
+		93F07CBE /* DreamTimelineService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31105116; };
+		ABDC4141 /* DreamTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57C674F2; };
+		0B3E0ECB /* DreamTrendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52076A10; };
+		3C513F38 /* DreamTrendView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4794CBC2; };
+		FD4AF550 /* DreamVideoEditor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 147AD837; };
+		295935EA /* DreamVideoEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DDBF98B; };
+		8F5C8E45 /* DreamVideoEnhancements.swift in Sources */ = {isa = PBXBuildFile; fileRef = F933BB90; };
+		2032C6E6 /* DreamVideoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54D331B8; };
+		21DA39C2 /* DreamVideoTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07F61E4F; };
+		40B503A0 /* DreamVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22AD3D64; };
+		39A33489 /* DreamWallpaperService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 123E3DF9; };
+		23540DA3 /* DreamWallpaperView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59F39637; };
+		7838D101 /* DreamWeeklyReportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 279D62B6; };
+		C2398E4C /* DreamWeeklyReportService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F945686; };
+		8531691E /* DreamWeeklyReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1C4F4F3; };
+		5ACB94AF /* DreamWrappedService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78347291; };
+		9783D3C1 /* DreamWrappedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 660528C6; };
+		82FAD3E1 /* DreamsGoalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43741766; };
+		02560401 /* EnhancedShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 725F2678; };
+		8579430A /* ExternalAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 42D8747D; };
+		CA28DBB2 /* FriendProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF279563; };
+		7BD10F19 /* FriendService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 030A0DA6; };
+		46FED8E9 /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 011DB738; };
+		3231017E /* GalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E7055DC; };
+		9AB72F72 /* HapticFeedback.swift in Sources */ = {isa = PBXBuildFile; fileRef = E2B2FE3D; };
+		E995F32B /* HealthKitService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A557CA9; };
+		134B871E /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1B48870; };
+		E230E403 /* ImageCacheService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6C60BA5B; };
+		C61791E1 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9038DE3; };
+		BC3A17FE /* LucidDreamTraining.swift in Sources */ = {isa = PBXBuildFile; fileRef = 29B5E4C1; };
+		FA683AC7 /* MeditationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = F83BAAB0; };
+		3CC9E6BC /* MeditationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B89C0853; };
+		0F096C53 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5514CE92; };
+		D84210D4 /* NotionIntegrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08C19192; };
+		016ACE49 /* ObsidianIntegrationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DA3AC28; };
+		63B2F54B /* OnThisDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 145AFFFA; };
+		3C6B7CF8 /* PrivateShareView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C386A906; };
+		0C74E61F /* RecordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04FFAF9C; };
+		0A1E8D53 /* Localizable.swift in Sources */ = {isa = PBXBuildFile; fileRef = D9807227; };
+		6A2CFF9A /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AF4A3395; };
+		95293EDF /* ShareService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 961B17A4; };
+		2ABF98B4 /* SiriShortcutViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AEC4EC2; };
+		294B0A0D /* SiriShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D664982; };
+		71E4CBD3 /* SleepDataView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1E79319; };
+		622F507E /* SleepQualityAnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4423E16B; };
+		9AB4EA43 /* SleepQualityAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 50013D8A; };
+		06860923 /* SmartReminderService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A7B3A74; };
+		47BCE556 /* SmartReminderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F3BB8D7; };
+		D71AFEB5 /* SpeechService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FC461D8; };
+		F3AD090E /* SpeechSynthesisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F17609C; };
+		A7B5693B /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11A186EE; };
+		3B84B686 /* ViewImageRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5835E4EF; };
+		BD11A77A /* WidgetConfigurationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA93273A; };
+		F7339DA4 /* WidgetCustomizationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6FBDF1D; };
+		B4E73CB5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 6BA0F774; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		BC5E826F /* AIArtService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIArtService.swift; sourceTree = "<group>"; };
-		AC712C26 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
-		A07D60F8 /* Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accessibility.swift; sourceTree = "<group>"; };
-		AEE4C897 /* AddFriendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFriendView.swift; sourceTree = "<group>"; };
-		7B6B42A4 /* AdvancedSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSearchView.swift; sourceTree = "<group>"; };
-		F3AF71CD /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
-		E9C6EC38 /* AudioSynthesisEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSynthesisEngine.swift; sourceTree = "<group>"; };
-		6CD0E46C /* CachedImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedImageView.swift; sourceTree = "<group>"; };
-		EC0C49BF /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
-		4EC4084C /* ChartsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartsView.swift; sourceTree = "<group>"; };
-		0633864E /* CloudSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncService.swift; sourceTree = "<group>"; };
-		BDE76736 /* CommonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonViews.swift; sourceTree = "<group>"; };
-		B719EB3C /* CommunityPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityPostView.swift; sourceTree = "<group>"; };
-		4630453F /* CommunityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityService.swift; sourceTree = "<group>"; };
-		664B2642 /* CommunityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityView.swift; sourceTree = "<group>"; };
-		8E8161FD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		92B7B25A /* Dream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dream.swift; sourceTree = "<group>"; };
-		61640BAA /* DreamArtGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamArtGalleryView.swift; sourceTree = "<group>"; };
-		D3080B5D /* DreamAssistantModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAssistantModels.swift; sourceTree = "<group>"; };
-		02909A0B /* DreamAssistantService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAssistantService.swift; sourceTree = "<group>"; };
-		6489F804 /* DreamAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAssistantView.swift; sourceTree = "<group>"; };
-		53F97FA6 /* DreamDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamDetailView.swift; sourceTree = "<group>"; };
-		8FAECA69 /* DreamDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamDictionary.swift; sourceTree = "<group>"; };
-		B86727C9 /* DreamExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamExportService.swift; sourceTree = "<group>"; };
-		E3C411D7 /* DreamGraphService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamGraphService.swift; sourceTree = "<group>"; };
-		15265E37 /* DreamGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamGraphView.swift; sourceTree = "<group>"; };
-		ACE2512D /* DreamJournalExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamJournalExportService.swift; sourceTree = "<group>"; };
-		F86A86B4 /* DreamJournalExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamJournalExportView.swift; sourceTree = "<group>"; };
-		62FB6D1E /* DreamLogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamLogApp.swift; sourceTree = "<group>"; };
-		4B80F6AD /* DreamLogQuickWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamLogQuickWidget.swift; sourceTree = "<group>"; };
-		41B24AC3 /* DreamLogWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamLogWidget.swift; sourceTree = "<group>"; };
-		36A1300C /* DreamMusicService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamMusicService.swift; sourceTree = "<group>"; };
-		A82EF2B5 /* DreamMusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamMusicView.swift; sourceTree = "<group>"; };
-		2B06FF09 /* DreamSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamSearchView.swift; sourceTree = "<group>"; };
-		2C8485AF /* DreamShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamShareCard.swift; sourceTree = "<group>"; };
-		010704B0 /* DreamStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamStore.swift; sourceTree = "<group>"; };
-		E5C70EE3 /* DreamStoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamStoryService.swift; sourceTree = "<group>"; };
-		2054A8CC /* DreamStoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamStoryView.swift; sourceTree = "<group>"; };
-		B6F6BF1F /* DreamTimelineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTimelineService.swift; sourceTree = "<group>"; };
-		3903BB74 /* DreamTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTimelineView.swift; sourceTree = "<group>"; };
-		44D664E0 /* DreamTrendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTrendService.swift; sourceTree = "<group>"; };
-		5CC6DD17 /* DreamTrendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTrendView.swift; sourceTree = "<group>"; };
-		4415CF41 /* DreamWallpaperService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWallpaperService.swift; sourceTree = "<group>"; };
-		C20DFA9F /* DreamWallpaperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWallpaperView.swift; sourceTree = "<group>"; };
-		5BC9D796 /* DreamWrappedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWrappedService.swift; sourceTree = "<group>"; };
-		21FF1C2E /* DreamWrappedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWrappedView.swift; sourceTree = "<group>"; };
-		4C26A112 /* DreamsGoalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamsGoalView.swift; sourceTree = "<group>"; };
-		89E9C6B4 /* EnhancedShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedShareService.swift; sourceTree = "<group>"; };
-		2CF7D88E /* FriendProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendProfileView.swift; sourceTree = "<group>"; };
-		A028F59C /* FriendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendService.swift; sourceTree = "<group>"; };
-		3EC0322A /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
-		7EE10A41 /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
-		4459B2A7 /* HapticFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedback.swift; sourceTree = "<group>"; };
-		3D412F16 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
-		5F056A20 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		A9017216 /* ImageCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheService.swift; sourceTree = "<group>"; };
-		8C06ADD3 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
-		082DE947 /* LucidDreamTraining.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucidDreamTraining.swift; sourceTree = "<group>"; };
-		5E34A787 /* MeditationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationService.swift; sourceTree = "<group>"; };
-		E1EC4FB9 /* MeditationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationView.swift; sourceTree = "<group>"; };
-		D1691EC2 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
-		9FBF854A /* OnThisDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnThisDayView.swift; sourceTree = "<group>"; };
-		812239DD /* PrivateShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateShareView.swift; sourceTree = "<group>"; };
-		C5F5D576 /* RecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordView.swift; sourceTree = "<group>"; };
-		D95175BA /* Localizable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localizable.swift; sourceTree = "<group>"; };
-		A2E4E731 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
-		42FADBEA /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
-		415745CF /* SiriShortcutViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriShortcutViews.swift; sourceTree = "<group>"; };
-		B4F69238 /* SiriShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriShortcuts.swift; sourceTree = "<group>"; };
-		6E2B9D51 /* SleepDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDataView.swift; sourceTree = "<group>"; };
-		26276DDE /* SleepQualityAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQualityAnalysisService.swift; sourceTree = "<group>"; };
-		F7FB490F /* SleepQualityAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQualityAnalysisView.swift; sourceTree = "<group>"; };
-		83CF399C /* SmartReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartReminderService.swift; sourceTree = "<group>"; };
-		E47E289C /* SmartReminderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartReminderSettingsView.swift; sourceTree = "<group>"; };
-		90D47189 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
-		C010B53E /* SpeechSynthesisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSynthesisService.swift; sourceTree = "<group>"; };
-		DFC5DC2F /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
-		06997BE6 /* ViewImageRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewImageRenderer.swift; sourceTree = "<group>"; };
-		52C06538 /* WidgetConfigurationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigurationService.swift; sourceTree = "<group>"; };
-		6E5F6E67 /* WidgetCustomizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetCustomizationView.swift; sourceTree = "<group>"; };
-		0AE65CB9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		CA6F43C1 /* DreamLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DreamLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3F73FD1F /* AIArtService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIArtService.swift; sourceTree = "<group>"; };
+		AE626979 /* AIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIService.swift; sourceTree = "<group>"; };
+		059958C7 /* Accessibility.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Accessibility.swift; sourceTree = "<group>"; };
+		E7C0C85E /* AddFriendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddFriendView.swift; sourceTree = "<group>"; };
+		99213ED7 /* AdvancedDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedDashboardView.swift; sourceTree = "<group>"; };
+		E5C918D3 /* AdvancedSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdvancedSearchView.swift; sourceTree = "<group>"; };
+		B13EE2FB /* Animations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Animations.swift; sourceTree = "<group>"; };
+		966A91D9 /* AssistantAnimations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssistantAnimations.swift; sourceTree = "<group>"; };
+		4B064386 /* AudioSynthesisEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioSynthesisEngine.swift; sourceTree = "<group>"; };
+		9C42B906 /* CachedImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CachedImageView.swift; sourceTree = "<group>"; };
+		1EA24DFD /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		D39DD892 /* ChartsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartsView.swift; sourceTree = "<group>"; };
+		55758D3C /* CloudSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudSyncService.swift; sourceTree = "<group>"; };
+		1AFCCEA8 /* CommonViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonViews.swift; sourceTree = "<group>"; };
+		19BFFAA2 /* CommunityPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityPostView.swift; sourceTree = "<group>"; };
+		697C9CDD /* CommunityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityService.swift; sourceTree = "<group>"; };
+		34D921E5 /* CommunityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityView.swift; sourceTree = "<group>"; };
+		1D548AEB /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		256181BC /* Dream.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dream.swift; sourceTree = "<group>"; };
+		4BEC505C /* DreamArtGalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamArtGalleryView.swift; sourceTree = "<group>"; };
+		0C94D536 /* DreamAssistantModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAssistantModels.swift; sourceTree = "<group>"; };
+		C4CF81F4 /* DreamAssistantService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAssistantService.swift; sourceTree = "<group>"; };
+		8AC9632A /* DreamAssistantView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAssistantView.swift; sourceTree = "<group>"; };
+		54E97DF7 /* DreamBackupModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamBackupModels.swift; sourceTree = "<group>"; };
+		ED4F6EC9 /* DreamBackupService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamBackupService.swift; sourceTree = "<group>"; };
+		BDC4F7AF /* DreamBackupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamBackupView.swift; sourceTree = "<group>"; };
+		51AE29BC /* DreamChallengeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamChallengeModels.swift; sourceTree = "<group>"; };
+		4691CFF9 /* DreamChallengeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamChallengeService.swift; sourceTree = "<group>"; };
+		E3180E75 /* DreamChallengeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamChallengeView.swift; sourceTree = "<group>"; };
+		116B4496 /* DreamCorrelationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamCorrelationService.swift; sourceTree = "<group>"; };
+		6C6306D1 /* DreamDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamDetailView.swift; sourceTree = "<group>"; };
+		42306EA4 /* DreamDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamDictionary.swift; sourceTree = "<group>"; };
+		2D1AB880 /* DreamExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamExportModels.swift; sourceTree = "<group>"; };
+		A8B3A723 /* DreamExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamExportService.swift; sourceTree = "<group>"; };
+		677B55CA /* DreamExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamExportView.swift; sourceTree = "<group>"; };
+		0746B07D /* DreamGraphService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamGraphService.swift; sourceTree = "<group>"; };
+		26B4935C /* DreamGraphView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamGraphView.swift; sourceTree = "<group>"; };
+		2735ED69 /* DreamJournalExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamJournalExportService.swift; sourceTree = "<group>"; };
+		3FF0D98F /* DreamJournalExportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamJournalExportView.swift; sourceTree = "<group>"; };
+		847C1738 /* DreamLogApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamLogApp.swift; sourceTree = "<group>"; };
+		EC29D6FB /* DreamLogQuickWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamLogQuickWidget.swift; sourceTree = "<group>"; };
+		FFC74105 /* DreamLogWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamLogWidget.swift; sourceTree = "<group>"; };
+		69D10447 /* DreamMusicService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamMusicService.swift; sourceTree = "<group>"; };
+		EA80D184 /* DreamMusicView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamMusicView.swift; sourceTree = "<group>"; };
+		157F4A99 /* DreamReportExportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamReportExportService.swift; sourceTree = "<group>"; };
+		BF17227C /* DreamSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamSearchView.swift; sourceTree = "<group>"; };
+		539300B4 /* DreamShareCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamShareCard.swift; sourceTree = "<group>"; };
+		C3BF3054 /* DreamShareCircleModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamShareCircleModels.swift; sourceTree = "<group>"; };
+		DB071612 /* DreamShareCircleService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamShareCircleService.swift; sourceTree = "<group>"; };
+		94DB0086 /* DreamShareCircleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamShareCircleView.swift; sourceTree = "<group>"; };
+		C158FF51 /* DreamStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamStore.swift; sourceTree = "<group>"; };
+		B249430D /* DreamStoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamStoryService.swift; sourceTree = "<group>"; };
+		1C0D875C /* DreamStoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamStoryView.swift; sourceTree = "<group>"; };
+		31105116 /* DreamTimelineService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTimelineService.swift; sourceTree = "<group>"; };
+		57C674F2 /* DreamTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTimelineView.swift; sourceTree = "<group>"; };
+		52076A10 /* DreamTrendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTrendService.swift; sourceTree = "<group>"; };
+		4794CBC2 /* DreamTrendView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamTrendView.swift; sourceTree = "<group>"; };
+		147AD837 /* DreamVideoEditor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamVideoEditor.swift; sourceTree = "<group>"; };
+		9DDBF98B /* DreamVideoEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamVideoEditorView.swift; sourceTree = "<group>"; };
+		F933BB90 /* DreamVideoEnhancements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamVideoEnhancements.swift; sourceTree = "<group>"; };
+		54D331B8 /* DreamVideoService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamVideoService.swift; sourceTree = "<group>"; };
+		07F61E4F /* DreamVideoTemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamVideoTemplates.swift; sourceTree = "<group>"; };
+		22AD3D64 /* DreamVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamVideoView.swift; sourceTree = "<group>"; };
+		123E3DF9 /* DreamWallpaperService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWallpaperService.swift; sourceTree = "<group>"; };
+		59F39637 /* DreamWallpaperView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWallpaperView.swift; sourceTree = "<group>"; };
+		279D62B6 /* DreamWeeklyReportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWeeklyReportModels.swift; sourceTree = "<group>"; };
+		2F945686 /* DreamWeeklyReportService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWeeklyReportService.swift; sourceTree = "<group>"; };
+		F1C4F4F3 /* DreamWeeklyReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWeeklyReportView.swift; sourceTree = "<group>"; };
+		78347291 /* DreamWrappedService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWrappedService.swift; sourceTree = "<group>"; };
+		660528C6 /* DreamWrappedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamWrappedView.swift; sourceTree = "<group>"; };
+		43741766 /* DreamsGoalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamsGoalView.swift; sourceTree = "<group>"; };
+		725F2678 /* EnhancedShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnhancedShareService.swift; sourceTree = "<group>"; };
+		42D8747D /* ExternalAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExternalAIService.swift; sourceTree = "<group>"; };
+		EF279563 /* FriendProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendProfileView.swift; sourceTree = "<group>"; };
+		030A0DA6 /* FriendService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendService.swift; sourceTree = "<group>"; };
+		011DB738 /* FriendsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendsView.swift; sourceTree = "<group>"; };
+		2E7055DC /* GalleryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryView.swift; sourceTree = "<group>"; };
+		E2B2FE3D /* HapticFeedback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticFeedback.swift; sourceTree = "<group>"; };
+		3A557CA9 /* HealthKitService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthKitService.swift; sourceTree = "<group>"; };
+		B1B48870 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		6C60BA5B /* ImageCacheService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheService.swift; sourceTree = "<group>"; };
+		F9038DE3 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		29B5E4C1 /* LucidDreamTraining.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LucidDreamTraining.swift; sourceTree = "<group>"; };
+		F83BAAB0 /* MeditationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationService.swift; sourceTree = "<group>"; };
+		B89C0853 /* MeditationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeditationView.swift; sourceTree = "<group>"; };
+		5514CE92 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		08C19192 /* NotionIntegrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotionIntegrationService.swift; sourceTree = "<group>"; };
+		3DA3AC28 /* ObsidianIntegrationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObsidianIntegrationService.swift; sourceTree = "<group>"; };
+		145AFFFA /* OnThisDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnThisDayView.swift; sourceTree = "<group>"; };
+		C386A906 /* PrivateShareView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateShareView.swift; sourceTree = "<group>"; };
+		04FFAF9C /* RecordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordView.swift; sourceTree = "<group>"; };
+		D9807227 /* Localizable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localizable.swift; sourceTree = "<group>"; };
+		AF4A3395 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		961B17A4 /* ShareService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareService.swift; sourceTree = "<group>"; };
+		6AEC4EC2 /* SiriShortcutViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriShortcutViews.swift; sourceTree = "<group>"; };
+		3D664982 /* SiriShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SiriShortcuts.swift; sourceTree = "<group>"; };
+		A1E79319 /* SleepDataView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepDataView.swift; sourceTree = "<group>"; };
+		4423E16B /* SleepQualityAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQualityAnalysisService.swift; sourceTree = "<group>"; };
+		50013D8A /* SleepQualityAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepQualityAnalysisView.swift; sourceTree = "<group>"; };
+		5A7B3A74 /* SmartReminderService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartReminderService.swift; sourceTree = "<group>"; };
+		9F3BB8D7 /* SmartReminderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmartReminderSettingsView.swift; sourceTree = "<group>"; };
+		9FC461D8 /* SpeechService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechService.swift; sourceTree = "<group>"; };
+		7F17609C /* SpeechSynthesisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSynthesisService.swift; sourceTree = "<group>"; };
+		11A186EE /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		5835E4EF /* ViewImageRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewImageRenderer.swift; sourceTree = "<group>"; };
+		DA93273A /* WidgetConfigurationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetConfigurationService.swift; sourceTree = "<group>"; };
+		E6FBDF1D /* WidgetCustomizationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetCustomizationView.swift; sourceTree = "<group>"; };
+		6BA0F774 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		3750CF2A /* DreamLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DreamLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		559A0234 /* Frameworks */ = {
+		92F2DFD7 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -186,114 +240,141 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		6C8E16F6 = {
+		D2E11892 = {
 			isa = PBXGroup;
 			children = (
-				8ACDE5B8 /* DreamLog */,
-				C5BC0E13 /* Products */,
+				0EF978BD /* DreamLog */,
+				C177E4A8 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		8ACDE5B8 /* DreamLog */ = {
+		0EF978BD /* DreamLog */ = {
 			isa = PBXGroup;
 			children = (
-				BC5E826F /* AIArtService.swift */,
-				AC712C26 /* AIService.swift */,
-				A07D60F8 /* Accessibility.swift */,
-				AEE4C897 /* AddFriendView.swift */,
-				7B6B42A4 /* AdvancedSearchView.swift */,
-				F3AF71CD /* Animations.swift */,
-				E9C6EC38 /* AudioSynthesisEngine.swift */,
-				6CD0E46C /* CachedImageView.swift */,
-				EC0C49BF /* CalendarView.swift */,
-				4EC4084C /* ChartsView.swift */,
-				0633864E /* CloudSyncService.swift */,
-				BDE76736 /* CommonViews.swift */,
-				B719EB3C /* CommunityPostView.swift */,
-				4630453F /* CommunityService.swift */,
-				664B2642 /* CommunityView.swift */,
-				8E8161FD /* ContentView.swift */,
-				92B7B25A /* Dream.swift */,
-				61640BAA /* DreamArtGalleryView.swift */,
-				D3080B5D /* DreamAssistantModels.swift */,
-				02909A0B /* DreamAssistantService.swift */,
-				6489F804 /* DreamAssistantView.swift */,
-				53F97FA6 /* DreamDetailView.swift */,
-				8FAECA69 /* DreamDictionary.swift */,
-				B86727C9 /* DreamExportService.swift */,
-				E3C411D7 /* DreamGraphService.swift */,
-				15265E37 /* DreamGraphView.swift */,
-				ACE2512D /* DreamJournalExportService.swift */,
-				F86A86B4 /* DreamJournalExportView.swift */,
-				62FB6D1E /* DreamLogApp.swift */,
-				4B80F6AD /* DreamLogQuickWidget.swift */,
-				41B24AC3 /* DreamLogWidget.swift */,
-				36A1300C /* DreamMusicService.swift */,
-				A82EF2B5 /* DreamMusicView.swift */,
-				2B06FF09 /* DreamSearchView.swift */,
-				2C8485AF /* DreamShareCard.swift */,
-				010704B0 /* DreamStore.swift */,
-				E5C70EE3 /* DreamStoryService.swift */,
-				2054A8CC /* DreamStoryView.swift */,
-				B6F6BF1F /* DreamTimelineService.swift */,
-				3903BB74 /* DreamTimelineView.swift */,
-				44D664E0 /* DreamTrendService.swift */,
-				5CC6DD17 /* DreamTrendView.swift */,
-				4415CF41 /* DreamWallpaperService.swift */,
-				C20DFA9F /* DreamWallpaperView.swift */,
-				5BC9D796 /* DreamWrappedService.swift */,
-				21FF1C2E /* DreamWrappedView.swift */,
-				4C26A112 /* DreamsGoalView.swift */,
-				89E9C6B4 /* EnhancedShareService.swift */,
-				2CF7D88E /* FriendProfileView.swift */,
-				A028F59C /* FriendService.swift */,
-				3EC0322A /* FriendsView.swift */,
-				7EE10A41 /* GalleryView.swift */,
-				4459B2A7 /* HapticFeedback.swift */,
-				3D412F16 /* HealthKitService.swift */,
-				5F056A20 /* HomeView.swift */,
-				A9017216 /* ImageCacheService.swift */,
-				8C06ADD3 /* InsightsView.swift */,
-				082DE947 /* LucidDreamTraining.swift */,
-				5E34A787 /* MeditationService.swift */,
-				E1EC4FB9 /* MeditationView.swift */,
-				D1691EC2 /* NotificationService.swift */,
-				9FBF854A /* OnThisDayView.swift */,
-				812239DD /* PrivateShareView.swift */,
-				C5F5D576 /* RecordView.swift */,
-				D95175BA /* Localizable.swift */,
-				A2E4E731 /* SettingsView.swift */,
-				42FADBEA /* ShareService.swift */,
-				415745CF /* SiriShortcutViews.swift */,
-				B4F69238 /* SiriShortcuts.swift */,
-				6E2B9D51 /* SleepDataView.swift */,
-				26276DDE /* SleepQualityAnalysisService.swift */,
-				F7FB490F /* SleepQualityAnalysisView.swift */,
-				83CF399C /* SmartReminderService.swift */,
-				E47E289C /* SmartReminderSettingsView.swift */,
-				90D47189 /* SpeechService.swift */,
-				C010B53E /* SpeechSynthesisService.swift */,
-				DFC5DC2F /* Theme.swift */,
-				06997BE6 /* ViewImageRenderer.swift */,
-				52C06538 /* WidgetConfigurationService.swift */,
-				6E5F6E67 /* WidgetCustomizationView.swift */,
-				6A3C6363 /* Resources */,
+				3F73FD1F /* AIArtService.swift */,
+				AE626979 /* AIService.swift */,
+				059958C7 /* Accessibility.swift */,
+				E7C0C85E /* AddFriendView.swift */,
+				99213ED7 /* AdvancedDashboardView.swift */,
+				E5C918D3 /* AdvancedSearchView.swift */,
+				B13EE2FB /* Animations.swift */,
+				966A91D9 /* AssistantAnimations.swift */,
+				4B064386 /* AudioSynthesisEngine.swift */,
+				9C42B906 /* CachedImageView.swift */,
+				1EA24DFD /* CalendarView.swift */,
+				D39DD892 /* ChartsView.swift */,
+				55758D3C /* CloudSyncService.swift */,
+				1AFCCEA8 /* CommonViews.swift */,
+				19BFFAA2 /* CommunityPostView.swift */,
+				697C9CDD /* CommunityService.swift */,
+				34D921E5 /* CommunityView.swift */,
+				1D548AEB /* ContentView.swift */,
+				256181BC /* Dream.swift */,
+				4BEC505C /* DreamArtGalleryView.swift */,
+				0C94D536 /* DreamAssistantModels.swift */,
+				C4CF81F4 /* DreamAssistantService.swift */,
+				8AC9632A /* DreamAssistantView.swift */,
+				54E97DF7 /* DreamBackupModels.swift */,
+				ED4F6EC9 /* DreamBackupService.swift */,
+				BDC4F7AF /* DreamBackupView.swift */,
+				51AE29BC /* DreamChallengeModels.swift */,
+				4691CFF9 /* DreamChallengeService.swift */,
+				E3180E75 /* DreamChallengeView.swift */,
+				116B4496 /* DreamCorrelationService.swift */,
+				6C6306D1 /* DreamDetailView.swift */,
+				42306EA4 /* DreamDictionary.swift */,
+				2D1AB880 /* DreamExportModels.swift */,
+				A8B3A723 /* DreamExportService.swift */,
+				677B55CA /* DreamExportView.swift */,
+				0746B07D /* DreamGraphService.swift */,
+				26B4935C /* DreamGraphView.swift */,
+				2735ED69 /* DreamJournalExportService.swift */,
+				3FF0D98F /* DreamJournalExportView.swift */,
+				847C1738 /* DreamLogApp.swift */,
+				EC29D6FB /* DreamLogQuickWidget.swift */,
+				FFC74105 /* DreamLogWidget.swift */,
+				69D10447 /* DreamMusicService.swift */,
+				EA80D184 /* DreamMusicView.swift */,
+				157F4A99 /* DreamReportExportService.swift */,
+				BF17227C /* DreamSearchView.swift */,
+				539300B4 /* DreamShareCard.swift */,
+				C3BF3054 /* DreamShareCircleModels.swift */,
+				DB071612 /* DreamShareCircleService.swift */,
+				94DB0086 /* DreamShareCircleView.swift */,
+				C158FF51 /* DreamStore.swift */,
+				B249430D /* DreamStoryService.swift */,
+				1C0D875C /* DreamStoryView.swift */,
+				31105116 /* DreamTimelineService.swift */,
+				57C674F2 /* DreamTimelineView.swift */,
+				52076A10 /* DreamTrendService.swift */,
+				4794CBC2 /* DreamTrendView.swift */,
+				147AD837 /* DreamVideoEditor.swift */,
+				9DDBF98B /* DreamVideoEditorView.swift */,
+				F933BB90 /* DreamVideoEnhancements.swift */,
+				54D331B8 /* DreamVideoService.swift */,
+				07F61E4F /* DreamVideoTemplates.swift */,
+				22AD3D64 /* DreamVideoView.swift */,
+				123E3DF9 /* DreamWallpaperService.swift */,
+				59F39637 /* DreamWallpaperView.swift */,
+				279D62B6 /* DreamWeeklyReportModels.swift */,
+				2F945686 /* DreamWeeklyReportService.swift */,
+				F1C4F4F3 /* DreamWeeklyReportView.swift */,
+				78347291 /* DreamWrappedService.swift */,
+				660528C6 /* DreamWrappedView.swift */,
+				43741766 /* DreamsGoalView.swift */,
+				725F2678 /* EnhancedShareService.swift */,
+				42D8747D /* ExternalAIService.swift */,
+				EF279563 /* FriendProfileView.swift */,
+				030A0DA6 /* FriendService.swift */,
+				011DB738 /* FriendsView.swift */,
+				2E7055DC /* GalleryView.swift */,
+				E2B2FE3D /* HapticFeedback.swift */,
+				3A557CA9 /* HealthKitService.swift */,
+				B1B48870 /* HomeView.swift */,
+				6C60BA5B /* ImageCacheService.swift */,
+				F9038DE3 /* InsightsView.swift */,
+				29B5E4C1 /* LucidDreamTraining.swift */,
+				F83BAAB0 /* MeditationService.swift */,
+				B89C0853 /* MeditationView.swift */,
+				5514CE92 /* NotificationService.swift */,
+				08C19192 /* NotionIntegrationService.swift */,
+				3DA3AC28 /* ObsidianIntegrationService.swift */,
+				145AFFFA /* OnThisDayView.swift */,
+				C386A906 /* PrivateShareView.swift */,
+				04FFAF9C /* RecordView.swift */,
+				D9807227 /* Localizable.swift */,
+				AF4A3395 /* SettingsView.swift */,
+				961B17A4 /* ShareService.swift */,
+				6AEC4EC2 /* SiriShortcutViews.swift */,
+				3D664982 /* SiriShortcuts.swift */,
+				A1E79319 /* SleepDataView.swift */,
+				4423E16B /* SleepQualityAnalysisService.swift */,
+				50013D8A /* SleepQualityAnalysisView.swift */,
+				5A7B3A74 /* SmartReminderService.swift */,
+				9F3BB8D7 /* SmartReminderSettingsView.swift */,
+				9FC461D8 /* SpeechService.swift */,
+				7F17609C /* SpeechSynthesisService.swift */,
+				11A186EE /* Theme.swift */,
+				5835E4EF /* ViewImageRenderer.swift */,
+				DA93273A /* WidgetConfigurationService.swift */,
+				E6FBDF1D /* WidgetCustomizationView.swift */,
+				2AE3B8E7 /* Resources */,
 			);
 			path = DreamLog;
 			sourceTree = "<group>";
 		};
-		6A3C6363 /* Resources */ = {
+		2AE3B8E7 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				0AE65CB9 /* Assets.xcassets */,
+				6BA0F774 /* Assets.xcassets */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		C5BC0E13 /* Products */ = {
+		C177E4A8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				CA6F43C1 /* DreamLog.app */,
+				3750CF2A /* DreamLog.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -301,13 +382,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		4D2D2DC3 /* DreamLog */ = {
+		A6629703 /* DreamLog */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 11B161A9 /* Build configuration list for PBXNativeTarget "DreamLog" */;
+			buildConfigurationList = B6F5D310 /* Build configuration list for PBXNativeTarget "DreamLog" */;
 			buildPhases = (
-				8D80E954 /* Sources */,
-				559A0234 /* Frameworks */,
-				53172E58 /* Resources */,
+				46E87C8A /* Sources */,
+				92F2DFD7 /* Frameworks */,
+				23CC4C8D /* Resources */,
 			);
 			buildRules = (
 			);
@@ -315,25 +396,25 @@
 			);
 			name = DreamLog;
 			productName = DreamLog;
-			productReference = CA6F43C1 /* DreamLog.app */;
+			productReference = 3750CF2A /* DreamLog.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		D6BD154A /* Project object */ = {
+		8DE11909 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 				TargetAttributes = {
-					4D2D2DC3 = {
+					A6629703 = {
 						CreatedOnToolsVersion = 15.0;
 					};
 				};
 			};
-			buildConfigurationList = 8AC04D77 /* Build configuration list for PBXProject "DreamLog" */;
+			buildConfigurationList = D234534A /* Build configuration list for PBXProject "DreamLog" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -342,119 +423,146 @@
 				Base,
 				"zh-Hans",
 			);
-			mainGroup = 6C8E16F6;
-			productRefGroup = C5BC0E13 /* Products */;
+			mainGroup = D2E11892;
+			productRefGroup = C177E4A8 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				4D2D2DC3 /* DreamLog */,
+				A6629703 /* DreamLog */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		53172E58 /* Resources */ = {
+		23CC4C8D /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				68C79FCF /* Assets.xcassets in Resources */,
+				B4E73CB5 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		8D80E954 /* Sources */ = {
+		46E87C8A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				5DD2FB43 /* AIArtService.swift in Sources */,
-				133B72E4 /* AIService.swift in Sources */,
-				60C248BD /* Accessibility.swift in Sources */,
-				AFA725E9 /* AddFriendView.swift in Sources */,
-				BC44A7AC /* AdvancedSearchView.swift in Sources */,
-				CB3AAA55 /* Animations.swift in Sources */,
-				876B3BCE /* AudioSynthesisEngine.swift in Sources */,
-				6F82BEC5 /* CachedImageView.swift in Sources */,
-				5918F0CD /* CalendarView.swift in Sources */,
-				A2611FFD /* ChartsView.swift in Sources */,
-				20EF7C3E /* CloudSyncService.swift in Sources */,
-				52D94062 /* CommonViews.swift in Sources */,
-				02DFE93F /* CommunityPostView.swift in Sources */,
-				5A632FCB /* CommunityService.swift in Sources */,
-				DDA499F8 /* CommunityView.swift in Sources */,
-				E94A8338 /* ContentView.swift in Sources */,
-				E5E87CD1 /* Dream.swift in Sources */,
-				3C454D07 /* DreamArtGalleryView.swift in Sources */,
-				D40FC631 /* DreamAssistantModels.swift in Sources */,
-				DAF94955 /* DreamAssistantService.swift in Sources */,
-				6F6CC97F /* DreamAssistantView.swift in Sources */,
-				7CC4A027 /* DreamDetailView.swift in Sources */,
-				4A027A5E /* DreamDictionary.swift in Sources */,
-				5BF05DA1 /* DreamExportService.swift in Sources */,
-				25FBCCC3 /* DreamGraphService.swift in Sources */,
-				A84D3280 /* DreamGraphView.swift in Sources */,
-				E3B8E6A3 /* DreamJournalExportService.swift in Sources */,
-				E6CB8D45 /* DreamJournalExportView.swift in Sources */,
-				298D50C4 /* DreamLogApp.swift in Sources */,
-				AF9D5DC6 /* DreamLogQuickWidget.swift in Sources */,
-				3FD0A979 /* DreamLogWidget.swift in Sources */,
-				3D95478B /* DreamMusicService.swift in Sources */,
-				F703A556 /* DreamMusicView.swift in Sources */,
-				9E890571 /* DreamSearchView.swift in Sources */,
-				BB19F5DC /* DreamShareCard.swift in Sources */,
-				43B4392A /* DreamStore.swift in Sources */,
-				69E51559 /* DreamStoryService.swift in Sources */,
-				0F227254 /* DreamStoryView.swift in Sources */,
-				10AF7968 /* DreamTimelineService.swift in Sources */,
-				D982ABE9 /* DreamTimelineView.swift in Sources */,
-				A9279768 /* DreamTrendService.swift in Sources */,
-				6B29AF86 /* DreamTrendView.swift in Sources */,
-				DB9A9DA4 /* DreamWallpaperService.swift in Sources */,
-				11DD11B6 /* DreamWallpaperView.swift in Sources */,
-				A3D366C4 /* DreamWrappedService.swift in Sources */,
-				B9D31FB3 /* DreamWrappedView.swift in Sources */,
-				1063ECDB /* DreamsGoalView.swift in Sources */,
-				EC3B0A93 /* EnhancedShareService.swift in Sources */,
-				7843AB8B /* FriendProfileView.swift in Sources */,
-				9C3681E3 /* FriendService.swift in Sources */,
-				077E0746 /* FriendsView.swift in Sources */,
-				32A2C9CF /* GalleryView.swift in Sources */,
-				FC7FE36F /* HapticFeedback.swift in Sources */,
-				7C4AF685 /* HealthKitService.swift in Sources */,
-				BA20D10D /* HomeView.swift in Sources */,
-				3A815487 /* ImageCacheService.swift in Sources */,
-				6F83D47A /* InsightsView.swift in Sources */,
-				0667A113 /* LucidDreamTraining.swift in Sources */,
-				BC0BCA98 /* MeditationService.swift in Sources */,
-				E0736F76 /* MeditationView.swift in Sources */,
-				6E523F36 /* NotificationService.swift in Sources */,
-				AA689729 /* OnThisDayView.swift in Sources */,
-				48BFC5B1 /* PrivateShareView.swift in Sources */,
-				A17726A2 /* RecordView.swift in Sources */,
-				02D293F8 /* Localizable.swift in Sources */,
-				59971535 /* SettingsView.swift in Sources */,
-				7C4A90D6 /* ShareService.swift in Sources */,
-				A6F43750 /* SiriShortcutViews.swift in Sources */,
-				2B0FF9B7 /* SiriShortcuts.swift in Sources */,
-				A095679E /* SleepDataView.swift in Sources */,
-				D1108BBB /* SleepQualityAnalysisService.swift in Sources */,
-				B7954CC4 /* SleepQualityAnalysisView.swift in Sources */,
-				9FE3395A /* SmartReminderService.swift in Sources */,
-				57118995 /* SmartReminderSettingsView.swift in Sources */,
-				6019ED51 /* SpeechService.swift in Sources */,
-				E6718905 /* SpeechSynthesisService.swift in Sources */,
-				C91B00CD /* Theme.swift in Sources */,
-				2E375EAC /* ViewImageRenderer.swift in Sources */,
-				3F9188C0 /* WidgetConfigurationService.swift in Sources */,
-				DD967946 /* WidgetCustomizationView.swift in Sources */,
+				DBE6C420 /* AIArtService.swift in Sources */,
+				A98D1BB1 /* AIService.swift in Sources */,
+				298DCDFD /* Accessibility.swift in Sources */,
+				801E4F06 /* AddFriendView.swift in Sources */,
+				A4FE4860 /* AdvancedDashboardView.swift in Sources */,
+				1ACBA95A /* AdvancedSearchView.swift in Sources */,
+				707B9714 /* Animations.swift in Sources */,
+				CFF6517D /* AssistantAnimations.swift in Sources */,
+				BCF87AC5 /* AudioSynthesisEngine.swift in Sources */,
+				7EFEDECD /* CachedImageView.swift in Sources */,
+				32FABB55 /* CalendarView.swift in Sources */,
+				524ECB56 /* ChartsView.swift in Sources */,
+				DFD93952 /* CloudSyncService.swift in Sources */,
+				02CBF6A9 /* CommonViews.swift in Sources */,
+				0D828C3F /* CommunityPostView.swift in Sources */,
+				33DB712C /* CommunityService.swift in Sources */,
+				F714C889 /* CommunityView.swift in Sources */,
+				92F8192A /* ContentView.swift in Sources */,
+				78017C85 /* Dream.swift in Sources */,
+				04D99140 /* DreamArtGalleryView.swift in Sources */,
+				24743DFE /* DreamAssistantModels.swift in Sources */,
+				22472D4E /* DreamAssistantService.swift in Sources */,
+				111C0C5F /* DreamAssistantView.swift in Sources */,
+				A32CA80D /* DreamBackupModels.swift in Sources */,
+				4EB6A00C /* DreamBackupService.swift in Sources */,
+				F8811480 /* DreamBackupView.swift in Sources */,
+				EECC525F /* DreamChallengeModels.swift in Sources */,
+				A28F4A73 /* DreamChallengeService.swift in Sources */,
+				84000261 /* DreamChallengeView.swift in Sources */,
+				9771A376 /* DreamCorrelationService.swift in Sources */,
+				59FC3535 /* DreamDetailView.swift in Sources */,
+				DE17A0A0 /* DreamDictionary.swift in Sources */,
+				C7B6FC7D /* DreamExportModels.swift in Sources */,
+				1E1C94CD /* DreamExportService.swift in Sources */,
+				65E369E1 /* DreamExportView.swift in Sources */,
+				A59A1FF3 /* DreamGraphService.swift in Sources */,
+				C24C7014 /* DreamGraphView.swift in Sources */,
+				310832F5 /* DreamJournalExportService.swift in Sources */,
+				B893DC71 /* DreamJournalExportView.swift in Sources */,
+				46374000 /* DreamLogApp.swift in Sources */,
+				A51F4856 /* DreamLogQuickWidget.swift in Sources */,
+				DF79706D /* DreamLogWidget.swift in Sources */,
+				A37FF21B /* DreamMusicService.swift in Sources */,
+				D1315347 /* DreamMusicView.swift in Sources */,
+				1825C20D /* DreamReportExportService.swift in Sources */,
+				5788AD53 /* DreamSearchView.swift in Sources */,
+				62F75E13 /* DreamShareCard.swift in Sources */,
+				CDB35931 /* DreamShareCircleModels.swift in Sources */,
+				17292F53 /* DreamShareCircleService.swift in Sources */,
+				E2850BE6 /* DreamShareCircleView.swift in Sources */,
+				FE94D10E /* DreamStore.swift in Sources */,
+				6401A5FA /* DreamStoryService.swift in Sources */,
+				38FF025A /* DreamStoryView.swift in Sources */,
+				93F07CBE /* DreamTimelineService.swift in Sources */,
+				ABDC4141 /* DreamTimelineView.swift in Sources */,
+				0B3E0ECB /* DreamTrendService.swift in Sources */,
+				3C513F38 /* DreamTrendView.swift in Sources */,
+				FD4AF550 /* DreamVideoEditor.swift in Sources */,
+				295935EA /* DreamVideoEditorView.swift in Sources */,
+				8F5C8E45 /* DreamVideoEnhancements.swift in Sources */,
+				2032C6E6 /* DreamVideoService.swift in Sources */,
+				21DA39C2 /* DreamVideoTemplates.swift in Sources */,
+				40B503A0 /* DreamVideoView.swift in Sources */,
+				39A33489 /* DreamWallpaperService.swift in Sources */,
+				23540DA3 /* DreamWallpaperView.swift in Sources */,
+				7838D101 /* DreamWeeklyReportModels.swift in Sources */,
+				C2398E4C /* DreamWeeklyReportService.swift in Sources */,
+				8531691E /* DreamWeeklyReportView.swift in Sources */,
+				5ACB94AF /* DreamWrappedService.swift in Sources */,
+				9783D3C1 /* DreamWrappedView.swift in Sources */,
+				82FAD3E1 /* DreamsGoalView.swift in Sources */,
+				02560401 /* EnhancedShareService.swift in Sources */,
+				8579430A /* ExternalAIService.swift in Sources */,
+				CA28DBB2 /* FriendProfileView.swift in Sources */,
+				7BD10F19 /* FriendService.swift in Sources */,
+				46FED8E9 /* FriendsView.swift in Sources */,
+				3231017E /* GalleryView.swift in Sources */,
+				9AB72F72 /* HapticFeedback.swift in Sources */,
+				E995F32B /* HealthKitService.swift in Sources */,
+				134B871E /* HomeView.swift in Sources */,
+				E230E403 /* ImageCacheService.swift in Sources */,
+				C61791E1 /* InsightsView.swift in Sources */,
+				BC3A17FE /* LucidDreamTraining.swift in Sources */,
+				FA683AC7 /* MeditationService.swift in Sources */,
+				3CC9E6BC /* MeditationView.swift in Sources */,
+				0F096C53 /* NotificationService.swift in Sources */,
+				D84210D4 /* NotionIntegrationService.swift in Sources */,
+				016ACE49 /* ObsidianIntegrationService.swift in Sources */,
+				63B2F54B /* OnThisDayView.swift in Sources */,
+				3C6B7CF8 /* PrivateShareView.swift in Sources */,
+				0C74E61F /* RecordView.swift in Sources */,
+				0A1E8D53 /* Localizable.swift in Sources */,
+				6A2CFF9A /* SettingsView.swift in Sources */,
+				95293EDF /* ShareService.swift in Sources */,
+				2ABF98B4 /* SiriShortcutViews.swift in Sources */,
+				294B0A0D /* SiriShortcuts.swift in Sources */,
+				71E4CBD3 /* SleepDataView.swift in Sources */,
+				622F507E /* SleepQualityAnalysisService.swift in Sources */,
+				9AB4EA43 /* SleepQualityAnalysisView.swift in Sources */,
+				06860923 /* SmartReminderService.swift in Sources */,
+				47BCE556 /* SmartReminderSettingsView.swift in Sources */,
+				D71AFEB5 /* SpeechService.swift in Sources */,
+				F3AD090E /* SpeechSynthesisService.swift in Sources */,
+				A7B5693B /* Theme.swift in Sources */,
+				3B84B686 /* ViewImageRenderer.swift in Sources */,
+				BD11A77A /* WidgetConfigurationService.swift in Sources */,
+				F7339DA4 /* WidgetCustomizationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
-		FC254C83 /* Debug */ = {
+		CCFB6F6C /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -517,7 +625,7 @@
 			};
 			name = Debug;
 		};
-		0B5D450F /* Release */ = {
+		86D984C0 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -573,7 +681,7 @@
 			};
 			name = Release;
 		};
-		BA979077 /* Debug */ = {
+		9B8A93C9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -603,7 +711,7 @@
 			};
 			name = Debug;
 		};
-		10322384 /* Release */ = {
+		F4314DF6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
@@ -636,25 +744,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		8AC04D77 /* Build configuration list for PBXProject "DreamLog" */ = {
+		D234534A /* Build configuration list for PBXProject "DreamLog" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				FC254C83 /* Debug */,
-				0B5D450F /* Release */,
+				CCFB6F6C /* Debug */,
+				86D984C0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationIsName = Debug;
 		};
-		11B161A9 /* Build configuration list for PBXNativeTarget "DreamLog" */ = {
+		B6F5D310 /* Build configuration list for PBXNativeTarget "DreamLog" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				BA979077 /* Debug */,
-				10322384 /* Release */,
+				9B8A93C9 /* Debug */,
+				F4314DF6 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationIsName = Debug;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = D6BD154A /* Project object */;
+	rootObject = 8DE11909 /* Project object */;
 }
