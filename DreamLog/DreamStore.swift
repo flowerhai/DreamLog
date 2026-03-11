@@ -285,7 +285,11 @@ class DreamStore: ObservableObject {
         case "水", "海", "河":
             return "水通常象征情绪和潜意识。\(count > 5 ? "频繁出现可能表示情绪波动较大。" : "这可能反映当前的情感状态。")"
         case "飞行":
-            return "飞行梦常代表自由、解脱或掌控感。\(topEmotion != nil ? "伴随\(topEmotion!.rawValue)的情绪。" : "")"
+            if let emotion = topEmotion {
+                return "飞行梦常代表自由、解脱或掌控感。伴随\(emotion.rawValue)的情绪。"
+            } else {
+                return "飞行梦常代表自由、解脱或掌控感。"
+            }
         case "追逐":
             return "被追逐的梦可能表示你在逃避某个问题或压力。"
         case "牙齿":

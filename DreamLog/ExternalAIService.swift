@@ -397,9 +397,16 @@ class ExternalAIService: ExternalAIServiceProtocol {
             throw AIServiceError.missingAPIKey
         }
         
+        guard let baseURL = config.apiBaseURL, !baseURL.isEmpty else {
+            throw AIServiceError.apiError("API Base URL 未配置", 400)
+        }
+        
         let request = AIChatRequest(messages: messages, config: config)
         
-        var urlRequest = URLRequest(url: URL(string: "\(config.apiBaseURL!)/chat/completions")!)
+        guard let url = URL(string: "\(baseURL)/chat/completions") else {
+            throw AIServiceError.apiError("无效的 API URL", 400)
+        }
+        var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -436,6 +443,10 @@ class ExternalAIService: ExternalAIServiceProtocol {
             throw AIServiceError.missingAPIKey
         }
         
+        guard let baseURL = config.apiBaseURL, !baseURL.isEmpty else {
+            throw AIServiceError.apiError("API Base URL 未配置", 400)
+        }
+        
         // Claude API 实现 (简化版)
         let systemPrompt = "你是 DreamLog 的 AI 梦境助手，帮助用户分析梦境、提供建议。"
         
@@ -453,7 +464,10 @@ class ExternalAIService: ExternalAIServiceProtocol {
             "messages": claudeMessages
         ]
         
-        var urlRequest = URLRequest(url: URL(string: "\(config.apiBaseURL!)/messages")!)
+        guard let url = URL(string: "\(baseURL)/messages") else {
+            throw AIServiceError.apiError("无效的 API URL", 400)
+        }
+        var urlRequest = URLRequest(url: url)
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("x-api-key \(apiKey)", forHTTPHeaderField: "Authorization")
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")

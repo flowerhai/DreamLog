@@ -50,7 +50,11 @@ class NotionIntegrationService {
         
         // Test by querying the database
         let url = "\(baseURL)/databases/\(config.databaseId)/query"
-        var request = URLRequest(url: URL(string: url)!)
+        guard let parsedURL = URL(string: url) else {
+            print("Notion: Invalid URL: \(url)")
+            return false
+        }
+        var request = URLRequest(url: parsedURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(config.apiKey, forHTTPHeaderField: "Authorization")
@@ -100,7 +104,10 @@ class NotionIntegrationService {
     
     private func createDreamPage(dream: Dream) async throws {
         let url = "\(baseURL)/pages"
-        var request = URLRequest(url: URL(string: url)!)
+        guard let parsedURL = URL(string: url) else {
+            throw NSError(domain: "NotionSync", code: 2, userInfo: [NSLocalizedDescriptionKey: "Invalid URL: \(url)"])
+        }
+        var request = URLRequest(url: parsedURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(config.apiKey, forHTTPHeaderField: "Authorization")
