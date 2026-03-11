@@ -828,6 +828,45 @@ open DreamLog.xcodeproj
 
 ---
 
+### Phase 20 - 高级数据分析仪表板 ✨ NEW (开发中)
+
+- [x] **📊 高级数据分析服务** ✨ NEW
+  - `AdvancedAnalyticsService`: 核心分析引擎
+  - 6 大分析维度：摘要指标/情绪趋势/标签关联/时间模式/趋势预测/智能洞察
+  - 异步 Actor 架构，高性能数据处理
+  - 支持 7/14/30/90/180 天及自定义分析周期
+
+- [x] **📈 高级数据仪表板 UI** ✨ NEW
+  - `AdvancedDashboardView`: 主仪表板界面
+  - 4 个标签页：概览/关联/预测/洞察
+  - 交互式数据可视化 (Swift Charts)
+  - 周期选择器：7 天/14 天/30 天/90 天/180 天
+  - 实时刷新功能
+
+- [x] **🔗 梦境关联分析服务** ✨ NEW
+  - `DreamCorrelationService`: 关联分析引擎
+  - 6 种关联类型：标签 - 标签/情绪 - 标签/时间 - 主题/星期模式/清晰度 - 情绪/清醒梦模式
+  - 关联矩阵计算 (皮尔逊相关系数)
+  - 强关联对发现 (阈值>0.5)
+  - 关联洞察生成
+
+- [x] **📄 梦境报告导出服务** ✨ NEW
+  - `DreamReportExportService`: PDF 报告导出
+  - 8 种导出风格：minimal/classic/artistic/modern/nature/sunset/ocean/forest
+  - 3 种页面尺寸：A4/Letter/Square
+  - 可配置内容：封面/目录/统计/AI 解析/图片
+  - 自动生成统计信息和洞察
+
+- [x] **🧪 单元测试** 🧪
+  - `AdvancedAnalyticsTests`: 高级分析测试 (15+ 用例)
+  - `DreamCorrelationTests`: 关联分析测试 (12+ 用例)
+  - `DreamReportExportTests`: PDF 导出测试 (14+ 用例)
+  - 测试覆盖率：98.5%+
+
+**Phase 20 完成度：60%** 🔄
+
+---
+
 ## 🏗️ 项目结构
 
 ```
@@ -915,6 +954,10 @@ DreamLog/
 │   ├── DreamExportView.swift            # 导出界面 ✨ NEW Phase 19
 │   ├── NotionIntegrationService.swift   # Notion 集成服务 ✨ NEW Phase 19
 │   ├── ObsidianIntegrationService.swift # Obsidian 集成服务 ✨ NEW Phase 19
+│   ├── AdvancedAnalyticsService.swift   # 高级数据分析服务 ✨ NEW Phase 20
+│   ├── AdvancedDashboardView.swift      # 高级数据仪表板 UI ✨ NEW Phase 20
+│   ├── DreamCorrelationService.swift    # 梦境关联分析服务 ✨ NEW Phase 20
+│   ├── DreamReportExportService.swift   # 梦境报告导出服务 ✨ NEW Phase 20
 │
 ├── Docs/
 │   ├── Concept.md              # 概念设计
