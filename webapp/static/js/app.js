@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadDreams();
     setupEventListeners();
     updateStats();
+    loadWeeklyReport();  // 加载周报
 });
 
 // 设置事件监听
@@ -453,6 +454,91 @@ function debounce(func, wait) {
     };
 }
 
+// ==================== 周报功能 ====================
+
+// 加载周报数据
+async function loadWeeklyReport() {
+    try {
+        const response = await fetch(`${API_BASE}/stats/weekly-report`);
+        if (!response.ok) throw new Error('加载周报失败');
+        
+        const result = await response.json();
+        if (result.success) {
+            renderWeeklyReport(result.data);
+        }
+    } catch (error) {
+        console.error('加载周报失败:', error);
+        showToast('加载周报失败，请稍后重试', 'error');
+    }
+}
+
+// 渲染周报
+function renderWeeklyReport(report) {
+    const statsSection = document.getElementById('stats');
+    if (!statsSection) return;
+    
+    // 创建周报卡片
+    const reportCard = document.createElement('div');
+    reportCard.className = 'weekly-report-card';
+    reportCard.innerHTML = `
+        <div class="report-header">
+            <h3>📊 梦境周报</h3>
+            <span class="report-period">${formatWeekRange(report.weekStartDate, report.weekEndDate)}</span>
+        </div>
+        <div class="report-stats">
+            <div class="report-stat">
+                <span class="stat-value">${report.totalDreams}</span>
+                <span class="stat-label">梦境总数</span>
+            </div>
+            <div class="report-stat">
+                <span class="stat-value">${report.lucidDreams}</span>
+                <span class="stat-label">清醒梦</span>
+            </div>
+            <div class="report-stat">
+                <span class="stat-value">${report.averageClarity.toFixed(1)}</span>
+                <span class="stat-label">平均清晰度</span>
+            </div>
+            <div class="report-stat">
+                <span class="stat-value">🔥 ${report.recordingStreak}天</span>
+                <span class="stat-label">连续记录</span>
+            </div>
+        </div>
+        ${report.insights.length > 0 ? `
+        <div class="report-insights">
+            <h4>💡 智能洞察</h4>
+            ${report.insights.map(insight => `
+                <div class="insight-item">
+                    <span class="insight-icon">${insight.icon}</span>
+                    <div>
+                        <strong>${insight.title}</strong>
+                        <p>${insight.description}</p>
+                    </div>
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
+        ${report.suggestions.length > 0 ? `
+        <div class="report-suggestions">
+            <h4>📝 建议</h4>
+            <ul>
+                ${report.suggestions.map(s => `<li>${s}</li>`).join('')}
+            </ul>
+        </div>
+        ` : ''}
+    `;
+    
+    // 插入到统计区域前面
+    statsSection.parentNode.insertBefore(reportCard, statsSection);
+}
+
+// 格式化周范围
+function formatWeekRange(startStr, endStr) {
+    const start = new Date(startStr);
+    const end = new Date(endStr);
+    const options = { month: 'short', day: 'numeric' };
+    return `${start.toLocaleDateString('zh-CN', options)} - ${end.toLocaleDateString('zh-CN', options)}`;
+}
+
 // 导出函数供全局使用
 window.openRecordModal = openRecordModal;
 window.closeRecordModal = closeRecordModal;
@@ -460,3 +546,4 @@ window.scrollToDreams = scrollToDreams;
 window.viewDream = viewDream;
 window.shareDream = shareDream;
 window.toggleFavorite = toggleFavorite;
+window.loadWeeklyReport = loadWeeklyReport;
