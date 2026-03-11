@@ -116,13 +116,13 @@ actor AdvancedAnalyticsService {
         
         switch dateRange {
         case .last7Days:
-            startDate = Calendar.current.date(byAdding: .day, value: -7, to: now)!
+            startDate = Calendar.current.date(byAdding: .day, value: -7, to: now) ?? now
         case .last30Days:
-            startDate = Calendar.current.date(byAdding: .day, value: -30, to: now)!
+            startDate = Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now
         case .last90Days:
-            startDate = Calendar.current.date(byAdding: .day, value: -90, to: now)!
+            startDate = Calendar.current.date(byAdding: .day, value: -90, to: now) ?? now
         case .lastYear:
-            startDate = Calendar.current.date(byAdding: .year, value: -1, to: now)!
+            startDate = Calendar.current.date(byAdding: .year, value: -1, to: now) ?? now
         case .all:
             startDate = Date.distantPast
         case .custom(let start, _):
@@ -199,7 +199,7 @@ actor AdvancedAnalyticsService {
         var currentDate = calendar.startOfDay(for: latest.date)
         
         while true {
-            let previousDate = calendar.date(byAdding: .day, value: -1, to: currentDate)!
+            guard let previousDate = calendar.date(byAdding: .day, value: -1, to: currentDate) else { break }
             let hasDreamOnPrevious = dreams.contains { dream in
                 calendar.isDate(dream.date, inSameDayAs: previousDate)
             }
@@ -507,11 +507,12 @@ actor AdvancedAnalyticsService {
         let now = Date()
         
         // 最近 2 周
-        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now)!
+        let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: now) ?? now
         let recentDreams = dreams.filter { $0.date >= twoWeeksAgo }
         
-        let lastWeek = recentDreams.filter { $0.date >= calendar.date(byAdding: .day, value: -7, to: now)! }
-        let previousWeek = recentDreams.filter { $0.date < calendar.date(byAdding: .day, value: -7, to: now)! }
+        let sevenDaysAgo = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+        let lastWeek = recentDreams.filter { $0.date >= sevenDaysAgo }
+        let previousWeek = recentDreams.filter { $0.date < sevenDaysAgo }
         
         let trend: String
         if lastWeek.count > previousWeek.count + 2 { trend = "上升" }

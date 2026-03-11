@@ -106,13 +106,13 @@ enum ExportDateRange: String, CaseIterable, Identifiable {
         case .all:
             return nil
         case .lastWeek:
-            return (Calendar.current.date(byAdding: .day, value: -7, to: now)!, now)
+            return (Calendar.current.date(byAdding: .day, value: -7, to: now) ?? now, now)
         case .lastMonth:
-            return (Calendar.current.date(byAdding: .day, value: -30, to: now)!, now)
+            return (Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now, now)
         case .last3Months:
-            return (Calendar.current.date(byAdding: .month, value: -3, to: now)!, now)
+            return (Calendar.current.date(byAdding: .month, value: -3, to: now) ?? now, now)
         case .lastYear:
-            return (Calendar.current.date(byAdding: .year, value: -1, to: now)!, now)
+            return (Calendar.current.date(byAdding: .year, value: -1, to: now) ?? now, now)
         case .custom:
             return nil // Handled separately
         }
