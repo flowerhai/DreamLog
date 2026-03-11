@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6B4C9A">
+    <meta name="description" content="DreamLog 梦境周报 - 每周梦境总结与洞察">
+    <title>梦境周报 🌙 - DreamLog</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/images/moon.svg">
+    <style>
+        .weekly-report-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .report-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeIn 0.6s ease;
+        }
+
+        .report-title {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #6B4C9A, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-period {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: slideUp 0.6s ease;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: bold;
+            background: linear-gradient(135deg, #6B4C9A, #A78BFA);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .report-section {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: fadeIn 0.8s ease;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .insights-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .insight-item {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(107, 76, 154, 0.1);
+            border-radius: 12px;
+            border-left: 4px solid #6B4C9A;
+        }
+
+        .insight-title {
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .insight-desc {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .suggestions-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .suggestion-item {
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            background: rgba(167, 139, 250, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+        }
+
+        .suggestion-icon {
+            font-size: 1.2rem;
+        }
+
+        .export-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, #6B4C9A, #A78BFA);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(107, 76, 154, 0.3);
+        }
+
+        .loading-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(107, 76, 154, 0.2);
+            border-top-color: #6B4C9A;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .weekly-report-container {
+                padding: 1rem;
+            }
+
+            .report-title {
+                font-size: 2rem;
+            }
+
+            .report-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span class="logo">🌙</span>
+                <span class="brand-name">DreamLog</span>
+            </a>
+            <div class="nav-links">
+                <a href="/" class="nav-link">首页</a>
+                <a href="/#dreams" class="nav-link">梦境</a>
+                <a href="/#analysis" class="nav-link">分析</a>
+                <a href="/weekly-report" class="nav-link active">周报</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="main-content">
+        <div class="weekly-report-container">
+            <!-- 加载状态 -->
+            <div id="loadingState" class="loading-state">
+                <div class="loading-spinner"></div>
+                <p>正在生成周报...</p>
+            </div>
+
+            <!-- 空状态 -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">📊</div>
+                <h2>暂无周报数据</h2>
+                <p style="color: var(--text-secondary); margin: 1rem 0;">
+                    记录梦境后，每周一自动生成上周的梦境报告
+                </p>
+                <a href="/" class="btn btn-primary">开始记录</a>
+            </div>
+
+            <!-- 周报内容 -->
+            <div id="reportContent" style="display: none;">
+                <!-- 头部 -->
+                <div class="report-header">
+                    <h1 class="report-title">🌙 梦境周报</h1>
+                    <p class="report-period" id="reportPeriod"></p>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="report-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalDreams">0</div>
+                        <div class="stat-label">梦境总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="lucidDreams">0</div>
+                        <div class="stat-label">清醒梦</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="avgClarity">0</div>
+                        <div class="stat-label">平均清晰度</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="streak">0</div>
+                        <div class="stat-label">连续记录天数</div>
+                    </div>
+                </div>
+
+                <!-- 智能洞察 -->
+                <div class="report-section">
+                    <h2 class="section-title">💡 智能洞察</h2>
+                    <ul class="insights-list" id="insightsList"></ul>
+                </div>
+
+                <!-- 个性化建议 -->
+                <div class="report-section">
+                    <h2 class="section-title">📝 建议</h2>
+                    <ul class="suggestions-list" id="suggestionsList"></ul>
+                </div>
+
+                <!-- 导出按钮 -->
+                <div style="text-align: center; margin-top: 2rem;">
+                    <button class="export-btn" onclick="exportReport()">
+                        <span>📥</span> 导出 PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let weeklyReportData = null;
+
+        // 页面加载时获取周报
+        document.addEventListener('DOMContentLoaded', loadWeeklyReport);
+
+        async function loadWeeklyReport() {
+            try {
+                const response = await fetch('/api/stats/weekly-report');
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    weeklyReportData = result.data;
+                    renderWeeklyReport(weeklyReportData);
+                } else {
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('加载周报失败:', error);
+                showEmptyState();
+            }
+        }
+
+        function renderWeeklyReport(data) {
+            // 隐藏加载状态，显示内容
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('reportContent').style.display = 'block';
+
+            // 设置周期
+            const startDate = new Date(data.weekStartDate).toLocaleDateString('zh-CN');
+            const endDate = new Date(data.weekEndDate).toLocaleDateString('zh-CN');
+            document.getElementById('reportPeriod').textContent = `${startDate} - ${endDate}`;
+
+            // 设置统计数据
+            document.getElementById('totalDreams').textContent = data.totalDreams;
+            document.getElementById('lucidDreams').textContent = data.lucidDreams;
+            document.getElementById('avgClarity').textContent = data.averageClarity.toFixed(1);
+            document.getElementById('streak').textContent = data.recordingStreak;
+
+            // 渲染洞察
+            const insightsList = document.getElementById('insightsList');
+            insightsList.innerHTML = data.insights.map(insight => `
+                <li class="insight-item">
+                    <div class="insight-title">
+                        <span>${insight.icon}</span>
+                        <span>${insight.title}</span>
+                    </div>
+                    <div class="insight-desc">${insight.description}</div>
+                </li>
+            `).join('');
+
+            // 渲染建议
+            const suggestionsList = document.getElementById('suggestionsList');
+            suggestionsList.innerHTML = data.suggestions.map(suggestion => `
+                <li class="suggestion-item">
+                    <span class="suggestion-icon">💭</span>
+                    <span>${suggestion}</span>
+                </li>
+            `).join('');
+        }
+
+        function showEmptyState() {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'block';
+        }
+
+        function exportReport() {
+            if (!weeklyReportData) return;
+
+            // 创建打印窗口
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>DreamLog 梦境周报 - ${weeklyReportData.weekStartDate}</title>
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; }
+                        h1 { color: #6B4C9A; }
+                        .stat { display: inline-block; margin: 20px; padding: 20px; background: #f5f5f5; border-radius: 12px; }
+                        .stat-number { font-size: 2.5rem; font-weight: bold; color: #6B4C9A; }
+                        .section { margin: 30px 0; }
+                        .insight { padding: 15px; margin: 10px 0; background: #f9f9f9; border-left: 4px solid #6B4C9A; border-radius: 8px; }
+                    </style>
+                </head>
+                <body>
+                    <h1>🌙 DreamLog 梦境周报</h1>
+                    <p>周期：${new Date(weeklyReportData.weekStartDate).toLocaleDateString('zh-CN')} - ${new Date(weeklyReportData.weekEndDate).toLocaleDateString('zh-CN')}</p>
+                    
+                    <div class="stats">
+                        <div class="stat">
+                            <div class="stat-number">${weeklyReportData.totalDreams}</div>
+                            <div>梦境总数</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">${weeklyReportData.lucidDreams}</div>
+                            <div>清醒梦</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">${weeklyReportData.averageClarity.toFixed(1)}</div>
+                            <div>平均清晰度</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-number">${weeklyReportData.recordingStreak}</div>
+                            <div>连续记录天数</div>
+                        </div>
+                    </div>
+
+                    <div class="section">
+                        <h2>💡 智能洞察</h2>
+                        ${weeklyReportData.insights.map(i => `
+                            <div class="insight">
+                                <strong>${i.icon} ${i.title}</strong><br>
+                                ${i.description}
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="section">
+                        <h2>📝 建议</h2>
+                        <ul>
+                            ${weeklyReportData.suggestions.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <script>
+                        window.onload = function() {
+                            window.print();
+                        }
+                    <\/script>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+        }
+    </script>
+</body>
+</html>

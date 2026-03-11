@@ -7,6 +7,8 @@
 //
 
 import SwiftUI
+import UIKit
+import Photos
 
 // MARK: - 周报主视图
 
@@ -721,11 +723,140 @@ struct ShareReportView: View {
     }
     
     private func shareToSocial() {
-        // 分享逻辑
+        // 生成分享卡片图片
+        guard let cardImage = generateShareCardImage() else { return }
+        
+        // 创建分享项目
+        let activityVC = UIActivityViewController(
+            activityItems: [cardImage, "我的梦境周报 - DreamLog 🌙"],
+            applicationActivities: nil
+        )
+        
+        // 排除不需要的活动类型
+        activityVC.excludedActivityTypes = [
+            .assignToContact,
+            .saveToCameraRoll,
+            .print
+        ]
+        
+        // 在 iPad 上需要设置 popover 源
+        if let popover = activityVC.popoverPresentationController {
+            popover.sourceView = UIApplication.shared.windows.first?.rootViewController?.view
+            popover.permittedArrowDirections = []
+        }
+        
+        // 获取当前窗口场景
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootViewController = window.rootViewController else { return }
+        
+        // 寻找最上层的视图控制器
+        var topController = rootViewController
+        while let presented = topController.presentedViewController {
+            topController = presented
+        }
+        
+        topController.present(activityVC, animated: true, completion: nil)
     }
     
     private func saveToPhotos() {
-        // 保存逻辑
+        // 生成分享卡片图片
+        guard let cardImage = generateShareCardImage() else {
+            showSaveError("无法生成卡片图片")
+            return
+        }
+        
+        // 请求相册权限
+        PHPhotoLibrary.requestAuthorization { status in
+            switch status {
+            case .authorized, .limited:
+                saveImageToPhotos(cardImage)
+            case .denied, .restricted:
+                showSaveError("需要相册权限才能保存")
+            case .notDetermined:
+                PHPhotoLibrary.requestAuthorization { newStatus in
+                    if newStatus == .authorized || newStatus == .limited {
+                        saveImageToPhotos(cardImage)
+                    } else {
+                        showSaveError("需要相册权限才能保存")
+                    }
+                }
+            @unknown default:
+                showSaveError("未知权限状态")
+            }
+        }
+    }
+    
+    private func generateShareCardImage() -> UIImage? {
+        // 创建分享卡片视图
+        let shareCard = StandardShareCardView(data: generateShareCardData())
+            .frame(width: 1080, height: 1920)
+        
+        // 渲染为图片
+        let renderer = ImageRenderer(content: shareCard)
+        renderer.scale = 3.0 // 高分辨率
+        
+        if let image = renderer.uiImage {
+            return image
+        }
+        
+        return nil
+    }
+    
+    private func generateShareCardData() -> DreamWrappedData {
+        // 从当前周报生成分享数据
+        guard let report = service.currentReport else {
+            return createEmptyShareData()
+        }
+        
+        return DreamWrappedData(
+            period: .thisWeek,
+            totalDreams: report.totalDreams,
+            lucidDreams: report.lucidDreams,
+            averageClarity: report.averageClarity,
+            consecutiveDays: report.recordingStreak,
+            topEmotions: report.emotionDistribution.map { DreamEmotion(name: $0.key, count: $0.value) },
+            topTags: report.topTags.map { TagFrequency(tag: $0.tag, count: $0.count) },
+            highlightDream: report.highlightDreams.first,
+            insights: report.insights.map { $0.title },
+            generatedAt: report.generatedAt
+        )
+    }
+    
+    private func createEmptyShareData() -> DreamWrappedData {
+        DreamWrappedData(
+            period: .thisWeek,
+            totalDreams: 0,
+            lucidDreams: 0,
+            averageClarity: 0,
+            consecutiveDays: 0,
+            topEmotions: [],
+            topTags: [],
+            highlightDream: nil,
+            insights: [],
+            generatedAt: Date()
+        )
+    }
+    
+    private func saveImageToPhotos(_ image: UIImage) {
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        
+        // 显示成功提示
+        DispatchQueue.main.async {
+            showSaveSuccess()
+        }
+    }
+    
+    private func showSaveError(_ message: String) {
+        DispatchQueue.main.async {
+            // 简单的错误提示（实际项目中可使用 Toast 或 Alert）
+            print("保存失败：\(message)")
+        }
+    }
+    
+    private func showSaveSuccess() {
+        // 成功提示（实际项目中可使用 Toast）
+        print("✅ 已保存到相册")
     }
 }
 

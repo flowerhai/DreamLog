@@ -90,6 +90,12 @@ async def root(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
 
 
+@app.get("/weekly-report")
+async def weekly_report(request: Request):
+    """梦境周报页面"""
+    return templates.TemplateResponse("weekly-report.html", {"request": request})
+
+
 @app.get("/health")
 async def health_check():
     """健康检查"""

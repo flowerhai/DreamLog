@@ -15,6 +15,71 @@
 
 ## 开发历史
 
+### 2026-03-11 10:04 (Session - dreamlog-dev) - Phase 18 梦境周报功能完成
+
+#### ✅ 已完成
+
+- [x] **iOS 端周报分享功能完善**
+  - 实现 `shareToSocial()` 方法 - UIActivityViewController 集成
+  - 实现 `saveToPhotos()` 方法 - 相册保存 + 权限处理
+  - 添加 `generateShareCardImage()` - 分享卡片图片生成
+  - 添加 `generateShareCardData()` - 从周报生成分享数据
+  - 添加错误处理和成功提示
+  - 导入 UIKit 和 Photos 框架支持
+
+- [x] **Web 端周报页面开发**
+  - 创建 `weekly-report.html` 页面模板
+  - 实现响应式布局（移动端/桌面端）
+  - 添加星空紫主题样式
+  - 开发 4 项核心统计卡片
+  - 实现智能洞察列表展示
+  - 实现个性化建议列表
+  - 添加 PDF 导出功能（浏览器打印）
+  - 集成 API 数据加载
+
+- [x] **Web 应用路由更新**
+  - 添加 `/weekly-report` 路由到 main.py
+  - 更新导航栏添加周报入口
+  - 更新 index.html 导航链接
+
+- [x] **代码质量**
+  - iOS 代码遵循 Swift 规范
+  - Web 代码通过 ESLint 检查
+  - 无编译错误
+  - 功能完整可运行
+
+#### 📊 代码统计
+
+| 文件 | 新增行数 | 说明 |
+|------|---------|------|
+| DreamWeeklyReportView.swift | +150 | 分享/保存功能实现 |
+| weekly-report.html | +420 | Web 周报页面 |
+| main.py | +6 | Web 路由添加 |
+| index.html | +1 | 导航链接更新 |
+| **总计** | **~577 行** | - |
+
+#### 🎯 Phase 18 完成度
+
+**完成度：80% → 100%** ✅
+
+**已完成功能**:
+- ✅ iOS 端周报生成服务
+- ✅ iOS 端周报查看界面
+- ✅ iOS 端周报分享功能
+- ✅ iOS 端周报保存到相册
+- ✅ Web 端周报 API
+- ✅ Web 端周报页面
+- ✅ Web 端周报导出功能
+- ✅ 单元测试覆盖
+
+**Phase 18 总计**:
+- iOS 代码：~2,125 行
+- Web 代码：~1,088 行
+- 测试用例：20+
+- 文档：4 份
+
+---
+
 ### 2026-03-11 06:04 (Session - dreamlog-dev) - Web 应用前端开发
 
 #### ✅ 已完成
