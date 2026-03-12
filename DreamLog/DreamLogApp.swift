@@ -18,9 +18,9 @@ struct DreamLogApp: App {
         Self.shared = self
         
         // 初始化 SwiftData 模型容器
+        // 注意：Dream 使用 UserDefaults 持久化，只有 DreamTimeCapsule 使用 SwiftData
         do {
             let schema = Schema([
-                Dream.self,
                 DreamTimeCapsule.self
             ])
             let modelConfiguration = ModelConfiguration(
