@@ -75,6 +75,19 @@ struct DreamARInteractionView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showSceneOptions) {
+                ARSceneSelectionView { scene in
+                    // 加载场景逻辑 - 从文件加载
+                    do {
+                        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                        let sceneURL = documentsPath.appendingPathComponent("ARScenes/\(scene.id).json")
+                        try interactionService.loadScene(from: sceneURL)
+                        showSceneOptions = false
+                    } catch {
+                        print("加载场景失败：\(error)")
+                    }
+                }
+            }
         }
     }
     
@@ -394,8 +407,7 @@ struct DreamARInteractionView: View {
     }
     
     private func loadScene() {
-        // TODO: 显示场景选择器
-        print("加载场景")
+        showSceneOptions = true
     }
     
     private func clearScene() {

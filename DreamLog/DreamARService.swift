@@ -155,21 +155,21 @@ class DreamARService: ObservableObject {
     /// 情绪转 AR 元素
     private func emotionToARElement(emotion: Emotion) -> ARDreamElement {
         let (type, name) = emotionToARType(emotion: emotion)
-        return ARDreamElement(type: type, name: name, description: "情绪：\(emotion.displayName)")
+        return ARDreamElement(type: type, name: name, description: "情绪：\(emotion.rawValue)")
     }
     
     private func emotionToARType(emotion: Emotion) -> (ARDreamElementType, String) {
         switch emotion {
-        case .平静: return (.light, "平静之光")
-        case .快乐: return (.light, "快乐之光")
-        case .焦虑: return (.wind, "焦虑之风")
-        case .恐惧: return (.dark, "恐惧之影")
-        case .困惑: return (.abstract, "困惑迷雾")
-        case .兴奋: return (.fire, "兴奋之火")
-        case .悲伤: return (.water, "悲伤之水")
-        case .愤怒: return (.fire, "愤怒之火")
-        case .惊讶: return (.light, "惊讶闪光")
-        case .中性: return (.abstract, "中性元素")
+        case .calm: return (.light, "平静之光")
+        case .happy: return (.light, "快乐之光")
+        case .anxious: return (.wind, "焦虑之风")
+        case .fearful: return (.dark, "恐惧之影")
+        case .confused: return (.abstract, "困惑迷雾")
+        case .excited: return (.fire, "兴奋之火")
+        case .sad: return (.water, "悲伤之水")
+        case .angry: return (.fire, "愤怒之火")
+        case .surprised: return (.light, "惊讶闪光")
+        case .neutral: return (.abstract, "中性元素")
         @unknown default: return (.abstract, "未知情绪")
         }
     }
