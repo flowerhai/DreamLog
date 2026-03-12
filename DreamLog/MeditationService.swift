@@ -224,8 +224,14 @@ class MeditationService: NSObject, ObservableObject {
     @Published var remainingTime: Int = 0
     @Published var volume: Float = 0.5
     
+    // Phase 26 - 音乐集成
+    @Published var isMusicEnabled: Bool = false
+    @Published var currentMusicId: UUID?
+    @Published var musicVolume: Float = 0.3
+    
     private var audioPlayers: [SoundType: AVAudioPlayer] = [:]
     private var guidedAudioPlayer: AVAudioPlayer?
+    private var musicPlayer: AVAudioPlayer?
     private var timer: Timer?
     private var progressTimer: Timer?
     
@@ -317,13 +323,17 @@ class MeditationService: NSObject, ObservableObject {
     func stopAll() {
         audioPlayers.values.forEach { $0.stop() }
         guidedAudioPlayer?.stop()
+        musicPlayer?.stop()
         audioPlayers.removeAll()
         guidedAudioPlayer = nil
+        musicPlayer = nil
         timer?.invalidate()
         progressTimer?.invalidate()
         isPlaying = false
         currentMix = nil
         currentGuidedMeditation = nil
+        currentMusicId = nil
+        isMusicEnabled = false
         playbackProgress = 0.0
         remainingTime = 0
     }
@@ -472,6 +482,126 @@ class MeditationService: NSObject, ObservableObject {
                 timer: nil
             )
         ]
+    }
+    
+    // MARK: - Phase 26: 音乐集成功能
+    
+    /// 播放梦境音乐与冥想结合
+    func playWithMusic(music: DreamMusic, mix: SoundMix? = nil) {
+        stopAll()
+        currentMusicId = music.id
+        isMusicEnabled = true
+        configureAudioSession()
+        
+        // 播放背景音乐
+        if let filePath = music.filePath, let url = URL(string: filePath) {
+            do {
+                musicPlayer = try AVAudioPlayer(contentsOf: url)
+                musicPlayer?.numberOfLoops = -1
+                musicPlayer?.volume = musicVolume
+                musicPlayer?.prepareToPlay()
+                musicPlayer?.play()
+            } catch {
+                print("Failed to play music: \(error)")
+            }
+        }
+        
+        // 播放音效混音（可选）
+        if let mix = mix {
+            currentMix = mix
+            for item in mix.sounds where item.isEnabled {
+                if let player = loadSound(item.soundType) {
+                    player.volume = item.volume * volume * mix.masterVolume
+                    player.play()
+                    audioPlayers[item.soundType] = player
+                }
+            }
+        }
+        
+        isPlaying = true
+        remainingTime = Int(music.duration)
+        startProgressTimer()
+        
+        print("🎵 开始播放冥想音乐：\(music.title)")
+    }
+    
+    /// 为冥想类型推荐音乐
+    func recommendMusicForMeditation(type: GuidedMeditationType, from library: [DreamMusic]) -> [DreamMusic] {
+        var recommended: [DreamMusic] = []
+        
+        switch type {
+        case .dreamRecall:
+            // 梦境回忆：平静、神秘
+            recommended = library.filter { [.peaceful, .mysterious, .ethereal].contains($0.mood) }
+        case .lucidInduction:
+            // 清醒梦：神秘、梦幻
+            recommended = library.filter { [.mysterious, .dreamy, .ethereal].contains($0.mood) }
+        case .sleepPreparation:
+            // 睡前准备：平静、舒缓
+            recommended = library.filter { [.peaceful, .melancholic].contains($0.mood) && $0.tempo == .verySlow }
+        case .stressRelief:
+            // 减压：平静、欢快
+            recommended = library.filter { [.peaceful, .joyful, .ethereal].contains($0.mood) }
+        case .morningGrounding:
+            // 晨间：欢快、活力
+            recommended = library.filter { [.joyful, .energetic, .peaceful].contains($0.mood) }
+        }
+        
+        return Array(recommended.prefix(5))
+    }
+    
+    /// 创建冥想 + 音乐场景预设
+    func createMeditationMusicScene(type: GuidedMeditationType, music: DreamMusic) -> SoundMix {
+        var sounds: [SoundMix.SoundMixItem] = []
+        
+        switch type {
+        case .dreamRecall:
+            sounds = [
+                SoundMix.SoundMixItem(soundType: .binaural5Hz, volume: 0.4, isEnabled: true),
+                SoundMix.SoundMixItem(soundType: .singingBowl, volume: 0.2, isEnabled: true)
+            ]
+        case .lucidInduction:
+            sounds = [
+                SoundMix.SoundMixItem(soundType: .binaural10Hz, volume: 0.3, isEnabled: true),
+                SoundMix.SoundMixItem(soundType: .windChimes, volume: 0.3, isEnabled: true)
+            ]
+        case .sleepPreparation:
+            sounds = [
+                SoundMix.SoundMixItem(soundType: .brownNoise, volume: 0.3, isEnabled: true),
+                SoundMix.SoundMixItem(soundType: .rain, volume: 0.5, isEnabled: true)
+            ]
+        case .stressRelief:
+            sounds = [
+                SoundMix.SoundMixItem(soundType: .ocean, volume: 0.6, isEnabled: true),
+                SoundMix.SoundMixItem(soundType: .forest, volume: 0.4, isEnabled: true)
+            ]
+        case .morningGrounding:
+            sounds = [
+                SoundMix.SoundMixItem(soundType: .forest, volume: 0.5, isEnabled: true),
+                SoundMix.SoundMixItem(soundType: .windChimes, volume: 0.4, isEnabled: true)
+            ]
+        }
+        
+        return SoundMix(
+            name: "🎵 \(type.displayName) + \(music.title)",
+            sounds: sounds,
+            masterVolume: 1.0,
+            timer: Int(music.duration)
+        )
+    }
+    
+    /// 停止音乐播放
+    func stopMusic() {
+        musicPlayer?.stop()
+        musicPlayer = nil
+        currentMusicId = nil
+        isMusicEnabled = false
+    }
+    
+    /// 更新音乐音量
+    func setMusicVolume(_ volume: Float) {
+        musicVolume = volume
+        musicPlayer?.volume = volume
     }
     
     deinit {
