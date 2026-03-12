@@ -64,7 +64,7 @@ class DreamARModelCache: ObservableObject {
     }
     
     private func getCacheDirectory() -> URL {
-        let cachePath = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let cachePath = fileManager.urls(for: .cachesDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
         return cachePath.appendingPathComponent("ARModels", isDirectory: true)
     }
     

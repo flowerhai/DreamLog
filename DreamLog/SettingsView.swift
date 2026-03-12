@@ -58,7 +58,7 @@ struct SettingsView: View {
                         Label("个性化定制", systemImage: "paintpalette")
                     }
                     
-                    Link(destination: URL(string: "dreamlog://widgets")!) {
+                    Link(destination: URL(string: "dreamlog://widgets") ?? URL(fileURLWithPath: "/")) {
                         HStack {
                             Label("添加小组件", systemImage: "plus.app")
                             Spacer()
@@ -321,7 +321,7 @@ struct SettingsView: View {
                 
                 // 隐私
                 Section(header: Label("隐私", systemImage: "hand.raised")) {
-                    Link(destination: URL(string: "https://dreamlog.app/privacy")!) {
+                    Link(destination: URL(string: "https://dreamlog.app/privacy") ?? URL(fileURLWithPath: "/")) {
                         HStack {
                             Label("隐私政策", systemImage: "doc.text")
                             Spacer()
@@ -331,7 +331,7 @@ struct SettingsView: View {
                         }
                     }
                     
-                    Link(destination: URL(string: "https://dreamlog.app/terms")!) {
+                    Link(destination: URL(string: "https://dreamlog.app/terms") ?? URL(fileURLWithPath: "/")) {
                         HStack {
                             Label("服务条款", systemImage: "doc.text")
                             Spacer()

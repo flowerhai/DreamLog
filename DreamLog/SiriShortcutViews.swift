@@ -86,7 +86,7 @@ struct SiriShortcutSettingsView: View {
             }
             
             Section {
-                Link(destination: URL(string: "shortcuts://")!) {
+                Link(destination: URL(string: "shortcuts://") ?? URL(fileURLWithPath: "/")) {
                     HStack {
                         Image(systemName: "wand.and.stars")
                         Text("打开快捷指令 App")

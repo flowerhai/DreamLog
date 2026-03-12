@@ -451,7 +451,7 @@ class DreamARPhotoService {
     private let photosDirectory: URL
     
     private init() {
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
         photosDirectory = documentsPath.appendingPathComponent("ARPhotos", isDirectory: true)
         try? fileManager.createDirectory(at: photosDirectory, withIntermediateDirectories: true)
     }

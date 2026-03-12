@@ -44,7 +44,7 @@ struct QuickRecordSmallWidget: View {
     @State private var config: WidgetCustomizationConfig = .default
     
     var body: some View {
-        Link(destination: URL(string: "dreamlog://record")!) {
+        Link(destination: URL(string: "dreamlog://record") ?? URL(fileURLWithPath: "/")) {
             ZStack {
                 // 背景渐变 - 使用用户选择的主题
                 LinearGradient(
@@ -99,7 +99,7 @@ struct QuickRecordMediumWidget: View {
     @State private var config: WidgetCustomizationConfig = .default
     
     var body: some View {
-        Link(destination: URL(string: "dreamlog://record")!) {
+        Link(destination: URL(string: "dreamlog://record") ?? URL(fileURLWithPath: "/")) {
             ZStack {
                 // 背景 - 使用用户选择的主题
                 LinearGradient(
@@ -179,7 +179,7 @@ struct DreamGoalWidget: View {
     @State private var config: WidgetCustomizationConfig = .default
     
     var body: some View {
-        Link(destination: URL(string: "dreamlog://insights")!) {
+        Link(destination: URL(string: "dreamlog://insights") ?? URL(fileURLWithPath: "/")) {
             ZStack {
                 // 背景 - 使用用户选择的主题
                 LinearGradient(

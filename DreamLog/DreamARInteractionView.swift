@@ -79,7 +79,7 @@ struct DreamARInteractionView: View {
                 ARSceneSelectionView { scene in
                     // 加载场景逻辑 - 从文件加载
                     do {
-                        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
                         let sceneURL = documentsPath.appendingPathComponent("ARScenes/\(scene.id).json")
                         try interactionService.loadScene(from: sceneURL)
                         showSceneOptions = false

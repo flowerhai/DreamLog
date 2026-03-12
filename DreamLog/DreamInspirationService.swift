@@ -18,7 +18,19 @@ final class DreamInspirationService {
     private var promptTemplates: [PromptTemplate] = []
     
     init(modelContext: ModelContext? = nil) {
-        self.modelContext = modelContext ?? (try? ModelContext(SharedModelContainer.shared.container)) ?? ModelContext(try! ModelContainer(for: CreativePrompt.self))
+        if let context = modelContext {
+            self.modelContext = context
+        } else if let context = try? ModelContext(SharedModelContainer.shared.container) {
+            self.modelContext = context
+        } else {
+            // Fallback: create a simple in-memory context
+            do {
+                let container = try ModelContainer(for: CreativePrompt.self)
+                self.modelContext = ModelContext(container)
+            } catch {
+                fatalError("Failed to create ModelContext: \(error)")
+            }
+        }
         loadPromptTemplates()
     }
     
@@ -228,9 +240,9 @@ final class DreamInspirationService {
     
     /// 根据梦境生成创意提示
     func generatePrompt(from dream: Dream, type: InspirationType? = nil) -> CreativePrompt {
-        let selectedType = type ?? InspirationType.allCases.randomElement()!
+        let selectedType = type ?? InspirationType.allCases.randomElement() ?? .writing
         let templates = promptTemplates.filter { $0.category == selectedType.rawValue }
-        let template = templates.randomElement() ?? templates.first!
+        let template = templates.randomElement() ?? promptTemplates.first!
         
         var title = template.title
         var description = template.template

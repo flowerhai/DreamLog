@@ -69,7 +69,7 @@ struct ARSceneSelectionView: View {
     
     private func loadScenesFromDisk() -> [ARDreamScene] {
         let fileManager = FileManager.default
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
         let scenesDirectory = documentsPath.appendingPathComponent("ARScenes", isDirectory: true)
         
         guard fileManager.fileExists(atPath: scenesDirectory.path) else {

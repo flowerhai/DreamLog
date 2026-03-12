@@ -43,7 +43,7 @@ class DreamARService: ObservableObject {
         self.fileManager = FileManager.default
         
         // 创建 AR 存档目录
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
         self.archiveDirectory = documentsPath.appendingPathComponent("ARScenes", isDirectory: true)
         
         try? fileManager.createDirectory(at: archiveDirectory, withIntermediateDirectories: true)

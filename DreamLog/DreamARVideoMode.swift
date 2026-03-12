@@ -642,7 +642,7 @@ class DreamARVideoService {
     private let videosDirectory: URL
     
     private init() {
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
         videosDirectory = documentsPath.appendingPathComponent("ARVideos", isDirectory: true)
         try? fileManager.createDirectory(at: videosDirectory, withIntermediateDirectories: true)
     }
