@@ -161,6 +161,13 @@ struct ContentView: View {
                     Text("分享圈")
                 }
                 .tag(20)
+            
+            DreamTimeCapsuleView()
+                .tabItem {
+                    Image(systemName: "hourglass.badge.fill")
+                    Text("时间胶囊")
+                }
+                .tag(21)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
