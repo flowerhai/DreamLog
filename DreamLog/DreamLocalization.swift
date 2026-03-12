@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 // MARK: - 支持的语言
 
@@ -414,6 +415,7 @@ extension View {
 struct LanguageSettingsView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject private var localizationService = DreamLocalizationService.shared
+    @State private var showingFeedbackAlert = false
     
     var body: some View {
         NavigationView {
@@ -456,7 +458,7 @@ struct LanguageSettingsView: View {
                 
                 Section {
                     Button("帮助改进翻译") {
-                        // TODO: 打开反馈表单
+                        openFeedbackForm()
                     }
                 }
             }
@@ -469,7 +471,40 @@ struct LanguageSettingsView: View {
                     }
                 }
             }
+            .alert("反馈翻译问题", isPresented: $showingFeedbackAlert) {
+                Button("取消", role: .cancel) { }
+                Button("发送邮件") {
+                    openEmailFeedback()
+                }
+                Button("在 App 内反馈") {
+                    openInAppFeedback()
+                }
+            } message: {
+                Text("请选择您喜欢的反馈方式，我们会认真对待每一条反馈！")
+            }
         }
+    }
+    
+    /// 打开反馈表单
+    private func openFeedbackForm() {
+        showingFeedbackAlert = true
+    }
+    
+    /// 通过邮件反馈
+    private func openEmailFeedback() {
+        guard let url = URL(string: "mailto:1559743577@qq.com?subject=DreamLog 翻译反馈&body=请描述您发现的翻译问题：") else {
+            return
+        }
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    /// 在 App 内反馈（未来可扩展）
+    private func openInAppFeedback() {
+        // 未来可以打开 App 内反馈界面
+        // 目前先显示提示
+        print("In-app feedback form will be implemented in future updates")
     }
 }
 

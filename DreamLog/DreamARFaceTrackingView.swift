@@ -7,6 +7,8 @@
 
 import SwiftUI
 import ARKit
+import UIKit
+import Photos
 
 // MARK: - 面部追踪主界面
 
@@ -15,6 +17,9 @@ struct DreamARFaceTrackingView: View {
     @State private var showingConfigSheet = false
     @State private var showingAvatarPicker = false
     @State private var showingAchievements = false
+    @State private var screenshotView: UIView?
+    @State private var showingScreenshotAlert = false
+    @State private var screenshotSaved = false
     
     var body: some View {
         VStack(spacing: 0) {
@@ -254,11 +259,12 @@ struct DreamARFaceTrackingView: View {
             
             // 截图按钮
             Button(action: {
-                // TODO: 实现截图功能
+                captureScreenshot()
             }) {
                 VStack {
                     Image(systemName: "camera.fill")
                         .font(.title2)
+                        .foregroundColor(screenshotSaved ? .green : .primary)
                     Text("截图")
                         .font(.caption)
                 }
@@ -266,6 +272,56 @@ struct DreamARFaceTrackingView: View {
                 .background(Color(.systemBackground))
                 .cornerRadius(12)
                 .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+            }
+            .alert("截图已保存", isPresented: $showingScreenshotAlert) {
+                Button("查看", role: .default) {
+                    // 可以跳转到相册
+                }
+                Button("好的", role: .cancel) { }
+            } message: {
+                Text("面部追踪截图已保存到相册")
+            }
+        }
+    }
+    
+    // MARK: - 截图功能
+    
+    /// 捕获当前面部追踪界面的截图并保存到相册
+    private func captureScreenshot() {
+        // 获取主窗口
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return
+        }
+        
+        // 使用 UIGraphicsImageRenderer 捕获屏幕
+        let renderer = UIGraphicsImageRenderer(bounds: window.bounds)
+        let image = renderer.image { context in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        
+        // 保存到相册
+        UIImageWriteToSavedPhotosAlbum(image, self, #selector(image(_:didFinishSavingWithError:contextInfo:)), nil)
+        
+        // 触发轻微触觉反馈
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+    }
+    
+    /// 图片保存完成回调
+    @objc private func image(_ image: UIImage, didFinishSavingWithError error: Error?, contextInfo: UnsafeRawPointer) {
+        DispatchQueue.main.async {
+            if error == nil {
+                screenshotSaved = true
+                showingScreenshotAlert = true
+                
+                // 1 秒后重置状态
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    screenshotSaved = false
+                }
+            } else {
+                // 保存失败，可能是权限问题
+                showingScreenshotAlert = true
             }
         }
     }
