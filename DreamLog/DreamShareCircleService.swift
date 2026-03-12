@@ -404,7 +404,8 @@ class DreamShareCircleService: ObservableObject {
     
     private func generateInviteCode() -> String {
         let characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return String((0..<8).map { _ in characters.randomElement()! })
+        let charArray = Array(characters)
+        return String((0..<8).map { _ in charArray.randomElement() ?? "A" })
     }
     
     // MARK: - CloudKit 集成

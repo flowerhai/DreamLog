@@ -28,7 +28,10 @@ final class DreamInspirationService {
                 let container = try ModelContainer(for: CreativePrompt.self)
                 self.modelContext = ModelContext(container)
             } catch {
-                fatalError("Failed to create ModelContext: \(error)")
+                // Last resort fallback: use shared container with minimal schema
+                let container = ModelContainer(for: CreativePrompt.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                self.modelContext = ModelContext(container)
+                print("[DreamInspirationService] Using in-memory ModelContext: \(error)")
             }
         }
         loadPromptTemplates()
@@ -242,7 +245,15 @@ final class DreamInspirationService {
     func generatePrompt(from dream: Dream, type: InspirationType? = nil) -> CreativePrompt {
         let selectedType = type ?? InspirationType.allCases.randomElement() ?? .writing
         let templates = promptTemplates.filter { $0.category == selectedType.rawValue }
-        let template = templates.randomElement() ?? promptTemplates.first!
+        let template = templates.randomElement() ?? promptTemplates.first ?? PromptTemplate(
+            category: "写作",
+            title: "自由创作",
+            template: "记录你的梦境和感受。",
+            variables: [],
+            difficulty: 1,
+            estimatedTime: 15,
+            tags: ["写作", "自由"]
+        )
         
         var title = template.title
         var description = template.template
@@ -302,8 +313,8 @@ final class DreamInspirationService {
         let recentDreams = fetchRecentDreams(limit: 5)
         let relatedDreamIds = recentDreams.map { $0.id }
         
-        let quote = quotes.randomElement()!
-        let theme = themes.randomElement()!
+        let quote = quotes.randomElement() ?? "在梦境深处，遇见最真实的自己。"
+        let theme = themes.randomElement() ?? "自我探索"
         
         // 基于最近的梦生成提示
         let prompt: String
@@ -449,8 +460,9 @@ final class DreamInspirationService {
     /// 获取今日灵感
     func fetchTodayInspiration() -> DailyInspiration? {
         let today = Calendar.current.startOfDay(for: Date())
+        let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? Date()
         let descriptor = FetchDescriptor<DailyInspiration>(
-            predicate: #Predicate { $0.date >= today && $0.date < Calendar.current.date(byAdding: .day, value: 1, to: today)! },
+            predicate: #Predicate { $0.date >= today && $0.date < tomorrow },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
         return (try? modelContext.fetch(descriptor))?.first
@@ -572,10 +584,9 @@ final class DreamInspirationService {
         guard let latest = dates.first else { return 0 }
         
         var streak = 1
-        var currentDate = latest
         
         for i in 1..<dates.count {
-            let expectedDate = Calendar.current.date(byAdding: .day, value: -streak, to: latest)!
+            guard let expectedDate = Calendar.current.date(byAdding: .day, value: -streak, to: latest) else { break }
             if Calendar.current.isDate(expectedDate, inSameDayAs: dates[i]) {
                 streak += 1
             } else if dates[i] < expectedDate {

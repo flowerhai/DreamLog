@@ -585,7 +585,8 @@ struct DreamARShareSession: Codable, Identifiable {
     /// 生成随机分享码
     static func generateShareCode() -> String {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return String((0..<6).map { _ in chars.randomElement()! })
+        let charArray = Array(chars)
+        return String((0..<6).map { _ in charArray.randomElement() ?? "A" })
     }
     
     /// 是否已过期
