@@ -31,8 +31,12 @@ class DreamTimeCapsuleService: ObservableObject {
             // Fallback: create an in-memory context for testing
             let schema = Schema([DreamTimeCapsule.self])
             let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-            let container = try! ModelContainer(for: schema, configurations: [modelConfiguration])
-            self.modelContext = ModelContext(container)
+            do {
+                let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+                self.modelContext = ModelContext(container)
+            } catch {
+                fatalError("Failed to create in-memory model container: \(error)")
+            }
         }
         self.notificationService = notificationService ?? NotificationService.shared
         Task { await loadCapsules() }

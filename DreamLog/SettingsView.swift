@@ -472,8 +472,9 @@ struct SettingsView: View {
     // MARK: - 清除缓存
     private func clearCache() {
         // 清除图像缓存
-        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
-        try? FileManager.default.removeItem(at: cacheDir!)
+        if let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first {
+            try? FileManager.default.removeItem(at: cacheDir)
+        }
         
         // 清除临时文件
         let tempDir = FileManager.default.temporaryDirectory
