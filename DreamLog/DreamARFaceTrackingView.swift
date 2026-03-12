@@ -13,7 +13,7 @@ import Photos
 // MARK: - 面部追踪主界面
 
 struct DreamARFaceTrackingView: View {
-    @StateObject private var faceTrackingService = DreamARFaceTrackingService.shared
+    @ObservedObject private var faceTrackingService = DreamARFaceTrackingService.shared
     @State private var showingConfigSheet = false
     @State private var showingAvatarPicker = false
     @State private var showingAchievements = false
@@ -411,7 +411,7 @@ struct ARViewContainerRepresentable: UIViewRepresentable {
 
 struct FaceTrackingConfigView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = DreamARFaceTrackingService.shared
+    @ObservedObject private var service = DreamARFaceTrackingService.shared
     @State private var config: FaceTrackingConfig = .default
     
     var body: some View {
@@ -475,7 +475,7 @@ struct FaceTrackingConfigView: View {
 
 struct AvatarPickerView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = DreamARFaceTrackingService.shared
+    @ObservedObject private var service = DreamARFaceTrackingService.shared
     @State private var selectedCategory: AvatarModel.AvatarCategory = .basic
     
     var filteredAvatars: [AvatarModel] {

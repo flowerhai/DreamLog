@@ -74,7 +74,7 @@ struct RecordingHabitAnalysis {
     static func analyze(from dreamStore: DreamStore) -> RecordingHabitAnalysis {
         var analysis = RecordingHabitAnalysis()
         
-        let dreams = dreamStore.allDreams
+        let dreams = dreamStore.dreams
         analysis.totalDreams = dreams.count
         
         if dreams.isEmpty {

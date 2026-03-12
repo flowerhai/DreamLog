@@ -64,7 +64,7 @@ class DreamWeeklyReportService: ObservableObject {
         }
         
         // 获取本周梦境
-        let dreams = dreamStore.allDreams.filter { dream in
+        let dreams = dreamStore.dreams.filter { dream in
             calendar.isDate(dream.date, inHalfOpenRange: startDate..<endDate)
         }
         
@@ -93,7 +93,7 @@ class DreamWeeklyReportService: ObservableObject {
         isGenerating = true
         defer { isGenerating = false }
         
-        let dreams = dreamStore.allDreams.filter { dream in
+        let dreams = dreamStore.dreams.filter { dream in
             dream.date >= startDate && dream.date < endDate
         }
         
@@ -460,7 +460,7 @@ class DreamWeeklyReportService: ObservableObject {
             return nil
         }
         
-        let lastWeekDreams = dreamStore.allDreams.filter { dream in
+        let lastWeekDreams = dreamStore.dreams.filter { dream in
             dream.date >= weekStart && dream.date < endDate
         }
         
@@ -504,7 +504,7 @@ class DreamWeeklyReportService: ObservableObject {
         var currentDate = calendar.startOfDay(for: date)
         
         while streak < 365 { // 最多计算一年的连续记录
-            let dreamsOnDay = dreamStore.allDreams.filter { dream in
+            let dreamsOnDay = dreamStore.dreams.filter { dream in
                 calendar.isDate(dream.date, inSameDayAs: currentDate)
             }
             

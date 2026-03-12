@@ -12,7 +12,7 @@ import SwiftData
 
 struct DailyInspirationView: View {
     @Environment(\.modelContext) private var modelContext
-    @StateObject private var service = DreamInspirationService.shared
+    @ObservedObject private var service = DreamInspirationService.shared
     
     @Query(sort: \DailyInspiration.date, order: .reverse)
     private var inspirations: [DailyInspiration]
@@ -227,7 +227,7 @@ struct GenerateTodayCard: View {
 // MARK: - 活跃挑战
 
 struct ActiveChallengesSection: View {
-    @StateObject private var service = DreamInspirationService.shared
+    @ObservedObject private var service = DreamInspirationService.shared
     @State private var challenges: [CreativeChallenge] = []
     
     var body: some View {
