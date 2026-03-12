@@ -2,454 +2,736 @@
 //  DreamBackupView.swift
 //  DreamLog
 //
-//  梦境备份与恢复界面 - Phase 16
+//  Phase 29 - Dream Backup & Restore System
+//  User interface for backup and restore operations
 //
 
 import SwiftUI
-
-// MARK: - 备份主视图
+import SwiftData
 
 struct DreamBackupView: View {
-    @ObservedObject private var backupService = DreamBackupService.shared
-    @ObservedObject private var dreamStore = DreamStore.shared
-    
-    @State private var showingBackupConfig = false
-    @State private var showingRestorePicker = false
-    @State private var selectedBackup: BackupMetadata?
-    @State private var showingDeleteConfirm = false
-    @State private var backupResult: BackupResult?
-    @State private var restoreResult: RestoreResult?
-    @State private var showingResultSheet = false
-    
+    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @StateObject private var backupService = BackupServiceViewModel()
+    
+    @Query(sort: \BackupHistory.backupDate, order: .reverse)
+    private var backupHistory: [BackupHistory]
+    
+    @State private var selectedTab = 0
+    @State private var showingPasswordSheet = false
+    @State private var backupPassword = ""
+    @State private var restoreFileURL: URL?
+    @State private var showingRestoreConfirmation = false
     
     var body: some View {
-        NavigationView {
-            List {
-                // 备份状态概览
-                backupStatusSection
+        NavigationStack {
+            TabView(selection: $selectedTab) {
+                // Backup Tab
+                BackupTabView(
+                    backupService: backupService,
+                    showingPasswordSheet: $showingPasswordSheet,
+                    backupPassword: $backupPassword
+                )
+                .tabItem {
+                    Label("创建备份", systemImage: "square.and.arrow.up")
+                }
+                .tag(0)
                 
-                // 备份操作
-                backupActionsSection
+                // Restore Tab
+                RestoreTabView(
+                    backupService: backupService,
+                    restoreFileURL: $restoreFileURL,
+                    showingPasswordSheet: $showingPasswordSheet,
+                    backupPassword: $backupPassword,
+                    showingRestoreConfirmation: $showingRestoreConfirmation
+                )
+                .tabItem {
+                    Label("恢复备份", systemImage: "square.and.arrow.down")
+                }
+                .tag(1)
                 
-                // 备份历史
-                backupHistorySection
+                // History Tab
+                HistoryTabView(
+                    backupHistory: backupHistory,
+                    backupService: backupService
+                )
+                .tabItem {
+                    Label("备份历史", systemImage: "clock")
+                }
+                .tag(2)
                 
-                // 设置
-                settingsSection
+                // Settings Tab
+                SettingsTabView(
+                    backupService: backupService,
+                    modelContext: modelContext
+                )
+                .tabItem {
+                    Label("自动备份", systemImage: "gear")
+                }
+                .tag(3)
             }
             .navigationTitle("备份与恢复")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("设置") {
-                        showingBackupConfig = true
-                    }
-                    .sheet(isPresented: $showingBackupConfig) {
-                        BackupConfigSheet(config: backupService.getConfig()) { config in
-                            backupService.saveConfig(config)
-                        }
+                    Button("完成") {
+                        dismiss()
                     }
                 }
             }
-            .overlay {
-                if backupService.isBackingUp || backupService.isRestoring {
-                    progressOverlay
-                }
+            .sheet(isPresented: $showingPasswordSheet) {
+                PasswordSheet(
+                    password: $backupPassword,
+                    showingPasswordSheet: $showingPasswordSheet,
+                    action: .backup
+                )
             }
-        }
-    }
-    
-    // MARK: - 备份状态概览
-    
-    private var backupStatusSection: some View {
-        Section("备份状态") {
-            HStack {
-                Image(systemName: lastBackupIcon)
-                    .foregroundColor(lastBackupColor)
-                
-                VStack(alignment: .leading) {
-                    Text("上次备份")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(lastBackupText)
-                        .font(.body)
-                }
-                
-                Spacer()
-            }
-            
-            HStack {
-                Image(systemName: "externaldrive.fill")
-                    .foregroundColor(.blue)
-                
-                VStack(alignment: .leading) {
-                    Text("备份数量")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text("\(backupService.backupHistory.backups.count) 个")
-                        .font(.body)
-                }
-                
-                Spacer()
-            }
-            
-            HStack {
-                Image(systemName: "cylinder.split.1x2.fill")
-                    .foregroundColor(.green)
-                
-                VStack(alignment: .leading) {
-                    Text("总大小")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    Text(backupService.backupHistory.formattedTotalSize)
-                        .font(.body)
-                }
-                
-                Spacer()
-            }
-        }
-    }
-    
-    private var lastBackupIcon: String {
-        if backupService.lastBackupDate == nil {
-            return "exclamationmark.triangle.fill"
-        }
-        return "checkmark.circle.fill"
-    }
-    
-    private var lastBackupColor: Color {
-        if backupService.lastBackupDate == nil {
-            return .orange
-        }
-        return .green
-    }
-    
-    private var lastBackupText: String {
-        guard let date = backupService.lastBackupDate else {
-            return "尚未备份"
-        }
-        
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .abbreviated
-        return formatter.localizedString(for: date, relativeTo: Date())
-    }
-    
-    // MARK: - 备份操作
-    
-    private var backupActionsSection: some View {
-        Section("操作") {
-            Button(action: performBackup) {
-                HStack {
-                    Image(systemName: "arrow.up.doc.fill")
-                        .foregroundColor(.green)
-                    Text("立即备份")
-                    Spacer()
-                    if backupService.isBackingUp {
-                        ProgressView()
-                            .progressViewStyle(.circular)
-                            .scaleEffect(0.8)
-                    }
-                }
-            }
-            .disabled(backupService.isBackingUp || backupService.isRestoring)
-            
-            Button(action: { showingRestorePicker = true }) {
-                HStack {
-                    Image(systemName: "arrow.down.doc.fill")
-                        .foregroundColor(.blue)
-                    Text("恢复备份")
-                    Spacer()
-                }
-            }
-            .disabled(backupService.isBackingUp || backupService.isRestoring)
-            .fileImporter(
-                isPresented: $showingRestorePicker,
-                allowedContentTypes: [.item],
-                allowsMultipleSelection: false
-            ) { result in
-                switch result {
-                case .success(let urls):
-                    if let url = urls.first {
+            .confirmationDialog("确认恢复", isPresented: $showingRestoreConfirmation) {
+                Button("恢复", role: .destructive) {
+                    if let url = restoreFileURL {
                         Task {
-                            await performRestore(from: url)
+                            await backupService.restoreBackup(from: url, password: backupPassword.isEmpty ? nil : backupPassword)
                         }
                     }
-                case .failure(let error):
-                    print("文件选择失败：\(error)")
+                }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("恢复操作将导入备份中的梦境数据。是否继续？")
+            }
+            .onChange(of: backupService.restoreTrigger) { oldValue, newValue in
+                if newValue > oldValue {
+                    showingRestoreConfirmation = true
                 }
             }
         }
-    }
-    
-    // MARK: - 备份历史
-    
-    private var backupHistorySection: some View {
-        Section("备份历史") {
-            if backupService.backupHistory.backups.isEmpty {
-                Text("暂无备份记录")
-                    .foregroundColor(.secondary)
-                    .font(.caption)
-                    .padding(.vertical, 8)
-            } else {
-                ForEach(backupService.backupHistory.backups, id: \.id) { backup in
-                    BackupHistoryRow(
-                        metadata: backup,
-                        isValid: backupService.verifyBackup(backup),
-                        onDelete: {
-                            selectedBackup = backup
-                            showingDeleteConfirm = true
-                        },
-                        onRestore: {
-                            Task {
-                                await restoreFromMetadata(backup)
-                            }
-                        }
-                    )
-                }
-                .onDelete { indexSet in
-                    for index in indexSet {
-                        let backup = backupService.backupHistory.backups[index]
-                        try? backupService.deleteBackup(backup)
-                    }
-                }
-            }
-        }
-    }
-    
-    // MARK: - 设置
-    
-    private var settingsSection: some View {
-        Section("设置") {
-            NavigationLink {
-                BackupConfigSheet(config: backupService.getConfig()) { config in
-                    backupService.saveConfig(config)
-                }
-            } label: {
-                Label("备份配置", systemImage: "gearshape")
-            }
-            
-            Toggle("自动备份", isOn: .init(
-                get: { backupService.getConfig().autoBackup },
-                set: { enabled in
-                    var config = backupService.getConfig()
-                    config.autoBackup = enabled
-                    backupService.saveConfig(config)
-                }
-            ))
-        }
-    }
-    
-    // MARK: - 进度覆盖层
-    
-    private var progressOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.4)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 16) {
-                ProgressView(value: progressValue)
-                    .progressViewStyle(.linear)
-                    .frame(width: 200)
-                
-                Text(progressText)
-                    .font(.caption)
-                    .foregroundColor(.white)
-            }
-            .padding(24)
-            .background(Color(.systemBackground))
-            .cornerRadius(16)
-        }
-    }
-    
-    private var progressValue: Double {
-        if backupService.isBackingUp, let progress = backupService.backupProgress {
-            return progress.progress
-        }
-        if backupService.isRestoring, let progress = backupService.restoreProgress {
-            return progress.progress
-        }
-        return 0
-    }
-    
-    private var progressText: String {
-        if backupService.isBackingUp, let progress = backupService.backupProgress {
-            return "\(progress.currentStep) (\(progress.currentStepIndex)/\(progress.totalSteps))"
-        }
-        if backupService.isRestoring, let progress = backupService.restoreProgress {
-            return "\(progress.currentStep) (\(progress.currentStepIndex)/\(progress.totalSteps))"
-        }
-        return ""
-    }
-    
-    // MARK: - Actions
-    
-    private func performBackup() {
-        Task {
-            let config = backupService.getConfig()
-            let result = await backupService.createBackup(config: config)
-            backupResult = result
-            showingResultSheet = true
-        }
-    }
-    
-    private func performRestore(from url: URL) async {
-        let config = RestoreConfig(
-            conflictResolution: .keepNewer,
-            restoreDreams: true,
-            restoreTags: true,
-            restoreSettings: false,
-            restoreStatistics: false,
-            dryRun: false
-        )
-        
-        let result = await backupService.restoreBackup(from: url, config: config)
-        restoreResult = result
-        showingResultSheet = true
-    }
-    
-    private func restoreFromMetadata(_ metadata: BackupMetadata) async {
-        let fileURL = URL(fileURLWithPath: "/path/to/backup/\(metadata.id).dreambackup")
-        await performRestore(from: fileURL)
     }
 }
 
-// MARK: - 备份历史行
+// MARK: - Backup Tab
+
+struct BackupTabView: View {
+    @ObservedObject var backupService: BackupServiceViewModel
+    @Binding var showingPasswordSheet: Bool
+    @Binding var backupPassword: String
+    
+    @State private var includeAllDreams = true
+    @State private var includeAudio = true
+    @State private var includeImages = true
+    @State private var encryptBackup = false
+    @State private var dateRangeStart = Date().addingTimeInterval(-7 * 24 * 3600)
+    @State private var dateRangeEnd = Date()
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Backup Options Section
+                BackupOptionsSection(
+                    includeAllDreams: $includeAllDreams,
+                    dateRangeStart: $dateRangeStart,
+                    dateRangeEnd: $dateRangeEnd,
+                    includeAudio: $includeAudio,
+                    includeImages: $includeImages,
+                    encryptBackup: $encryptBackup
+                )
+                
+                // Progress Section
+                if backupService.isBackingUp {
+                    BackupProgressSection(progress: backupService.progress)
+                }
+                
+                // Result Section
+                if let result = backupService.lastBackupResult {
+                    BackupResultSection(result: result)
+                }
+                
+                // Create Backup Button
+                Button(action: createBackup) {
+                    HStack {
+                        Image(systemName: backupService.isBackingUp ? "hourglass" : "square.and.arrow.up")
+                            .font(.title2)
+                        Text(backupService.isBackingUp ? "备份中..." : "创建备份")
+                            .font(.headline)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(
+                        LinearGradient(
+                            colors: [Color.purple, Color.blue],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .disabled(backupService.isBackingUp)
+                
+                Spacer()
+            }
+            .padding()
+        }
+        .navigationTitle("创建备份")
+    }
+    
+    private func createBackup() {
+        let options = BackupOptions(
+            includeAllDreams: includeAllDreams,
+            dateRange: includeAllDreams ? nil : (start: dateRangeStart, end: dateRangeEnd),
+            includeAudio: includeAudio,
+            includeImages: includeImages,
+            includeMetadata: true,
+            encryptBackup: encryptBackup,
+            backupPassword: encryptBackup ? backupPassword : nil
+        )
+        
+        if encryptBackup && backupPassword.isEmpty {
+            showingPasswordSheet = true
+            return
+        }
+        
+        Task {
+            await backupService.createBackup(options: options)
+        }
+    }
+}
+
+struct BackupOptionsSection: View {
+    @Binding var includeAllDreams: Bool
+    @Binding var dateRangeStart: Date
+    @Binding var dateRangeEnd: Date
+    @Binding var includeAudio: Bool
+    @Binding var includeImages: Bool
+    @Binding var encryptBackup: Bool
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("备份选项")
+                .font(.headline)
+            
+            // Date Range
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("备份所有梦境", isOn: $includeAllDreams)
+                
+                if !includeAllDreams {
+                    VStack(spacing: 12) {
+                        DatePicker("开始日期", selection: $dateRangeStart, displayedComponents: .date)
+                        DatePicker("结束日期", selection: $dateRangeEnd, displayedComponents: .date)
+                    }
+                    .padding(.leading)
+                }
+            }
+            
+            Divider()
+            
+            // Content Options
+            Toggle("包含音频录音", isOn: $includeAudio)
+            Toggle("包含梦境图片", isOn: $includeImages)
+            
+            Divider()
+            
+            // Security
+            VStack(alignment: .leading, spacing: 8) {
+                Toggle("加密备份文件", isOn: $encryptBackup)
+                
+                if encryptBackup {
+                    Text("🔒 备份将使用 AES-256 加密保护")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct BackupProgressSection: View {
+    let progress: BackupProgress
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Text(progress.message)
+                    .font(.subheadline)
+                Spacer()
+                Text("\(progress.currentDreamIndex)/\(progress.totalDreamCount)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            ProgressView(value: Double(progress.currentDreamIndex), total: Double(progress.totalDreamCount))
+                .progressViewStyle(LinearProgressViewStyle())
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+struct BackupResultSection: View {
+    let result: BackupResult
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(result.success ? .green : .red)
+                
+                Text(result.success ? "备份成功！" : "备份失败")
+                    .font(.headline)
+                
+                Spacer()
+            }
+            
+            if result.success {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("梦境数量：")
+                            .foregroundColor(.secondary)
+                        Text("\(result.dreamCount)")
+                            .fontWeight(.medium)
+                    }
+                    
+                    HStack {
+                        Text("文件大小：")
+                            .foregroundColor(.secondary)
+                        Text(result.backupSize)
+                            .fontWeight(.medium)
+                    }
+                    
+                    HStack {
+                        Text("备份时间：")
+                            .foregroundColor(.secondary)
+                        Text(result.completedAt, style: .date)
+                            .fontWeight(.medium)
+                    }
+                }
+                .font(.subheadline)
+            } else if let error = result.errorMessage {
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Restore Tab
+
+struct RestoreTabView: View {
+    @ObservedObject var backupService: BackupServiceViewModel
+    @Binding var restoreFileURL: URL?
+    @Binding var showingPasswordSheet: Bool
+    @Binding var backupPassword: String
+    @Binding var showingRestoreConfirmation: Bool
+    
+    @State private var showingFilePicker = false
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Instructions
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("如何恢复备份")
+                        .font(.headline)
+                    
+                    Text("1. 选择之前创建的 .dreamlog 备份文件")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text("2. 如果备份已加密，输入密码")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text("3. 确认后开始恢复")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+                
+                // Selected File
+                if let url = restoreFileURL {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("已选文件")
+                            .font(.headline)
+                        
+                        HStack {
+                            Image(systemName: "doc.fill")
+                                .foregroundColor(.purple)
+                            Text(url.lastPathComponent)
+                                .lineLimit(1)
+                                .truncationMode(.middle)
+                            Spacer()
+                            Button("清除") {
+                                restoreFileURL = nil
+                            }
+                            .foregroundColor(.red)
+                        }
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                }
+                
+                // Progress
+                if backupService.isRestoring {
+                    BackupProgressSection(progress: backupService.progress)
+                }
+                
+                // Result
+                if let result = backupService.lastRestoreResult {
+                    RestoreResultSection(result: result)
+                }
+                
+                // Buttons
+                VStack(spacing: 12) {
+                    Button(action: { showingFilePicker = true }) {
+                        HStack {
+                            Image(systemName: "folder")
+                                .font(.title2)
+                            Text("选择备份文件")
+                                .font(.headline)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
+                    
+                    if restoreFileURL != nil {
+                        Button(action: {
+                            backupService.triggerRestore()
+                        }) {
+                            HStack {
+                                Image(systemName: "arrow.down.doc")
+                                    .font(.title2)
+                                Text("开始恢复")
+                                    .font(.headline)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(
+                                LinearGradient(
+                                    colors: [Color.green, Color.blue],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                        }
+                    }
+                }
+                
+                Spacer()
+            }
+            .padding()
+        }
+        .navigationTitle("恢复备份")
+        .fileImporter(
+            isPresented: $showingFilePicker,
+            allowedContentTypes: [.data],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                if let url = urls.first {
+                    restoreFileURL = url
+                    // Start accessing security-scoped resource
+                    let accessing = url.startAccessingSecurityScopedResource()
+                    defer {
+                        if accessing {
+                            url.stopAccessingSecurityScopedResource()
+                        }
+                    }
+                }
+            case .failure(let error):
+                print("File selection failed: \(error)")
+            }
+        }
+    }
+}
+
+struct RestoreResultSection: View {
+    let result: RestoreResult
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .font(.title2)
+                    .foregroundColor(result.success ? .green : .red)
+                
+                Text(result.success ? "恢复成功！" : "恢复失败")
+                    .font(.headline)
+                
+                Spacer()
+            }
+            
+            if result.success {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text("恢复梦境：")
+                            .foregroundColor(.secondary)
+                        Text("\(result.dreamsRestored)")
+                            .fontWeight(.medium)
+                    }
+                    
+                    if result.skippedDuplicates > 0 {
+                        HStack {
+                            Text("跳过重复：")
+                                .foregroundColor(.secondary)
+                            Text("\(result.skippedDuplicates)")
+                                .fontWeight(.medium)
+                        }
+                    }
+                    
+                    HStack {
+                        Text("恢复时间：")
+                            .foregroundColor(.secondary)
+                        Text(result.completedAt, style: .date)
+                            .fontWeight(.medium)
+                    }
+                }
+                .font(.subheadline)
+            } else if let error = result.errorMessage {
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundColor(.red)
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - History Tab
+
+struct HistoryTabView: View {
+    let backupHistory: [BackupHistory]
+    @ObservedObject var backupService: BackupServiceViewModel
+    
+    @State private var showingDeleteConfirmation = false
+    @State private var backupToDelete: BackupHistory?
+    
+    var body: some View {
+        Group {
+            if backupHistory.isEmpty {
+                ContentUnavailableView(
+                    "暂无备份历史",
+                    systemImage: "clock",
+                    description: Text("创建的备份将显示在这里")
+                )
+            } else {
+                List {
+                    ForEach(backupHistory, id: \.id) { history in
+                        BackupHistoryRow(history: history)
+                            .swipeActions(edge: .trailing) {
+                                Button("删除", role: .destructive) {
+                                    backupToDelete = history
+                                    showingDeleteConfirmation = true
+                                }
+                            }
+                    }
+                }
+                .listStyle(.insetGrouped)
+            }
+        }
+        .navigationTitle("备份历史")
+        .confirmationDialog("删除备份", isPresented: $showingDeleteConfirmation) {
+            Button("删除", role: .destructive) {
+                if let history = backupToDelete, let url = URL(string: history.filePath) {
+                    try? backupService.deleteBackup(at: url)
+                }
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("确定要删除这个备份文件吗？此操作不可撤销。")
+        }
+    }
+}
 
 struct BackupHistoryRow: View {
-    let metadata: BackupMetadata
-    let isValid: Bool
-    let onDelete: () -> Void
-    let onRestore: () -> Void
+    let history: BackupHistory
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Image(systemName: isValid ? "doc.fill.badge.checkmark" : "doc.fill.badge.exclamationmark")
-                    .foregroundColor(isValid ? .green : .orange)
+                Image(systemName: history.isEncrypted ? "lock.fill" : "doc.fill")
+                    .foregroundColor(history.isEncrypted ? .orange : .purple)
                 
-                VStack(alignment: .leading) {
-                    Text(metadata.backupType.rawValue)
-                        .font(.headline)
-                    Text(metadata.formattedDate)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                Text(history.backupDate, style: .date)
+                    .font(.headline)
                 
                 Spacer()
                 
-                Text(metadata.formattedSize)
-                    .font(.caption)
+                BadgeView(text: history.backupType.rawValue)
+            }
+            
+            HStack {
+                Text("\(history.dreamCount) 条梦境")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                
+                Text("•")
+                    .foregroundColor(.secondary)
+                
+                Text(ByteCountFormatter.string(fromByteCount: history.fileSize, countStyle: .file))
+                    .font(.subheadline)
                     .foregroundColor(.secondary)
             }
             
-            if let notes = metadata.notes {
+            if let notes = history.notes {
                 Text(notes)
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
-            }
-            
-            HStack {
-                Button(action: onRestore) {
-                    Label("恢复", systemImage: "arrow.down.doc")
-                }
-                .buttonStyle(.bordered)
-                
-                Spacer()
-                
-                Button(action: onDelete) {
-                    Image(systemName: "trash")
-                        .foregroundColor(.red)
-                }
             }
         }
         .padding(.vertical, 4)
     }
 }
 
-// MARK: - 备份配置 Sheet
+struct BadgeView: View {
+    let text: String
+    
+    var body: some View {
+        Text(text)
+            .font(.caption)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 2)
+            .background(Color.blue.opacity(0.2))
+            .foregroundColor(.blue)
+            .cornerRadius(4)
+    }
+}
 
-struct BackupConfigSheet: View {
-    @Environment(\.dismiss) private var dismiss
+// MARK: - Settings Tab
+
+struct SettingsTabView: View {
+    @ObservedObject var backupService: BackupServiceViewModel
+    let modelContext: ModelContext
     
-    @State private var config: BackupConfig
-    let onSave: (BackupConfig) -> Void
+    @Query private var backupSchedules: [BackupSchedule]
     
-    init(config: BackupConfig, onSave: @escaping (BackupConfig) -> Void) {
-        _config = State(initialValue: config)
-        self.onSave = onSave
+    @State private var isEnabled = false
+    @State private var frequency: BackupSchedule.BackupFrequency = .weekly
+    @State private var backupTime = Date()
+    @State private var keepLastNBackups = 5
+    
+    var body: some View {
+        Form {
+            Section("自动备份设置") {
+                Toggle("启用自动备份", isOn: $isEnabled)
+                
+                if isEnabled {
+                    Picker("备份频率", selection: $frequency) {
+                        ForEach(BackupSchedule.BackupFrequency.allCases, id: \.self) { freq in
+                            Text(freq.displayName).tag(freq)
+                        }
+                    }
+                    
+                    DatePicker("备份时间", selection: $backupTime, displayedComponents: .hourAndMinute)
+                    
+                    Stepper("保留最近 \(keepLastNBackups) 个备份", value: $keepLastNBackups, in: 1...20)
+                }
+            }
+            
+            Section("备份位置") {
+                HStack {
+                    Text("备份目录")
+                    Spacer()
+                    Text("Documents/DreamLogBackups")
+                        .foregroundColor(.secondary)
+                        .font(.caption)
+                }
+            }
+            
+            Section("备份提示") {
+                Text("• 自动备份会在指定时间自动创建")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("• 建议启用加密保护隐私")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                Text("• 定期将备份文件导出到安全位置")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            Section {
+                Button("保存设置") {
+                    saveSettings()
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .navigationTitle("自动备份")
+    }
+    
+    private func saveSettings() {
+        // Update or create backup schedule
+        if let schedule = backupSchedules.first {
+            schedule.isEnabled = isEnabled
+            schedule.frequency = frequency
+            schedule.time = backupTime
+            schedule.keepLastNBackups = keepLastNBackups
+        } else {
+            let schedule = BackupSchedule(
+                isEnabled: isEnabled,
+                frequency: frequency,
+                time: backupTime,
+                keepLastNBackups: keepLastNBackups
+            )
+            modelContext.insert(schedule)
+        }
+        
+        try? modelContext.save()
+    }
+}
+
+// MARK: - Password Sheet
+
+struct PasswordSheet: View {
+    @Binding var password: String
+    @Binding var showingPasswordSheet: Bool
+    let action: PasswordAction
+    
+    enum PasswordAction {
+        case backup
+        case restore
     }
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
-                Section("备份类型") {
-                    Picker("类型", selection: $config.backupType) {
-                        ForEach(BackupType.allCases) { type in
-                            HStack {
-                                Image(systemName: type.icon)
-                                Text(type.rawValue)
-                            }
-                            .tag(type)
-                        }
-                    }
-                    .pickerStyle(.menu)
+                Section("设置备份密码") {
+                    SecureField("密码", text: $password)
                     
-                    Text(config.backupType.description)
+                    Text("密码将用于加密备份文件。请妥善保管，丢失后无法恢复。")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                }
-                
-                Section("加密") {
-                    Picker("加密方式", selection: $config.encryption) {
-                        ForEach(BackupEncryption.allCases) { encryption in
-                            HStack {
-                                Image(systemName: encryption.icon)
-                                Text(encryption.rawValue)
-                            }
-                            .tag(encryption)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    
-                    Text(config.encryption.description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                
-                Section("包含内容") {
-                    Toggle("包含设置", isOn: $config.includeSettings)
-                    Toggle("包含统计", isOn: $config.includeStatistics)
-                    Toggle("包含 AI 历史", isOn: $config.includeAIHistory)
-                    Toggle("压缩数据", isOn: $config.compressData)
-                }
-                
-                Section("自动备份") {
-                    Toggle("启用自动备份", isOn: $config.autoBackup)
-                    
-                    if config.autoBackup {
-                        Picker("频率", selection: $config.autoBackupInterval) {
-                            ForEach(BackupConfig.AutoBackupInterval.allCases, id: \.self) { interval in
-                                Text(interval.rawValue).tag(interval)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                    }
-                }
-                
-                Section("预估大小") {
-                    Text(config.estimatedSize)
-                        .font(.headline)
                 }
             }
-            .navigationTitle("备份配置")
+            .navigationTitle("备份密码")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("取消") {
+                        showingPasswordSheet = false
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("保存") {
-                        onSave(config)
-                        dismiss()
+                    Button("完成") {
+                        showingPasswordSheet = false
                     }
                 }
             }
@@ -457,8 +739,65 @@ struct BackupConfigSheet: View {
     }
 }
 
-// MARK: - 预览
+// MARK: - View Model
+
+@MainActor
+class BackupServiceViewModel: ObservableObject {
+    @Published var isBackingUp = false
+    @Published var isRestoring = false
+    @Published var progress = BackupProgress(
+        currentStep: 0,
+        totalSteps: 0,
+        currentDreamIndex: 0,
+        totalDreamCount: 0,
+        status: .preparing,
+        message: ""
+    )
+    @Published var lastBackupResult: BackupResult?
+    @Published var lastRestoreResult: RestoreResult?
+    @Published var restoreTrigger = 0
+    
+    private let backupService: DreamBackupService
+    
+    init() {
+        self.backupService = DreamBackupService.shared
+        self.backupService.onProgressUpdate = { [weak self] progress in
+            DispatchQueue.main.async {
+                self?.progress = progress
+            }
+        }
+    }
+    
+    func createBackup(options: BackupOptions) async {
+        isBackingUp = true
+        lastBackupResult = nil
+        
+        let result = await backupService.createBackup(options: options)
+        
+        lastBackupResult = result
+        isBackingUp = false
+    }
+    
+    func restoreBackup(from url: URL, password: String?) async {
+        isRestoring = true
+        lastRestoreResult = nil
+        
+        let result = await backupService.restoreBackup(from: url, password: password)
+        
+        lastRestoreResult = result
+        isRestoring = false
+    }
+    
+    func triggerRestore() {
+        restoreTrigger += 1
+    }
+    
+    func deleteBackup(at url: URL) throws {
+        try backupService.deleteBackup(at: url)
+    }
+}
 
 #Preview {
     DreamBackupView()
+        .modelContainer(for: [Dream.self, BackupHistory.self, BackupSchedule.self])
 }

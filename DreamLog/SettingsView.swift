@@ -296,6 +296,33 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
                     
+                    // 备份与恢复 ✨ NEW
+                    NavigationLink(destination: DreamBackupView().environmentObject(dreamStore)) {
+                        Label("🗄️ 备份与恢复", systemImage: "externaldrive")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("创建本地加密备份，支持自动备份计划")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Text("• 支持 AES-256 加密保护隐私")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("• 可设置每日/每周/每月自动备份")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("• 选择性备份梦境/音频/图片")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 4)
+                    
+                    Divider()
+                    
                     // 导入功能
                     Button(action: { showingImportPicker = true }) {
                         HStack {

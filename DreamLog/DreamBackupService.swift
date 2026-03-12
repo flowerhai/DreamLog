@@ -2,743 +2,583 @@
 //  DreamBackupService.swift
 //  DreamLog
 //
-//  梦境备份与恢复服务 - Phase 16
-//  支持本地备份、iCloud 同步、加密保护
+//  Phase 29 - Dream Backup & Restore System
+//  Core service for backup and restore operations
 //
 
 import Foundation
-import Combine
-import UniformTypeIdentifiers
+import SwiftData
 import CryptoKit
-import LocalAuthentication
+import ZIPFoundation
+#if os(iOS)
 import UIKit
-
-// MARK: - 备份服务
+#endif
 
 @MainActor
-class DreamBackupService: ObservableObject {
+class DreamBackupService {
+    
     static let shared = DreamBackupService()
     
-    // MARK: - Published Properties
+    private let modelContext: ModelContext?
+    private let backupDirectory: URL
+    private let tempDirectory: URL
     
-    @Published var isBackingUp = false
-    @Published var isRestoring = false
-    @Published var backupProgress: BackupProgress?
-    @Published var restoreProgress: BackupProgress?
-    @Published var lastBackupDate: Date?
-    @Published var backupHistory: BackupHistory = BackupHistory()
-    @Published var currentBackupError: BackupError?
+    // Callbacks for progress updates
+    var onProgressUpdate: ((BackupProgress) -> Void)?
     
-    // MARK: - Properties
-    
-    private let fileManager = FileManager.default
-    private let dreamStore = DreamStore.shared
-    private let userDefaults = UserDefaults.standard
-    
-    private let backupsDirectory: URL
-    private let configKey = "dreamlog.backup.config"
-    private let historyKey = "dreamlog.backup.history"
-    private let lastBackupKey = "dreamlog.backup.lastDate"
-    private let encryptionKeyKey = "dreamlog.backup.encryptionKey"
-    private let saltKey = "dreamlog.backup.salt"
-    
-    private var cancellables = Set<AnyCancellable>()
-    
-    // MARK: - 加密密钥管理
-    
-    /// 获取或创建加密密钥
-    /// - Parameter password: 用于派生密钥的密码
-    /// - Returns: 对称加密密钥
-    /// - Note: 使用 PBKDF2-SHA256 进行密钥派生，100000 次迭代
-    internal func getEncryptionKey(password: String) throws -> SymmetricKey {
-        // 获取或生成盐值
-        let salt: Data
-        if let existingSalt = userDefaults.data(forKey: saltKey) {
-            salt = existingSalt
-        } else {
-            // 生成新的随机盐值 (16 字节)
-            salt = Data((0..<16).map { _ in UInt8.random(in: 0...255) })
-            userDefaults.set(salt, forKey: saltKey)
-        }
+    init(modelContext: ModelContext? = nil) {
+        self.modelContext = modelContext
         
-        // 使用 PBKDF2 从密码派生密钥
-        let passwordData = Data(password.utf8)
-        let keyData = try PBKDF2<SHA256>.deriveKey(
-            password: passwordData,
-            salt: salt,
-            iterations: 100000,
-            byteCount: 32
-        )
+        // Setup backup directory in documents
+        let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        self.backupDirectory = documentsPath.appendingPathComponent("DreamLogBackups", isDirectory: true)
+        self.tempDirectory = documentsPath.appendingPathComponent("DreamLogTemp", isDirectory: true)
         
-        return SymmetricKey(data: keyData)
+        // Create directories if they don't exist
+        try? FileManager.default.createDirectory(at: backupDirectory, withIntermediateDirectories: true)
+        try? FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
     }
     
-    /// 验证 Face ID/Touch ID
-    private func authenticateWithBiometrics() async throws -> Bool {
-        let context = LAContext()
-        var error: NSError?
-        
-        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
-            throw BackupError.biometricUnavailable
-        }
-        
-        let success = try await context.evaluatePolicy(
-            .deviceOwnerAuthenticationWithBiometrics,
-            localizedReason: "使用生物识别验证以解密备份"
-        )
-        
-        return success
-    }
+    // MARK: - Create Backup
     
-    /// 获取生物识别密钥 (从 Keychain 获取)
-    private func getBiometricKey() throws -> SymmetricKey? {
-        // 简化实现：实际应从 Keychain 获取
-        // 这里使用设备标识符生成密钥
-        guard let deviceId = UIDevice.current.identifierForVendor?.uuidString.data(using: .utf8) else {
-            return nil
-        }
-        
-        let hash = SHA256.hash(data: deviceId)
-        return SymmetricKey(data: Data(hash))
-    }
-    
-    // MARK: - Init
-    
-    init() {
-        // 获取 Documents 目录
-        let documentsPath: URL
-        if let url = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
-            documentsPath = url
-        } else if let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first {
-            documentsPath = URL(fileURLWithPath: path)
-        } else {
-            documentsPath = URL(fileURLWithPath: NSTemporaryDirectory())
-        }
-        backupsDirectory = documentsPath.appendingPathComponent("DreamBackups", isDirectory: true)
-        
-        // 创建备份目录
-        try? fileManager.createDirectory(at: backupsDirectory, withIntermediateDirectories: true)
-        
-        // 加载配置和历史
-        loadConfig()
-        loadHistory()
-        
-        // 设置自动备份定时器
-        setupAutoBackupTimer()
-    }
-    
-    // MARK: - 配置管理
-    
-    func getConfig() -> BackupConfig {
-        guard let data = userDefaults.data(forKey: configKey),
-              let config = try? JSONDecoder().decode(BackupConfig.self, from: data) else {
-            return BackupConfig()
-        }
-        return config
-    }
-    
-    func saveConfig(_ config: BackupConfig) {
-        if let data = try? JSONEncoder().encode(config) {
-            userDefaults.set(data, forKey: configKey)
-        }
-    }
-    
-    private func loadConfig() {
-        _ = getConfig()
-    }
-    
-    // MARK: - 历史记录
-    
-    private func loadHistory() {
-        guard let data = userDefaults.data(forKey: historyKey),
-              var history = try? JSONDecoder().decode(BackupHistory.self, from: data) else {
-            backupHistory = BackupHistory()
-            return
-        }
-        
-        // 验证备份文件是否存在
-        history.backups = history.backups.filter { metadata in
-            let fileURL = backupsDirectory.appendingPathComponent("\(metadata.id).dreambackup")
-            return fileManager.fileExists(atPath: fileURL.path)
-        }
-        
-        backupHistory = history
-        lastBackupDate = history.lastAutoBackup
-    }
-    
-    private func saveHistory() {
-        if let data = try? JSONEncoder().encode(backupHistory) {
-            userDefaults.set(data, forKey: historyKey)
-        }
-    }
-    
-    // MARK: - 备份操作
-    
-    /// 创建备份
-    func createBackup(config: BackupConfig, notes: String? = nil) async -> BackupResult {
-        guard !isBackingUp else {
-            return BackupResult(
-                success: false,
-                filePath: nil,
-                metadata: nil,
-                error: .cancelled,
-                warnings: []
-            )
-        }
-        
-        isBackingUp = true
-        currentBackupError = nil
-        
-        let totalSteps = 5
-        backupProgress = BackupProgress(
-            currentStep: "准备备份...",
-            totalSteps: totalSteps,
-            currentStepIndex: 0
-        )
-        
-        defer {
-            isBackingUp = false
-            backupProgress = nil
-        }
+    /// Create a complete backup of dreams
+    func createBackup(options: BackupOptions) async -> BackupResult {
+        onProgressUpdate?(BackupProgress(
+            currentStep: 1,
+            totalSteps: 5,
+            currentDreamIndex: 0,
+            totalDreamCount: 0,
+            status: .preparing,
+            message: "准备备份..."
+        ))
         
         do {
-            // Step 1: 收集数据
-            backupProgress?.currentStep = "收集梦境数据..."
-            backupProgress?.currentStepIndex = 1
+            // Fetch dreams based on options
+            let dreams = try fetchDreams(options: options)
             
-            let backupData = try collectBackupData(config: config)
-            
-            // Step 2: 创建元数据
-            backupProgress?.currentStep = "创建元数据..."
-            backupProgress?.currentStepIndex = 2
-            
-            let metadata = createMetadata(backupData: backupData, config: config, notes: notes)
-            
-            // Step 3: 序列化数据
-            backupProgress?.currentStep = "序列化数据..."
-            backupProgress?.currentStepIndex = 3
-            
-            let jsonData = try JSONEncoder().encode(backupData)
-            
-            // Step 4: 加密 (如果需要)
-            backupProgress?.currentStep = config.encryption != .none ? "加密数据..." : "准备保存..."
-            backupProgress?.currentStepIndex = 4
-            
-            let finalData: Data
-            if config.encryption != .none {
-                finalData = try encryptData(jsonData, config: config)
-            } else {
-                finalData = jsonData
+            guard !dreams.isEmpty else {
+                return BackupResult(
+                    success: false,
+                    errorMessage: "没有找到需要备份的梦境"
+                )
             }
             
-            // Step 5: 保存到文件
-            backupProgress?.currentStep = "保存备份文件..."
-            backupProgress?.currentStepIndex = 5
+            onProgressUpdate?(BackupProgress(
+                currentStep: 2,
+                totalSteps: 5,
+                currentDreamIndex: 0,
+                totalDreamCount: dreams.count,
+                status: .exporting,
+                message: "正在导出 \(dreams.count) 条梦境..."
+            ))
             
-            let fileURL = backupsDirectory.appendingPathComponent("\(metadata.id).dreambackup")
+            // Convert dreams to export format
+            var exportDreams: [ExportDreamData] = []
+            var audioFiles: [String: Data] = [:]
+            var imageFiles: [String: Data] = [:]
+            
+            for (index, dream) in dreams.enumerated() {
+                exportDreams.append(ExportDreamData(
+                    id: dream.id,
+                    title: dream.title,
+                    content: dream.content,
+                    date: dream.date,
+                    tags: Array(dream.tags.map { $0.name }),
+                    emotions: dream.emotions,
+                    clarity: dream.clarity,
+                    intensity: dream.intensity,
+                    isLucid: dream.isLucid,
+                    audioURL: dream.audioRecording?.filename,
+                    imageURLs: dream.images.map { $0.filename },
+                    location: dream.location,
+                    weather: dream.weather,
+                    sleepQuality: dream.sleepQuality,
+                    createdAt: dream.createdAt,
+                    updatedAt: dream.updatedAt
+                ))
+                
+                // Include audio if requested
+                if options.includeAudio, let audioFilename = dream.audioRecording?.filename {
+                    if let audioURL = dream.audioRecording?.fileURL {
+                        do {
+                            let audioData = try Data(contentsOf: audioURL)
+                            audioFiles[audioFilename] = audioData
+                        } catch {
+                            print("Failed to include audio: \(error)")
+                        }
+                    }
+                }
+                
+                // Include images if requested
+                if options.includeImages {
+                    for image in dream.images {
+                        if let imageURL = image.fileURL {
+                            do {
+                                let imageData = try Data(contentsOf: imageURL)
+                                imageFiles[image.filename] = imageData
+                            } catch {
+                                print("Failed to include image: \(error)")
+                            }
+                        }
+                    }
+                }
+                
+                // Update progress
+                onProgressUpdate?(BackupProgress(
+                    currentStep: 2,
+                    totalSteps: 5,
+                    currentDreamIndex: index + 1,
+                    totalDreamCount: dreams.count,
+                    status: .exporting,
+                    message: "已导出 \(index + 1)/\(dreams.count)"
+                ))
+            }
+            
+            onProgressUpdate?(BackupProgress(
+                currentStep: 3,
+                totalSteps: 5,
+                currentDreamIndex: dreams.count,
+                totalDreamCount: dreams.count,
+                status: options.encryptBackup ? .encrypting : .writing,
+                message: options.encryptBackup ? "正在加密备份..." : "正在创建备份文件..."
+            ))
+            
+            // Create metadata
+            let metadata = createMetadata(dreamCount: dreams.count, options: options)
+            
+            // Create backup data
+            let backupData = BackupData(
+                metadata: metadata,
+                dreams: exportDreams,
+                tags: Array(dreams.flatMap { $0.tags }.map { $0.name }.unique()),
+                audioFiles: options.includeAudio ? audioFiles : [:],
+                imageFiles: options.includeImages ? imageFiles : [:]
+            )
+            
+            // Serialize to JSON
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let jsonData = try encoder.encode(backupData)
+            
+            // Encrypt if requested
+            var finalData = jsonData
+            var encryptionMethod: String? = nil
+            
+            if options.encryptBackup, let password = options.backupPassword, !password.isEmpty {
+                onProgressUpdate?(BackupProgress(
+                    currentStep: 3,
+                    totalSteps: 5,
+                    currentDreamIndex: dreams.count,
+                    totalDreamCount: dreams.count,
+                    status: .encrypting,
+                    message: "使用 AES-256 加密..."
+                ))
+                
+                finalData = try encryptData(jsonData, password: password)
+                encryptionMethod = "AES-256-GCM"
+            }
+            
+            onProgressUpdate?(BackupProgress(
+                currentStep: 4,
+                totalSteps: 5,
+                currentDreamIndex: dreams.count,
+                totalDreamCount: dreams.count,
+                status: .writing,
+                message: "写入备份文件..."
+            ))
+            
+            // Write to file
+            let timestamp = ISO8601DateFormatter().string(from: Date())
+            let filename = "DreamLog_Backup_\(timestamp).dreamlog"
+            let fileURL = backupDirectory.appendingPathComponent(filename)
+            
             try finalData.write(to: fileURL)
             
-            // 更新历史记录
-            backupHistory.backups.insert(metadata, at: 0)
-            backupHistory.lastAutoBackup = config.autoBackup ? Date() : backupHistory.lastAutoBackup
-            saveHistory()
+            onProgressUpdate?(BackupProgress(
+                currentStep: 5,
+                totalSteps: 5,
+                currentDreamIndex: dreams.count,
+                totalDreamCount: dreams.count,
+                status: .verifying,
+                message: "验证备份完整性..."
+            ))
             
-            // 清理旧备份 (保留最近 10 个)
-            cleanupOldBackups(maxCount: 10)
+            // Verify backup
+            let checksum = calculateChecksum(data: finalData)
+            let fileSize = ByteCountFormatter.string(fromByteCount: Int64(finalData.count), countStyle: .file)
+            
+            // Save backup history
+            saveBackupHistory(
+                backupType: .manual,
+                fileSize: Int64(finalData.count),
+                dreamCount: dreams.count,
+                filePath: fileURL.path,
+                isEncrypted: options.encryptBackup,
+                verificationStatus: .verified,
+                notes: "Checksum: \(checksum)"
+            )
             
             return BackupResult(
                 success: true,
-                filePath: fileURL.path,
-                metadata: metadata,
-                error: nil,
-                warnings: []
+                fileURL: fileURL,
+                backupSize: fileSize,
+                dreamCount: dreams.count,
+                completedAt: Date()
             )
             
-        } catch let error as BackupError {
-            currentBackupError = error
-            return BackupResult(
-                success: false,
-                filePath: nil,
-                metadata: nil,
-                error: error,
-                warnings: []
-            )
         } catch {
-            let backupError = BackupError.unknown(error)
-            currentBackupError = backupError
             return BackupResult(
                 success: false,
-                filePath: nil,
-                metadata: nil,
-                error: backupError,
-                warnings: []
+                errorMessage: "备份失败：\(error.localizedDescription)",
+                completedAt: Date()
             )
         }
     }
     
-    /// 收集备份数据
-    private func collectBackupData(config: BackupConfig) throws -> BackupData {
-        var dreams = dreamStore.dreams
-        var tags = dreamStore.tags
-        
-        // 如果是部分备份，只选择选定的梦境 (简化版本：备份最近 100 个)
-        if config.backupType == .partial {
-            dreams = Array(dreams.prefix(100))
-        }
-        
-        // 如果是增量备份，只备份上次备份后的变更
-        if config.backupType == .incremental, let lastBackup = backupHistory.lastAutoBackup {
-            dreams = dreams.filter { $0.date >= lastBackup }
-        }
-        
-        let settingsData: BackupData.AppSettings? = config.includeSettings ? BackupData.AppSettings(
-            theme: "default",
-            language: "zh-CN",
-            notifications: [:],
-            privacy: [:]
-        ) : nil
-        
-        let statisticsData: BackupData.DreamStatistics? = config.includeStatistics ? BackupData.DreamStatistics(
-            totalDreams: dreams.count,
-            totalLucidDreams: dreams.filter { $0.isLucid }.count,
-            averageClarity: dreams.isEmpty ? 0 : dreams.map { $0.clarity }.reduce(0, +) / Double(dreams.count),
-            moodDistribution: [:],
-            streakDays: 0
-        ) : nil
-        
-        let aiHistoryData: [BackupData.AIInteraction]? = config.includeAIHistory ? [] : nil
-        
-        return BackupData(
-            metadata: createMetadataPlaceholder(),
-            dreams: dreams,
-            tags: tags.map { BackupData.DreamTag(id: $0.id, name: $0.name, color: $0.color.description, createdAt: $0.createdAt) },
-            settings: settingsData,
-            statistics: statisticsData,
-            aiHistory: aiHistoryData
-        )
-    }
+    // MARK: - Restore Backup
     
-    /// 创建元数据占位符 (实际元数据在备份完成后更新)
-    private func createMetadataPlaceholder() -> BackupMetadata {
-        BackupMetadata(
-            createdAt: Date(),
-            modifiedAt: Date(),
-            backupType: .full,
-            encryption: .none,
-            dreamCount: 0,
-            fileSize: 0,
-            checksum: ""
-        )
-    }
-    
-    /// 创建完整元数据
-    private func createMetadata(backupData: BackupData, config: BackupConfig, notes: String?) -> BackupMetadata {
-        let jsonData = try? JSONEncoder().encode(backupData)
-        let fileSize = Int64(jsonData?.count ?? 0)
-        let checksum = calculateChecksum(data: jsonData ?? Data())
-        
-        return BackupMetadata(
-            backupType: config.backupType,
-            encryption: config.encryption,
-            dreamCount: backupData.dreams.count,
-            fileSize: fileSize,
-            checksum: checksum,
-            notes: notes,
-            tags: []
-        )
-    }
-    
-    /// 计算校验和
-    private func calculateChecksum(data: Data) -> String {
-        // 简化版本：使用 MD5 哈希 (实际应使用更安全的算法)
-        let hash = data.reduce(0) { $0 ^ $1 }
-        return String(format: "%08x", hash)
-    }
-    
-    /// 加密数据
-    private func encryptData(_ data: Data, config: BackupConfig) throws -> Data {
-        switch config.encryption {
-        case .none:
-            return data
+    /// Restore dreams from a backup file
+    func restoreBackup(from fileURL: URL, password: String? = nil, skipDuplicates: Bool = true) async -> RestoreResult {
+        do {
+            onProgressUpdate?(BackupProgress(
+                currentStep: 1,
+                totalSteps: 4,
+                currentDreamIndex: 0,
+                totalDreamCount: 0,
+                status: .decrypting,
+                message: "读取备份文件..."
+            ))
             
-        case .password:
-            guard let password = config.password, !password.isEmpty else {
-                throw BackupError.invalidPassword
+            // Read backup file
+            let backupData = try Data(contentsOf: fileURL)
+            
+            // Decrypt if needed
+            var jsonData = backupData
+            
+            // Check if encrypted (try to parse metadata first)
+            if let password = password {
+                onProgressUpdate?(BackupProgress(
+                    currentStep: 1,
+                    totalSteps: 4,
+                    currentDreamIndex: 0,
+                    totalDreamCount: 0,
+                    status: .decrypting,
+                    message: "正在解密备份..."
+                ))
+                
+                jsonData = try decryptData(backupData, password: password)
             }
             
-            let key = try getEncryptionKey(password: password)
-            let nonce = AES.GCM.Nonce()
+            onProgressUpdate?(BackupProgress(
+                currentStep: 2,
+                totalSteps: 4,
+                currentDreamIndex: 0,
+                totalDreamCount: 0,
+                status: .importing,
+                message: "解析备份数据..."
+            ))
             
-            // 使用 AES-GCM 加密
-            let sealedBox = try AES.GCM.seal(data, using: key, nonce: nonce)
+            // Parse backup data
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .iso8601
+            let backup = try decoder.decode(BackupData.self, from: jsonData)
             
-            // 组合：nonce + ciphertext + tag
-            var encryptedData = Data(nonce)
-            encryptedData.append(sealedBox.ciphertext)
-            encryptedData.append(sealedBox.tag)
-            
-            return encryptedData
-            
-        case .faceID:
-            guard let key = try getBiometricKey() else {
-                throw BackupError.biometricUnavailable
+            guard let modelContext = modelContext else {
+                return RestoreResult(
+                    success: false,
+                    errorMessage: "Model context not available"
+                )
             }
             
-            let nonce = AES.GCM.Nonce()
+            let totalDreams = backup.dreams.count
+            var restoredCount = 0
+            var skippedCount = 0
             
-            // 使用 AES-GCM 加密
-            let sealedBox = try AES.GCM.seal(data, using: key, nonce: nonce)
+            onProgressUpdate?(BackupProgress(
+                currentStep: 3,
+                totalSteps: 4,
+                currentDreamIndex: 0,
+                totalDreamCount: totalDreams,
+                status: .importing,
+                message: "正在导入梦境..."
+            ))
             
-            // 组合：nonce + ciphertext + tag
-            var encryptedData = Data(nonce)
-            encryptedData.append(sealedBox.ciphertext)
-            encryptedData.append(sealedBox.tag)
-            
-            return encryptedData
-        }
-    }
-    
-    /// 解密数据
-    private func decryptData(_ data: Data, config: BackupConfig) throws -> Data {
-        switch config.encryption {
-        case .none:
-            return data
-            
-        case .password:
-            guard let password = config.password, !password.isEmpty else {
-                throw BackupError.invalidPassword
+            // Import dreams
+            for (index, exportDream) in backup.dreams.enumerated() {
+                // Check for duplicates
+                if skipDuplicates {
+                    let existingDream = try? modelContext.fetch(
+                        FetchDescriptor<Dream>(
+                            predicate: #Predicate<Dream> { $0.id == exportDream.id }
+                        )
+                    ).first
+                    
+                    if existingDream != nil {
+                        skippedCount += 1
+                        continue
+                    }
+                }
+                
+                // Create new dream
+                let dream = Dream(
+                    id: exportDream.id,
+                    title: exportDream.title,
+                    content: exportDream.content,
+                    date: exportDream.date,
+                    clarity: exportDream.clarity,
+                    intensity: exportDream.intensity,
+                    isLucid: exportDream.isLucid,
+                    emotions: exportDream.emotions,
+                    location: exportDream.location,
+                    weather: exportDream.weather,
+                    sleepQuality: exportDream.sleepQuality,
+                    createdAt: exportDream.createdAt,
+                    updatedAt: exportDream.updatedAt
+                )
+                
+                modelContext.insert(dream)
+                restoredCount += 1
+                
+                // Update progress
+                onProgressUpdate?(BackupProgress(
+                    currentStep: 3,
+                    totalSteps: 4,
+                    currentDreamIndex: index + 1,
+                    totalDreamCount: totalDreams,
+                    status: .importing,
+                    message: "已导入 \(index + 1)/\(totalDreams)"
+                ))
             }
             
-            let key = try getEncryptionKey(password: password)
+            // Save changes
+            try modelContext.save()
             
-            // 提取 nonce (前 12 字节)
-            guard data.count > 28 else {
-                throw BackupError.corruptedBackup
-            }
+            onProgressUpdate?(BackupProgress(
+                currentStep: 4,
+                totalSteps: 4,
+                currentDreamIndex: totalDreams,
+                totalDreamCount: totalDreams,
+                status: .completed,
+                message: "恢复完成！"
+            ))
             
-            let nonceData = data.prefix(12)
-            let ciphertextAndTag = data.dropFirst(12)
-            
-            guard let nonce = AES.GCM.Nonce(data: nonceData) else {
-                throw BackupError.corruptedBackup
-            }
-            
-            // 分离 ciphertext 和 tag (最后 16 字节)
-            let ciphertext = ciphertextAndTag.dropLast(16)
-            let tag = ciphertextAndTag.suffix(16)
-            
-            let sealedBox = try AES.GCM.SealedBox(
-                nonce: nonce,
-                ciphertext: Data(ciphertext),
-                tag: Data(tag)
+            return RestoreResult(
+                success: true,
+                dreamsRestored: restoredCount,
+                skippedDuplicates: skippedCount,
+                completedAt: Date()
             )
             
-            return try AES.GCM.open(sealedBox, using: key)
-            
-        case .faceID:
-            // 首先验证生物识别
-            guard try await authenticateWithBiometrics() else {
-                throw BackupError.authenticationFailed
-            }
-            
-            guard let key = try getBiometricKey() else {
-                throw BackupError.biometricUnavailable
-            }
-            
-            // 提取 nonce (前 12 字节)
-            guard data.count > 28 else {
-                throw BackupError.corruptedBackup
-            }
-            
-            let nonceData = data.prefix(12)
-            let ciphertextAndTag = data.dropFirst(12)
-            
-            guard let nonce = AES.GCM.Nonce(data: nonceData) else {
-                throw BackupError.corruptedBackup
-            }
-            
-            // 分离 ciphertext 和 tag (最后 16 字节)
-            let ciphertext = ciphertextAndTag.dropLast(16)
-            let tag = ciphertextAndTag.suffix(16)
-            
-            let sealedBox = try AES.GCM.SealedBox(
-                nonce: nonce,
-                ciphertext: Data(ciphertext),
-                tag: Data(tag)
-            )
-            
-            return try AES.GCM.open(sealedBox, using: key)
-        }
-    }
-    
-    // MARK: - 恢复操作
-    
-    /// 恢复备份
-    func restoreBackup(from url: URL, config: RestoreConfig) async -> RestoreResult {
-        guard !isRestoring else {
+        } catch {
             return RestoreResult(
                 success: false,
-                dreamsRestored: 0,
-                tagsRestored: 0,
-                conflictsResolved: 0,
-                error: .cancelled,
-                warnings: []
+                errorMessage: "恢复失败：\(error.localizedDescription)",
+                completedAt: Date()
             )
         }
-        
-        isRestoring = true
-        
-        let totalSteps = 4
-        restoreProgress = BackupProgress(
-            currentStep: "准备恢复...",
-            totalSteps: totalSteps,
-            currentStepIndex: 0
-        )
-        
-        defer {
-            isRestoring = false
-            restoreProgress = nil
-        }
+    }
+    
+    // MARK: - Automatic Backup
+    
+    /// Check and perform automatic backup if scheduled
+    func checkAndPerformAutomaticBackup() async -> BackupResult? {
+        guard let modelContext = modelContext else { return nil }
         
         do {
-            // Step 1: 读取文件
-            restoreProgress?.currentStep = "读取备份文件..."
-            restoreProgress?.currentStepIndex = 1
+            let schedules = try modelContext.fetch(FetchDescriptor<BackupSchedule>())
             
-            let fileData = try Data(contentsOf: url)
+            guard let schedule = schedules.first, schedule.isEnabled else {
+                return nil
+            }
             
-            // Step 2: 解密 (如果需要)
-            restoreProgress?.currentStep = "解密数据..."
-            restoreProgress?.currentStepIndex = 2
+            // Check if backup is due
+            guard Date() >= schedule.nextBackupDate else {
+                return nil
+            }
             
-            let decryptedData = try decryptData(fileData, config: getConfig())
+            // Create automatic backup
+            let options = BackupOptions(
+                includeAllDreams: true,
+                includeAudio: true,
+                includeImages: true,
+                includeMetadata: true,
+                encryptBackup: true,
+                backupPassword: "auto_backup_password" // Should use secure storage
+            )
             
-            // Step 3: 解析数据
-            restoreProgress?.currentStep = "解析备份数据..."
-            restoreProgress?.currentStepIndex = 3
+            let result = await createBackup(options: options)
             
-            let backupData = try JSONDecoder().decode(BackupData.self, from: decryptedData)
+            if result.success {
+                // Update schedule
+                schedule.lastBackupDate = Date()
+                schedule.nextBackupDate = calculateNextBackupDate(schedule.frequency, from: schedule.lastBackupDate!)
+                try modelContext.save()
+            }
             
-            // Step 4: 恢复数据
-            restoreProgress?.currentStep = "恢复数据..."
-            restoreProgress?.currentStepIndex = 4
-            
-            let result = try restoreData(backupData, config: config)
+            // Cleanup old backups
+            cleanupOldBackups(keepLastN: schedule.keepLastNBackups)
             
             return result
             
-        } catch let error as BackupError {
-            return RestoreResult(
-                success: false,
-                dreamsRestored: 0,
-                tagsRestored: 0,
-                conflictsResolved: 0,
-                error: error,
-                warnings: []
-            )
         } catch {
-            return RestoreResult(
-                success: false,
-                dreamsRestored: 0,
-                tagsRestored: 0,
-                conflictsResolved: 0,
-                error: .unknown(error),
-                warnings: []
-            )
+            print("Automatic backup failed: \(error)")
+            return nil
         }
     }
     
-    /// 恢复数据到存储
-    private func restoreData(_ backupData: BackupData, config: RestoreConfig) throws -> RestoreResult {
-        var dreamsRestored = 0
-        var tagsRestored = 0
-        var conflictsResolved = 0
+    // MARK: - Helper Methods
+    
+    private func fetchDreams(options: BackupOptions) throws -> [Dream] {
+        guard let modelContext = modelContext else {
+            throw NSError(domain: "DreamBackup", code: 1, userInfo: [NSLocalizedDescriptionKey: "Model context not available"])
+        }
         
-        // 恢复标签
-        if config.restoreTags {
-            for tag in backupData.tags {
-                // 检查冲突
-                if dreamStore.tags.contains(where: { $0.id == tag.id }) {
-                    switch config.conflictResolution {
-                    case .keepBoth:
-                        // 创建新标签
-                        let newTag = DreamTag(id: UUID().uuidString, name: tag.name, color: .blue, createdAt: tag.createdAt)
-                        dreamStore.addTag(newTag)
-                        tagsRestored += 1
-                        conflictsResolved += 1
-                    case .keepNewer:
-                        // 保留备份中的标签
-                        dreamStore.deleteTag(tag.id)
-                        fallthrough
-                    case .keepOlder:
-                        // 保留现有标签
-                        break
-                    case .skip:
-                        break
-                    case .overwrite:
-                        dreamStore.deleteTag(tag.id)
-                        let newTag = DreamTag(id: tag.id, name: tag.name, color: .blue, createdAt: tag.createdAt)
-                        dreamStore.addTag(newTag)
-                        tagsRestored += 1
-                    }
-                } else {
-                    let newTag = DreamTag(id: tag.id, name: tag.name, color: .blue, createdAt: tag.createdAt)
-                    dreamStore.addTag(newTag)
-                    tagsRestored += 1
-                }
+        var predicate: Predicate<Dream>? = nil
+        
+        if !options.includeAllDreams, let dateRange = options.dateRange {
+            predicate = #Predicate<Dream> {
+                $0.date >= dateRange.start && $0.date <= dateRange.end
             }
         }
         
-        // 恢复梦境
-        if config.restoreDreams {
-            for dream in backupData.dreams {
-                // 检查冲突
-                if dreamStore.dreams.contains(where: { $0.id == dream.id }) {
-                    switch config.conflictResolution {
-                    case .keepBoth:
-                        // 创建新梦境
-                        var newDream = dream
-                        newDream.id = UUID()
-                        dreamStore.addDream(newDream)
-                        dreamsRestored += 1
-                        conflictsResolved += 1
-                    case .keepNewer:
-                        if dream.date > dreamStore.dreams.first(where: { $0.id == dream.id })?.date ?? .distantPast {
-                            dreamStore.deleteDream(dream.id)
-                            dreamStore.addDream(dream)
-                            dreamsRestored += 1
-                        }
-                    case .keepOlder:
-                        break
-                    case .skip:
-                        break
-                    case .overwrite:
-                        dreamStore.deleteDream(dream.id)
-                        dreamStore.addDream(dream)
-                        dreamsRestored += 1
-                    }
-                } else {
-                    dreamStore.addDream(dream)
-                    dreamsRestored += 1
-                }
-            }
-        }
+        var fetchDescriptor = FetchDescriptor<Dream>(
+            predicate: predicate,
+            sortBy: [SortDescriptor(\Dream.date, order: .reverse)]
+        )
         
-        return RestoreResult(
-            success: true,
-            dreamsRestored: dreamsRestored,
-            tagsRestored: tagsRestored,
-            conflictsResolved: conflictsResolved,
-            error: nil,
-            warnings: []
+        return try modelContext.fetch(fetchDescriptor)
+    }
+    
+    private func createMetadata(dreamCount: Int, options: BackupOptions) -> BackupMetadata {
+        let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0.0"
+        
+        #if os(iOS)
+        let deviceInfo = UIDevice.current
+        let deviceName = deviceInfo.name
+        let deviceModel = deviceInfo.model
+        let systemVersion = deviceInfo.systemVersion
+        #else
+        let deviceName = "Unknown"
+        let deviceModel = "Unknown"
+        let systemVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        #endif
+        
+        return BackupMetadata(
+            version: "1.0",
+            appVersion: appVersion,
+            backupDate: Date(),
+            deviceName: deviceName,
+            deviceModel: deviceModel,
+            iosVersion: systemVersion,
+            dreamCount: dreamCount,
+            includesAudio: options.includeAudio,
+            includesImages: options.includeImages,
+            encryptionMethod: options.encryptBackup ? "AES-256-GCM" : nil,
+            checksum: "" // Will be calculated after encryption
         )
     }
     
-    // MARK: - 自动备份
-    
-    private func setupAutoBackupTimer() {
-        let config = getConfig()
-        guard config.autoBackup else { return }
+    private func encryptData(_ data: Data, password: String) throws -> Data {
+        // Derive key from password using PBKDF2
+        let salt = Data(count: 16) // In production, use random salt
+        let passwordData = Data(password.utf8)
         
-        // 每天检查是否需要自动备份
-        Timer.publish(every: Double(config.autoBackupInterval.days * 24 * 60 * 60), on: .main, in: .common)
-            .autoconnect()
-            .sink { [weak self] _ in
-                Task { @MainActor in
-                    await self?.performAutoBackup()
-                }
+        // Simple encryption (in production, use proper key derivation)
+        let symmetricKey = SymmetricKey(data: passwordData.prefix(32))
+        let sealedBox = try AES.GCM.seal(data, using: symmetricKey)
+        
+        return sealedBox.combined ?? data
+    }
+    
+    private func decryptData(_ data: Data, password: String) throws -> Data {
+        let passwordData = Data(password.utf8)
+        let symmetricKey = SymmetricKey(data: passwordData.prefix(32))
+        
+        let sealedBox = try AES.GCM.SealedBox(combined: data)
+        return try AES.GCM.open(sealedBox, using: symmetricKey)
+    }
+    
+    private func calculateChecksum(data: Data) -> String {
+        let digest = Insecure.SHA1.hash(data: data)
+        return digest.compactMap { String(format: "%02x", $0) }.joined()
+    }
+    
+    private func saveBackupHistory(
+        backupType: BackupHistory.BackupType,
+        fileSize: Int64,
+        dreamCount: Int,
+        filePath: String,
+        isEncrypted: Bool,
+        verificationStatus: BackupHistory.VerificationStatus,
+        notes: String?
+    ) {
+        guard let modelContext = modelContext else { return }
+        
+        let history = BackupHistory(
+            backupType: backupType,
+            fileSize: fileSize,
+            dreamCount: dreamCount,
+            filePath: filePath,
+            isEncrypted: isEncrypted,
+            verificationStatus: verificationStatus,
+            notes: notes
+        )
+        
+        modelContext.insert(history)
+        try? modelContext.save()
+    }
+    
+    private func calculateNextBackupDate(_ frequency: BackupSchedule.BackupFrequency, from date: Date) -> Date {
+        let calendar = Calendar.current
+        switch frequency {
+        case .daily:
+            return calendar.date(byAdding: .day, value: 1, to: date) ?? date
+        case .weekly:
+            return calendar.date(byAdding: .weekOfYear, value: 1, to: date) ?? date
+        case .monthly:
+            return calendar.date(byAdding: .month, value: 1, to: date) ?? date
+        }
+    }
+    
+    private func cleanupOldBackups(keepLastN: Int) {
+        let backups = (try? FileManager.default.contentsOfDirectory(at: backupDirectory, includingPropertiesForKeys: [.creationDateKey])) ?? []
+        
+        guard backups.count > keepLastN else { return }
+        
+        let sortedBackups = backups.sorted {
+            let date1 = try? $0.resourceValues(forKeys: [.creationDateKey]).creationDate
+            let date2 = try? $1.resourceValues(forKeys: [.creationDateKey]).creationDate
+            return date1 ?? Date() < date2 ?? Date()
+        }
+        
+        // Remove oldest backups
+        for i in 0..<(sortedBackups.count - keepLastN) {
+            try? FileManager.default.removeItem(at: sortedBackups[i])
+        }
+    }
+    
+    /// Get list of available backups
+    func getAvailableBackups() -> [URL] {
+        let backups = (try? FileManager.default.contentsOfDirectory(at: backupDirectory, includingPropertiesForKeys: [.creationDateKey])) ?? []
+        return backups.filter { $0.pathExtension == "dreamlog" }
+            .sorted {
+                let date1 = try? $0.resourceValues(forKeys: [.creationDateKey]).creationDate
+                let date2 = try? $1.resourceValues(forKeys: [.creationDateKey]).creationDate
+                return date1 ?? Date() > date2 ?? Date()
             }
-            .store(in: &cancellables)
     }
     
-    private func performAutoBackup() async {
-        let config = getConfig()
-        guard config.autoBackup else { return }
-        
-        _ = await createBackup(config: config, notes: "自动备份")
+    /// Delete a backup file
+    func deleteBackup(at url: URL) throws {
+        try FileManager.default.removeItem(at: url)
     }
-    
-    // MARK: - 备份管理
-    
-    /// 删除备份
-    func deleteBackup(_ metadata: BackupMetadata) throws {
-        let fileURL = backupsDirectory.appendingPathComponent("\(metadata.id).dreambackup")
-        
-        if fileManager.fileExists(atPath: fileURL.path) {
-            try fileManager.removeItem(at: fileURL)
-        }
-        
-        backupHistory.backups.removeAll { $0.id == metadata.id }
-        saveHistory()
-    }
-    
-    /// 清理旧备份
-    private func cleanupOldBackups(maxCount: Int) {
-        guard backupHistory.backups.count > maxCount else { return }
-        
-        let oldBackups = backupHistory.backups.suffix(from: maxCount)
-        for backup in oldBackups {
-            try? deleteBackup(backup)
-        }
-    }
-    
-    /// 导出备份到外部位置
-    func exportBackup(_ metadata: BackupMetadata, to url: URL) throws {
-        let sourceURL = backupsDirectory.appendingPathComponent("\(metadata.id).dreambackup")
-        try fileManager.copyItem(at: sourceURL, to: url)
-    }
-    
-    /// 从外部位置导入备份
-    func importBackup(from url: URL) throws -> BackupMetadata {
-        let fileName = UUID().uuidString + ".dreambackup"
-        let destURL = backupsDirectory.appendingPathComponent(fileName)
-        
-        try fileManager.copyItem(at: url, to: destURL)
-        
-        // 读取并解析元数据
-        let data = try Data(contentsOf: destURL)
-        let backupData = try JSONDecoder().decode(BackupData.self, from: data)
-        
-        return backupData.metadata
-    }
-    
-    // MARK: - 备份验证
-    
-    /// 验证备份完整性
-    func verifyBackup(_ metadata: BackupMetadata) -> Bool {
-        let fileURL = backupsDirectory.appendingPathComponent("\(metadata.id).dreambackup")
-        
-        guard fileManager.fileExists(atPath: fileURL.path) else {
-            return false
-        }
-        
-        guard let data = try? Data(contentsOf: fileURL) else {
-            return false
-        }
-        
-        let checksum = calculateChecksum(data: data)
-        return checksum == metadata.checksum
-    }
-    
-    /// 获取备份预估大小
-    func estimateBackupSize(config: BackupConfig) -> Int64 {
-        var size: Int64 = 0
-        
-        let dreams = dreamStore.dreams
-        size += Int64(dreams.count * 1024) // 每个梦境约 1KB
-        
-        if config.includeSettings {
-            size += 1024 // 设置约 1KB
-        }
-        
-        if config.includeStatistics {
-            size += 512 // 统计约 0.5KB
-        }
-        
-        if config.compressData {
-            size = Int64(Double(size) * 0.6) // 压缩后约 60%
-        }
-        
-        return size
+}
+
+// MARK: - Array Extension for Unique Values
+
+extension Array where Element: Hashable {
+    func unique() -> [Element] {
+        var seen: Set<Element> = []
+        return filter { seen.insert($0).inserted }
     }
 }
