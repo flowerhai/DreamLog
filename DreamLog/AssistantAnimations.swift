@@ -118,14 +118,19 @@ struct WaveformAnimationView: View {
     }
     
     private func animateWaveform() {
-        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { timer in
-            if !isRecording {
+        Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            
+            if !self.isRecording {
                 timer.invalidate()
                 return
             }
             
             withAnimation(.waveform) {
-                barHeights = (0..<barCount).map { _ in
+                self.barHeights = (0..<self.barCount).map { _ in
                     CGFloat.random(in: 0.2...1.0)
                 }
             }
