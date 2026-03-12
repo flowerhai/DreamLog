@@ -20,8 +20,8 @@ final class DreamInspirationService {
     init(modelContext: ModelContext? = nil) {
         if let context = modelContext {
             self.modelContext = context
-        } else if let context = try? ModelContext(SharedModelContainer.shared.container) {
-            self.modelContext = context
+        } else if let app = DreamLogApp.shared {
+            self.modelContext = ModelContext(app.modelContainer)
         } else {
             // Fallback: create a simple in-memory context
             do {

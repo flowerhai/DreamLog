@@ -168,6 +168,13 @@ struct ContentView: View {
                     Text("时间胶囊")
                 }
                 .tag(21)
+            
+            DreamInsightsDashboardView()
+                .tabItem {
+                    Image(systemName: "brain.head.profile")
+                    Text("AI 解析")
+                }
+                .tag(22)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(

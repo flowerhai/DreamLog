@@ -6,9 +6,36 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct DreamLogApp: App {
+    static var shared: DreamLogApp!
+    
+    let modelContainer: ModelContainer
+    
+    init() {
+        Self.shared = self
+        
+        // 初始化 SwiftData 模型容器
+        do {
+            let schema = Schema([
+                Dream.self,
+                DreamTimeCapsule.self
+            ])
+            let modelConfiguration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false
+            )
+            modelContainer = try ModelContainer(
+                for: schema,
+                configurations: [modelConfiguration]
+            )
+        } catch {
+            fatalError("无法初始化模型容器：\(error)")
+        }
+    }
+    
     @ObservedObject private var dreamStore = DreamStore.shared
     @StateObject private var speechService = SpeechService()
     @StateObject private var aiService = AIService()
@@ -32,6 +59,7 @@ struct DreamLogApp: App {
                 .environmentObject(trendService)
                 .environmentObject(timelineService)
                 .environmentObject(challengeService)
+                .modelContainer(modelContainer)
                 .onAppear {
                     // 初始化通知服务
                     notificationService.checkAuthorization()

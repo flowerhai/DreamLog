@@ -23,7 +23,17 @@ class DreamTimeCapsuleService: ObservableObject {
     private let notificationService: NotificationService
     
     init(modelContext: ModelContext? = nil, notificationService: NotificationService? = nil) {
-        self.modelContext = modelContext ?? (try? ModelContext(DreamLogApp.shared.modelContainer))!
+        if let modelContext = modelContext {
+            self.modelContext = modelContext
+        } else if let app = DreamLogApp.shared {
+            self.modelContext = ModelContext(app.modelContainer)
+        } else {
+            // Fallback: create an in-memory context for testing
+            let schema = Schema([DreamTimeCapsule.self])
+            let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+            let container = try! ModelContainer(for: schema, configurations: [modelConfiguration])
+            self.modelContext = ModelContext(container)
+        }
         self.notificationService = notificationService ?? NotificationService.shared
         Task { await loadCapsules() }
     }
