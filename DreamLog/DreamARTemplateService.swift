@@ -204,12 +204,12 @@ class DreamARTemplateService: ObservableObject {
     
     private func createOceanWorldElements() -> [DreamARElement3D] {
         [
-            DreamARElement3D(name: "fish_koi", elementType: .animal, category: .animal, scale: 0.5, animation: .swim),
-            DreamARElement3D(name: "fish_goldfish", elementType: .animal, category: .animal, scale: 0.4, animation: .swim),
-            DreamARElement3D(name: "fish_goldfish", elementType: .animal, category: .animal, scale: 0.4, animation: .swim),
+            DreamARElement3D(name: "fish_koi", elementType: .animal, category: .animal, scale: 0.5, animation: .wave),
+            DreamARElement3D(name: "fish_goldfish", elementType: .animal, category: .animal, scale: 0.4, animation: .wave),
+            DreamARElement3D(name: "fish_goldfish", elementType: .animal, category: .animal, scale: 0.4, animation: .wave),
             DreamARElement3D(name: "water_lily", elementType: .water, category: .nature, scale: 0.4),
             DreamARElement3D(name: "water_drop", elementType: .water, category: .dreamSymbol, scale: 0.3, animation: .float),
-            DreamARElement3D(name: "bubble", elementType: .water, category: .abstract, scale: 0.2, animation: .float)
+            DreamARElement3D(name: "sphere_glowing", elementType: .light, category: .abstract, scale: 0.2, animation: .float)
         ]
     }
     
@@ -230,8 +230,8 @@ class DreamARTemplateService: ObservableObject {
         [
             DreamARElement3D(name: "sphere_glowing", elementType: .light, category: .abstract, scale: 0.6, material: MaterialConfig.emissive, animation: .pulse),
             DreamARElement3D(name: "energy_orb", elementType: .abstract, category: .abstract, scale: 0.5, material: MaterialConfig.emissive, animation: .rotate),
-            DreamARElement3D(name: "crystal", elementType: .abstract, category: .abstract, scale: 0.4, material: MaterialConfig.glass),
-            DreamARElement3D(name: "magic_circle", elementType: .abstract, category: .abstract, scale: 1.5, material: MaterialConfig.emissive, animation: .rotate),
+            DreamARElement3D(name: "cube_crystal", elementType: .abstract, category: .abstract, scale: 0.4, material: MaterialConfig.glass),
+            DreamARElement3D(name: "torus_gold", elementType: .abstract, category: .abstract, scale: 1.5, material: MaterialConfig.emissive, animation: .rotate),
             DreamARElement3D(name: "particles_sparkle", elementType: .light, category: .abstract, scale: 0.4, animation: .sparkle),
             DreamARElement3D(name: "light_beam", elementType: .light, category: .abstract, scale: 1.0, animation: .pulse)
         ]
@@ -240,10 +240,10 @@ class DreamARTemplateService: ObservableObject {
     private func createCastleElements() -> [DreamARElement3D] {
         [
             DreamARElement3D(name: "house_cottage", elementType: .building, category: .building, scale: 3.0),
-            DreamARElement3D(name: "door_magical", elementType: .door, category: .building, scale: 1.2, material: MaterialConfig.emissive),
+            DreamARElement3D(name: "door_magical", elementType: .light, category: .building, scale: 1.2, material: MaterialConfig.emissive),
             DreamARElement3D(name: "window_arch", elementType: .building, category: .building, scale: 1.0),
             DreamARElement3D(name: "cloud_fluffy", elementType: .wind, category: .nature, scale: 3.0),
-            DreamARElement3D(name: "rainbow", elementType: .light, category: .abstract, scale: 4.0),
+            DreamARElement3D(name: "torus_gold", elementType: .abstract, category: .abstract, scale: 4.0, material: MaterialConfig.glass),
             DreamARElement3D(name: "star_large", elementType: .light, category: .dreamSymbol, scale: 0.6, material: MaterialConfig.emissive)
         ]
     }
@@ -264,9 +264,9 @@ class DreamARTemplateService: ObservableObject {
             DreamARElement3D(name: "flower_rose", elementType: .nature, category: .nature, scale: 0.4),
             DreamARElement3D(name: "flower_sunflower", elementType: .nature, category: .nature, scale: 0.6),
             DreamARElement3D(name: "moon_crescent", elementType: .light, category: .dreamSymbol, scale: 1.0, material: MaterialConfig.emissive),
-            DreamARElement3D(name: "firefly", elementType: .light, category: .abstract, scale: 0.1, material: MaterialConfig.emissive, animation: .twinkle),
+            DreamARElement3D(name: "star_small", elementType: .light, category: .abstract, scale: 0.1, material: MaterialConfig.emissive, animation: .sparkle),
             DreamARElement3D(name: "grass_patch", elementType: .nature, category: .nature, scale: 1.2),
-            DreamARElement3D(name: "butterfly_monarch", elementType: .animal, category: .animal, scale: 0.3, animation: .flutter)
+            DreamARElement3D(name: "butterfly_monarch", elementType: .animal, category: .animal, scale: 0.3, animation: .float)
         ]
     }
     

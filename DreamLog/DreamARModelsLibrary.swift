@@ -194,42 +194,42 @@ class DreamARModelsLibrary: ObservableObject {
                 elementType: .animal,
                 category: .animal,
                 scale: 0.2,
-                animation: .flutter
+                animation: .float
             ),
             DreamARElement3D(
                 name: "butterfly_monarch",
                 elementType: .animal,
                 category: .animal,
                 scale: 0.25,
-                animation: .flutter
+                animation: .float
             ),
             DreamARElement3D(
                 name: "bird_sparrow",
                 elementType: .animal,
                 category: .animal,
                 scale: 0.3,
-                animation: .hover
+                animation: .float
             ),
             DreamARElement3D(
                 name: "bird_dove",
                 elementType: .animal,
                 category: .animal,
                 scale: 0.35,
-                animation: .hover
+                animation: .float
             ),
             DreamARElement3D(
                 name: "fish_koi",
                 elementType: .animal,
                 category: .animal,
                 scale: 0.4,
-                animation: .swim
+                animation: .wave
             ),
             DreamARElement3D(
                 name: "fish_goldfish",
                 elementType: .animal,
                 category: .animal,
                 scale: 0.3,
-                animation: .swim
+                animation: .wave
             ),
             DreamARElement3D(
                 name: "cat_sleeping",
@@ -248,14 +248,14 @@ class DreamARModelsLibrary: ObservableObject {
                 elementType: .animal,
                 category: .animal,
                 scale: 0.4,
-                animation: .hover
+                animation: .float
             ),
             DreamARElement3D(
                 name: "dragonfly",
                 elementType: .animal,
                 category: .animal,
                 scale: 0.15,
-                animation: .flutter
+                animation: .float
             )
         ]
     }
@@ -440,7 +440,7 @@ class DreamARModelsLibrary: ObservableObject {
                 category: .dreamSymbol,
                 scale: 0.2,
                 material: MaterialConfig.emissive,
-                animation: .twinkle
+                animation: .sparkle
             ),
             DreamARElement3D(
                 name: "star_large",
@@ -448,7 +448,7 @@ class DreamARModelsLibrary: ObservableObject {
                 category: .dreamSymbol,
                 scale: 0.4,
                 material: MaterialConfig.emissive,
-                animation: .twinkle
+                animation: .sparkle
             ),
             DreamARElement3D(
                 name: "key_ancient",
@@ -498,7 +498,7 @@ class DreamARModelsLibrary: ObservableObject {
                 category: .dreamSymbol,
                 scale: 0.4,
                 material: MaterialConfig.emissive,
-                animation: .flicker
+                animation: .pulse
             ),
             DreamARElement3D(
                 name: "water_drop",

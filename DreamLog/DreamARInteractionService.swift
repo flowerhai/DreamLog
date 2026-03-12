@@ -30,6 +30,12 @@ class DreamARInteractionService: ObservableObject {
     /// 交互模式
     @Published var interactionMode: InteractionMode = .view
     
+    /// 当前模式 (alias for compatibility)
+    var currentMode: InteractionMode {
+        get { interactionMode }
+        set { interactionMode = newValue }
+    }
+    
     /// 当前场景中的元素
     @Published var sceneElements: [DreamARElement3D] = []
     

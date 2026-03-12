@@ -14,10 +14,17 @@ import ARKit
 /// 梦境 AR 可视化主界面
 struct DreamARView: View {
     @StateObject private var arService: DreamARService
+    @ObservedObject private var interactionService = DreamARInteractionService.shared
+    @ObservedObject private var modelsLibrary = DreamARModelsLibrary.shared
+    @ObservedObject private var templateService = DreamARTemplateService.shared
+    
     @State private var selectedDream: Dream?
     @State private var showScenePicker = false
     @State private var showRecordingOptions = false
     @State private var showShareSheet = false
+    @State private var showModelBrowser = false
+    @State private var showTemplateGallery = false
+    @State private var showInteractionPanel = false
     @State private var recordedVideoURL: URL?
     
     @Environment(\.dismiss) private var dismiss
@@ -84,22 +91,47 @@ struct DreamARView: View {
             Spacer()
             
             if arService.currentScene != nil {
-                Menu {
-                    Button(action: { showScenePicker = true }) {
-                        Label("选择场景", systemImage: "list.bullet")
+                HStack(spacing: 16) {
+                    // 添加元素按钮
+                    Menu {
+                        Button(action: { showModelBrowser = true }) {
+                            Label("浏览模型", systemImage: "cube.box")
+                        }
+                        
+                        Button(action: { showTemplateGallery = true }) {
+                            Label("场景模板", systemImage: "photo.on.rectangle.angled")
+                        }
+                    } label: {
+                        Image(systemName: "plus.app")
+                            .font(.title3)
+                            .foregroundColor(.white)
                     }
                     
-                    Button(action: { showRecordingOptions = true }) {
-                        Label("录制视频", systemImage: "video")
+                    // 交互控制按钮
+                    Button(action: { showInteractionPanel = true }) {
+                        Image(systemName: "hand.point.up.left")
+                            .font(.title3)
+                            .foregroundColor(.white)
                     }
                     
-                    Button(action: { shareCurrentScene() }) {
-                        Label("分享", systemImage: "square.and.arrow.up")
+                    // 更多选项
+                    Menu {
+                        Button(action: { showScenePicker = true }) {
+                            Label("选择场景", systemImage: "list.bullet")
+                        }
+                        
+                        Button(action: { showRecordingOptions = true }) {
+                            Label("录制视频", systemImage: "video")
+                        }
+                        
+                        Button(action: { shareCurrentScene() }) {
+                            Label("分享", systemImage: "square.and.arrow.up")
+                        }
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.title3)
+                            .foregroundColor(.white)
                     }
-                } label: {
-                    Image(systemName: "ellipsis")
-                        .font(.title3)
-                        .foregroundColor(.white)
                 }
             }
         }

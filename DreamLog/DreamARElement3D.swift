@@ -17,11 +17,11 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
     var id: UUID
     var name: String
     var nameLocalizable: String {
-        return L.elementName(name)
+        return name
     }
     
     /// 元素类型
-    var elementType: ARElementType
+    var elementType: ARDreamElementType
     
     /// 3D 模型 URL（本地或远程）
     var modelURL: URL?
@@ -45,7 +45,7 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
     var material: MaterialConfig
     
     /// 动画配置
-    var animation: ElementAnimation?
+    var animation: ARAnimationType?
     
     /// 是否被选中
     var isSelected: Bool
@@ -68,7 +68,7 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
     init(
         id: UUID = UUID(),
         name: String,
-        elementType: ARElementType,
+        elementType: ARDreamElementType,
         modelURL: URL? = nil,
         thumbnailURL: URL? = nil,
         category: ModelCategory,
@@ -76,7 +76,7 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
         rotation: SIMD4<Float> = SIMD4<Float>(0, 0, 0, 1),
         scale: CGFloat = 1.0,
         material: MaterialConfig = MaterialConfig(),
-        animation: ElementAnimation? = nil,
+        animation: ARAnimationType? = nil,
         isSelected: Bool = false,
         isInteractive: Bool = true,
         isFavorite: Bool = false,
@@ -103,15 +103,15 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
         self.modifiedAt = modifiedAt
     }
     
-    /// 从 Phase 21 的 ARElement 转换
-    init(from arElement: ARElement) {
+    /// 从 Phase 21 的 ARDreamElement 转换
+    init(from arElement: ARDreamElement) {
         self.id = arElement.id
         self.name = arElement.name
         self.elementType = arElement.type
         self.category = ModelCategory(from: arElement.type)
-        self.position = SIMD3<Float>(0, 0, 0)
-        self.rotation = SIMD4<Float>(0, 0, 0, 1)
-        self.scale = 1.0
+        self.position = arElement.position
+        self.rotation = arElement.rotation
+        self.scale = CGFloat(arElement.scale.x)
         self.material = MaterialConfig()
         self.animation = arElement.animation
         self.isSelected = false
@@ -122,16 +122,14 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
         self.modifiedAt = Date()
     }
     
-    /// 转换为 Phase 21 的 ARElement
-    func toARElement() -> ARElement {
-        return ARElement(
-            id: self.id,
-            type: self.elementType,
-            name: self.name,
-            position: .zero,
-            animation: self.animation,
-            color: self.material.color
-        )
+    /// 转换为 Phase 21 的 ARDreamElement
+    func toARElement() -> ARDreamElement {
+        var element = ARDreamElement(type: self.elementType, name: self.name, description: self.name)
+        element.position = self.position
+        element.scale = SIMD3<Float>(Float(self.scale), Float(self.scale), Float(self.scale))
+        element.rotation = self.rotation
+        element.animation = self.animation
+        return element
     }
     
     /// 哈希值
@@ -157,6 +155,9 @@ enum ModelCategory: String, Codable, CaseIterable, Identifiable {
     
     var id: String { rawValue }
     
+    /// 类别显示名称
+    var displayName: String { rawValue }
+    
     /// 类别图标
     var icon: String {
         switch self {
@@ -181,20 +182,20 @@ enum ModelCategory: String, Codable, CaseIterable, Identifiable {
         }
     }
     
-    /// 从 ARElementType 转换
-    init(from arType: ARElementType) {
+    /// 从 ARDreamElementType 转换
+    init(from arType: ARDreamElementType) {
         switch arType {
         case .water, .wind, .earth, .nature:
             self = .nature
-        case .animal, .butterfly:
+        case .animal:
             self = .animal
-        case .person:
+        case .human:
             self = .person
-        case .building, .door:
+        case .building, .vehicle:
             self = .building
         case .light, .dark, .abstract:
             self = .abstract
-        case .fire, .traffic:
+        case .fire:
             self = .dreamSymbol
         }
     }
@@ -357,7 +358,7 @@ struct DreamARTemplate: Codable, Identifiable {
     var id: UUID
     var name: String
     var nameLocalizable: String {
-        return L.templateName(name)
+        return name
     }
     var description: String
     var category: TemplateCategory
