@@ -2,7 +2,7 @@
 //  WatchContentView.swift
 //  DreamLog WatchKit Extension
 //
-//  Apple Watch 主界面
+//  Apple Watch 主界面 - Phase 32 增强
 //
 
 import SwiftUI
@@ -11,8 +11,10 @@ import WatchKit
 struct WatchContentView: View {
     @EnvironmentObject var dreamStore: DreamStore
     @EnvironmentObject var hapticFeedback: HapticFeedback
+    @StateObject private var syncService = DreamWatchSyncService.shared
     @State private var selectedTab = 0
     @State private var isRecording = false
+    @State private var showingHandoffPrompt = false
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -49,6 +51,42 @@ struct WatchContentView: View {
                 .tag(3)
         }
         .tint(Color(hex: "9B7EBD"))
+        .onAppear {
+            // 检查接力状态
+            checkHandoffStatus()
+        }
+        .onChange(of: syncService.syncStatus) { newStatus in
+            handleSyncStatusChange(newStatus)
+        }
+    }
+    
+    private func checkHandoffStatus() {
+        // 检查是否有来自 iPhone 的接力活动
+        #if os(watchOS)
+        WKExtension.shared().handleUserActivity { activity in
+            if let activity = activity {
+                // 处理接力活动
+                handleHandoff(activity)
+            }
+        }
+        #endif
+    }
+    
+    private func handleHandoff(_ activity: any NSUserActivity) {
+        // 处理来自 iPhone 的接力
+        showingHandoffPrompt = true
+        hapticFeedback.trigger(.success)
+    }
+    
+    private func handleSyncStatusChange(_ status: SyncStatus) {
+        switch status {
+        case .completed:
+            hapticFeedback.trigger(.success)
+        case .failed:
+            hapticFeedback.trigger(.error)
+        default:
+            break
+        }
     }
 }
 
