@@ -21,8 +21,14 @@ final class DreamPredictionService {
     private var predictionCache: [Date: DreamPrediction] = [:]
     private let cacheQueue = DispatchQueue(label: "com.dreamlog.prediction.cache")
     
-    init(modelContext: ModelContext? = nil) {
-        self.modelContext = modelContext ?? (try? ModelContext(sharedModelContainer: SharedModelContainer.main))!
+    private init(modelContext: ModelContext? = nil) {
+        if let context = modelContext {
+            self.modelContext = context
+        } else if let container = SharedModelContainer.main {
+            self.modelContext = try! ModelContext(sharedModelContainer: container)
+        } else {
+            fatalError("无法初始化模型上下文：SharedModelContainer.main 未设置")
+        }
         self.config = .default
         loadConfig()
     }

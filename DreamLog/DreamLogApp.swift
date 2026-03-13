@@ -18,10 +18,11 @@ struct DreamLogApp: App {
         Self.shared = self
         
         // 初始化 SwiftData 模型容器
-        // 注意：Dream 使用 UserDefaults 持久化，只有 DreamTimeCapsule 使用 SwiftData
+        // 注意：Dream 使用 UserDefaults 持久化，只有 DreamTimeCapsule 和 DreamPrediction 使用 SwiftData
         do {
             let schema = Schema([
-                DreamTimeCapsule.self
+                DreamTimeCapsule.self,
+                DreamPrediction.self
             ])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
@@ -34,6 +35,9 @@ struct DreamLogApp: App {
         } catch {
             fatalError("无法初始化模型容器：\(error)")
         }
+        
+        // 初始化共享模型容器
+        SharedModelContainer.initialize(modelContainer)
     }
     
     @ObservedObject private var dreamStore = DreamStore.shared

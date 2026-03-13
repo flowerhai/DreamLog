@@ -175,6 +175,13 @@ struct ContentView: View {
                     Text("AI 解析")
                 }
                 .tag(22)
+            
+            DreamPredictionView()
+                .tabItem {
+                    Image(systemName: "crystal.ball")
+                    Text("预测")
+                }
+                .tag(23)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
