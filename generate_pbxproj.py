@@ -9,13 +9,22 @@ def gen_uuid():
     """Generate an 8-character uppercase hex UUID."""
     return uuid.uuid4().hex[:8].upper()
 
-# Get all Swift files in DreamLog folder
+# Get all Swift files in DreamLog folder and root directory
 swift_files = []
+
+# Files in DreamLog subdirectory
 for root, dirs, files in os.walk('DreamLog'):
     for f in files:
         if f.endswith('.swift'):
             rel_path = os.path.join(root, f)
             swift_files.append(rel_path)
+
+# Files in root directory (excluding tests, docs, and config files)
+for f in os.listdir('.'):
+    if f.endswith('.swift') and os.path.isfile(f):
+        # Exclude test files and generated files
+        if 'Tests' not in f and f != 'generate_pbxproj.py':
+            swift_files.append(f)
 
 # Sort for consistency
 swift_files.sort()

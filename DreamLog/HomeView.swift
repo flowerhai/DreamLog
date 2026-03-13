@@ -225,18 +225,33 @@ struct TagFilterSection: View {
 // MARK: - 梦境列表
 struct DreamListSection: View {
     let dreams: [Dream]
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(dreams, id: \.id) { dream in
-                    NavigationLink(destination: DreamDetailView(dream: dream)) {
-                        DreamCard(dream: dream)
+            if dreams.isEmpty {
+                // 空状态 - 使用 DreamEmptyStates
+                DreamListEmptyView(
+                    hasSearched: false,
+                    onRecordDream: {
+                        hapticService.trigger(.success)
                     }
-                    .buttonStyle(.plain)
+                )
+                .padding()
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(dreams, id: \.id) { dream in
+                        NavigationLink(destination: DreamDetailView(dream: dream)) {
+                            DreamCard(dream: dream)
+                                .onTapGesture {
+                                    hapticService.trigger(.selection)
+                                }
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
+                .padding()
             }
-            .padding()
         }
     }
 }

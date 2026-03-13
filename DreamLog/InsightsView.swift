@@ -9,6 +9,7 @@ import SwiftUI
 
 struct InsightsView: View {
     @EnvironmentObject var dreamStore: DreamStore
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     var stats: DreamStatistics {
         dreamStore.getStatistics()
@@ -18,10 +19,24 @@ struct InsightsView: View {
         dreamStore.findPatterns()
     }
     
+    var hasNoDreams: Bool {
+        dreamStore.dreams.isEmpty
+    }
+    
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+            if hasNoDreams {
+                // 空状态 - 需要更多梦境才能生成洞察
+                DreamInsightsEmptyView(
+                    dreamCount: 0,
+                    onDismiss: {
+                        hapticService.trigger(.selection)
+                    }
+                )
+                .padding()
+            } else {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
                     // AI 趋势分析入口 ✨ NEW
                     NavigationLink(destination: DreamTrendView().environmentObject(dreamStore)) {
                         HStack(spacing: 16) {
@@ -233,6 +248,7 @@ struct InsightsView: View {
                 .padding()
             }
             .navigationTitle("梦境洞察 📊")
+            }
         }
     }
 }
