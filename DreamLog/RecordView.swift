@@ -12,6 +12,7 @@ struct RecordView: View {
     @EnvironmentObject var dreamStore: DreamStore
     @EnvironmentObject var speechService: SpeechService
     @EnvironmentObject var aiService: AIService
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     @State private var title: String = ""
     @State private var content: String = ""
@@ -100,11 +101,13 @@ struct RecordView: View {
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("取消") {
+                        hapticService.trigger(.selection)
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("保存") {
+                        hapticService.trigger(.mediumImpact)
                         saveDream()
                     }
                     .disabled(content.isEmpty || isSaving)
@@ -149,6 +152,8 @@ struct RecordView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             isSaving = false
             showingSaveSuccess = true
+            // 触觉反馈 - 保存成功
+            hapticService.trigger(.success)
         }
     }
 }
