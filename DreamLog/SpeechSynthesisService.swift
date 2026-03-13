@@ -315,8 +315,8 @@ struct SpeechSettingsView: View {
                         if let voiceId = speechService.config.voiceIdentifier,
                            let voice = AVSpeechSynthesisVoice(identifier: voiceId) {
                             speechService.previewVoice(voice)
-                        } else {
-                            speechService.previewVoice(AVSpeechSynthesisVoice(language: "zh-CN")!)
+                        } else if let defaultVoice = AVSpeechSynthesisVoice(language: "zh-CN") {
+                            speechService.previewVoice(defaultVoice)
                         }
                     }
                 }
