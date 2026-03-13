@@ -10,7 +10,7 @@ import SwiftUI
 
 /// Dream Story View - Main container
 struct DreamStoryView: View {
-    @EnvironmentObject var store: DreamStore
+    @EnvironmentObject var dreamStore: DreamStore
     @State private var selectedDream: Dream?
     @State private var isGeneratingStory = false
     @State private var generatedStory: DreamStoryService.GeneratedStory?
@@ -201,7 +201,7 @@ struct DreamStoryView: View {
         isGeneratingStory = true
         
         // Get a random dream with sufficient content
-        let dreams = store.dreams.filter { $0.content.count > 50 }
+        let dreams = dreamStore.dreams.filter { $0.content.count > 50 }
         
         guard let dream = dreams.randomElement() else {
             isGeneratingStory = false

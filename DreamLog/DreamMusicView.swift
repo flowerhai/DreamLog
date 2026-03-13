@@ -11,6 +11,7 @@ import SwiftUI
 // MARK: - 梦境音乐主视图
 
 struct DreamMusicView: View {
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     @ObservedObject private var musicService = DreamMusicService.shared
     @State private var selectedDream: Dream?
     @State private var showingGenerator = false
@@ -75,7 +76,10 @@ struct DreamMusicView: View {
                 
                 Spacer()
                 
-                Button(action: { showingGenerator = true }) {
+                Button(action: {
+                    hapticService.trigger(.selection)
+                    showingGenerator = true
+                }) {
                     Image(systemName: "wand.and.stars")
                         .font(.title2)
                         .padding(12)
@@ -110,6 +114,7 @@ struct DreamMusicView: View {
             RecentDreamsPicker(selectedDream: $selectedDream)
             
             Button(action: {
+                hapticService.trigger(.selection)
                 if selectedDream != nil {
                     showingGenerator = true
                 }
@@ -270,6 +275,7 @@ struct RecentDreamsPicker: View {
                 HStack(spacing: 8) {
                     ForEach(recentDreams) { dream in
                         Button(action: {
+                            hapticService.trigger(.selection)
                             selectedDream = dream
                         }) {
                             VStack(alignment: .leading, spacing: 4) {
@@ -299,10 +305,14 @@ struct RecentDreamsPicker: View {
 struct MusicListItemView: View {
     let music: DreamMusic
     let onTap: () -> Void
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     @ObservedObject private var musicService = DreamMusicService.shared
     
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            hapticService.trigger(.selection)
+            onTap()
+        }) {
             HStack(spacing: 12) {
                 // 情绪图标
                 ZStack {
@@ -349,12 +359,16 @@ struct MusicListItemView: View {
         }
         .contextMenu {
             // 播放
-            Button(action: onTap) {
+            Button(action: {
+                hapticService.trigger(.selection)
+                onTap()
+            }) {
                 Label("播放", systemImage: "play.fill")
             }
             
             // 导出
             Button(action: {
+                hapticService.trigger(.selection)
                 Task {
                     await musicService.exportMusic(music)
                 }
@@ -364,6 +378,7 @@ struct MusicListItemView: View {
             
             // 分享
             Button(action: {
+                hapticService.trigger(.selection)
                 Task {
                     await musicService.shareMusic(music)
                 }
@@ -375,6 +390,7 @@ struct MusicListItemView: View {
             
             // 收藏
             Button(action: {
+                hapticService.trigger(.selection)
                 musicService.toggleFavorite(music)
             }) {
                 Label(music.isFavorite ? "取消收藏" : "收藏", 
@@ -385,6 +401,7 @@ struct MusicListItemView: View {
             
             // 删除
             Button(role: .destructive, action: {
+                hapticService.trigger(.warning)
                 musicService.deleteMusic(music)
             }) {
                 Label("删除", systemImage: "trash")
@@ -405,9 +422,13 @@ struct MusicCardView: View {
     let music: DreamMusic
     let compact: Bool
     let onTap: () -> Void
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            hapticService.trigger(.selection)
+            onTap()
+        }) {
             VStack(alignment: .leading, spacing: 8) {
                 // 封面
                 ZStack {
@@ -447,9 +468,13 @@ struct MusicCardView: View {
 struct MoodCardView: View {
     let mood: DreamMusic.DreamMusicMood
     let onTap: () -> Void
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            hapticService.trigger(.selection)
+            onTap()
+        }) {
             VStack(spacing: 8) {
                 ZStack {
                     Circle()
@@ -477,6 +502,7 @@ struct MoodCardView: View {
 
 struct DreamMusicGeneratorView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     @ObservedObject private var musicService = DreamMusicService.shared
     let dream: Dream?
     
@@ -553,6 +579,7 @@ struct DreamMusicGeneratorView: View {
             }
             
             Button(action: {
+                hapticService.trigger(.selection)
                 if let dream = dream {
                     Task {
                         await musicService.generateMusic(for: dream)
@@ -710,6 +737,7 @@ struct DreamMusicGeneratorView: View {
             VStack(spacing: 12) {
                 HStack(spacing: 15) {
                     Button(action: {
+                        hapticService.trigger(.success)
                         musicService.saveMusic(music)
                         dismiss()
                     }) {
@@ -725,6 +753,7 @@ struct DreamMusicGeneratorView: View {
                     }
                     
                     Button(action: {
+                        hapticService.trigger(.selection)
                         musicService.play(music)
                         musicService.saveMusic(music)
                     }) {
@@ -743,6 +772,7 @@ struct DreamMusicGeneratorView: View {
                 // 导出和分享按钮
                 HStack(spacing: 15) {
                     Button(action: {
+                        hapticService.trigger(.selection)
                         Task {
                             await musicService.exportMusic(music)
                         }
@@ -759,6 +789,7 @@ struct DreamMusicGeneratorView: View {
                     }
                     
                     Button(action: {
+                        hapticService.trigger(.selection)
                         Task {
                             await musicService.shareMusic(music)
                         }
@@ -789,6 +820,7 @@ struct DreamMusicGeneratorView: View {
 
 struct DreamMusicPlayerView: View {
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     @ObservedObject private var musicService = DreamMusicService.shared
     let music: DreamMusic
     @State private var isPlaying = false
@@ -877,6 +909,7 @@ struct DreamMusicPlayerView: View {
                     // 播放控制
                     HStack(spacing: 40) {
                         Button(action: {
+                            hapticService.trigger(.selection)
                             currentTime = max(0, currentTime - 10)
                             musicService.seek(to: currentTime)
                         }) {
@@ -886,6 +919,7 @@ struct DreamMusicPlayerView: View {
                         }
                         
                         Button(action: {
+                            hapticService.trigger(.selection)
                             if isPlaying {
                                 musicService.pause()
                                 isPlaying = false
@@ -906,6 +940,7 @@ struct DreamMusicPlayerView: View {
                         }
                         
                         Button(action: {
+                            hapticService.trigger(.selection)
                             currentTime = min(music.duration, currentTime + 10)
                             musicService.seek(to: currentTime)
                         }) {
@@ -983,6 +1018,7 @@ struct DreamMusicPlayerView: View {
                     Menu {
                         // 导出选项
                         Button(action: {
+                            hapticService.trigger(.selection)
                             Task {
                                 await musicService.exportMusic(music)
                             }
@@ -993,6 +1029,7 @@ struct DreamMusicPlayerView: View {
                         // 分享选项
                         Menu("分享到") {
                             Button(action: {
+                                hapticService.trigger(.selection)
                                 Task {
                                     await musicService.shareMusicToSocial(music, platform: .wechat)
                                 }
@@ -1000,6 +1037,7 @@ struct DreamMusicPlayerView: View {
                                 Label("微信", systemImage: "message.fill")
                             }
                             Button(action: {
+                                hapticService.trigger(.selection)
                                 Task {
                                     await musicService.shareMusicToSocial(music, platform: .weibo)
                                 }
@@ -1007,6 +1045,7 @@ struct DreamMusicPlayerView: View {
                                 Label("微博", systemImage: "weibo")
                             }
                             Button(action: {
+                                hapticService.trigger(.selection)
                                 Task {
                                     await musicService.shareMusicToSocial(music, platform: .qq)
                                 }
@@ -1014,6 +1053,7 @@ struct DreamMusicPlayerView: View {
                                 Label("QQ", systemImage: "message.circle.fill")
                             }
                             Button(action: {
+                                hapticService.trigger(.selection)
                                 UIPasteboard.general.string = music.title
                             }) {
                                 Label("复制链接", systemImage: "link")
