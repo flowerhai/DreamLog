@@ -79,6 +79,7 @@ struct RootView: View {
     @EnvironmentObject var timelineService: DreamTimelineService
     @EnvironmentObject var challengeService: DreamChallengeService
     @EnvironmentObject var hapticService: DreamHapticFeedback
+    @ObservedObject private var smartReminderService = SmartReminderService.shared
     
     @State private var showOnboarding = false
     @State private var appInitialized = false
