@@ -12,6 +12,7 @@ struct DreamDetailView: View {
     let dream: Dream
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var dreamStore: DreamStore
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     @StateObject private var shareService = ShareService()
     @StateObject private var friendService = FriendService()
     @ObservedObject private var aiArtService = AIArtService.shared
@@ -90,7 +91,10 @@ struct DreamDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: { showingShareSheet = true }) {
+                Button(action: {
+                    hapticService.trigger(.selection)
+                    showingShareSheet = true
+                }) {
                     Image(systemName: "square.and.arrow.up")
                         .foregroundColor(.accentColor)
                 }
@@ -105,6 +109,7 @@ struct DreamDetailView: View {
         .alert("删除梦境", isPresented: $showingDeleteAlert) {
             Button("取消", role: .cancel) {}
             Button("删除", role: .destructive) {
+                hapticService.trigger(.mediumImpact)
                 dreamStore.deleteDream(dream)
                 dismiss()
             }
@@ -442,12 +447,16 @@ struct ActionButtons: View {
     let onPrivateShare: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     var body: some View {
         VStack(spacing: 12) {
             // 分享按钮行
             HStack(spacing: 12) {
-                Button(action: onShare) {
+                Button(action: {
+                    hapticService.trigger(.selection)
+                    onShare()
+                }) {
                     Label("公开分享", systemImage: "globe")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -456,7 +465,10 @@ struct ActionButtons: View {
                         .cornerRadius(12)
                 }
                 
-                Button(action: onPrivateShare) {
+                Button(action: {
+                    hapticService.trigger(.selection)
+                    onPrivateShare()
+                }) {
                     Label("好友分享", systemImage: "person.2.fill")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -468,7 +480,10 @@ struct ActionButtons: View {
             
             // 编辑和删除按钮行
             HStack(spacing: 12) {
-                Button(action: onEdit) {
+                Button(action: {
+                    hapticService.trigger(.selection)
+                    onEdit()
+                }) {
                     Label("编辑", systemImage: "pencil")
                         .frame(maxWidth: .infinity)
                         .padding()
@@ -477,7 +492,10 @@ struct ActionButtons: View {
                         .cornerRadius(12)
                 }
                 
-                Button(action: onDelete) {
+                Button(action: {
+                    hapticService.trigger(.warning)
+                    onDelete()
+                }) {
                     Image(systemName: "trash")
                         .font(.system(size: 18, weight: .semibold))
                         .frame(width: 50, height: 50)
@@ -577,6 +595,7 @@ struct DreamArtPreviewSection: View {
 // MARK: - 生成艺术提示区域
 struct GenerateArtPromptSection: View {
     let onGenerate: () -> Void
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -592,7 +611,10 @@ struct GenerateArtPromptSection: View {
                 .font(.subheadline)
                 .foregroundColor(.white.opacity(0.8))
             
-            Button(action: onGenerate) {
+            Button(action: {
+                hapticService.trigger(.selection)
+                onGenerate()
+            }) {
                 HStack {
                     Image(systemName: "wand.and.stars")
                     Text("生成梦境图像")
@@ -633,6 +655,7 @@ struct GenerateArtPromptSection: View {
 struct DreamStoryPromptSection: View {
     let dream: Dream
     let onGenerate: () -> Void
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -652,7 +675,10 @@ struct DreamStoryPromptSection: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            Button(action: onGenerate) {
+            Button(action: {
+                hapticService.trigger(.selection)
+                onGenerate()
+            }) {
                 HStack {
                     Image(systemName: "sparkles")
                     Text("生成梦境故事")

@@ -10,6 +10,7 @@ import UIKit
 
 struct SettingsView: View {
     @EnvironmentObject var dreamStore: DreamStore
+    @EnvironmentObject var hapticService: DreamHapticFeedback
     @AppStorage("notificationsEnabled") private var notificationsEnabled = true
     @AppStorage("reminderTime") private var reminderTime = "08:00"
     @AppStorage("icloudSync") private var icloudSync = false
@@ -44,11 +45,17 @@ struct SettingsView: View {
                 // 外观设置
                 Section(header: Label("外观", systemImage: "paintpalette")) {
                     Toggle("深色模式", isOn: $darkMode)
+                        .onChange(of: darkMode) { _ in
+                            hapticService.trigger(.toggleSwitch)
+                        }
                     
                     HStack {
                         Text("主题色")
                         Spacer()
                         ColorPicker("", selection: .constant(.accentColor))
+                            .onChange(of: .accentColor) { _ in
+                                hapticService.trigger(.selection)
+                            }
                     }
                 }
                 
@@ -194,6 +201,9 @@ struct SettingsView: View {
                 // 提醒设置
                 Section(header: Label("提醒", systemImage: "bell")) {
                     Toggle("晨间提醒", isOn: $notificationsEnabled)
+                        .onChange(of: notificationsEnabled) { _ in
+                            hapticService.trigger(.toggleSwitch)
+                        }
                     
                     if notificationsEnabled {
                         HStack {
@@ -207,6 +217,9 @@ struct SettingsView: View {
                     }
                     
                     Toggle("自动 AI 解析", isOn: $autoAnalysis)
+                        .onChange(of: autoAnalysis) { _ in
+                            hapticService.trigger(.toggleSwitch)
+                        }
                     
                     // 智能提醒系统入口
                     NavigationLink(destination: SmartReminderSettingsView(service: reminderService, dreamStore: dreamStore)) {
