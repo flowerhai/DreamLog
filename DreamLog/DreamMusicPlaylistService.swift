@@ -454,8 +454,8 @@ class DreamMusicPlaylistService: ObservableObject {
     }
     
     private func generateShareCode() -> String {
-        let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return String((0..<8).map { _ in chars.randomElement()! })
+        let chars = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789")
+        return String((0..<8).map { _ in chars.randomElement() ?? "A" })
     }
     
     /// 通过分享码获取音乐

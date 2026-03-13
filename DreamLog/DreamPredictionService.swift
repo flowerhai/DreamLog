@@ -253,7 +253,8 @@ final class DreamPredictionService {
         let timeStrings = optimalHours.map { hour -> String in
             let formatter = DateFormatter()
             formatter.dateFormat = "HH:00"
-            return formatter.string(from: Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date())!)
+            let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) ?? Date()
+            return formatter.string(from: date)
         }
         
         return DreamPrediction(
@@ -938,9 +939,11 @@ final class DreamPredictionService {
     // MARK: - 数据获取
     
     private func fetchRecentDreams(days: Int) async -> [Dream] {
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date.distantPast
+        
         let fetchDescriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
-                dream.createdAt >= Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+                dream.createdAt >= cutoffDate
             },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
         )
@@ -962,7 +965,7 @@ final class DreamPredictionService {
     
     func getPredictions(for date: Date) async -> [DreamPrediction] {
         let startOfDay = Calendar.current.startOfDay(for: date)
-        let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay)!
+        let endOfDay = Calendar.current.date(byAdding: .day, value: 1, to: startOfDay) ?? Date.distantFuture
         
         let fetchDescriptor = FetchDescriptor<DreamPrediction>(
             predicate: #Predicate { prediction in
@@ -976,7 +979,7 @@ final class DreamPredictionService {
     
     func getUpcomingPredictions(days: Int = 7) async -> [DreamPrediction] {
         let now = Date()
-        let futureDate = Calendar.current.date(byAdding: .day, value: days, to: now)!
+        let futureDate = Calendar.current.date(byAdding: .day, value: days, to: now) ?? Date.distantFuture
         
         let fetchDescriptor = FetchDescriptor<DreamPrediction>(
             predicate: #Predicate { prediction in
@@ -1017,7 +1020,7 @@ final class DreamPredictionService {
     }
     
     func clearOldPredictions(olderThan days: Int = 30) {
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date())!
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -days, to: Date()) ?? Date.distantPast
         
         let fetchDescriptor = FetchDescriptor<DreamPrediction>(
             predicate: #Predicate { prediction in
