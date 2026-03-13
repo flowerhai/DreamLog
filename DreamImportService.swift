@@ -29,8 +29,12 @@ final class DreamImportService {
         } else {
             // 创建临时 context 用于预览
             let config = ModelConfiguration(isStoredInMemoryOnly: true)
-            let container = try! ModelContainer(for: Dream.self, configurations: config)
-            self.modelContext = ModelContext(container)
+            do {
+                let container = try ModelContainer(for: Dream.self, configurations: config)
+                self.modelContext = ModelContext(container)
+            } catch {
+                fatalError("Failed to create in-memory ModelContainer for DreamImportService: \(error)")
+            }
         }
     }
     
