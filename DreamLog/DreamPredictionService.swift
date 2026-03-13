@@ -25,7 +25,11 @@ final class DreamPredictionService {
         if let context = modelContext {
             self.modelContext = context
         } else if let container = SharedModelContainer.main {
-            self.modelContext = try! ModelContext(sharedModelContainer: container)
+            do {
+                self.modelContext = try ModelContext(sharedModelContainer: container)
+            } catch {
+                fatalError("无法初始化模型上下文：\(error)")
+            }
         } else {
             fatalError("无法初始化模型上下文：SharedModelContainer.main 未设置")
         }

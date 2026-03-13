@@ -209,53 +209,64 @@ struct AvatarModel: Codable, Identifiable, Hashable {
     }
     
     /// 预设虚拟化身
-    static let presets: [AvatarModel] = [
-        AvatarModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
-            name: "基础人脸",
-            description: "标准人脸模型，适合日常使用",
-            thumbnailName: "avatar_basic",
-            category: .basic,
-            isUnlocked: true,
-            unlockCondition: nil
-        ),
-        AvatarModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
-            name: "快乐精灵",
-            description: "带有翅膀的精灵形象",
-            thumbnailName: "avatar_elf",
-            category: .fantasy,
-            isUnlocked: false,
-            unlockCondition: "连续记录 7 天"
-        ),
-        AvatarModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
-            name: "机械战警",
-            description: "未来科技感机器人",
-            thumbnailName: "avatar_robot",
-            category: .robot,
-            isUnlocked: false,
-            unlockCondition: "创建 10 个 AR 场景"
-        ),
-        AvatarModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
-            name: "熊猫宝宝",
-            description: "可爱的熊猫形象",
-            thumbnailName: "avatar_panda",
-            category: .animal,
-            isUnlocked: false,
-            unlockCondition: "记录 50 个梦境"
-        ),
-        AvatarModel(
-            id: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!,
-            name: "星空使者",
-            description: "星空主题的奇幻形象",
-            thumbnailName: "avatar_stars",
-            category: .fantasy,
-            isUnlocked: false,
-            unlockCondition: "完成所有清醒梦训练"
-        )
-    ]
+    static let presets: [AvatarModel] = {
+        // 使用安全的 UUID 初始化方式，避免强制解包
+        let presetUUIDs = [
+            "00000000-0000-0000-0000-000000000001",
+            "00000000-0000-0000-0000-000000000002",
+            "00000000-0000-0000-0000-000000000003",
+            "00000000-0000-0000-0000-000000000004",
+            "00000000-0000-0000-0000-000000000005"
+        ]
+        
+        return [
+            AvatarModel(
+                id: UUID(uuidString: presetUUIDs[0]) ?? UUID(),
+                name: "基础人脸",
+                description: "标准人脸模型，适合日常使用",
+                thumbnailName: "avatar_basic",
+                category: .basic,
+                isUnlocked: true,
+                unlockCondition: nil
+            ),
+            AvatarModel(
+                id: UUID(uuidString: presetUUIDs[1]) ?? UUID(),
+                name: "快乐精灵",
+                description: "带有翅膀的精灵形象",
+                thumbnailName: "avatar_elf",
+                category: .fantasy,
+                isUnlocked: false,
+                unlockCondition: "连续记录 7 天"
+            ),
+            AvatarModel(
+                id: UUID(uuidString: presetUUIDs[2]) ?? UUID(),
+                name: "机械战警",
+                description: "未来科技感机器人",
+                thumbnailName: "avatar_robot",
+                category: .robot,
+                isUnlocked: false,
+                unlockCondition: "创建 10 个 AR 场景"
+            ),
+            AvatarModel(
+                id: UUID(uuidString: presetUUIDs[3]) ?? UUID(),
+                name: "熊猫宝宝",
+                description: "可爱的熊猫形象",
+                thumbnailName: "avatar_panda",
+                category: .animal,
+                isUnlocked: false,
+                unlockCondition: "记录 50 个梦境"
+            ),
+            AvatarModel(
+                id: UUID(uuidString: presetUUIDs[4]) ?? UUID(),
+                name: "星空使者",
+                description: "星空主题的奇幻形象",
+                thumbnailName: "avatar_stars",
+                category: .fantasy,
+                isUnlocked: false,
+                unlockCondition: "完成所有清醒梦训练"
+            )
+        ]
+    }()
 }
 
 // MARK: - 面部追踪服务
