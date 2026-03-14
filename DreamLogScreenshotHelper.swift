@@ -1,0 +1,694 @@
+//
+//  DreamLogScreenshotHelper.swift
+//  DreamLog
+//
+//  Created for Phase 38 - App Store 发布准备
+//  Copyright © 2026 DreamLog. All rights reserved.
+//
+
+import SwiftUI
+
+// MARK: - Screenshot Helper View
+// 用于 App Store 截图的辅助视图
+// 使用方法：在 Settings 中启用 Screenshot Mode，然后导航到各个页面截图
+
+/// Screenshot 模式配置
+struct ScreenshotConfig {
+    static let showDeviceFrame = false  // 是否显示设备框架 (后期添加)
+    static let hideStatusBar = true     // 隐藏状态栏
+    static let useLightMode = true      // 使用浅色模式
+    static let fontSize: CGFloat = 17   // 默认字体大小
+}
+
+// MARK: - 首页截图视图
+
+/// 首页截图预览 - 展示梦境列表和统计
+struct HomeScreenshotView: View {
+    @Environment(\.modelContext) private var modelContext
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // 头部统计卡片
+            headerStatsSection
+            
+            Divider()
+                .padding(.horizontal)
+            
+            // 梦境列表
+            dreamListSection
+        }
+        .navigationTitle("DreamLog")
+        .navigationBarTitleDisplayMode(.large)
+        .background(Color(.systemBackground))
+    }
+    
+    private var headerStatsSection: some View {
+        VStack(spacing: 16) {
+            // 连续记录卡片
+            StreakCard(days: 7, totalDreams: 128)
+            
+            // 统计网格
+            HStack(spacing: 12) {
+                StatCard(
+                    value: "128",
+                    title: "总梦境",
+                    icon: "moon.fill",
+                    color: .purple
+                )
+                
+                StatCard(
+                    value: "23",
+                    title: "清醒梦",
+                    icon: "star.fill",
+                    color: .yellow
+                )
+                
+                StatCard(
+                    value: "8.5",
+                    title: "平均清晰",
+                    icon: "eye.fill",
+                    color: .blue
+                )
+            }
+            .padding(.horizontal)
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.purple.opacity(0.1), Color(.systemBackground)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+    
+    private var dreamListSection: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                ForEach(sampleDreams) { dream in
+                    DreamCard(dream: dream)
+                        .padding(.horizontal)
+                }
+            }
+            .padding(.vertical)
+        }
+    }
+    
+    private var sampleDreams: [Dream] {
+        [
+            Dream(title: "昨晚的奇幻冒险", date: Date(), mood: .excited, clarity: 9, tags: ["冒险", "飞行", "奇幻"]),
+            Dream(title: "深海探险", date: Date().addingTimeInterval(-86400), mood: .calm, clarity: 8, tags: ["海洋", "探索", "宁静"]),
+            Dream(title: "与故人重逢", date: Date().addingTimeInterval(-172800), mood: .happy, clarity: 7, tags: ["回忆", "情感", "温暖"]),
+            Dream(title: "未来城市", date: Date().addingTimeInterval(-259200), mood: .curious, clarity: 8, tags: ["科幻", "未来", "城市"]),
+        ]
+    }
+}
+
+// MARK: - AI 解析截图视图
+
+/// AI 解析截图预览 - 展示三层解析结果
+struct AIAnalysisScreenshotView: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // 梦境标题
+                dreamHeader
+                
+                // 三层解析卡片
+                analysisLayers
+                
+                // 智能洞察
+                insightsSection
+                
+                // 个性化建议
+                suggestionsSection
+            }
+            .padding()
+        }
+        .navigationTitle("AI 梦境解析")
+        .navigationBarTitleDisplayMode(.large)
+    }
+    
+    private var dreamHeader: some View {
+        VStack(spacing: 8) {
+            Text("昨晚的奇幻冒险")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            HStack {
+                Label("2026 年 3 月 14 日", systemImage: "calendar")
+                Label("清晰度 9/10", systemImage: "star.fill")
+            }
+            .font(.subheadline)
+            .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+    
+    private var analysisLayers: some View {
+        VStack(spacing: 16) {
+            AnalysisLayerCard(
+                title: "🧠 表层解析",
+                content: "这是一次充满冒险精神的梦境，飞行元素象征着对自由的渴望和突破限制的愿望。",
+                color: .blue
+            )
+            
+            AnalysisLayerCard(
+                title: "🔮 深层解析",
+                content: "反映了你内心对未知领域的好奇心和探索欲。可能预示着生活中即将迎来新的机遇和挑战。",
+                color: .purple
+            )
+            
+            AnalysisLayerCard(
+                title: "🎭 原型层",
+                content: "英雄原型 - 成长之旅。你正在经历个人成长的阶段，勇敢面对挑战并将获得突破。",
+                color: .orange
+            )
+        }
+    }
+    
+    private var insightsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("💡 智能洞察")
+                .font(.headline)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                InsightRow(icon: "📈", text: "近期冒险主题梦境增多，创造力处于高峰期")
+                InsightRow(icon: "🌙", text: "清晰度持续提升，清醒梦练习效果显著")
+                InsightRow(icon: "✨", text: "情绪积极，心理健康状态良好")
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+    
+    private var suggestionsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("📝 个性化建议")
+                .font(.headline)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                SuggestionRow(icon: "🎯", text: "尝试记录梦境后的第一个想法")
+                SuggestionRow(icon: "🧘", text: "睡前进行 5 分钟冥想，提升梦境质量")
+                SuggestionRow(icon: "📖", text: "阅读关于飞行梦境的解析，加深理解")
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - AR 可视化截图视图
+
+/// AR 可视化截图预览 - 展示 3D 梦境元素
+struct ARVisualizationScreenshotView: View {
+    var body: some View {
+        ZStack {
+            // 模拟 AR 背景
+            ARBackgroundView()
+            
+            // 3D 元素
+            ARElementsOverlay()
+            
+            // 控制按钮
+            ControlButtonsOverlay()
+        }
+        .navigationTitle("AR 梦境世界")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Image(systemName: "cube.box.fill")
+                    .foregroundColor(.accentColor)
+            }
+        }
+    }
+}
+
+struct ARBackgroundView: View {
+    var body: some View {
+        LinearGradient(
+            colors: [
+                Color(red: 0.1, green: 0.1, blue: 0.3),
+                Color(red: 0.2, green: 0.1, blue: 0.4),
+                Color(red: 0.3, green: 0.1, blue: 0.5)
+            ],
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .overlay(
+            // 星空效果
+            Canvas { context, size in
+                for _ in 0..<50 {
+                    let x = CGFloat.random(in: 0..<size.width)
+                    let y = CGFloat.random(in: 0..<size.height)
+                    let radius = CGFloat.random(in: 1..<3)
+                    let path = Circle().path(in: CGRect(x: x, y: y, width: radius * 2, height: radius * 2))
+                    context.fill(path, with: .color(.white.opacity(Double.random(in: 0.3..<0.8))))
+                }
+            }
+        )
+    }
+}
+
+struct ARElementsOverlay: View {
+    var body: some View {
+        GeometryReader { geometry in
+            // 漂浮的光点
+            ForEach(0..<5) { index in
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [.yellow, .orange.opacity(0.1)],
+                            center: .center,
+                            radius: 30
+                        )
+                    )
+                    .frame(width: 60, height: 60)
+                    .position(
+                        x: CGFloat.random(in: 50..<geometry.size.width - 50),
+                        y: CGFloat.random(in: 50..<geometry.size.height - 50)
+                    )
+                    .blur(radius: 5)
+            }
+            
+            // 水元素
+            Ellipse()
+                .fill(
+                    LinearGradient(
+                        colors: [.blue.opacity(0.6), .cyan.opacity(0.3)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+                .frame(width: 120, height: 80)
+                .position(x: geometry.size.width * 0.3, y: geometry.size.height * 0.6)
+                .blur(radius: 10)
+            
+            // 蝴蝶
+            Image(systemName: "ladybug.fill")
+                .font(.system(size: 40))
+                .foregroundColor(.orange)
+                .position(x: geometry.size.width * 0.7, y: geometry.size.height * 0.4)
+                .rotationEffect(.degrees(45))
+        }
+    }
+}
+
+struct ControlButtonsOverlay: View {
+    var body: some View {
+        VStack {
+            Spacer()
+            
+            HStack(spacing: 20) {
+                ControlButton(icon: "plus", label: "添加")
+                ControlButton(icon: "wand.and.stars", label: "魔法")
+                ControlButton(icon: "record.circle", label: "录制", accent: true)
+                ControlButton(icon: "square.and.arrow.up", label: "分享")
+            }
+            .padding()
+            .background(
+                Color(.systemBackground)
+                    .opacity(0.9)
+            )
+            .cornerRadius(20)
+            .padding()
+        }
+    }
+}
+
+struct ControlButton: View {
+    let icon: String
+    let label: String
+    var accent: Bool = false
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(accent ? .white : .accentColor)
+                .frame(width: 50, height: 50)
+                .background(
+                    Circle()
+                        .fill(accent ? Color.accentColor : Color.accentColor.opacity(0.1))
+                )
+            
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - 分享中心截图视图
+
+/// 分享中心截图预览 - 展示分享配置和统计
+struct ShareHubScreenshotView: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            // 统计卡片
+            statsSection
+            
+            Divider()
+            
+            // 快速分享
+            quickShareSection
+            
+            Divider()
+            
+            // 分享配置
+            configsSection
+        }
+        .navigationTitle("分享中心")
+        .navigationBarTitleDisplayMode(.large)
+    }
+    
+    private var statsSection: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                StatCard(value: "47", title: "本周分享", icon: "paperplane.fill", color: .blue)
+                StatCard(value: "12", title: "本月分享", icon: "calendar", color: .purple)
+            }
+            
+            HStack {
+                Image(systemName: "star.fill")
+                    .foregroundColor(.yellow)
+                Text("最常用平台：微信朋友圈")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.blue.opacity(0.1), Color(.systemBackground)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+    
+    private var quickShareSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("快速分享")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    PlatformButton(platform: .wechat) {}
+                    PlatformButton(platform: .moments) {}
+                    PlatformButton(platform: .weibo) {}
+                    PlatformButton(platform: .xiaohongshu) {}
+                    PlatformButton(platform: .qq) {}
+                }
+                .padding(.horizontal)
+            }
+        }
+        .padding(.vertical)
+    }
+    
+    private var configsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("分享配置")
+                .font(.headline)
+                .padding(.horizontal)
+            
+            ConfigCard(
+                config: ShareConfig(
+                    name: "默认配置",
+                    platforms: [.wechat, .moments],
+                    template: .starry
+                )
+            ) {}
+            .padding(.horizontal)
+        }
+        .padding(.vertical)
+    }
+}
+
+// MARK: - 组件视图
+
+struct StreakCard: View {
+    let days: Int
+    let totalDreams: Int
+    
+    var body: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("🔥 \(days) 天连续记录")
+                    .font(.headline)
+                Text("已记录 \(totalDreams) 个梦境")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Circle()
+                .fill(
+                    LinearGradient(
+                        colors: [.orange, .red],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .frame(width: 60, height: 60)
+                .overlay(
+                    Text("\(days)")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                )
+        }
+        .padding()
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: .orange.opacity(0.3), radius: 10, x: 0, y: 5)
+    }
+}
+
+struct AnalysisLayerCard: View {
+    let title: String
+    let content: String
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+            
+            Text(content)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineSpacing(4)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(color.opacity(0.1))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(color.opacity(0.3), lineWidth: 1)
+                )
+        )
+    }
+}
+
+struct InsightRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(icon)
+                .font(.title2)
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+struct SuggestionRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Text(icon)
+                .font(.title2)
+            Text(text)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+struct PlatformButton: View {
+    let platform: SharePlatform
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Image(systemName: platform.iconName)
+                    .font(.title2)
+                    .foregroundColor(platformColor(platform))
+                
+                Text(platform.displayName)
+                    .font(.caption2)
+                    .lineLimit(1)
+            }
+            .frame(width: 70, height: 70)
+            .background(platformColor(platform).opacity(0.1))
+            .cornerRadius(12)
+        }
+    }
+    
+    private func platformColor(_ platform: SharePlatform) -> Color {
+        switch platform {
+        case .wechat: return .green
+        case .moments: return .green
+        case .weibo: return .red
+        case .xiaohongshu: return .red
+        case .qq: return .blue
+        default: return .gray
+        }
+    }
+}
+
+struct ConfigCard: View {
+    let config: ShareConfig
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Image(systemName: "wand.and.stars")
+                        .foregroundColor(.accentColor)
+                    Text(config.name)
+                        .font(.headline)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack(spacing: 8) {
+                    ForEach(config.platforms.prefix(4), id: \.self) { platform in
+                        Image(systemName: SharePlatform.iconName(for: platform))
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
+                    if config.platforms.count > 4 {
+                        Text("+\(config.platforms.count - 4)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                HStack {
+                    Label("模板：\(config.template.displayName)", systemImage: "paintbrush")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                    Spacer()
+                    Label("卡片", systemImage: "card.fill")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+        }
+    }
+}
+
+struct DreamCard: View {
+    let dream: Dream
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(dream.title)
+                    .font(.headline)
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                Image(systemName: moodIcon(dream.mood))
+                    .foregroundColor(moodColor(dream.mood))
+            }
+            
+            Text(dream.contentPreview)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+            
+            HStack {
+                ForEach(dream.tags.prefix(3), id: \.self) { tag in
+                    Text("#\(tag)")
+                        .font(.caption)
+                        .foregroundColor(.accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.accentColor.opacity(0.1))
+                        .cornerRadius(8)
+                }
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+    
+    private func moodIcon(_ mood: DreamMood) -> String {
+        switch mood {
+        case .happy: return "face.smiling"
+        case .calm: return "face.relaxed"
+        case .excited: return "star.fill"
+        case .curious: return "eye.fill"
+        default: return "face.smiling"
+        }
+    }
+    
+    private func moodColor(_ mood: DreamMood) -> Color {
+        switch mood {
+        case .happy: return .yellow
+        case .calm: return .blue
+        case .excited: return .orange
+        case .curious: return .purple
+        default: return .gray
+        }
+    }
+}
+
+// MARK: - 预览
+
+#Preview("首页截图") {
+    NavigationStack {
+        HomeScreenshotView()
+    }
+}
+
+#Preview("AI 解析截图") {
+    NavigationStack {
+        AIAnalysisScreenshotView()
+    }
+}
+
+#Preview("AR 可视化截图") {
+    NavigationStack {
+        ARVisualizationScreenshotView()
+    }
+}
+
+#Preview("分享中心截图") {
+    NavigationStack {
+        ShareHubScreenshotView()
+    }
+}
