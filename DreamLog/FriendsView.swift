@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FriendsView: View {
     @StateObject private var friendService: FriendService
-    @ObservedObject var dreamStore: DreamStore
+    @EnvironmentObject var dreamStore: DreamStore
     @State private var selectedTab: FriendTab = .list
     @State private var showingAddFriend = false
     @State private var showingCreateCircle = false
@@ -32,8 +32,7 @@ struct FriendsView: View {
         }
     }
     
-    init(dreamStore: DreamStore) {
-        _dreamStore = ObservedObject(wrappedValue: dreamStore)
+    init(dreamStore: DreamStore = DreamStore.shared) {
         _friendService = StateObject(wrappedValue: FriendService())
     }
     

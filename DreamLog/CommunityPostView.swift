@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct CommunityPostView: View {
-    @ObservedObject var dreamStore: DreamStore
-    @ObservedObject var communityService: CommunityService
+    @EnvironmentObject var dreamStore: DreamStore
+    @EnvironmentObject var communityService: CommunityService
     @Environment(\.dismiss) var dismiss
     @State private var selectedDream: Dream?
     @State private var isAnonymous: Bool = true
@@ -190,7 +190,7 @@ struct CommunityPostView: View {
 
 // MARK: - 梦境选择卡片
 struct DreamSelectionCard: View {
-    @ObservedObject var dream: Dream
+    @ObservedObject let dream: Dream
     let isSelected: Bool
     let onSelect: () -> Void
     

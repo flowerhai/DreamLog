@@ -9,7 +9,7 @@ import SwiftUI
 
 struct CommunityView: View {
     @StateObject private var communityService = CommunityService()
-    @ObservedObject var dreamStore: DreamStore
+    @EnvironmentObject var dreamStore: DreamStore
     @State private var selectedFilter: CommunityFilter = .hot
     @State private var searchText: String = ""
     @State private var showingPostSheet = false

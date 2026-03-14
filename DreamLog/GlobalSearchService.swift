@@ -101,7 +101,7 @@ class GlobalSearchService: ObservableObject {
             var relevance: Double = 0.0
             
             // 标题匹配
-            if let title = dream.title, title.lowercased().contains(lowercaseQuery) {
+            if dream.title.lowercased().contains(lowercaseQuery) {
                 relevance += 0.5
             }
             
@@ -116,7 +116,7 @@ class GlobalSearchService: ObservableObject {
             }
             
             // 情绪匹配
-            if dream.mood.rawValue.lowercased().contains(lowercaseQuery) {
+            if dream.emotions.contains(where: { $0.rawValue.lowercased().contains(lowercaseQuery) }) {
                 relevance += 0.2
             }
             
@@ -145,13 +145,12 @@ class GlobalSearchService: ObservableObject {
     /// 搜索情绪
     private func searchEmotions(query: String) -> [SearchResult] {
         let lowercaseQuery = query.lowercased()
-        let allMoods: [String] = ["平静", "快乐", "悲伤", "恐惧", "愤怒", "惊讶", "厌恶", "期待", "信任", "困惑"]
         
-        return allMoods.compactMap { mood -> SearchResult? in
-            if mood.lowercased().contains(lowercaseQuery) || mood.contains(lowercaseQuery) {
-                let count = dreamStore.dreams.filter { $0.mood.rawValue == mood }.count
+        return Emotion.allCases.compactMap { emotion -> SearchResult? in
+            if emotion.rawValue.lowercased().contains(lowercaseQuery) || emotion.rawValue.contains(lowercaseQuery) {
+                let count = dreamStore.dreams.filter { $0.emotions.contains(emotion) }.count
                 return SearchResult(
-                    type: .emotion(mood),
+                    type: .emotion(emotion.rawValue),
                     relevance: Double(count) / Double(dreamStore.dreams.count) * 0.4
                 )
             }

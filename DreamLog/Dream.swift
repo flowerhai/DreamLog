@@ -139,6 +139,11 @@ extension Dream {
     var primaryEmotion: Emotion? {
         emotions.first
     }
+    
+    /// 格式化的日期字符串
+    var formattedDate: String {
+        date.formatted(.dateTime.year().month().day().hour().minute())
+    }
 }
 
 // MARK: - 梦境标签

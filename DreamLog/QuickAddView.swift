@@ -14,14 +14,14 @@ struct QuickAddView: View {
     
     @State private var title = ""
     @State private var content = ""
-    @State private var selectedMood: Mood = .calm
+    @State private var selectedEmotion: Emotion = .calm
     @State private var tags: String = ""
     @State private var isLucid = false
     @State private var clarity: Int = 3
     @State private var isRecording = false
     @State private var showSuccess = false
     
-    @StateObject private var speechService = SpeechService.shared
+    @StateObject private var speechService = SpeechService()
     
     var body: some View {
         NavigationView {
@@ -145,9 +145,9 @@ struct QuickAddView: View {
                 .foregroundColor(.white)
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                ForEach(Mood.allCases, id: \.self) { mood in
-                    MoodButton(mood: mood, isSelected: selectedMood == mood) {
-                        selectedMood = mood
+                ForEach(Emotion.allCases, id: \.self) { emotion in
+                    EmotionButton(emotion: emotion, isSelected: selectedEmotion == emotion) {
+                        selectedEmotion = emotion
                     }
                 }
             }
@@ -262,7 +262,7 @@ struct QuickAddView: View {
     private func resetForm() {
         title = ""
         content = ""
-        selectedMood = .calm
+        selectedEmotion = .calm
         tags = ""
         isLucid = false
         clarity = 3
@@ -271,17 +271,17 @@ struct QuickAddView: View {
 
 // MARK: - 情绪按钮
 
-struct MoodButton: View {
-    let mood: Mood
+struct EmotionButton: View {
+    let emotion: Emotion
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
             VStack(spacing: 4) {
-                Text(mood.emoji)
+                Text(emotion.icon)
                     .font(.title2)
-                Text(mood.displayName)
+                Text(emotion.rawValue)
                     .font(.caption)
                     .foregroundColor(.white)
             }

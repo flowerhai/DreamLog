@@ -70,8 +70,8 @@ enum MainTab: Int, CaseIterable {
             ]
         case .explore:
             return [
-                NavigationViewItem(id: "community", title: "梦境社区", icon: "globe", destination: AnyView(CommunityView(dreamStore: DreamStore())), isFavorite: true),
-                NavigationViewItem(id: "friends", title: "好友", icon: "person.2.fill", destination: AnyView(FriendsView(dreamStore: DreamStore())), isFavorite: false),
+                NavigationViewItem(id: "community", title: "梦境社区", icon: "globe", destination: AnyView(CommunityView()), isFavorite: true),
+                NavigationViewItem(id: "friends", title: "好友", icon: "person.2.fill", destination: AnyView(FriendsView()), isFavorite: false),
                 NavigationViewItem(id: "challenges", title: "挑战", icon: "trophy.fill", destination: AnyView(DreamChallengeView()), isFavorite: true),
                 NavigationViewItem(id: "share-circle", title: "分享圈", icon: "person.3.fill", destination: AnyView(DreamShareCircleView()), isFavorite: false),
                 NavigationViewItem(id: "gallery", title: "梦境画廊", icon: "photo.on.rectangle", destination: AnyView(GalleryView()), isFavorite: false)
@@ -245,7 +245,7 @@ enum SearchResultType {
     
     var title: String {
         switch self {
-        case .dream(let dream): return dream.title ?? "无标题梦境"
+        case .dream(let dream): return dream.title.isEmpty ? "无标题梦境" : dream.title
         case .tag(let tag): return "#\(tag)"
         case .emotion(let emotion): return emotion
         case .communityPost(let post): return post.title
@@ -260,7 +260,7 @@ enum SearchResultType {
         case .tag(let tag):
             return "\(DreamStore.shared.dreams.filter { $0.tags.contains(tag) }.count) 个梦境"
         case .emotion(let emotion):
-            return "\(DreamStore.shared.dreams.filter { $0.mood.rawValue == emotion }.count) 个梦境"
+            return "\(DreamStore.shared.dreams.filter { $0.emotions.contains(where: { $0.rawValue == emotion }) }.count) 个梦境"
         case .communityPost(let post):
             return "社区帖子"
         case .challenge(let challenge):
