@@ -279,7 +279,7 @@ struct RecentDreamsPicker: View {
                             selectedDream = dream
                         }) {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(dream.title ?? "无题梦境")
+                                Text(dream.title.isEmpty ? "无题梦境" : dream.title)
                                     .font(.caption)
                                     .fontWeight(.medium)
                                     .lineLimit(1)
@@ -565,7 +565,7 @@ struct DreamMusicGeneratorView: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Text(dream.title ?? "无题")
+                    Text(dream.title.isEmpty ? "无题" : dream.title)
                         .font(.headline)
                     
                     Text(dream.content.prefix(100))
