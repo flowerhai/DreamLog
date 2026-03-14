@@ -2,531 +2,265 @@
 //  DreamChallengeView.swift
 //  DreamLog
 //
-//  梦境挑战系统界面
-//  Phase 15 - 梦境挑战系统
+//  Phase 41 - 梦境挑战系统
+//  用户界面
 //
 
 import SwiftUI
-import Combine
+import SwiftData
 
-// MARK: - 主挑战视图
+// MARK: - 挑战主界面
 
 struct DreamChallengeView: View {
-    @EnvironmentObject var dreamStore: DreamStore
-    @ObservedObject private var challengeService = DreamChallengeService.shared
-    @State private var selectedFilter: ChallengeFilter = .all
-    @State private var showingBadgeDetail = false
-    @State private var selectedBadge: ChallengeBadge?
-    @State private var showingConfetti = false
-    @State private var showingShareSheet = false
-    @State private var shareChallenge: DreamChallenge?
-    private var cancellables = Set<AnyCancellable>()
-    
-    enum ChallengeFilter: String, CaseIterable {
-        case all = "全部"
-        case active = "进行中"
-        case completed = "已完成"
-        case badges = "徽章"
-    }
+    @Environment(\.modelContext) private var modelContext
+    @State private var service: DreamChallengeService?
+    @State private var challenges: [DreamChallenge] = []
+    @State private var badges: [ChallengeBadge] = []
+    @State private var stats: ChallengeStats?
+    @State private var selectedTab = 0
+    @State private var showingCreateSheet = false
+    @State private var selectedFilter: DreamChallengeType?
     
     var body: some View {
         NavigationView {
-            ZStack {
-                if challengeService.isLoading {
-                    LoadingView()
-                } else {
-                    challengeContent
-                }
-                
-                // 庆祝动画
-                if showingConfetti {
-                    ConfettiView(isActive: true)
-                        .ignoresSafeArea()
-                }
-            }
-            .navigationTitle("🎯 挑战")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 12) {
-                        // 积分显示
-                        HStack(spacing: 4) {
-                            Image(systemName: "star.fill")
-                                .foregroundColor(.yellow)
-                            Text("\(challengeService.totalPoints)")
-                                .fontWeight(.semibold)
-                        }
-                        
-                        // 等级显示
-                        HStack(spacing: 4) {
-                            Image(systemName: "crown.fill")
-                                .foregroundColor(.orange)
-                            Text("Lv.\(challengeService.currentLevel)")
-                                .fontWeight(.semibold)
-                        }
-                    }
-                }
-            }
-        }
-        .onAppear {
-            challengeService.checkAndActivateChallenges()
-            challengeService.resetDailyChallenges()
-            challengeService.scheduleChallengeReminders()
-        }
-        .sheet(isPresented: $showingShareSheet) {
-            if let challenge = shareChallenge {
-                ShareChallengeSheet(
-                    challenge: challenge,
-                    progress: challengeService.getProgress(for: challenge.id)
-                )
-            }
-        }
-    }
-    
-    var challengeContent: some View {
-        Group {
-            switch selectedFilter {
-            case .all:
-                allChallengesView
-            case .active:
-                activeChallengesView
-            case .completed:
-                completedChallengesView
-            case .badges:
-                badgesView
-            }
-        }
-    }
-    
-    // MARK: - 全部挑战视图
-    
-    var allChallengesView: some View {
-        ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 0) {
                 // 统计概览
-                statisticsOverview
+                statsView
                 
                 // 筛选器
-                filterPicker
+                filterBar
                 
-                // 活跃挑战
-                if !challengeService.activeChallenges.isEmpty {
-                    activeChallengesSection
-                }
+                // 挑战列表
+                challengeList
                 
-                // 已完成挑战
-                if !challengeService.completedChallenges.isEmpty {
-                    completedChallengesSection
-                }
-                
-                // 徽章预览
-                badgesPreviewSection
+                // 底部徽章栏
+                badgeBar
             }
-            .padding()
-        }
-    }
-    
-    // MARK: - 活跃挑战视图
-    
-    var activeChallengesView: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                if challengeService.activeChallenges.isEmpty {
-                    emptyStateView(
-                        icon: "checkmark.circle",
-                        title: "没有进行中的挑战",
-                        subtitle: "每日挑战会自动刷新，敬请期待！"
-                    )
-                } else {
-                    ForEach(challengeService.activeChallenges) { challenge in
-                        ChallengeCard(
-                            challenge: challenge,
-                            progress: challengeService.getProgress(for: challenge.id),
-                            onClaimReward: {
-                                claimReward(challenge)
-                            },
-                            onShare: {
-                                shareChallenge = challenge
-                                showingShareSheet = true
-                            }
-                        )
+            .navigationTitle("🎯 梦境挑战")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingCreateSheet = true }) {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.title2)
                     }
                 }
             }
-            .padding()
-        }
-    }
-    
-    // MARK: - 已完成挑战视图
-    
-    var completedChallengesView: some View {
-        ScrollView {
-            VStack(spacing: 16) {
-                if challengeService.completedChallenges.isEmpty {
-                    emptyStateView(
-                        icon: "trophy",
-                        title: "还没有完成的挑战",
-                        subtitle: "完成挑战来获得积分和徽章吧！"
-                    )
-                } else {
-                    ForEach(challengeService.completedChallenges) { challenge in
-                        CompletedChallengeCard(challenge: challenge)
-                    }
-                }
+            .task {
+                await loadChallenges()
             }
-            .padding()
-        }
-    }
-    
-    // MARK: - 徽章视图
-    
-    var badgesView: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // 徽章统计
-                HStack(spacing: 20) {
-                    StatCard(
-                        icon: "shield.fill",
-                        value: "\(challengeService.unlockedBadges.count)",
-                        label: "已解锁",
-                        color: .green
-                    )
-                    
-                    StatCard(
-                        icon: "lock.fill",
-                        value: "\(DreamChallengeTemplate.allBadges().count - challengeService.unlockedBadges.count)",
-                        label: "未解锁",
-                        color: .orange
-                    )
-                    
-                    StatCard(
-                        icon: "star.fill",
-                        value: "\(challengeService.statistics.totalPoints)",
-                        label: "总积分",
-                        color: .yellow
-                    )
-                }
-                
-                // 按类别分组
-                ForEach(ChallengeBadge.BadgeCategory.allCases, id: \.self) { category in
-                    badgeCategorySection(category: category)
-                }
+            .sheet(isPresented: $showingCreateSheet) {
+                CreateChallengeView()
             }
-            .padding()
         }
     }
     
-    // MARK: - 组件视图
+    // MARK: - 统计概览
     
-    var statisticsOverview: some View {
+    private var statsView: some View {
         VStack(spacing: 12) {
-            HStack(spacing: 12) {
+            HStack(spacing: 16) {
                 StatCard(
-                    icon: "flame.fill",
-                    value: "\(challengeService.statistics.currentStreak)",
-                    label: "当前连续",
+                    title: "进行中",
+                    value: "\(stats?.inProgressChallenges ?? 0)",
+                    icon: "🔥",
                     color: .orange
                 )
                 
                 StatCard(
-                    icon: "checkmark.seal.fill",
-                    value: "\(challengeService.statistics.totalChallengesCompleted)",
-                    label: "完成挑战",
+                    title: "已完成",
+                    value: "\(stats?.completedChallenges ?? 0)",
+                    icon: "✅",
                     color: .green
                 )
                 
                 StatCard(
-                    icon: "star.fill",
-                    value: "\(challengeService.totalPoints)",
-                    label: "总积分",
+                    title: "总积分",
+                    value: "\(stats?.totalPoints ?? 0)",
+                    icon: "⭐",
+                    color: .purple
+                )
+                
+                StatCard(
+                    title: "徽章",
+                    value: "\(stats?.totalBadges ?? 0)",
+                    icon: "🏆",
                     color: .yellow
                 )
             }
-            
-            // 等级进度条
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("等级 \(challengeService.currentLevel)")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                    
-                    Spacer()
-                    
-                    Text("距下一级还需 \(challengeService.statistics.nextLevelPoints) 积分")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.systemBackground))
+    }
+    
+    // MARK: - 筛选器
+    
+    private var filterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                FilterChip(
+                    title: "全部",
+                    icon: "📋",
+                    isSelected: selectedFilter == nil
+                ) {
+                    selectedFilter = nil
                 }
                 
-                ProgressView(value: Double(challengeService.totalPoints % 100), total: 100)
-                    .progressViewStyle(LinearProgressViewStyle(tint: .purple))
+                ForEach(DreamChallengeType.allCases) { type in
+                    FilterChip(
+                        title: type.displayName.replacingOccurrences(of: " ", with: ""),
+                        icon: type.icon,
+                        isSelected: selectedFilter == type
+                    ) {
+                        selectedFilter = type
+                    }
+                }
+            }
+            .padding(.horizontal)
+        }
+        .padding(.vertical, 8)
+        .background(Color(.systemGray6))
+    }
+    
+    // MARK: - 挑战列表
+    
+    private var challengeList: some View {
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                // 进行中的挑战
+                if selectedFilter == nil || selectedFilter == .streak {
+                    if !challenges.filter({ $0.isOngoing }).isEmpty {
+                        SectionHeader(title: "🔥 进行中")
+                        ForEach(challenges.filter { $0.isOngoing }) { challenge in
+                            ChallengeCard(challenge: challenge, service: service)
+                        }
+                    }
+                }
+                
+                // 可参与的挑战
+                if selectedFilter == nil {
+                    SectionHeader(title: "✨ 可参与")
+                    ForEach(challenges.filter { $0.status == .available && !$0.isExpired }) { challenge in
+                        ChallengeCard(challenge: challenge, service: service)
+                    }
+                }
+                
+                // 已完成的挑战
+                if selectedFilter == nil {
+                    SectionHeader(title: "✅ 已完成")
+                    ForEach(challenges.filter { $0.status == .completed }) { challenge in
+                        ChallengeCard(challenge: challenge, service: service)
+                    }
+                }
             }
             .padding()
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(12)
         }
     }
     
-    var filterPicker: some View {
-        Picker("筛选", selection: $selectedFilter) {
-            ForEach(ChallengeFilter.allCases, id: \.self) { filter in
-                Text(filter.rawValue).tag(filter)
-            }
-        }
-        .pickerStyle(.segmented)
-    }
+    // MARK: - 徽章栏
     
-    var activeChallengesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "🔥 进行中的挑战", count: challengeService.activeChallenges.count)
+    private var badgeBar: some View {
+        VStack(spacing: 8) {
+            Divider()
             
-            ForEach(challengeService.activeChallenges) { challenge in
-                ChallengeCard(
-                    challenge: challenge,
-                    progress: challengeService.getProgress(for: challenge.id),
-                    onClaimReward: {
-                        claimReward(challenge)
-                    },
-                    onShare: {
-                        shareChallenge = challenge
-                        showingShareSheet = true
-                    }
-                )
-            }
-        }
-    }
-    
-    var completedChallengesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "✅ 已完成的挑战", count: challengeService.completedChallenges.count)
-            
-            ForEach(challengeService.completedChallenges) { challenge in
-                CompletedChallengeCard(challenge: challenge)
-            }
-        }
-    }
-    
-    var badgesPreviewSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "🏅 最近解锁的徽章", count: challengeService.unlockedBadges.count)
-            
-            if challengeService.unlockedBadges.isEmpty {
-                Text("完成挑战来解锁徽章！")
-                    .foregroundColor(.secondary)
+            HStack {
+                Text("🏆 最近徽章")
                     .font(.caption)
-            } else {
+                    .foregroundColor(.secondary)
+                
+                Spacer()
+                
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        ForEach(challengeService.unlockedBadges.prefix(10)) { badge in
-                            BadgeCard(badge: badge) {
-                                selectedBadge = badge
-                                showingBadgeDetail = true
+                        ForEach(badges.prefix(5)) { badge in
+                            VStack {
+                                Text(badge.icon)
+                                    .font(.title2)
+                                Text(badge.name)
+                                    .font(.caption2)
+                                    .lineLimit(1)
                             }
+                            .frame(width: 50)
                         }
                     }
                 }
             }
+            .padding(.horizontal)
+            .padding(.vertical, 8)
         }
+        .background(Color(.systemBackground))
     }
     
-    func badgeCategorySection(category: ChallengeBadge.BadgeCategory) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: category.displayName, count: 0)
-            
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 12) {
-                let badges = DreamChallengeTemplate.allBadges().filter { $0.category == category }
-                ForEach(badges, id: \.name) { badge in
-                    let isUnlocked = challengeService.unlockedBadges.contains(badge)
-                    MiniBadgeCard(badge: badge, isUnlocked: isUnlocked) {
-                        if isUnlocked {
-                            selectedBadge = badge
-                            showingBadgeDetail = true
-                        }
-                    }
-                }
-            }
-        }
-    }
+    // MARK: - Methods
     
-    func emptyStateView(icon: String, title: String, subtitle: String) -> some View {
-        VStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
+    private func loadChallenges() async {
+        service = DreamChallengeService(modelContext: modelContext)
+        await service?.initializePresetChallenges()
+        challenges = await service?.getAllChallenges() ?? []
+        badges = await service?.getAllBadges() ?? []
+        stats = await service?.getChallengeStats()
+    }
+}
+
+// MARK: - 统计卡片
+
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(icon)
+                .font(.title2)
+            Text(value)
+                .font(.title3)
+                .fontWeight(.bold)
             Text(title)
-                .font(.headline)
-            
-            Text(subtitle)
-                .font(.subheadline)
+                .font(.caption2)
                 .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
         }
-        .padding(.vertical, 60)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(color.opacity(0.1))
+        .cornerRadius(12)
     }
+}
+
+// MARK: - 筛选芯片
+
+struct FilterChip: View {
+    let title: String
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
     
-    func claimReward(_ challenge: DreamChallenge) {
-        if challengeService.claimReward(for: challenge.id) {
-            // 显示庆祝动画
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.7)) {
-                showingConfetti = true
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                Text(icon)
+                Text(title)
             }
-            
-            // 3 秒后隐藏
-            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                withAnimation {
-                    showingConfetti = false
-                }
-            }
-            
-            // 发送通知
-            challengeService.sendChallengeCompletedNotification(challenge)
+            .font(.subheadline)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(isSelected ? Color.purple : Color(.systemGray5))
+            .foregroundColor(isSelected ? .white : .primary)
+            .cornerRadius(20)
         }
     }
 }
 
-// MARK: - 庆祝动画组件
+// MARK: - 章节标题
 
-struct ConfettiView: View {
-    let isActive: Bool
+struct SectionHeader: View {
+    let title: String
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                if isActive {
-                    ForEach(0..<50, id: \.self) { index in
-                        ConfettiParticle(index: index, size: geometry.size)
-                    }
-                }
-            }
-        }
-        .allowsHitTesting(false)
-    }
-}
-
-struct ConfettiParticle: View {
-    let index: Int
-    let size: CGSize
-    @State private var offset = CGSize.zero
-    @State private var opacity = 1.0
-    
-    let colors: [Color] = [.red, .orange, .yellow, .green, .blue, .purple, .pink]
-    
-    var body: some View {
-        Circle()
-            .fill(colors[index % colors.count])
-            .frame(width: CGFloat.random(in: 8...12), height: CGFloat.random(in: 8...12))
-            .position(
-                x: CGFloat.random(in: 0...size.width),
-                y: CGFloat.random(in: -50...0)
-            )
-            .opacity(opacity)
-            .onAppear {
-                withAnimation(.easeOut(duration: Double.random(in: 2...4))) {
-                    offset = CGSize(
-                        width: CGFloat.random(in: -100...100),
-                        height: size.height + 100
-                    )
-                    opacity = 0
-                }
-            }
-    }
-}
-
-// MARK: - 分享 Sheet
-
-struct ShareChallengeSheet: View {
-    let challenge: DreamChallenge
-    let progress: UserChallengeProgress?
-    @Environment(\.dismiss) var dismiss
-    
-    var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                // 挑战卡片预览
-                VStack(spacing: 12) {
-                    Image(systemName: challenge.type.icon)
-                        .font(.system(size: 60))
-                        .foregroundColor(.purple)
-                    
-                    Text(challenge.title)
-                        .font(.title2)
-                        .fontWeight(.bold)
-                    
-                    Text(challenge.description)
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                    
-                    // 进度
-                    if let progress = progress {
-                        VStack(spacing: 8) {
-                            ProgressView(value: Double(progress.currentTotal), total: Double(challenge.goal.targetValue))
-                                .progressViewStyle(LinearProgressViewStyle(tint: .purple))
-                            
-                            Text("\(progress.currentTotal) / \(challenge.goal.targetValue) \(challenge.goal.unit)")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.horizontal)
-                    }
-                    
-                    // 奖励
-                    HStack(spacing: 8) {
-                        Image(systemName: challenge.reward.icon)
-                            .foregroundColor(.yellow)
-                        Text(challenge.reward.description)
-                            .fontWeight(.semibold)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Color.yellow.opacity(0.2))
-                    .cornerRadius(8)
-                }
-                .padding(30)
-                .background(
-                    LinearGradient(
-                        colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.3)],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
-                .cornerRadius(16)
-                .padding()
-                
-                // 分享按钮
-                ShareLink(
-                    item: Text("我正在参与 DreamLog 挑战：「\(challenge.title)」！\(challenge.reward.description)"),
-                    subject: Text("DreamLog 梦境挑战"),
-                    message: Text("加入我，一起记录梦境，探索潜意识！")
-                ) {
-                    HStack {
-                        Image(systemName: "square.and.arrow.up")
-                        Text("分享挑战")
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.purple)
-                    .foregroundColor(.white)
-                    .cornerRadius(12)
-                }
-                
-                Button(action: { dismiss() }) {
-                    Text("关闭")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.gray.opacity(0.2))
-                        .foregroundColor(.primary)
-                        .cornerRadius(12)
-                }
-            }
-            .navigationTitle("分享挑战")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") { dismiss() }
-                }
-            }
-        }
+        Text(title)
+            .font(.headline)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 8)
     }
 }
 
@@ -534,276 +268,380 @@ struct ShareChallengeSheet: View {
 
 struct ChallengeCard: View {
     let challenge: DreamChallenge
-    let progress: UserChallengeProgress?
-    let onClaimReward: () -> Void
-    let onShare: (() -> Void)?
-    
-    init(challenge: DreamChallenge, progress: UserChallengeProgress?, onClaimReward: @escaping () -> Void, onShare: (() -> Void)? = nil) {
-        self.challenge = challenge
-        self.progress = progress
-        self.onClaimReward = onClaimReward
-        self.onShare = onShare
-    }
+    var service: DreamChallengeService?
+    @State private var showingDetail = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // 头部
             HStack {
-                Image(systemName: challenge.type.icon)
-                    .font(.title2)
-                    .foregroundColor(.purple)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(challenge.title)
-                        .font(.headline)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(challenge.type.icon)
+                            .font(.title2)
+                        Text(challenge.title)
+                            .font(.headline)
+                    }
                     
-                    Text(challenge.type.displayName)
-                        .font(.caption)
+                    Text(challenge.description)
+                        .font(.subheadline)
                         .foregroundColor(.secondary)
+                        .lineLimit(2)
                 }
                 
                 Spacer()
                 
-                HStack(spacing: 8) {
-                    // 分享按钮
-                    if let onShare = onShare {
-                        Button(action: onShare) {
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.caption)
-                                .foregroundColor(.purple)
-                                .padding(6)
-                                .background(Color.purple.opacity(0.2))
-                                .cornerRadius(6)
-                        }
-                    }
-                    
-                    // 难度标签
-                    Text(challenge.difficulty.displayName)
-                        .font(.caption2)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(challenge.difficulty.color).opacity(0.2))
-                        .cornerRadius(8)
+                VStack(alignment: .trailing, spacing: 4) {
+                    StatusBadge(status: challenge.status)
+                    DifficultyBadge(difficulty: challenge.difficulty)
                 }
             }
-            
-            // 描述
-            Text(challenge.description)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
             
             // 进度条
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text("进度")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+            if challenge.isOngoing {
+                VStack(spacing: 4) {
+                    HStack {
+                        Text("进度")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        Spacer()
+                        Text("\(challenge.progressPercentage)%")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                    }
                     
-                    Spacer()
-                    
-                    Text("\(progress?.currentTotal ?? 0)/\(challenge.goal.targetValue) \(challenge.goal.unit)")
-                        .font(.caption)
-                        .fontWeight(.semibold)
+                    ProgressView(value: challenge.progress)
+                        .progressViewStyle(LinearProgressViewStyle(tint: .purple))
                 }
-                
-                ProgressView(value: progress?.currentTotal ?? 0, total: challenge.goal.targetValue)
-                    .progressViewStyle(LinearProgressViewStyle(tint: .purple))
             }
             
-            // 奖励
-            HStack {
-                Image(systemName: challenge.reward.icon)
-                    .foregroundColor(.yellow)
-                
-                Text(challenge.reward.description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                
-                Spacer()
-                
-                if progress?.isCompleted == true && !(progress?.claimedReward ?? false) {
-                    Button(action: onClaimReward) {
-                        Text("领取奖励")
+            // 任务列表
+            if challenge.isOngoing {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(challenge.tasks.prefix(3), id: \.id) { task in
+                        TaskRow(task: task)
+                    }
+                    
+                    if challenge.tasks.count > 3 {
+                        Text("+ \(challenge.tasks.count - 3) 更多任务")
                             .font(.caption)
-                            .fontWeight(.semibold)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(Color.purple)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
             
-            // 截止时间
+            // 底部信息
             HStack {
-                Image(systemName: "clock")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack(spacing: 4) {
+                    Image(systemName: "star.fill")
+                        .foregroundColor(.yellow)
+                    Text("\(challenge.earnedPoints)/\(challenge.totalPoints) 积分")
+                        .font(.caption)
+                }
                 
-                Text("截止：\(challenge.endDate, style: .date)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Spacer()
+                
+                if challenge.isOngoing {
+                    Text("⏰ 剩余 \(challenge.daysRemaining) 天")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                }
+                
+                Button(action: { showingDetail = true }) {
+                    Text("详情")
+                        .font(.caption)
+                        .foregroundColor(.purple)
+                }
             }
         }
         .padding()
-        .background(Color.white.opacity(0.1))
+        .background(Color(.systemBackground))
         .cornerRadius(16)
-    }
-}
-
-// MARK: - 已完成挑战卡片
-
-struct CompletedChallengeCard: View {
-    let challenge: DreamChallenge
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "checkmark.circle.fill")
-                .font(.title2)
-                .foregroundColor(.green)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(challenge.title)
-                    .font(.headline)
-                
-                Text(challenge.reward.description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
-            
-            Text("已完成")
-                .font(.caption)
-                .foregroundColor(.green)
-                .fontWeight(.semibold)
-        }
-        .padding()
-        .background(Color.green.opacity(0.1))
-        .cornerRadius(16)
-    }
-}
-
-// MARK: - 徽章卡片
-
-struct BadgeCard: View {
-    let badge: ChallengeBadge
-    let onTap: () -> Void
-    
-    var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 8) {
-                Image(systemName: badge.icon)
-                    .font(.system(size: 40))
-                    .foregroundColor(.yellow)
-                
-                Text(badge.name)
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                
-                Text("\(badge.points) 积分")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .frame(width: 100, height: 120)
-            .background(Color.white.opacity(0.1))
-            .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .sheet(isPresented: $showingDetail) {
+            ChallengeDetailView(challenge: challenge, service: service)
         }
     }
 }
 
-// MARK: - 迷你徽章卡片
+// MARK: - 状态徽章
 
-struct MiniBadgeCard: View {
-    let badge: ChallengeBadge
-    let isUnlocked: Bool
-    let onTap: () -> Void
+struct StatusBadge: View {
+    let status: ChallengeStatus
     
     var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 4) {
-                Image(systemName: badge.icon)
-                    .font(.system(size: 30))
-                    .foregroundColor(isUnlocked ? .yellow : .gray)
-                    .opacity(isUnlocked ? 1.0 : 0.5)
-                
-                Text(badge.name)
-                    .font(.caption2)
-                    .lineLimit(1)
-                    .foregroundColor(isUnlocked ? .primary : .secondary)
-            }
-            .frame(width: 80, height: 90)
-            .background(Color.white.opacity(0.05))
+        Text(status.displayName)
+            .font(.caption2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(statusColor.opacity(0.2))
+            .foregroundColor(statusColor)
             .cornerRadius(8)
+    }
+    
+    private var statusColor: Color {
+        switch status {
+        case .available: return .green
+        case .inProgress: return .blue
+        case .completed: return .purple
+        case .failed: return .red
+        case .expired: return .gray
         }
-        .disabled(!isUnlocked)
     }
 }
 
-// MARK: - 统计卡片
+// MARK: - 难度徽章
 
-struct StatCard: View {
-    let icon: String
-    let value: String
-    let label: String
-    let color: Color
+struct DifficultyBadge: View {
+    let difficulty: ChallengeDifficulty
     
     var body: some View {
-        VStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(color)
-            
-            Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
-            
-            Text(label)
-                .font(.caption2)
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(Color.white.opacity(0.1))
-        .cornerRadius(12)
+        Text(difficulty.displayName)
+            .font(.caption2)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color(.systemGray5))
+            .cornerRadius(8)
     }
 }
 
-// MARK: - 章节头部
+// MARK: - 任务行
 
-struct SectionHeader: View {
-    let title: String
-    let count: Int
+struct TaskRow: View {
+    let task: ChallengeTask
     
     var body: some View {
         HStack {
-            Text(title)
-                .font(.headline)
+            Image(systemName: task.isCompleted ? "checkmark.circle.fill" : "circle")
+                .foregroundColor(task.isCompleted ? .green : .gray)
             
-            if count > 0 {
-                Text("(\(count))")
+            VStack(alignment: .leading, spacing: 2) {
+                Text(task.title)
                     .font(.subheadline)
+                    .strikethrough(task.isCompleted)
+                Text("\(task.currentCount)/\(task.targetCount)")
+                    .font(.caption)
                     .foregroundColor(.secondary)
             }
             
             Spacer()
+            
+            Text("+\(task.points)")
+                .font(.caption)
+                .foregroundColor(.orange)
         }
     }
 }
 
-// MARK: - 加载视图
+// MARK: - 挑战详情
 
-struct LoadingView: View {
+struct ChallengeDetailView: View {
+    let challenge: DreamChallenge
+    var service: DreamChallengeService?
+    @Environment(\.dismiss) private var dismiss
+    @State private var isStarting = false
+    
     var body: some View {
-        VStack(spacing: 16) {
-            ProgressView()
-                .scaleEffect(1.5)
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // 头部信息
+                    ChallengeHeader(challenge: challenge)
+                    
+                    // 任务列表
+                    TaskList(challenge: challenge, service: service)
+                    
+                    // 操作按钮
+                    ActionButtons(challenge: challenge, service: service, isStarting: $isStarting)
+                }
+                .padding()
+            }
+            .navigationTitle("挑战详情")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "xmark")
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct ChallengeHeader: View {
+    let challenge: DreamChallenge
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text(challenge.type.icon)
+                .font(.system(size: 60))
             
-            Text("加载中...")
+            Text(challenge.title)
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text(challenge.description)
+                .font(.body)
                 .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            
+            HStack(spacing: 16) {
+                InfoBadge(icon: "📅", text: "\(challenge.totalDays)天")
+                InfoBadge(icon: "⭐", text: "\(challenge.totalPoints)积分")
+                InfoBadge(icon: "👥", text: "\(challenge.participantCount)人参与")
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(16)
+    }
+}
+
+struct InfoBadge: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(icon)
+            Text(text)
+                .font(.subheadline)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(Color(.systemBackground))
+        .cornerRadius(20)
+    }
+}
+
+struct TaskList: View {
+    let challenge: DreamChallenge
+    var service: DreamChallengeService?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("📋 挑战任务")
+                .font(.headline)
+            
+            ForEach(challenge.tasks, id: \.id) { task in
+                TaskRow(task: task)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+            }
+        }
+    }
+}
+
+struct ActionButtons: View {
+    let challenge: DreamChallenge
+    var service: DreamChallengeService?
+    @Binding var isStarting: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            if challenge.status == .available {
+                Button(action: startChallenge) {
+                    HStack {
+                        Image(systemName: "play.fill")
+                        Text("开始挑战")
+                    }
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.purple)
+                    .foregroundColor(.white)
+                    .cornerRadius(12)
+                }
+                .disabled(isStarting)
+            } else if challenge.isOngoing {
+                Button(action: quitChallenge) {
+                    HStack {
+                        Image(systemName: "xmark.circle")
+                        Text("放弃挑战")
+                    }
+                    .fontWeight(.semibold)
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color.red.opacity(0.1))
+                    .foregroundColor(.red)
+                    .cornerRadius(12)
+                }
+            }
+        }
+    }
+    
+    private func startChallenge() {
+        isStarting = true
+        Task {
+            try? await service?.startChallenge(id: challenge.id)
+            dismiss()
+        }
+    }
+    
+    private func quitChallenge() {
+        Task {
+            try? await service?.quitChallenge(id: challenge.id)
+            dismiss()
+        }
+    }
+}
+
+// MARK: - 创建挑战
+
+struct CreateChallengeView: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var title = ""
+    @State private var description = ""
+    @State private var selectedType: DreamChallengeType = .recall
+    @State private var selectedDifficulty: ChallengeDifficulty = .easy
+    @State private var duration = 7
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("基本信息")) {
+                    TextField("挑战标题", text: $title)
+                    TextField("挑战描述", text: $description)
+                    
+                    Picker("挑战类型", selection: $selectedType) {
+                        ForEach(DreamChallengeType.allCases) { type in
+                            Text(type.displayName).tag(type)
+                        }
+                    }
+                    
+                    Picker("难度等级", selection: $selectedDifficulty) {
+                        ForEach(ChallengeDifficulty.allCases, id: \.self) { difficulty in
+                            Text(difficulty.displayName).tag(difficulty)
+                        }
+                    }
+                    
+                    Stepper("持续时间：\(duration) 天", value: $duration, in: 1...90)
+                }
+                
+                Section(header: Text("提示")) {
+                    Text("创建自定义挑战后，您可以添加具体任务和目标。")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle("创建挑战")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("取消") { dismiss() }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("创建") {
+                        dismiss()
+                        // TODO: 实现创建逻辑
+                    }
+                    .disabled(title.isEmpty)
+                }
+            }
         }
     }
 }
@@ -812,5 +650,5 @@ struct LoadingView: View {
 
 #Preview {
     DreamChallengeView()
-        .environmentObject(DreamStore())
+        .modelContainer(for: [DreamChallenge.self, ChallengeTask.self, ChallengeBadge.self])
 }

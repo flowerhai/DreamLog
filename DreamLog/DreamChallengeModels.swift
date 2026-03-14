@@ -2,69 +2,68 @@
 //  DreamChallengeModels.swift
 //  DreamLog
 //
-//  梦境挑战系统数据模型
-//  Phase 15 - 梦境挑战系统
+//  Phase 41 - 梦境挑战系统
+//  数据模型
 //
 
 import Foundation
+import SwiftData
 
 // MARK: - 挑战类型
 
-/// 挑战类型枚举
-enum DreamChallengeType: String, Codable, CaseIterable, Identifiable {
-    case recording = "recording"           // 记录挑战
-    case lucid = "lucid"                   // 清醒梦挑战
-    case emotion = "emotion"               // 情绪探索挑战
-    case theme = "theme"                   // 主题挑战
-    case creativity = "creativity"         // 创意挑战
-    case mindfulness = "mindfulness"       // 正念挑战
+/// 梦境挑战类型
+enum DreamChallengeType: String, CaseIterable, Codable, Identifiable {
+    case recall = "recall"           // 梦境回忆挑战
+    case lucid = "lucid"             // 清醒梦挑战
+    case theme = "theme"             // 主题探索挑战
+    case creative = "creative"       // 创意梦境挑战
+    case mindfulness = "mindfulness" // 正念梦境挑战
+    case streak = "streak"           // 连续记录挑战
     
     var id: String { rawValue }
     
     var displayName: String {
         switch self {
-        case .recording: return "📝 记录挑战"
-        case .lucid: return "👁️ 清醒梦挑战"
-        case .emotion: return "💖 情绪探索"
-        case .theme: return "🎨 主题挑战"
-        case .creativity: return "✨ 创意挑战"
-        case .mindfulness: return "🧘 正念挑战"
-        }
-    }
-    
-    var icon: String {
-        switch self {
-        case .recording: return "text.badge.checkmark"
-        case .lucid: return "eye.fill"
-        case .emotion: return "heart.fill"
-        case .theme: return "paintpalette.fill"
-        case .creativity: return "sparkles"
-        case .mindfulness: return "figure.mind.and.body"
+        case .recall: return "🧠 梦境回忆"
+        case .lucid: return "💫 清醒梦"
+        case .theme: return "🎨 主题探索"
+        case .creative: return "✨ 创意梦境"
+        case .mindfulness: return "🧘 正念梦境"
+        case .streak: return "🔥 连续记录"
         }
     }
     
     var description: String {
         switch self {
-        case .recording: return "坚持记录梦境，培养记录习惯"
-        case .lucid: return "练习清醒梦技巧，探索意识边界"
-        case .emotion: return "探索不同情绪，了解内心世界"
-        case .theme: return "聚焦特定主题，发现梦境模式"
-        case .creativity: return "发挥创意想象，记录奇幻梦境"
-        case .mindfulness: return "保持正念觉知，提升梦境清晰度"
+        case .recall: return "提高梦境回忆能力，记住更多梦境细节"
+        case .lucid: return "练习清醒梦技巧，在梦中保持意识"
+        case .theme: return "探索特定主题的梦境，发现潜意识秘密"
+        case .creative: return "激发创意灵感，从梦境中获取创作素材"
+        case .mindfulness: return "培养正念意识，改善睡眠质量"
+        case .streak: return "坚持记录梦境，养成良好习惯"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .recall: return "🧠"
+        case .lucid: return "💫"
+        case .theme: return "🎨"
+        case .creative: return "✨"
+        case .mindfulness: return "🧘"
+        case .streak: return "🔥"
         }
     }
 }
 
 // MARK: - 挑战难度
 
-/// 挑战难度级别
-enum DreamChallengeDifficulty: String, Codable, CaseIterable, Identifiable {
-    case easy = "easy"         // 简单
-    case medium = "medium"     // 中等
-    case hard = "hard"         // 困难
-    case expert = "expert"     // 专家
-    
-    var id: String { rawValue }
+/// 挑战难度等级
+enum ChallengeDifficulty: String, CaseIterable, Codable {
+    case easy = "easy"       // 简单
+    case medium = "medium"   // 中等
+    case hard = "hard"       // 困难
+    case expert = "expert"   // 专家
     
     var displayName: String {
         switch self {
@@ -83,507 +82,377 @@ enum DreamChallengeDifficulty: String, Codable, CaseIterable, Identifiable {
         case .expert: return 3.0
         }
     }
+}
+
+// MARK: - 挑战状态
+
+/// 挑战参与状态
+enum ChallengeStatus: String, CaseIterable, Codable {
+    case available = "available"       // 可参与
+    case inProgress = "inProgress"     // 进行中
+    case completed = "completed"       // 已完成
+    case failed = "failed"             // 已失败
+    case expired = "expired"           // 已过期
+    
+    var displayName: String {
+        switch self {
+        case .available: return "可参与"
+        case .inProgress: return "进行中"
+        case .completed: return "已完成"
+        case .failed: return "已失败"
+        case .expired: return "已过期"
+        }
+    }
     
     var color: String {
         switch self {
-        case .easy: return "green"
-        case .medium: return "blue"
-        case .hard: return "orange"
-        case .expert: return "purple"
+        case .available: return "green"
+        case .inProgress: return "blue"
+        case .completed: return "purple"
+        case .failed: return "red"
+        case .expired: return "gray"
         }
     }
 }
 
-// MARK: - 挑战周期
+// MARK: - 挑战任务
 
-/// 挑战周期类型
-enum DreamChallengePeriod: String, Codable, CaseIterable, Identifiable {
-    case daily = "daily"           // 每日
-    case weekly = "weekly"         // 每周
-    case biweekly = "biweekly"     // 双周
-    case monthly = "monthly"       // 每月
-    
-    var id: String { rawValue }
+/// 挑战任务类型
+enum ChallengeTaskType: String, CaseIterable, Codable {
+    case recordDream = "recordDream"           // 记录梦境
+    case achieveLucid = "achieveLucid"         // 达成清醒梦
+    case specificTheme = "specificTheme"       // 特定主题梦境
+    case realityCheck = "realityCheck"         // 现实检查
+    case meditation = "meditation"             // 冥想练习
+    case sleepSchedule = "sleepSchedule"       // 规律作息
+    case dreamRecall = "dreamRecall"           // 梦境回忆练习
+    case creativeWriting = "creativeWriting"   // 创意写作
+    case shareDream = "shareDream"             // 分享梦境
     
     var displayName: String {
         switch self {
-        case .daily: return "每日挑战"
-        case .weekly: return "每周挑战"
-        case .biweekly: return "双周挑战"
-        case .monthly: return "每月挑战"
+        case .recordDream: return "记录梦境"
+        case .achieveLucid: return "清醒梦"
+        case .specificTheme: return "主题梦境"
+        case .realityCheck: return "现实检查"
+        case .meditation: return "冥想练习"
+        case .sleepSchedule: return "规律作息"
+        case .dreamRecall: return "回忆练习"
+        case .creativeWriting: return "创意写作"
+        case .shareDream: return "分享梦境"
         }
     }
+}
+
+// MARK: - 挑战任务模型
+
+/// 挑战任务
+@Model
+final class ChallengeTask {
+    var id: UUID
+    var type: ChallengeTaskType
+    var title: String
+    var description: String
+    var targetCount: Int           // 目标次数
+    var currentCount: Int          // 当前进度
+    var isCompleted: Bool
+    var completedAt: Date?
+    var points: Int                // 任务积分
     
-    var durationDays: Int {
-        switch self {
-        case .daily: return 1
-        case .weekly: return 7
-        case .biweekly: return 14
-        case .monthly: return 30
-        }
+    init(
+        id: UUID = UUID(),
+        type: ChallengeTaskType,
+        title: String,
+        description: String,
+        targetCount: Int,
+        currentCount: Int = 0,
+        isCompleted: Bool = false,
+        completedAt: Date? = nil,
+        points: Int
+    ) {
+        self.id = id
+        self.type = type
+        self.title = title
+        self.description = description
+        self.targetCount = targetCount
+        self.currentCount = currentCount
+        self.isCompleted = isCompleted
+        self.completedAt = completedAt
+        self.points = points
+    }
+    
+    var progress: Double {
+        guard targetCount > 0 else { return 0 }
+        return min(Double(currentCount) / Double(targetCount), 1.0)
+    }
+    
+    var progressPercentage: Int {
+        Int(progress * 100)
     }
 }
 
 // MARK: - 挑战模型
 
-/// 梦境挑战数据模型
-struct DreamChallenge: Identifiable, Codable {
-    var id: UUID = UUID()
-    var title: String                   // 挑战标题
-    var description: String             // 挑战描述
-    var type: DreamChallengeType        // 挑战类型
-    var difficulty: DreamChallengeDifficulty  // 难度级别
-    var period: DreamChallengePeriod    // 周期
-    var goal: DreamChallengeGoal        // 挑战目标
-    var reward: DreamChallengeReward    // 奖励
-    var startDate: Date                 // 开始日期
-    var endDate: Date                   // 结束日期
-    var isActive: Bool = true           // 是否激活
-    var isCompleted: Bool = false       // 是否已完成
-    var participantCount: Int = 0       // 参与人数 (社区挑战)
-    var completionRate: Double = 0.0    // 完成率 (社区挑战)
+/// 梦境挑战
+@Model
+final class DreamChallenge {
+    var id: UUID
+    var title: String
+    var description: String
+    var type: DreamChallengeType
+    var difficulty: ChallengeDifficulty
+    var status: ChallengeStatus
+    var startDate: Date
+    var endDate: Date
+    var tasks: [ChallengeTask]
+    var totalPoints: Int
+    var earnedPoints: Int
+    var badge: String?
+    var isFavorite: Bool
+    var participantCount: Int
+    var completionRate: Double
+    var createdAt: Date
+    var startedAt: Date?
+    var completedAt: Date?
     
-    enum CodingKeys: String, CodingKey {
-        case id, title, description, type, difficulty, period, goal, reward
-        case startDate, endDate, isActive, isCompleted, participantCount, completionRate
+    init(
+        id: UUID = UUID(),
+        title: String,
+        description: String,
+        type: DreamChallengeType,
+        difficulty: ChallengeDifficulty,
+        status: ChallengeStatus = .available,
+        startDate: Date,
+        endDate: Date,
+        tasks: [ChallengeTask] = [],
+        totalPoints: Int = 0,
+        earnedPoints: Int = 0,
+        badge: String? = nil,
+        isFavorite: Bool = false,
+        participantCount: Int = 0,
+        completionRate: Double = 0,
+        createdAt: Date = Date(),
+        startedAt: Date? = nil,
+        completedAt: Date? = nil
+    ) {
+        self.id = id
+        self.title = title
+        self.description = description
+        self.type = type
+        self.difficulty = difficulty
+        self.status = status
+        self.startDate = startDate
+        self.endDate = endDate
+        self.tasks = tasks
+        self.totalPoints = totalPoints
+        self.earnedPoints = earnedPoints
+        self.badge = badge
+        self.isFavorite = isFavorite
+        self.participantCount = participantCount
+        self.completionRate = completionRate
+        self.createdAt = createdAt
+        self.startedAt = startedAt
+        self.completedAt = completedAt
     }
-}
-
-// MARK: - 挑战目标
-
-/// 挑战目标类型
-enum DreamChallengeGoalType: String, Codable, CaseIterable {
-    case recordCount = "recordCount"         // 记录数量
-    case lucidCount = "lucidCount"           // 清醒梦数量
-    case emotionVariety = "emotionVariety"   // 情绪多样性
-    case themeExploration = "themeExploration" // 主题探索
-    case clarityAverage = "clarityAverage"   // 平均清晰度
-    case consecutiveDays = "consecutiveDays" // 连续天数
-    case realityChecks = "realityChecks"     // 现实检查次数
-    case dreamLength = "dreamLength"         // 梦境长度
     
-    var displayName: String {
-        switch self {
-        case .recordCount: return "记录数量"
-        case .lucidCount: return "清醒梦数量"
-        case .emotionVariety: return "情绪多样性"
-        case .themeExploration: return "主题探索"
-        case .clarityAverage: return "平均清晰度"
-        case .consecutiveDays: return "连续记录"
-        case .realityChecks: return "现实检查"
-        case .dreamLength: return "梦境长度"
-        }
+    var isExpired: Bool {
+        Date() > endDate
     }
-}
-
-/// 挑战目标
-struct DreamChallengeGoal: Codable {
-    var type: DreamChallengeGoalType      // 目标类型
-    var targetValue: Int                  // 目标值
-    var currentValue: Int = 0             // 当前值
-    var unit: String                      // 单位
+    
+    var isOngoing: Bool {
+        status == .inProgress && !isExpired
+    }
+    
+    var daysRemaining: Int {
+        Calendar.current.dateComponents([.day], from: Date(), to: endDate).day ?? 0
+    }
+    
+    var totalDays: Int {
+        Calendar.current.dateComponents([.day], from: startDate, to: endDate).day ?? 0
+    }
     
     var progress: Double {
-        guard targetValue > 0 else { return 0 }
-        return min(Double(currentValue) / Double(targetValue), 1.0)
+        guard !tasks.isEmpty else { return 0 }
+        let completedTasks = tasks.filter { $0.isCompleted }.count
+        return Double(completedTasks) / Double(tasks.count)
     }
     
-    var isCompleted: Bool {
-        return progress >= 1.0
-    }
-}
-
-// MARK: - 挑战奖励
-
-/// 奖励类型
-enum DreamChallengeRewardType: String, Codable, CaseIterable {
-    case points = "points"               // 积分
-    case badge = "badge"                 // 徽章
-    case streak = "streak"               // 连续记录加成
-    case theme = "theme"                 // 主题解锁
-    case feature = "feature"             // 功能解锁
-    
-    var displayName: String {
-        switch self {
-        case .points: return "积分奖励"
-        case .badge: return "徽章奖励"
-        case .streak: return "连续加成"
-        case .theme: return "主题解锁"
-        case .feature: return "功能解锁"
-        }
+    var progressPercentage: Int {
+        Int(progress * 100)
     }
 }
 
-/// 挑战奖励
-struct DreamChallengeReward: Codable {
-    var type: DreamChallengeRewardType    // 奖励类型
-    var value: Int                        // 奖励值 (积分数量/徽章 ID 等)
-    var description: String               // 奖励描述
+// MARK: - 挑战成就
+
+/// 挑战成就徽章
+@Model
+final class ChallengeBadge {
+    var id: UUID
+    var name: String
+    var icon: String
+    var description: String
+    var requirement: String
+    var earnedAt: Date
+    var challengeId: UUID?
+    var points: Int
     
-    var icon: String {
-        switch type {
-        case .points: return "star.fill"
-        case .badge: return "shield.fill"
-        case .streak: return "flame.fill"
-        case .theme: return "paintbrush.fill"
-        case .feature: return "wrench.and.screwdriver.fill"
-        }
+    init(
+        id: UUID = UUID(),
+        name: String,
+        icon: String,
+        description: String,
+        requirement: String,
+        earnedAt: Date = Date(),
+        challengeId: UUID? = nil,
+        points: Int
+    ) {
+        self.id = id
+        self.name = name
+        self.icon = icon
+        self.description = description
+        self.requirement = requirement
+        self.earnedAt = earnedAt
+        self.challengeId = challengeId
+        self.points = points
     }
 }
 
-// MARK: - 用户挑战进度
+// MARK: - 挑战统计
 
-/// 用户挑战进度
-struct UserChallengeProgress: Identifiable, Codable {
-    var id: UUID = UUID()
-    var challengeId: UUID                 // 挑战 ID
-    var userId: String                    // 用户 ID
-    var startDate: Date                   // 开始日期
-    var progress: [String: Int]           // 进度数据 (key: 梦境 ID, value: 贡献值)
-    var currentTotal: Int = 0             // 当前总计
-    var isCompleted: Bool = false         // 是否完成
-    var completedDate: Date?              // 完成日期
-    var claimedReward: Bool = false       // 是否领取奖励
-    var lastUpdated: Date = Date()        // 最后更新时间
+/// 挑战统计数据
+struct ChallengeStats {
+    var totalChallenges: Int
+    var completedChallenges: Int
+    var inProgressChallenges: Int
+    var totalPoints: Int
+    var totalBadges: Int
+    var completionRate: Double
+    var favoriteType: DreamChallengeType?
+    var currentStreak: Int
+    var longestStreak: Int
     
-    var progressPercentage: Double {
-        // 由服务层计算
-        return 0.0
-    }
-}
-
-// MARK: - 挑战徽章
-
-/// 挑战徽章
-struct ChallengeBadge: Identifiable, Codable, Equatable {
-    var id: UUID = UUID()
-    var name: String                      // 徽章名称
-    var description: String               // 徽章描述
-    var icon: String                      // 徽章图标 (SF Symbol)
-    var category: BadgeCategory           // 徽章类别
-    var requirement: String               // 获取要求
-    var points: Int                       // 徽章积分
-    var isUnlocked: Bool = false          // 是否已解锁
-    var unlockedDate: Date?               // 解锁日期
-    
-    enum BadgeCategory: String, Codable, CaseIterable {
-        case recording = "recording"       // 记录类
-        case lucid = "lucid"               // 清醒梦类
-        case streak = "streak"             // 连续类
-        case exploration = "exploration"   // 探索类
-        case creativity = "creativity"     // 创意类
-        case special = "special"           // 特殊类
-        
-        var displayName: String {
-            switch self {
-            case .recording: return "📝 记录"
-            case .lucid: return "👁️ 清醒梦"
-            case .streak: return "🔥 连续"
-            case .exploration: return "🔍 探索"
-            case .creativity: return "✨ 创意"
-            case .special: return "🌟 特殊"
-            }
-        }
+    var completionRatePercentage: Int {
+        guard totalChallenges > 0 else { return 0 }
+        return Int((Double(completedChallenges) / Double(totalChallenges)) * 100)
     }
 }
 
 // MARK: - 预设挑战模板
 
-/// 预设挑战模板
-struct DreamChallengeTemplate {
-    
-    /// 生成每日挑战
-    static func dailyChallenges() -> [DreamChallenge] {
-        let today = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: 1, to: today) ?? Date().addingTimeInterval(24 * 60 * 60)
+extension DreamChallenge {
+    /// 创建预设挑战模板
+    static func createPresetChallenges() -> [DreamChallenge] {
+        let calendar = Calendar.current
+        let now = Date()
         
         return [
+            // 7 天梦境回忆挑战
             DreamChallenge(
-                title: "🌅 晨间记录",
-                description: "起床后 30 分钟内记录一个梦境",
-                type: .recording,
+                title: "7 天梦境回忆大师",
+                description: "连续 7 天记录梦境，提高梦境回忆能力",
+                type: .recall,
                 difficulty: .easy,
-                period: .daily,
-                goal: DreamChallengeGoal(type: .recordCount, targetValue: 1, unit: "个梦境"),
-                reward: DreamChallengeReward(type: .points, value: 10, description: "获得 10 积分"),
-                startDate: today,
-                endDate: endDate
+                status: .available,
+                startDate: now,
+                endDate: calendar.date(byAdding: .day, value: 7, to: now)!,
+                tasks: [
+                    ChallengeTask(type: .recordDream, title: "记录梦境", description: "每天至少记录 1 个梦境", targetCount: 7, points: 10),
+                    ChallengeTask(type: .dreamRecall, title: "回忆练习", description: "醒来后静躺回忆 5 分钟", targetCount: 7, points: 5),
+                    ChallengeTask(type: .creativeWriting, title: "细节描写", description: "为每个梦境添加至少 3 个细节", targetCount: 5, points: 15)
+                ],
+                totalPoints: 30,
+                badge: "🧠 回忆大师"
             ),
+            
+            // 14 天清醒梦挑战
             DreamChallenge(
-                title: "👁️ 清醒梦练习",
-                description: "记录一个清醒梦或进行 5 次现实检查",
+                title: "14 天清醒梦入门",
+                description: "学习清醒梦技巧，实现第一次清醒梦",
                 type: .lucid,
                 difficulty: .medium,
-                period: .daily,
-                goal: DreamChallengeGoal(type: .lucidCount, targetValue: 1, unit: "个清醒梦"),
-                reward: DreamChallengeReward(type: .points, value: 25, description: "获得 25 积分"),
-                startDate: today,
-                endDate: endDate
+                status: .available,
+                startDate: now,
+                endDate: calendar.date(byAdding: .day, value: 14, to: now)!,
+                tasks: [
+                    ChallengeTask(type: .realityCheck, title: "现实检查", description: "每天进行 10 次现实检查", targetCount: 140, points: 20),
+                    ChallengeTask(type: .meditation, title: "冥想练习", description: "睡前冥想 10 分钟", targetCount: 14, points: 15),
+                    ChallengeTask(type: .achieveLucid, title: "清醒梦", description: "实现至少 1 次清醒梦", targetCount: 1, points: 50),
+                    ChallengeTask(type: .recordDream, title: "记录梦境", description: "记录所有梦境", targetCount: 10, points: 20)
+                ],
+                totalPoints: 105,
+                badge: "💫 清醒行者"
             ),
+            
+            // 30 天连续记录挑战
             DreamChallenge(
-                title: "💖 情绪探索",
-                description: "记录包含 3 种以上情绪的梦境",
-                type: .emotion,
-                difficulty: .medium,
-                period: .daily,
-                goal: DreamChallengeGoal(type: .emotionVariety, targetValue: 3, unit: "种情绪"),
-                reward: DreamChallengeReward(type: .points, value: 20, description: "获得 20 积分"),
-                startDate: today,
-                endDate: endDate
-            )
-        ]
-    }
-    
-    /// 生成每周挑战
-    static func weeklyChallenges() -> [DreamChallenge] {
-        let today = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: 7, to: today) ?? Date().addingTimeInterval(7 * 24 * 60 * 60)
-        
-        return [
-            DreamChallenge(
-                title: "📝 一周记录者",
-                description: "连续 7 天记录梦境",
-                type: .recording,
+                title: "30 天连续记录挑战",
+                description: "坚持 30 天每天记录梦境，养成习惯",
+                type: .streak,
                 difficulty: .hard,
-                period: .weekly,
-                goal: DreamChallengeGoal(type: .consecutiveDays, targetValue: 7, unit: "天"),
-                reward: DreamChallengeReward(type: .badge, value: 1, description: "获得「坚持之星」徽章"),
-                startDate: today,
-                endDate: endDate
+                status: .available,
+                startDate: now,
+                endDate: calendar.date(byAdding: .day, value: 30, to: now)!,
+                tasks: [
+                    ChallengeTask(type: .recordDream, title: "连续记录", description: "连续 30 天每天记录", targetCount: 30, points: 100),
+                    ChallengeTask(type: .sleepSchedule, title: "规律作息", description: "保持固定作息时间", targetCount: 30, points: 30)
+                ],
+                totalPoints: 130,
+                badge: "🔥 毅力之王"
             ),
+            
+            // 创意梦境挑战
             DreamChallenge(
-                title: "🎨 主题探索周",
-                description: "记录 5 个包含「飞行」主题的梦境",
+                title: "创意梦境探索",
+                description: "从梦境中获取创意灵感，完成创意作品",
+                type: .creative,
+                difficulty: .medium,
+                status: .available,
+                startDate: now,
+                endDate: calendar.date(byAdding: .day, value: 21, to: now)!,
+                tasks: [
+                    ChallengeTask(type: .recordDream, title: "记录梦境", description: "记录 15 个梦境", targetCount: 15, points: 30),
+                    ChallengeTask(type: .creativeWriting, title: "创意写作", description: "基于梦境创作 3 篇故事", targetCount: 3, points: 45),
+                    ChallengeTask(type: .shareDream, title: "分享灵感", description: "分享 5 个创意梦境", targetCount: 5, points: 25)
+                ],
+                totalPoints: 100,
+                badge: "✨ 创意达人"
+            ),
+            
+            // 主题探索：飞行梦
+            DreamChallenge(
+                title: "飞行梦探索",
+                description: "探索和记录所有与飞行相关的梦境",
                 type: .theme,
-                difficulty: .hard,
-                period: .weekly,
-                goal: DreamChallengeGoal(type: .themeExploration, targetValue: 5, unit: "个梦境"),
-                reward: DreamChallengeReward(type: .points, value: 100, description: "获得 100 积分"),
-                startDate: today,
-                endDate: endDate
+                difficulty: .easy,
+                status: .available,
+                startDate: now,
+                endDate: calendar.date(byAdding: .day, value: 14, to: now)!,
+                tasks: [
+                    ChallengeTask(type: .specificTheme, title: "飞行梦境", description: "记录 5 个飞行主题的梦", targetCount: 5, points: 50),
+                    ChallengeTask(type: .meditation, title: "意向设定", description: "睡前设定飞行意向", targetCount: 10, points: 20),
+                    ChallengeTask(type: .recordDream, title: "记录细节", description: "详细记录飞行感受", targetCount: 5, points: 30)
+                ],
+                totalPoints: 100,
+                badge: "🕊️ 飞行者"
             ),
+            
+            // 正念梦境挑战
             DreamChallenge(
-                title: "✨ 创意大师",
-                description: "记录 3 个超现实的奇幻梦境",
-                type: .creativity,
-                difficulty: .medium,
-                period: .weekly,
-                goal: DreamChallengeGoal(type: .recordCount, targetValue: 3, unit: "个创意梦境"),
-                reward: DreamChallengeReward(type: .points, value: 75, description: "获得 75 积分"),
-                startDate: today,
-                endDate: endDate
-            )
-        ]
-    }
-    
-    /// 生成每月挑战
-    static func monthlyChallenges() -> [DreamChallenge] {
-        let today = Date()
-        let endDate = Calendar.current.date(byAdding: .day, value: 30, to: today) ?? Date().addingTimeInterval(30 * 24 * 60 * 60)
-        
-        return [
-            DreamChallenge(
-                title: "🏆 月度记录大师",
-                description: "本月记录 30 个梦境",
-                type: .recording,
-                difficulty: .expert,
-                period: .monthly,
-                goal: DreamChallengeGoal(type: .recordCount, targetValue: 30, unit: "个梦境"),
-                reward: DreamChallengeReward(type: .badge, value: 2, description: "获得「月度大师」徽章"),
-                startDate: today,
-                endDate: endDate
-            ),
-            DreamChallenge(
-                title: "👁️ 清醒梦修行者",
-                description: "本月记录 10 个清醒梦",
-                type: .lucid,
-                difficulty: .expert,
-                period: .monthly,
-                goal: DreamChallengeGoal(type: .lucidCount, targetValue: 10, unit: "个清醒梦"),
-                reward: DreamChallengeReward(type: .badge, value: 3, description: "获得「清醒梦大师」徽章"),
-                startDate: today,
-                endDate: endDate
-            ),
-            DreamChallenge(
-                title: "🧘 正念修行",
-                description: "本月平均梦境清晰度达到 4.0 以上",
+                title: "正念梦境修行",
+                description: "通过正念冥想改善睡眠质量和梦境体验",
                 type: .mindfulness,
-                difficulty: .expert,
-                period: .monthly,
-                goal: DreamChallengeGoal(type: .clarityAverage, targetValue: 4, unit: "清晰度"),
-                reward: DreamChallengeReward(type: .badge, value: 4, description: "获得「正念大师」徽章"),
-                startDate: today,
-                endDate: endDate
+                difficulty: .medium,
+                status: .available,
+                startDate: now,
+                endDate: calendar.date(byAdding: .day, value: 21, to: now)!,
+                tasks: [
+                    ChallengeTask(type: .meditation, title: "睡前冥想", description: "每天睡前冥想 15 分钟", targetCount: 21, points: 42),
+                    ChallengeTask(type: .sleepSchedule, title: "规律作息", description: "固定时间睡觉起床", targetCount: 21, points: 42),
+                    ChallengeTask(type: .dreamRecall, title: "正念回忆", description: "以正念态度回忆梦境", targetCount: 15, points: 30)
+                ],
+                totalPoints: 114,
+                badge: "🧘 正念大师"
             )
         ]
-    }
-    
-    /// 获取所有预设徽章
-    static func allBadges() -> [ChallengeBadge] {
-        return [
-            // 记录类徽章
-            ChallengeBadge(
-                name: "新手记录者",
-                description: "首次记录梦境",
-                icon: "pencil.circle.fill",
-                category: .recording,
-                requirement: "记录第一个梦境",
-                points: 10
-            ),
-            ChallengeBadge(
-                name: "坚持之星",
-                description: "连续 7 天记录梦境",
-                icon: "star.circle.fill",
-                category: .recording,
-                requirement: "连续记录 7 天",
-                points: 50
-            ),
-            ChallengeBadge(
-                name: "记录达人",
-                description: "累计记录 100 个梦境",
-                icon: "book.fill",
-                category: .recording,
-                requirement: "累计记录 100 个梦境",
-                points: 200
-            ),
-            ChallengeBadge(
-                name: "梦境大师",
-                description: "累计记录 500 个梦境",
-                icon: "crown.fill",
-                category: .recording,
-                requirement: "累计记录 500 个梦境",
-                points: 1000
-            ),
-            
-            // 清醒梦类徽章
-            ChallengeBadge(
-                name: "清醒新手",
-                description: "首次记录清醒梦",
-                icon: "eye.circle.fill",
-                category: .lucid,
-                requirement: "记录第一个清醒梦",
-                points: 50
-            ),
-            ChallengeBadge(
-                name: "清醒探索者",
-                description: "累计记录 10 个清醒梦",
-                icon: "eye.fill",
-                category: .lucid,
-                requirement: "累计记录 10 个清醒梦",
-                points: 200
-            ),
-            ChallengeBadge(
-                name: "清醒梦大师",
-                description: "累计记录 50 个清醒梦",
-                icon: "sparkles",
-                category: .lucid,
-                requirement: "累计记录 50 个清醒梦",
-                points: 500
-            ),
-            
-            // 连续类徽章
-            ChallengeBadge(
-                name: "三日连记",
-                description: "连续记录 3 天",
-                icon: "flame.circle.fill",
-                category: .streak,
-                requirement: "连续记录 3 天",
-                points: 30
-            ),
-            ChallengeBadge(
-                name: "周记不断",
-                description: "连续记录 7 天",
-                icon: "flame.fill",
-                category: .streak,
-                requirement: "连续记录 7 天",
-                points: 100
-            ),
-            ChallengeBadge(
-                name: "月记传奇",
-                description: "连续记录 30 天",
-                icon: "fire.fill",
-                category: .streak,
-                requirement: "连续记录 30 天",
-                points: 500
-            ),
-            
-            // 探索类徽章
-            ChallengeBadge(
-                name: "情绪探索者",
-                description: "记录包含 10 种不同情绪的梦境",
-                icon: "heart.circle.fill",
-                category: .exploration,
-                requirement: "体验 10 种不同情绪",
-                points: 100
-            ),
-            ChallengeBadge(
-                name: "主题猎手",
-                description: "记录 20 种不同主题的梦境",
-                icon: "tag.circle.fill",
-                category: .exploration,
-                requirement: "探索 20 种不同主题",
-                points: 150
-            ),
-            
-            // 创意类徽章
-            ChallengeBadge(
-                name: "创意新星",
-                description: "记录 10 个超现实梦境",
-                icon: "lightbulb.fill",
-                category: .creativity,
-                requirement: "10 个超现实梦境",
-                points: 100
-            ),
-            ChallengeBadge(
-                name: "奇幻作家",
-                description: "记录 50 个创意梦境",
-                icon: "wand.and.stars",
-                category: .creativity,
-                requirement: "50 个创意梦境",
-                points: 300
-            ),
-            
-            // 特殊徽章
-            ChallengeBadge(
-                name: "午夜记录者",
-                description: "在凌晨 3 点记录梦境",
-                icon: "moon.stars.fill",
-                category: .special,
-                requirement: "凌晨 3 点记录",
-                points: 50
-            ),
-            ChallengeBadge(
-                name: "百日修行",
-                description: "连续记录 100 天",
-                icon: "trophy.fill",
-                category: .special,
-                requirement: "连续记录 100 天",
-                points: 2000
-            )
-        ]
-    }
-}
-
-// MARK: - 挑战统计数据
-
-/// 挑战统计数据
-struct ChallengeStatistics: Codable {
-    var totalChallengesCompleted: Int = 0       // 总完成挑战数
-    var totalPointsEarned: Int = 0              // 总获得积分
-    var totalBadgesEarned: Int = 0              // 总获得徽章数
-    var currentStreak: Int = 0                  // 当前连续天数
-    var longestStreak: Int = 0                  // 最长连续天数
-    var challengesByType: [DreamChallengeType: Int] = [:]  // 按类型统计
-    var challengesByDifficulty: [DreamChallengeDifficulty: Int] = [:]  // 按难度统计
-    var monthlyProgress: [Int] = Array(repeating: 0, count: 12)  // 每月完成数
-    var recentAchievements: [String] = []       // 最近成就
-    
-    var level: Int {
-        // 根据积分计算等级
-        return totalPointsEarned / 100 + 1
-    }
-    
-    var nextLevelPoints: Int {
-        return (level + 1) * 100 - totalPointsEarned
     }
 }

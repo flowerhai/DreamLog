@@ -2,671 +2,398 @@
 //  DreamChallengeService.swift
 //  DreamLog
 //
-//  梦境挑战系统服务
-//  Phase 15 - 梦境挑战系统
+//  Phase 41 - 梦境挑战系统
+//  核心服务
 //
 
 import Foundation
-import Combine
+import SwiftData
 import UserNotifications
 
-/// 梦境挑战服务
-@MainActor
-class DreamChallengeService: ObservableObject {
-    
-    // MARK: - 单例
-    
-    static let shared = DreamChallengeService()
-    
-    // MARK: - Published Properties
-    
-    @Published var activeChallenges: [DreamChallenge] = []
-    @Published var completedChallenges: [DreamChallenge] = []
-    @Published var userProgress: [UUID: UserChallengeProgress] = [:]
-    @Published var unlockedBadges: [ChallengeBadge] = []
-    @Published var statistics: ChallengeStatistics = ChallengeStatistics()
-    @Published var totalPoints: Int = 0
-    @Published var currentLevel: Int = 1
-    @Published var isLoading: Bool = false
+actor DreamChallengeService {
     
     // MARK: - Properties
     
-    private let userDefaultsKey = "DreamLog_Challenges"
-    private let badgesKey = "DreamLog_Badges"
-    private let statsKey = "DreamLog_ChallengeStats"
-    private let pointsKey = "DreamLog_ChallengePoints"
+    private let modelContext: ModelContext
+    private var challenges: [DreamChallenge] = []
+    private var badges: [ChallengeBadge] = []
     
-    private var cancellables = Set<AnyCancellable>()
+    // MARK: - Initialization
     
-    // MARK: - 初始化
-    
-    private init() {
-        loadData()
-        checkAndActivateChallenges()
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
+        loadChallenges()
+        loadBadges()
     }
     
-    // MARK: - 数据加载/保存
+    // MARK: - Load Data
     
-    /// 加载数据
-    func loadData() {
-        // 加载积分
-        totalPoints = UserDefaults.standard.integer(forKey: pointsKey)
-        currentLevel = totalPoints / 100 + 1
+    private func loadChallenges() {
+        let descriptor = FetchDescriptor<DreamChallenge>(
+            sortBy: [SortDescriptor(\.startDate, order: .reverse)]
+        )
         
-        // 加载徽章
-        if let badgesData = UserDefaults.standard.data(forKey: badgesKey),
-           let badges = try? JSONDecoder().decode([ChallengeBadge].self, from: badgesData) {
-            unlockedBadges = badges
-        }
-        
-        // 加载统计数据
-        if let statsData = UserDefaults.standard.data(forKey: statsKey),
-           let stats = try? JSONDecoder().decode(ChallengeStatistics.self, from: statsData) {
-            statistics = stats
-        }
-        
-        // 加载用户进度
-        if let progressData = UserDefaults.standard.data(forKey: userDefaultsKey),
-           let progress = try? JSONDecoder().decode([UserChallengeProgress].self, from: progressData) {
-            for p in progress {
-                userProgress[p.challengeId] = p
-            }
-        }
-        
-        print("🎯 ChallengeService: 加载数据完成 - 积分：\(totalPoints), 徽章：\(unlockedBadges.count)")
-    }
-    
-    /// 保存数据
-    private func saveData() {
-        // 保存积分
-        UserDefaults.standard.set(totalPoints, forKey: pointsKey)
-        
-        // 保存徽章
-        if let badgesData = try? JSONEncoder().encode(unlockedBadges) {
-            UserDefaults.standard.set(badgesData, forKey: badgesKey)
-        }
-        
-        // 保存统计数据
-        if let statsData = try? JSONEncoder().encode(statistics) {
-            UserDefaults.standard.set(statsData, forKey: statsKey)
-        }
-        
-        // 保存用户进度
-        let progressArray = Array(userProgress.values)
-        if let progressData = try? JSONEncoder().encode(progressArray) {
-            UserDefaults.standard.set(progressData, forKey: userDefaultsKey)
+        do {
+            challenges = try modelContext.fetch(descriptor)
+        } catch {
+            print("Failed to load challenges: \(error)")
         }
     }
     
-    // MARK: - 挑战管理
-    
-    /// 检查并激活挑战
-    func checkAndActivateChallenges() {
-        let now = Date()
+    private func loadBadges() {
+        let descriptor = FetchDescriptor<ChallengeBadge>(
+            sortBy: [SortDescriptor(\.earnedAt, order: .reverse)]
+        )
         
-        // 获取预设挑战
-        let dailyChallenges = DreamChallengeTemplate.dailyChallenges()
-        let weeklyChallenges = DreamChallengeTemplate.weeklyChallenges()
-        let monthlyChallenges = DreamChallengeTemplate.monthlyChallenges()
-        
-        var allChallenges = dailyChallenges + weeklyChallenges + monthlyChallenges
-        
-        // 过滤激活的挑战
-        activeChallenges = allChallenges.filter { challenge in
-            challenge.isActive &&
-            challenge.startDate <= now &&
-            challenge.endDate >= now &&
-            !(userProgress[challenge.id]?.isCompleted ?? false)
-        }
-        
-        // 更新每个挑战的当前进度
-        updateAllChallengesProgress()
-    }
-    
-    /// 更新所有挑战进度
-    func updateAllChallengesProgress() {
-        for challenge in activeChallenges {
-            updateChallengeProgress(challenge)
+        do {
+            badges = try modelContext.fetch(descriptor)
+        } catch {
+            print("Failed to load badges: \(error)")
         }
     }
     
-    /// 更新单个挑战进度
-    func updateChallengeProgress(_ challenge: DreamChallenge) {
-        // 这里需要根据挑战类型计算实际进度
-        // 简化版本：从 DreamStore 获取数据计算
+    // MARK: - Challenge Management
+    
+    /// 获取所有挑战
+    func getAllChallenges() -> [DreamChallenge] {
+        loadChallenges()
+        return challenges
+    }
+    
+    /// 获取进行中的挑战
+    func getInProgressChallenges() -> [DreamChallenge] {
+        challenges.filter { $0.isOngoing }
+    }
+    
+    /// 获取可参与的挑战
+    func getAvailableChallenges() -> [DreamChallenge] {
+        challenges.filter { $0.status == .available && !$0.isExpired }
+    }
+    
+    /// 获取已完成的挑战
+    func getCompletedChallenges() -> [DreamChallenge] {
+        challenges.filter { $0.status == .completed }
+    }
+    
+    /// 获取特定类型的挑战
+    func getChallenges(by type: DreamChallengeType) -> [DreamChallenge] {
+        challenges.filter { $0.type == type }
+    }
+    
+    /// 获取收藏的挑战
+    func getFavoriteChallenges() -> [DreamChallenge] {
+        challenges.filter { $0.isFavorite }
+    }
+    
+    /// 获取挑战详情
+    func getChallenge(id: UUID) -> DreamChallenge? {
+        challenges.first { $0.id == id }
+    }
+    
+    // MARK: - Challenge Actions
+    
+    /// 开始挑战
+    func startChallenge(id: UUID) async throws {
+        guard let challenge = challenges.first(where: { $0.id == id }) else {
+            throw ChallengeError.challengeNotFound
+        }
         
-        guard var progress = userProgress[challenge.id] else {
-            // 创建新进度
-            let newProgress = UserChallengeProgress(
-                challengeId: challenge.id,
-                userId: "current_user",
-                startDate: Date(),
-                progress: [:],
-                currentTotal: 0
-            )
-            userProgress[challenge.id] = newProgress
+        guard challenge.status == .available else {
+            throw ChallengeError.challengeNotAvailable
+        }
+        
+        challenge.status = .inProgress
+        challenge.startedAt = Date()
+        
+        try modelContext.save()
+        await scheduleChallengeReminders(for: challenge)
+    }
+    
+    /// 更新任务进度
+    func updateTaskProgress(challengeId: UUID, taskId: UUID, increment: Int = 1) async throws {
+        guard let challenge = challenges.first(where: { $0.id == challengeId }) else {
+            throw ChallengeError.challengeNotFound
+        }
+        
+        guard let task = challenge.tasks.first(where: { $0.id == taskId }) else {
+            throw ChallengeError.taskNotFound
+        }
+        
+        task.currentCount += increment
+        
+        if task.currentCount >= task.targetCount && !task.isCompleted {
+            task.isCompleted = true
+            task.completedAt = Date()
+            challenge.earnedPoints += task.points
+            
+            // 检查挑战是否完成
+            await checkChallengeCompletion(challengeId: challengeId)
+        }
+        
+        try modelContext.save()
+    }
+    
+    /// 检查挑战完成状态
+    private func checkChallengeCompletion(challengeId: UUID) async {
+        guard let challenge = challenges.first(where: { $0.id == challengeId }) else {
             return
         }
         
-        // 根据挑战类型计算进度
-        switch challenge.goal.type {
-        case .recordCount:
-            progress.currentTotal = calculateRecordCount(since: challenge.startDate)
-        case .lucidCount:
-            progress.currentTotal = calculateLucidCount(since: challenge.startDate)
-        case .emotionVariety:
-            progress.currentTotal = calculateEmotionVariety(since: challenge.startDate)
-        case .themeExploration:
-            progress.currentTotal = calculateThemeCount(since: challenge.startDate)
-        case .clarityAverage:
-            progress.currentTotal = Int(calculateAverageClarity(since: challenge.startDate) * 10)
-        case .consecutiveDays:
-            progress.currentTotal = calculateConsecutiveDays()
-        case .realityChecks:
-            progress.currentTotal = calculateRealityChecks(since: challenge.startDate)
-        case .dreamLength:
-            progress.currentTotal = calculateTotalDreamLength(since: challenge.startDate)
-        }
+        let allTasksCompleted = challenge.tasks.allSatisfy { $0.isCompleted }
         
-        progress.currentTotal = min(progress.currentTotal, challenge.goal.targetValue)
-        progress.lastUpdated = Date()
-        
-        // 检查是否完成
-        if progress.currentTotal >= challenge.goal.targetValue {
-            progress.isCompleted = true
-            progress.completedDate = Date()
-            completeChallenge(challenge)
-        }
-        
-        userProgress[challenge.id] = progress
-        saveData()
-    }
-    
-    // MARK: - 进度计算辅助方法
-    
-    private func calculateRecordCount(since date: Date) -> Int {
-        let dreamStore = DreamStore.shared
-        return dreamStore.dreams.filter { $0.date >= date }.count
-    }
-    
-    private func calculateLucidCount(since date: Date) -> Int {
-        let dreamStore = DreamStore.shared
-        return dreamStore.dreams.filter { $0.isLucid && $0.date >= date }.count
-    }
-    
-    private func calculateEmotionVariety(since date: Date) -> Int {
-        let dreamStore = DreamStore.shared
-        var emotionSet = Set<Emotion>()
-        for dream in dreamStore.dreams where dream.date >= date {
-            emotionSet.formUnion(dream.emotions)
-        }
-        return emotionSet.count
-    }
-    
-    private func calculateThemeCount(since date: Date) -> Int {
-        let dreamStore = DreamStore.shared
-        var tagSet = Set<String>()
-        for dream in dreamStore.dreams where dream.date >= date {
-            tagSet.formUnion(dream.tags)
-        }
-        return tagSet.count
-    }
-    
-    private func calculateAverageClarity(since date: Date) -> Double {
-        let dreamStore = DreamStore.shared
-        let dreams = dreamStore.dreams.filter { $0.date >= date }
-        guard !dreams.isEmpty else { return 0.0 }
-        let total = dreams.reduce(0) { $0 + $1.clarity }
-        return Double(total) / Double(dreams.count)
-    }
-    
-    private func calculateConsecutiveDays() -> Int {
-        let dreamStore = DreamStore.shared
-        guard !dreamStore.dreams.isEmpty else { return 0 }
-        
-        let calendar = Calendar.current
-        let sortedDreams = dreamStore.dreams.sorted { $0.date > $1.date }
-        var streak = 1
-        var lastDate = calendar.startOfDay(for: sortedDreams[0].date)
-        
-        for i in 1..<sortedDreams.count {
-            let currentDate = calendar.startOfDay(for: sortedDreams[i].date)
-            let daysDiff = calendar.dateComponents([.day], from: currentDate, to: lastDate).day ?? 0
+        if allTasksCompleted {
+            challenge.status = .completed
+            challenge.completedAt = Date()
             
-            if daysDiff == 1 {
-                streak += 1
-                lastDate = currentDate
-            } else if daysDiff > 1 {
+            // 授予徽章
+            if let badgeName = challenge.badge {
+                await awardBadge(name: badgeName, challengeId: challengeId, points: challenge.totalPoints)
+            }
+            
+            // 发送完成通知
+            await sendChallengeCompletedNotification(challenge: challenge)
+        }
+    }
+    
+    /// 放弃挑战
+    func quitChallenge(id: UUID) async throws {
+        guard let challenge = challenges.first(where: { $0.id == id }) else {
+            throw ChallengeError.challengeNotFound
+        }
+        
+        challenge.status = .failed
+        try modelContext.save()
+        await cancelChallengeReminders(challengeId: id)
+    }
+    
+    /// 切换收藏状态
+    func toggleFavorite(id: UUID) async throws {
+        guard let challenge = challenges.first(where: { $0.id == id }) else {
+            throw ChallengeError.challengeNotFound
+        }
+        
+        challenge.isFavorite.toggle()
+        try modelContext.save()
+    }
+    
+    // MARK: - Badge Management
+    
+    /// 获取所有徽章
+    func getAllBadges() -> [ChallengeBadge] {
+        loadBadges()
+        return badges
+    }
+    
+    /// 授予徽章
+    private func awardBadge(name: String, challengeId: UUID, points: Int) async {
+        let badge = ChallengeBadge(
+            name: name,
+            icon: getBadgeIcon(for: name),
+            description: "完成挑战获得",
+            requirement: name,
+            challengeId: challengeId,
+            points: points
+        )
+        
+        badges.append(badge)
+        modelContext.insert(badge)
+        
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save badge: \(error)")
+        }
+        
+        await sendBadgeEarnedNotification(badge: badge)
+    }
+    
+    private func getBadgeIcon(for name: String) -> String {
+        let iconMap: [String: String] = [
+            "🧠 回忆大师": "🧠",
+            "💫 清醒行者": "💫",
+            "🔥 毅力之王": "🔥",
+            "✨ 创意达人": "✨",
+            "🕊️ 飞行者": "🕊️",
+            "🧘 正念大师": "🧘"
+        ]
+        return iconMap[name] ?? "🏆"
+    }
+    
+    // MARK: - Statistics
+    
+    /// 获取挑战统计
+    func getChallengeStats() -> ChallengeStats {
+        loadChallenges()
+        loadBadges()
+        
+        let completed = challenges.filter { $0.status == .completed }.count
+        let inProgress = challenges.filter { $0.isOngoing }.count
+        let totalPoints = challenges.reduce(0) { $0 + $1.earnedPoints }
+        
+        // 计算最喜欢的挑战类型
+        let typeCounts = Dictionary(grouping: challenges.filter { $0.status == .completed }, by: { $0.type })
+        let favoriteType = typeCounts.max(by: { $0.value.count < $1.value.count })?.key
+        
+        // 计算连续记录
+        let currentStreak = calculateCurrentStreak()
+        let longestStreak = calculateLongestStreak()
+        
+        return ChallengeStats(
+            totalChallenges: challenges.count,
+            completedChallenges: completed,
+            inProgressChallenges: inProgress,
+            totalPoints: totalPoints,
+            totalBadges: badges.count,
+            completionRate: completed > 0 ? Double(completed) / Double(challenges.count) : 0,
+            favoriteType: favoriteType,
+            currentStreak: currentStreak,
+            longestStreak: longestStreak
+        )
+    }
+    
+    private func calculateCurrentStreak() -> Int {
+        // 简化实现：计算连续记录天数
+        let calendar = Calendar.current
+        let now = Date()
+        var streak = 0
+        
+        for day in 0..<365 {
+            guard let date = calendar.date(byAdding: .day, value: -day, to: now) else { break }
+            let startOfDay = calendar.startOfDay(for: date)
+            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+            
+            let descriptor = FetchDescriptor<DreamChallenge>(
+                predicate: #Predicate<DreamChallenge> { challenge in
+                    challenge.startedAt != nil &&
+                    challenge.startedAt! >= startOfDay &&
+                    challenge.startedAt! < endOfDay
+                }
+            )
+            
+            do {
+                let count = try modelContext.fetch(descriptor).count
+                if count > 0 {
+                    streak += 1
+                } else if day > 0 {
+                    break
+                }
+            } catch {
                 break
             }
-            // daysDiff == 0 表示同一天，跳过
         }
         
         return streak
     }
     
-    private func calculateRealityChecks(since date: Date) -> Int {
-        // 从 LucidTrainingService 获取现实检查次数
-        let trainingService = LucidTrainingService.shared
-        let stats = trainingService.getRealityCheckStats()
-        return stats.total
+    private func calculateLongestStreak() -> Int {
+        // 简化实现：返回历史最长连续记录
+        return calculateCurrentStreak() // 实际应计算历史最大值
     }
     
-    private func calculateTotalDreamLength(since date: Date) -> Int {
-        let dreamStore = DreamStore.shared
-        let dreams = dreamStore.dreams.filter { $0.date >= date }
-        // 估算：每个梦境平均字数 / 100 作为长度单位
-        return dreams.reduce(0) { $0 + ($1.content.count / 100) }
-    }
+    // MARK: - Notifications
     
-    // MARK: - 挑战完成
-    
-    /// 完成挑战
-    func completeChallenge(_ challenge: DreamChallenge) {
-        guard !challenge.isCompleted else { return }
-        
-        challenge.isCompleted = true
-        
-        // 移动到已完成列表
-        if !completedChallenges.contains(where: { $0.id == challenge.id }) {
-            completedChallenges.append(challenge)
-        }
-        
-        // 从活跃列表移除
-        activeChallenges.removeAll { $0.id == challenge.id }
-        
-        // 发放奖励
-        distributeReward(challenge.reward)
-        
-        // 更新统计
-        updateStatistics(for: challenge)
-        
-        // 检查徽章解锁
-        checkBadgeUnlocks()
-        
-        saveData()
-        
-        print("🎉 挑战完成：\(challenge.title)")
-    }
-    
-    /// 发放奖励
-    func distributeReward(_ reward: DreamChallengeReward) {
-        switch reward.type {
-        case .points:
-            totalPoints += reward.value
-            currentLevel = totalPoints / 100 + 1
-            print("⭐ 获得 \(reward.value) 积分，总积分：\(totalPoints)")
-            
-        case .badge:
-            // 解锁徽章
-            let allBadges = DreamChallengeTemplate.allBadges()
-            if reward.value < allBadges.count {
-                var badge = allBadges[reward.value]
-                badge.isUnlocked = true
-                badge.unlockedDate = Date()
-                if !unlockedBadges.contains(badge) {
-                    unlockedBadges.append(badge)
-                    statistics.totalBadgesEarned += 1
-                    print("🏅 解锁徽章：\(badge.name)")
-                }
-            }
-            
-        case .streak:
-            // 连续记录加成 (简化处理)
-            print("🔥 获得连续记录加成")
-            
-        case .theme:
-            // 解锁主题 (简化处理)
-            print("🎨 解锁新主题")
-            
-        case .feature:
-            // 解锁功能 (简化处理)
-            print("🔧 解锁新功能")
-        }
-        
-        saveData()
-    }
-    
-    /// 更新统计数据
-    func updateStatistics(for challenge: DreamChallenge) {
-        statistics.totalChallengesCompleted += 1
-        
-        // 按类型统计
-        statistics.challengesByType[challenge.type, default: 0] += 1
-        
-        // 按难度统计
-        statistics.challengesByDifficulty[challenge.difficulty, default: 0] += 1
-        
-        // 月度统计
-        let month = Calendar.current.component(.month, from: Date())
-        if month >= 1 && month <= 12 {
-            statistics.monthlyProgress[month - 1] += 1
-        }
-        
-        // 添加最近成就
-        let achievement = "完成挑战：\(challenge.title)"
-        statistics.recentAchievements.insert(achievement, at: 0)
-        if statistics.recentAchievements.count > 10 {
-            statistics.recentAchievements.removeLast()
-        }
-    }
-    
-    // MARK: - 徽章系统
-    
-    /// 检查徽章解锁
-    func checkBadgeUnlocks() {
-        let allBadges = DreamChallengeTemplate.allBadges()
-        let dreamStore = DreamStore.shared
-        
-        for badge in allBadges where !unlockedBadges.contains(badge) {
-            var shouldUnlock = false
-            
-            // 检查解锁条件
-            switch badge.name {
-            case "新手记录者":
-                shouldUnlock = dreamStore.dreams.count >= 1
-                
-            case "坚持之星":
-                shouldUnlock = calculateConsecutiveDays() >= 7
-                
-            case "记录达人":
-                shouldUnlock = dreamStore.dreams.count >= 100
-                
-            case "梦境大师":
-                shouldUnlock = dreamStore.dreams.count >= 500
-                
-            case "清醒新手":
-                shouldUnlock = dreamStore.dreams.filter { $0.isLucid }.count >= 1
-                
-            case "清醒探索者":
-                shouldUnlock = dreamStore.dreams.filter { $0.isLucid }.count >= 10
-                
-            case "清醒梦大师":
-                shouldUnlock = dreamStore.dreams.filter { $0.isLucid }.count >= 50
-                
-            case "三日连记":
-                shouldUnlock = calculateConsecutiveDays() >= 3
-                
-            case "周记不断":
-                shouldUnlock = calculateConsecutiveDays() >= 7
-                
-            case "月记传奇":
-                shouldUnlock = calculateConsecutiveDays() >= 30
-                
-            default:
-                break
-            }
-            
-            if shouldUnlock {
-                var unlockedBadge = badge
-                unlockedBadge.isUnlocked = true
-                unlockedBadge.unlockedDate = Date()
-                unlockedBadges.append(unlockedBadge)
-                statistics.totalBadgesEarned += 1
-                totalPoints += badge.points
-                print("🏅 解锁徽章：\(badge.name) (+\(badge.points) 积分)")
-            }
-        }
-        
-        saveData()
-    }
-    
-    // MARK: - 梦境记录触发
-    
-    /// 当新梦境记录时调用
-    func onDreamRecorded(_ dream: Dream) {
-        // 更新所有活跃挑战的进度
-        for challenge in activeChallenges {
-            updateChallengeProgress(challenge)
-        }
-        
-        // 检查徽章解锁
-        checkBadgeUnlocks()
-    }
-    
-    /// 当清醒梦记录时调用
-    func onLucidDreamRecorded(_ dream: Dream) {
-        // 特殊处理清醒梦相关挑战
-        for challenge in activeChallenges where challenge.type == .lucid {
-            updateChallengeProgress(challenge)
-        }
-    }
-    
-    // MARK: - 查询方法
-    
-    /// 获取挑战详情
-    func getChallenge(by id: UUID) -> DreamChallenge? {
-        return activeChallenges.first { $0.id == id }
-            ?? completedChallenges.first { $0.id == id }
-    }
-    
-    /// 获取挑战进度
-    func getProgress(for challengeId: UUID) -> UserChallengeProgress? {
-        return userProgress[challengeId]
-    }
-    
-    /// 获取进度百分比
-    func getProgressPercentage(for challengeId: UUID) -> Double {
-        guard let progress = userProgress[challengeId],
-              let challenge = getChallenge(by: challengeId) else {
-            return 0.0
-        }
-        return Double(progress.currentTotal) / Double(challenge.goal.targetValue)
-    }
-    
-    /// 获取按类型筛选的挑战
-    func getChallenges(by type: DreamChallengeType) -> [DreamChallenge] {
-        return activeChallenges.filter { $0.type == type }
-    }
-    
-    /// 获取按难度筛选的挑战
-    func getChallenges(by difficulty: DreamChallengeDifficulty) -> [DreamChallenge] {
-        return activeChallenges.filter { $0.difficulty == difficulty }
-    }
-    
-    // MARK: - 领取奖励
-    
-    /// 领取挑战奖励
-    func claimReward(for challengeId: UUID) -> Bool {
-        guard let progress = userProgress[challengeId],
-              progress.isCompleted,
-              !progress.claimedReward,
-              let challenge = getChallenge(by: challengeId) else {
-            return false
-        }
-        
-        // 标记为已领取
-        var updatedProgress = progress
-        updatedProgress.claimedReward = true
-        userProgress[challengeId] = updatedProgress
-        
-        // 发放奖励
-        distributeReward(challenge.reward)
-        
-        saveData()
-        return true
-    }
-    
-    // MARK: - 重置
-    
-    /// 重置每日挑战
-    func resetDailyChallenges() {
-        let today = Date()
-        let calendar = Calendar.current
-        
-        // 检查是否需要重置 (新的一天)
-        let lastReset = UserDefaults.standard.object(forKey: "DreamLog_LastDailyReset") as? Date ?? Date.distantPast
-        
-        if !calendar.isDate(today, inSameDayAs: lastReset) {
-            // 移除过期的每日挑战
-            activeChallenges.removeAll { challenge in
-                challenge.period == .daily && challenge.endDate < today
-            }
-            
-            // 添加新的每日挑战
-            let newDailyChallenges = DreamChallengeTemplate.dailyChallenges()
-            for challenge in newDailyChallenges {
-                if !activeChallenges.contains(where: { $0.id == challenge.id }) {
-                    activeChallenges.append(challenge)
-                }
-            }
-            
-            UserDefaults.standard.set(today, forKey: "DreamLog_LastDailyReset")
-            saveData()
-            
-            print("🔄 每日挑战已重置")
-        }
-    }
-    
-    /// 重置每周挑战
-    func resetWeeklyChallenges() {
-        // 类似每日挑战的逻辑
-    }
-    
-    /// 重置每月挑战
-    func resetMonthlyChallenges() {
-        // 类似每日挑战的逻辑
-    }
-}
-
-// MARK: - 扩展：与 DreamStore 集成
-
-extension DreamChallengeService {
-    
-    /// 设置梦境记录监听
-    func setupDreamListener() {
-        // 这里可以监听 DreamStore 的变化
-        // 当新梦境添加时自动更新挑战进度
-    }
-}
-
-// MARK: - 扩展：通知支持
-
-extension DreamChallengeService {
-    
-    /// 安排挑战提醒通知
-    func scheduleChallengeReminders() {
-        let now = Date()
-        let calendar = Calendar.current
-        
-        for challenge in activeChallenges {
-            // 计算剩余时间
-            let timeRemaining = challenge.endDate.timeIntervalSince(now)
-            
-            // 如果挑战将在 24 小时内到期，发送提醒
-            if timeRemaining > 0 && timeRemaining < 86400 {
-                scheduleExpiringChallengeNotification(challenge)
-            }
-            
-            // 每日挑战在晚上 8 点提醒
-            if challenge.period == .daily {
-                scheduleDailyChallengeReminder(challenge)
-            }
-        }
-    }
-    
-    /// 安排即将到期挑战的通知
-    private func scheduleExpiringChallengeNotification(_ challenge: DreamChallenge) {
+    /// 安排挑战提醒
+    private func scheduleChallengeReminders(for challenge: DreamChallenge) {
         let content = UNMutableNotificationContent()
-        content.title = "⏰ 挑战即将到期"
-        content.body = "「\(challenge.title)」将在 24 小时内结束，加油！"
+        content.title = "🎯 挑战进行中"
+        content.body = "\"\(challenge.title)\" - 加油！还剩 \(challenge.daysRemaining) 天"
         content.sound = .default
-        content.badge = NSNumber(value: challengeServiceUnreadCount())
-        content.userInfo = ["challengeId": challenge.id.uuidString, "type": "expiring"]
+        content.categoryIdentifier = "DREAM_CHALLENGE"
         
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 3600, repeats: false)
-        let request = UNNotificationRequest(
-            identifier: "challenge_expiring_\(challenge.id.uuidString)",
-            content: content,
-            trigger: trigger
-        )
-        
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("❌ 安排挑战到期通知失败：\(error)")
-            } else {
-                print("✅ 已安排挑战到期提醒：\(challenge.title)")
-            }
-        }
-    }
-    
-    /// 安排每日挑战提醒
-    private func scheduleDailyChallengeReminder(_ challenge: DreamChallenge) {
-        let content = UNMutableNotificationContent()
-        content.title = "📝 每日挑战"
-        content.body = "今天的挑战「\(challenge.title)」完成了吗？记录梦境来获取积分吧！"
-        content.sound = .default
-        content.categoryIdentifier = "dream_record"
-        content.userInfo = ["challengeId": challenge.id.uuidString, "type": "daily"]
-        
-        // 每天晚上 8 点提醒
-        var dateComponents = DateComponents()
-        dateComponents.hour = 20
-        dateComponents.minute = 0
-        
+        // 每天提醒
+        let dateComponents = DateComponents(hour: 20, minute: 0)
         let trigger = UNCalendarNotificationTrigger(dateMatching: dateComponents, repeats: true)
+        
         let request = UNNotificationRequest(
-            identifier: "daily_challenge_\(challenge.id.uuidString)",
+            identifier: "challenge_\(challenge.id.uuidString)",
             content: content,
             trigger: trigger
         )
         
         UNUserNotificationCenter.current().add(request) { error in
             if let error = error {
-                print("❌ 安排每日挑战提醒失败：\(error)")
-            } else {
-                print("✅ 已安排每日挑战提醒")
+                print("Failed to schedule challenge reminder: \(error)")
             }
         }
     }
     
-    /// 发送挑战完成庆祝通知
-    func sendChallengeCompletedNotification(_ challenge: DreamChallenge) {
+    /// 取消挑战提醒
+    private func cancelChallengeReminders(challengeId: UUID) {
+        UNUserNotificationCenter.current().removePendingNotificationRequests(
+            withIdentifiers: ["challenge_\(challengeId.uuidString)"]
+        )
+    }
+    
+    /// 发送挑战完成通知
+    private func sendChallengeCompletedNotification(challenge: DreamChallenge) async {
         let content = UNMutableNotificationContent()
-        content.title = "🎉 挑战完成！"
-        content.body = "恭喜你完成「\(challenge.title)」！获得 \(challenge.reward.description)"
+        content.title = "🎉 挑战完成!"
+        content.body = "恭喜完成\"\(challenge.title)\"! 获得 \(challenge.earnedPoints) 积分"
         content.sound = .default
-        content.userInfo = ["challengeId": challenge.id.uuidString, "type": "completed"]
         
         let request = UNNotificationRequest(
             identifier: "challenge_completed_\(challenge.id.uuidString)",
             content: content,
-            trigger: nil // 立即发送
+            trigger: nil
         )
         
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("❌ 发送挑战完成通知失败：\(error)")
-            }
-        }
+        await UNUserNotificationCenter.current().add(request)
     }
     
-    /// 发送徽章解锁通知
-    func sendBadgeUnlockedNotification(_ badge: ChallengeBadge) {
+    /// 发送徽章获得通知
+    private func sendBadgeEarnedNotification(badge: ChallengeBadge) async {
         let content = UNMutableNotificationContent()
-        content.title = "🏅 新徽章解锁！"
-        content.body = "恭喜你获得「\(badge.name)」徽章！+ \(badge.points) 积分"
+        content.title = "🏆 新徽章解锁!"
+        content.body = "获得\"\(badge.name)\"徽章! +\(badge.points) 积分"
         content.sound = .default
-        content.userInfo = ["badgeId": badge.id, "type": "badge"]
         
         let request = UNNotificationRequest(
-            identifier: "badge_unlocked_\(badge.id)",
+            identifier: "badge_earned_\(badge.id.uuidString)",
             content: content,
-            trigger: nil // 立即发送
+            trigger: nil
         )
         
-        UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
-                print("❌ 发送徽章解锁通知失败：\(error)")
-            }
-        }
+        await UNUserNotificationCenter.current().add(request)
     }
     
-    /// 计算未读挑战通知数量
-    private func challengeServiceUnreadCount() -> Int {
-        return activeChallenges.filter { challenge in
-            guard let progress = userProgress[challenge.id] else { return false }
-            return progress.isCompleted && !progress.claimedReward
-        }.count
+    // MARK: - Preset Challenges
+    
+    /// 初始化预设挑战
+    func initializePresetChallenges() async {
+        let existingTitles = challenges.map { $0.title }
+        let presetChallenges = DreamChallenge.createPresetChallenges()
+        
+        for challenge in presetChallenges {
+            if !existingTitles.contains(challenge.title) {
+                challenges.append(challenge)
+                modelContext.insert(challenge)
+            }
+        }
+        
+        do {
+            try modelContext.save()
+        } catch {
+            print("Failed to save preset challenges: \(error)")
+        }
+    }
+}
+
+// MARK: - Errors
+
+enum ChallengeError: LocalizedError {
+    case challengeNotFound
+    case taskNotFound
+    case challengeNotAvailable
+    case challengeAlreadyStarted
+    case challengeExpired
+    
+    var errorDescription: String? {
+        switch self {
+        case .challengeNotFound: return "挑战不存在"
+        case .taskNotFound: return "任务不存在"
+        case .challengeNotAvailable: return "挑战不可参与"
+        case .challengeAlreadyStarted: return "挑战已开始"
+        case .challengeExpired: return "挑战已过期"
+        }
     }
 }
