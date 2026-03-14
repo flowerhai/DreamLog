@@ -90,6 +90,45 @@ actor DreamChallengeService {
         challenges.first { $0.id == id }
     }
     
+    /// 创建自定义挑战
+    func createChallenge(
+        title: String,
+        description: String,
+        type: DreamChallengeType,
+        difficulty: ChallengeDifficulty,
+        duration: Int,
+        tasks: [ChallengeTask] = []
+    ) async throws -> DreamChallenge {
+        let startDate = Date()
+        let endDate = Calendar.current.date(byAdding: .day, value: duration, to: startDate) ?? startDate
+        
+        // 计算总积分
+        let totalPoints = tasks.reduce(0) { $0 + $1.points }
+        
+        let challenge = DreamChallenge(
+            title: title,
+            description: description,
+            type: type,
+            difficulty: difficulty,
+            status: .available,
+            startDate: startDate,
+            endDate: endDate,
+            tasks: tasks,
+            totalPoints: totalPoints,
+            earnedPoints: 0,
+            isFavorite: false,
+            participantCount: 1,
+            completionRate: 0
+        )
+        
+        modelContext.insert(challenge)
+        try modelContext.save()
+        
+        await loadChallenges()
+        
+        return challenge
+    }
+    
     // MARK: - Challenge Actions
     
     /// 开始挑战

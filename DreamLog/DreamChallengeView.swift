@@ -593,11 +593,15 @@ struct ActionButtons: View {
 
 struct CreateChallengeView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     @State private var title = ""
     @State private var description = ""
     @State private var selectedType: DreamChallengeType = .recall
     @State private var selectedDifficulty: ChallengeDifficulty = .easy
     @State private var duration = 7
+    @State private var showingAlert = false
+    @State private var alertMessage = ""
+    @State private var isCreating = false
     
     var body: some View {
         NavigationView {
@@ -636,13 +640,197 @@ struct CreateChallengeView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("创建") {
-                        dismiss()
-                        // TODO: 实现创建逻辑
+                        Task {
+                            await createChallenge()
+                        }
                     }
-                    .disabled(title.isEmpty)
+                    .disabled(title.isEmpty || isCreating)
                 }
             }
+            .alert("提示", isPresented: $showingAlert) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(alertMessage)
+            }
         }
+    }
+    
+    // MARK: - Actions
+    
+    private func createChallenge() async {
+        isCreating = true
+        defer { isCreating = false }
+        
+        do {
+            // 根据类型创建默认任务
+            let tasks = createDefaultTasks(for: selectedType, difficulty: selectedDifficulty)
+            
+            let service = DreamChallengeService(modelContext: modelContext)
+            let challenge = try await service.createChallenge(
+                title: title,
+                description: description,
+                type: selectedType,
+                difficulty: selectedDifficulty,
+                duration: duration,
+                tasks: tasks
+            )
+            
+            await MainActor.run {
+                alertMessage = "✅ 挑战\"\(challenge.title)\"创建成功！"
+                showingAlert = true
+                
+                // 延迟关闭
+                Task { @MainActor in
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    dismiss()
+                }
+            }
+        } catch {
+            await MainActor.run {
+                alertMessage = "❌ 创建失败：\(error.localizedDescription)"
+                showingAlert = true
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func createDefaultTasks(for type: DreamChallengeType, difficulty: ChallengeDifficulty) -> [ChallengeTask] {
+        var tasks: [ChallengeTask] = []
+        let pointsMultiplier = difficulty.pointsMultiplier
+        
+        switch type {
+        case .recall:
+            tasks = [
+                ChallengeTask(
+                    type: .recordDream,
+                    title: "记录梦境",
+                    description: "每天醒来后记录至少一个梦境",
+                    targetCount: duration,
+                    points: Int(10 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .dreamRecall,
+                    title: "回忆练习",
+                    description: "睡前进行 5 分钟回忆练习",
+                    targetCount: Int(Double(duration) * 0.8),
+                    points: Int(15 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .creativeWriting,
+                    title: "梦境写作",
+                    description: "选择一个梦境进行详细描写",
+                    targetCount: Int(Double(duration) * 0.3),
+                    points: Int(20 * pointsMultiplier)
+                )
+            ]
+            
+        case .lucid:
+            tasks = [
+                ChallengeTask(
+                    type: .realityCheck,
+                    title: "现实检查",
+                    description: "每天进行至少 5 次现实检查",
+                    targetCount: duration * 5,
+                    points: Int(8 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .meditation,
+                    title: "冥想练习",
+                    description: "睡前进行 10 分钟冥想",
+                    targetCount: Int(Double(duration) * 0.7),
+                    points: Int(15 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .achieveLucid,
+                    title: "清醒梦体验",
+                    description: "至少体验一次清醒梦",
+                    targetCount: 1,
+                    points: Int(50 * pointsMultiplier)
+                )
+            ]
+            
+        case .theme:
+            tasks = [
+                ChallengeTask(
+                    type: .recordDream,
+                    title: "主题梦境记录",
+                    description: "记录与主题相关的梦境",
+                    targetCount: Int(Double(duration) * 0.6),
+                    points: Int(12 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .meditation,
+                    title: "主题冥想",
+                    description: "睡前冥想主题相关内容",
+                    targetCount: Int(Double(duration) * 0.5),
+                    points: Int(15 * pointsMultiplier)
+                )
+            ]
+            
+        case .creative:
+            tasks = [
+                ChallengeTask(
+                    type: .recordDream,
+                    title: "创意梦境记录",
+                    description: "记录富有创意的梦境",
+                    targetCount: Int(Double(duration) * 0.5),
+                    points: Int(15 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .creativeWriting,
+                    title: "创意写作",
+                    description: "基于梦境进行创意写作",
+                    targetCount: Int(Double(duration) * 0.4),
+                    points: Int(25 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .shareDream,
+                    title: "分享灵感",
+                    description: "分享梦境中的创意想法",
+                    targetCount: Int(Double(duration) * 0.2),
+                    points: Int(20 * pointsMultiplier)
+                )
+            ]
+            
+        case .mindfulness:
+            tasks = [
+                ChallengeTask(
+                    type: .meditation,
+                    title: "正念冥想",
+                    description: "每天进行正念冥想",
+                    targetCount: duration,
+                    points: Int(12 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .sleepSchedule,
+                    title: "规律作息",
+                    description: "保持固定的睡眠时间",
+                    targetCount: Int(Double(duration) * 0.8),
+                    points: Int(15 * pointsMultiplier)
+                ),
+                ChallengeTask(
+                    type: .recordDream,
+                    title: "梦境记录",
+                    description: "记录梦境中的感受",
+                    targetCount: Int(Double(duration) * 0.7),
+                    points: Int(10 * pointsMultiplier)
+                )
+            ]
+            
+        case .streak:
+            tasks = [
+                ChallengeTask(
+                    type: .recordDream,
+                    title: "连续记录",
+                    description: "每天记录至少一个梦境",
+                    targetCount: duration,
+                    points: Int(20 * pointsMultiplier)
+                )
+            ]
+        }
+        
+        return tasks
     }
 }
 
