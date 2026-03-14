@@ -9,12 +9,13 @@
 import Foundation
 import AVFoundation
 import Accelerate
+import Combine
 
 // MARK: - 音频合成引擎
 
 /// 真实音频合成引擎
 /// 使用 AVAudioEngine 和 AudioKit 风格的合成器生成梦境音乐
-class AudioSynthesisEngine {
+class AudioSynthesisEngine: ObservableObject {
     static let shared = AudioSynthesisEngine()
     
     private var audioEngine: AVAudioEngine?
