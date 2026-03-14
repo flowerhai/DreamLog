@@ -2,186 +2,65 @@
 //  ContentView.swift
 //  DreamLog
 //
-//  主容器视图
+//  Phase 43 - 导航重构：5 个主标签
 //
 
 import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var dreamStore: DreamStore
-    @ObservedObject private var challengeService = DreamChallengeService.shared
-    @State private var selectedTab = 0
+    @StateObject private var challengeService = DreamChallengeService.shared
+    @StateObject private var favoriteManager = FavoriteManager.shared
+    @AppStorage("selectedMainTab") private var selectedTab = 0
     
     var body: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
+            // 📖 梦境
+            DreamsNavigationView()
+                .environmentObject(dreamStore)
                 .tabItem {
-                    Image(systemName: "book.fill")
-                    Text("梦境")
+                    Image(systemName: MainTab.dreams.icon)
+                    Text(MainTab.dreams.title)
                 }
                 .tag(0)
             
-            CalendarView()
+            // 📊 分析
+            InsightsNavigationView()
+                .environmentObject(dreamStore)
                 .tabItem {
-                    Image(systemName: "calendar")
-                    Text("日历")
+                    Image(systemName: MainTab.insights.icon)
+                    Text(MainTab.insights.title)
                 }
                 .tag(1)
             
-            InsightsView()
+            // 🎮 探索
+            ExploreNavigationView()
+                .environmentObject(dreamStore)
+                .environmentObject(challengeService)
                 .tabItem {
-                    Image(systemName: "chart.bar.fill")
-                    Text("洞察")
+                    Image(systemName: MainTab.explore.icon)
+                    Text(MainTab.explore.title)
                 }
                 .tag(2)
             
-            FriendsView(dreamStore: dreamStore)
+            // 🧘 成长
+            GrowthNavigationView()
+                .environmentObject(dreamStore)
                 .tabItem {
-                    Image(systemName: "person.2.fill")
-                    Text("好友")
+                    Image(systemName: MainTab.growth.icon)
+                    Text(MainTab.growth.title)
                 }
                 .tag(3)
             
-            CommunityView(dreamStore: dreamStore)
-                .tabItem {
-                    Image(systemName: "globe")
-                    Text("社区")
-                }
-                .tag(4)
-            
-            SleepDataView()
-                .tabItem {
-                    Image(systemName: "moon.stars.fill")
-                    Text("睡眠")
-                }
-                .tag(5)
-            
-            MeditationView()
-                .tabItem {
-                    Image(systemName: "music.note.house")
-                    Text("冥想")
-                }
-                .tag(6)
-            
-            DreamDictionaryView()
-                .tabItem {
-                    Image(systemName: "text.book.closed.fill")
-                    Text("词典")
-                }
-                .tag(7)
-            
-            DreamsGoalView()
-                .tabItem {
-                    Image(systemName: "target")
-                    Text("目标")
-                }
-                .tag(8)
-            
-            LucidTrainingView()
-                .tabItem {
-                    Image(systemName: "brain.head.profile")
-                    Text("训练")
-                }
-                .tag(9)
-            
-            GalleryView()
-                .tabItem {
-                    Image(systemName: "photo.on.rectangle")
-                    Text("画廊")
-                }
-                .tag(10)
-            
-            DreamVideoView()
-                .tabItem {
-                    Image(systemName: "film")
-                    Text("视频")
-                }
-                .tag(11)
-            
-            DreamGraphView()
-                .tabItem {
-                    Image(systemName: "network")
-                    Text("图谱")
-                }
-                .tag(12)
-            
-            DreamMusicView()
-                .tabItem {
-                    Image(systemName: "music.note.house.fill")
-                    Text("音乐")
-                }
-                .tag(13)
-            
-            DreamWrappedView()
-                .tabItem {
-                    Image(systemName: "sparkles")
-                    Text("回顾")
-                }
-                .tag(14)
-            
-            DreamAssistantView()
-                .tabItem {
-                    Image(systemName: "message.fill")
-                    Text("助手")
-                }
-                .tag(15)
-            
-            SettingsView()
-                .tabItem {
-                    Image(systemName: "gearshape.fill")
-                    Text("设置")
-                }
-                .tag(16)
-            
-            DreamStoryView()
-                .tabItem {
-                    Image(systemName: "book.closed.fill")
-                    Text("故事")
-                }
-                .tag(17)
-            
-            DreamChallengeView()
+            // ⚙️ 我的
+            ProfileNavigationView()
+                .environmentObject(dreamStore)
                 .environmentObject(challengeService)
                 .tabItem {
-                    Image(systemName: "trophy.fill")
-                    Text("挑战")
+                    Image(systemName: MainTab.profile.icon)
+                    Text(MainTab.profile.title)
                 }
-                .tag(18)
-            
-            DreamBackupView()
-                .tabItem {
-                    Image(systemName: "externaldrive.fill")
-                    Text("备份")
-                }
-                .tag(19)
-            
-            DreamShareCircleView()
-                .tabItem {
-                    Image(systemName: "person.3.fill")
-                    Text("分享圈")
-                }
-                .tag(20)
-            
-            DreamTimeCapsuleView()
-                .tabItem {
-                    Image(systemName: "hourglass.badge.fill")
-                    Text("时间胶囊")
-                }
-                .tag(21)
-            
-            DreamInsightsDashboardView()
-                .tabItem {
-                    Image(systemName: "brain.head.profile")
-                    Text("AI 解析")
-                }
-                .tag(22)
-            
-            DreamPredictionView()
-                .tabItem {
-                    Image(systemName: "crystal.ball")
-                    Text("预测")
-                }
-                .tag(23)
+                .tag(4)
         }
         .tint(Color(hex: "9B7EBD"))
         .background(
@@ -193,6 +72,198 @@ struct ContentView: View {
         )
     }
 }
+
+// MARK: - 📖 梦境导航
+
+struct DreamsNavigationView: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @State private var selectedViewId: String = "home"
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section(header: Text("常用功能")) {
+                    NavigationLink(destination: HomeView(), tag: "home", selection: $selectedViewId) {
+                        Label("梦境列表", systemImage: "list.bullet")
+                    }
+                    NavigationLink(destination: CalendarView(), tag: "calendar", selection: $selectedViewId) {
+                        Label("日历视图", systemImage: "calendar")
+                    }
+                    NavigationLink(destination: QuickAddView(), tag: "quick-add", selection: $selectedViewId) {
+                        Label("快速记录", systemImage: "plus.circle.fill")
+                    }
+                }
+                
+                Section(header: Text("搜索")) {
+                    NavigationLink(destination: GlobalSearchView(), tag: "search", selection: $selectedViewId) {
+                        Label("全局搜索", systemImage: "magnifyingglass")
+                    }
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("📖 梦境")
+        }
+    }
+}
+
+// MARK: - 📊 分析导航
+
+struct InsightsNavigationView: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section(header: Text("核心分析")) {
+                    NavigationLink(destination: InsightsView()) {
+                        Label("数据洞察", systemImage: "chart.bar")
+                    }
+                    NavigationLink(destination: DreamInsightsDashboardView()) {
+                        Label("AI 解析", systemImage: "brain.head.profile")
+                    }
+                }
+                
+                Section(header: Text("高级功能")) {
+                    NavigationLink(destination: DreamPredictionView()) {
+                        Label("梦境预测", systemImage: "crystal.ball")
+                    }
+                    NavigationLink(destination: DreamWrappedView()) {
+                        Label("梦境回顾", systemImage: "sparkles")
+                    }
+                    NavigationLink(destination: AdvancedDashboardView()) {
+                        Label("高级统计", systemImage: "chart.line.uptrend.xyaxis")
+                    }
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("📊 分析")
+        }
+    }
+}
+
+// MARK: - 🎮 探索导航
+
+struct ExploreNavigationView: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @EnvironmentObject var challengeService: DreamChallengeService
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section(header: Text("社区")) {
+                    NavigationLink(destination: CommunityView(dreamStore: dreamStore)) {
+                        Label("梦境社区", systemImage: "globe")
+                    }
+                    NavigationLink(destination: FriendsView(dreamStore: dreamStore)) {
+                        Label("好友", systemImage: "person.2.fill")
+                    }
+                }
+                
+                Section(header: Text("互动")) {
+                    NavigationLink(destination: DreamChallengeView()) {
+                        Label("挑战", systemImage: "trophy.fill")
+                    }
+                    NavigationLink(destination: DreamShareCircleView()) {
+                        Label("分享圈", systemImage: "person.3.fill")
+                    }
+                    NavigationLink(destination: GalleryView()) {
+                        Label("梦境画廊", systemImage: "photo.on.rectangle")
+                    }
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("🎮 探索")
+        }
+    }
+}
+
+// MARK: - 🧘 成长导航
+
+struct GrowthNavigationView: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section(header: Text("睡眠与健康")) {
+                    NavigationLink(destination: SleepDataView()) {
+                        Label("睡眠数据", systemImage: "moon.stars.fill")
+                    }
+                    NavigationLink(destination: MeditationView()) {
+                        Label("冥想音乐", systemImage: "music.note.house")
+                    }
+                }
+                
+                Section(header: Text("技能提升")) {
+                    NavigationLink(destination: LucidTrainingView()) {
+                        Label("清醒梦训练", systemImage: "brain.head.profile")
+                    }
+                    NavigationLink(destination: DreamsGoalView()) {
+                        Label("梦境目标", systemImage: "target")
+                    }
+                    NavigationLink(destination: DreamDictionaryView()) {
+                        Label("梦境词典", systemImage: "text.book.closed.fill")
+                    }
+                }
+                
+                Section(header: Text("创意")) {
+                    NavigationLink(destination: DreamMusicView()) {
+                        Label("梦境音乐", systemImage: "music.note.house.fill")
+                    }
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("🧘 成长")
+        }
+    }
+}
+
+// MARK: - ⚙️ 我的导航
+
+struct ProfileNavigationView: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @EnvironmentObject var challengeService: DreamChallengeService
+    
+    var body: some View {
+        NavigationView {
+            List {
+                Section(header: Text("个人")) {
+                    NavigationLink(destination: SettingsView()) {
+                        Label("设置", systemImage: "gearshape.fill")
+                    }
+                    NavigationLink(destination: DreamAssistantView()) {
+                        Label("AI 助手", systemImage: "message.fill")
+                    }
+                }
+                
+                Section(header: Text("数据管理")) {
+                    NavigationLink(destination: DreamBackupView()) {
+                        Label("备份恢复", systemImage: "externaldrive.fill")
+                    }
+                    NavigationLink(destination: DreamTimeCapsuleView()) {
+                        Label("时间胶囊", systemImage: "hourglass.badge.fill")
+                    }
+                }
+                
+                Section(header: Text("创意功能")) {
+                    NavigationLink(destination: DreamStoryView()) {
+                        Label("梦境故事", systemImage: "book.closed.fill")
+                    }
+                    NavigationLink(destination: DreamVideoView()) {
+                        Label("梦境视频", systemImage: "film")
+                    }
+                    NavigationLink(destination: DreamGraphView()) {
+                        Label("梦境图谱", systemImage: "network")
+                    }
+                }
+            }
+            .listStyle(InsetGroupedListStyle())
+            .navigationTitle("⚙️ 我的")
+        }
+    }
+}
+
+// MARK: - 预览
 
 #Preview {
     ContentView()
