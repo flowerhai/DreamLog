@@ -359,7 +359,7 @@ struct DreamCard: View {
     }
     
     private func shareDream() {
-        // TODO: 实现分享功能
+        showingShareSheet = true
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -374,6 +374,7 @@ struct DreamCard: View {
 struct ShareDreamView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var service = DreamCommunityService.shared
+    @StateObject private var dreamStore = DreamStore.shared
     @State private var selectedDream: Dream?
     @State private var title = ""
     @State private var allowAIAnalysis = true
@@ -381,6 +382,7 @@ struct ShareDreamView: View {
     @State private var allowComments = true
     @State private var isAnonymous = true
     @State private var isSharing = false
+    @State private var showingDreamPicker = false
     
     var body: some View {
         NavigationView {
@@ -396,14 +398,13 @@ struct ShareDreamView: View {
                                 .foregroundColor(.secondary)
                                 .lineLimit(2)
                         }
-                    } else {
-                        Button(action: selectDream) {
-                            HStack {
-                                Image(systemName: "plus.circle")
-                                    .foregroundColor(.purple)
-                                Text("选择要分享的梦境")
-                                    .foregroundColor(.purple)
-                            }
+                    }
+                    NavigationLink(destination: DreamPickerView(selectedDream: $selectedDream)) {
+                        HStack {
+                            Image(systemName: selectedDream != nil ? "checkmark.circle.fill" : "plus.circle")
+                                .foregroundColor(selectedDream != nil ? .green : .purple)
+                            Text(selectedDream != nil ? "已选择梦境" : "选择要分享的梦境")
+                                .foregroundColor(selectedDream != nil ? .green : .purple)
                         }
                     }
                 }
@@ -457,9 +458,7 @@ struct ShareDreamView: View {
         }
     }
     
-    private func selectDream() {
-        // TODO: 打开梦境选择器
-    }
+    // selectDream 不再需要，已改用 NavigationLink
     
     private func shareToCommunity() {
         guard let dream = selectedDream else { return }
@@ -625,7 +624,18 @@ struct DreamDetailView: View {
     }
     
     private func postComment() {
-        // TODO: 实现评论发布
+        guard !commentText.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        
+        Task {
+            do {
+                if let comment = await service.addComment(to: dream, content: commentText) {
+                    comments.append(comment)
+                    commentText = ""
+                }
+            } catch {
+                print("发布评论失败：\(error)")
+            }
+        }
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -664,6 +674,72 @@ struct CommentRow: View {
         let formatter = RelativeDateTimeFormatter()
         formatter.unitsStyle = .abbreviated
         return formatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+// MARK: - 梦境选择器
+
+struct DreamPickerView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var dreamStore: DreamStore
+    @Binding var selectedDream: Dream?
+    @State private var searchText = ""
+    
+    var filteredDreams: [Dream] {
+        if searchText.isEmpty {
+            return dreamStore.filteredDreams
+        }
+        return dreamStore.filteredDreams.filter {
+            $0.title.localizedCaseInsensitiveContains(searchText) ||
+            $0.content.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    
+    var body: some View {
+        List {
+            ForEach(filteredDreams, id: \.id) { dream in
+                Button(action: {
+                    selectedDream = dream
+                    dismiss()
+                }) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text(dream.title)
+                                .font(.headline)
+                            Spacer()
+                            if selectedDream?.id == dream.id {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                            }
+                        }
+                        
+                        Text(dream.content.prefix(80))
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                        
+                        HStack {
+                            Label(dream.date, systemImage: "calendar")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                            
+                            if dream.isLucid {
+                                Label("清醒梦", systemImage: "sparkles")
+                                    .font(.caption)
+                                    .foregroundColor(.purple)
+                            }
+                            
+                            Spacer()
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
+                .buttonStyle(PlainButtonStyle())
+            }
+        }
+        .navigationTitle("选择梦境")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(text: $searchText, prompt: "搜索梦境...")
     }
 }
 

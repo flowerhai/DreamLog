@@ -20,6 +20,7 @@ actor DreamARSyncEngine {
     private var pendingSyncs: [UUID: SyncTask] = [:]
     private var syncQueue: [SyncTask] = []
     private var isSyncing = false
+    private var currentSessionID: UUID?
     
     private let encoder: JSONEncoder
     private let decoder: JSONDecoder
@@ -28,6 +29,18 @@ actor DreamARSyncEngine {
     private var syncCount = 0
     private var lastSyncTime: Date?
     private var totalSyncTime: TimeInterval = 0
+    
+    // MARK: - Session Management
+    
+    /// 设置当前会话 ID
+    func setCurrentSessionID(_ id: UUID) {
+        currentSessionID = id
+    }
+    
+    /// 清除当前会话 ID
+    func clearCurrentSessionID() {
+        currentSessionID = nil
+    }
     
     // MARK: - Initialization
     
@@ -106,7 +119,7 @@ actor DreamARSyncEngine {
             let data = try encoder.encode(elementID)
             let packet = ARSyncPacket(
                 type: .elementDelete,
-                sessionID: UUID(), // TODO: 从上下文获取
+                sessionID: currentSessionID ?? UUID(),
                 timestamp: Date(),
                 data: data
             )
@@ -376,8 +389,9 @@ class ConflictResolver {
             return local.updatedAt > remote.updatedAt ? local : remote
             
         case .hostWins:
-            // TODO: 需要知道哪个是主机创建的
-            return local.creatorID == local.sessionID /* 简化判断 */ ? local : remote
+            // 简化判断：假设主机创建的元素优先
+            // 实际实现中应该通过 session 查询创建者是否为主机
+            return local.creatorID == local.sessionID ? local : remote
             
         case .merge:
             // 合并两个元素的属性

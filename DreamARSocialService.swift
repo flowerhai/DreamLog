@@ -32,6 +32,7 @@ class DreamARSocialService: NSObject, ObservableObject {
     // MARK: - Properties
     
     private let modelContainer: ModelContainer
+    private let userID: UUID
     private var modelContext: ModelContext { modelContainer.mainContext }
     
     // Multipeer Connectivity
@@ -59,6 +60,7 @@ class DreamARSocialService: NSObject, ObservableObject {
     
     init(modelContainer: ModelContainer, userID: UUID, displayName: String) {
         self.modelContainer = modelContainer
+        self.userID = userID
         self.myPeerID = MCPeerID(displayName: displayName)
         self.syncEngine = DreamARSyncEngine()
         
@@ -144,7 +146,7 @@ class DreamARSocialService: NSObject, ObservableObject {
         // 创建会话
         let session = ARSession(
             sessionCode: sessionCode,
-            hostUserID: UUID(), // TODO: 从用户服务获取
+            hostUserID: userID,
             hostDisplayName: myPeerID.displayName,
             dreamID: dreamID,
             sceneTemplate: sceneTemplate,
@@ -209,7 +211,7 @@ class DreamARSocialService: NSObject, ObservableObject {
         // 创建参与者
         let participant = ARParticipant(
             sessionID: session.id,
-            userID: UUID(), // TODO: 从用户服务获取
+            userID: userID,
             displayName: myPeerID.displayName,
             isHost: false
         )
@@ -339,7 +341,7 @@ class DreamARSocialService: NSObject, ObservableObject {
             throw ARSocialError.noActiveSession
         }
         
-        let creatorID = UUID() // TODO: 从用户服务获取
+        let creatorID = userID
         let creatorName = myPeerID.displayName
         
         let element = ARElement(
@@ -416,7 +418,7 @@ class DreamARSocialService: NSObject, ObservableObject {
     ) async {
         guard let session = currentSession else { return }
         
-        let senderID = UUID() // TODO: 从用户服务获取
+        let senderID = userID
         let senderName = myPeerID.displayName
         
         let message = ARMessage(

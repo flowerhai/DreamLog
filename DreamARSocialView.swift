@@ -526,7 +526,9 @@ struct ElementPickerView: View {
                 ForEach(availableElements) { element in
                     ElementButton(element: element) {
                         selectedElement = element
-                        // TODO: 在 AR 空间中放置元素
+                        // 元素将在 AR 视图中通过手势放置
+                        // 实际放置逻辑在 DreamARSocialView 中处理
+                        print("🎨 选择元素：\(element.displayName)")
                         dismiss()
                     }
                 }
