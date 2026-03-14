@@ -14,8 +14,14 @@ struct DreamLogApp: App {
     
     let modelContainer: ModelContainer
     
+    @StateObject private var performanceService = PerformanceOptimizationService.shared
+    @StateObject private var accessibilityMonitor = AccessibilitySettingsMonitor.shared
+    
     init() {
         Self.shared = self
+        
+        // 记录启动开始时间
+        PerformanceOptimizationService.shared.recordLaunchStart()
         
         // 初始化 SwiftData 模型容器
         // 注意：Dream 使用 UserDefaults 持久化，只有 DreamTimeCapsule 和 DreamPrediction 使用 SwiftData
@@ -65,7 +71,17 @@ struct DreamLogApp: App {
                 .environmentObject(timelineService)
                 .environmentObject(challengeService)
                 .environmentObject(hapticService)
+                .environmentObject(performanceService)
+                .environmentObject(accessibilityMonitor)
                 .modelContainer(modelContainer)
+                .onAppear {
+                    // 启动完成
+                    PerformanceOptimizationService.shared.recordLaunchEnd()
+                    // 开始性能监控
+                    PerformanceOptimizationService.shared.startMemoryMonitoring()
+                    PerformanceOptimizationService.shared.startFrameRateMonitoring()
+                    PerformanceOptimizationService.shared.registerForMemoryWarnings()
+                }
         }
     }
 }
