@@ -8,6 +8,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 // MARK: - 主界面
 
@@ -23,33 +24,26 @@ struct DreamShareHubView: View {
     @State private var showingHistorySheet = false
     @State private var selectedDream: Dream?
     @State private var showingShareSheet = false
+    @State private var isLoading = true
+    @State private var errorMessage: String?
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // 统计卡片
-                statsSection
-                
-                Divider()
-                
-                // 快速分享
-                quickShareSection
-                
-                Divider()
-                
-                // 分享配置
-                configsSection
-                
-                Divider()
-                
-                // 分享历史
-                historySection
+            Group {
+                if isLoading {
+                    loadingView
+                } else if let error = errorMessage {
+                    errorView(error: error)
+                } else {
+                    contentView
+                }
             }
             .navigationTitle("分享中心")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         showingConfigSheet = true
                     } label: {
                         Image(systemName: "gearshape.fill")
@@ -66,9 +60,112 @@ struct DreamShareHubView: View {
                 ShareDreamSheet(dream: dream)
             }
             .task {
-                await viewModel.loadStats()
-                await viewModel.detectPlatforms()
+                await loadData()
             }
+            .refreshable {
+                await loadData()
+            }
+        }
+    }
+    
+    // MARK: - Loading View
+    
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text("正在加载分享数据...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityLabel("正在加载")
+        .accessibilityHint("等待分享数据加载完成")
+    }
+    
+    // MARK: - Error View
+    
+    private func errorView(error: String) -> some View {
+        VStack(spacing: 16) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 50))
+                .foregroundColor(.orange)
+            
+            Text("加载失败")
+                .font(.headline)
+            
+            Text(error)
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            Button {
+                Task {
+                    await loadData()
+                }
+            } label: {
+                Label("重试", systemImage: "arrow.clockwise")
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.accentColor)
+                    .foregroundColor(.white)
+                    .cornerRadius(10)
+            }
+            .accessibilityHint("点击重新加载数据")
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    // MARK: - Content View
+    
+    private var contentView: some View {
+        VStack(spacing: 0) {
+            // 统计卡片
+            statsSection
+            
+            Divider()
+            
+            // 快速分享
+            quickShareSection
+            
+            Divider()
+            
+            // 分享配置
+            configsSection
+            
+            Divider()
+            
+            // 分享历史
+            historySection
+        }
+    }
+    
+    // MARK: - Load Data
+    
+    @MainActor
+    private func loadData() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            async let stats = viewModel.loadStats()
+            async let platforms = viewModel.detectPlatforms()
+            
+            try await Task.sleep(nanoseconds: 300_000_000) // 最小加载时间，避免闪烁
+            
+            await stats
+            await platforms
+            
+            withAnimation(.easeOut(duration: 0.3)) {
+                isLoading = false
+            }
+        } catch {
+            withAnimation(.easeOut(duration: 0.3)) {
+                isLoading = false
+                errorMessage = "无法加载分享数据：\(error.localizedDescription)"
+            }
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
         }
     }
     
@@ -84,6 +181,7 @@ struct DreamShareHubView: View {
                     icon: "paperplane.fill",
                     color: .blue
                 )
+                .accessibilityAddTraits(.isHeader)
                 
                 // 本周分享
                 StatCard(
@@ -107,11 +205,14 @@ struct DreamShareHubView: View {
                 HStack {
                     Image(systemName: "star.fill")
                         .foregroundColor(.yellow)
+                        .accessibilityHidden(true)
                     Text("最常用平台：\(platformName(favoritePlatform))")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
                 .padding(.horizontal)
+                .padding(.top, 4)
+                .accessibilityLabel("最常用的分享平台是 \(platformName(favoritePlatform))")
             }
         }
         .padding()
@@ -125,20 +226,32 @@ struct DreamShareHubView: View {
             Text("快速分享")
                 .font(.headline)
                 .padding(.horizontal)
+                .accessibilityAddTraits(.isHeader)
             
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(viewModel.installedPlatforms.prefix(6)) { platform in
-                        PlatformButton(platform: platform) {
-                            // 选择梦境进行分享
-                            showingShareSheet = true
+            if viewModel.installedPlatforms.isEmpty {
+                Text("未检测到已安装的分享平台")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
+                    .padding(.vertical, 8)
+                    .accessibilityLabel("未检测到已安装的分享平台")
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 12) {
+                        ForEach(viewModel.installedPlatforms.prefix(6)) { platform in
+                            PlatformButton(platform: platform) {
+                                selectedDream = nil
+                                showingShareSheet = true
+                            }
                         }
                     }
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
             
             Button {
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                selectedDream = nil
                 showingShareSheet = true
             } label: {
                 HStack {
@@ -150,6 +263,7 @@ struct DreamShareHubView: View {
             }
             .padding(.horizontal)
             .padding(.bottom, 8)
+            .accessibilityHint("点击选择要分享的梦境")
         }
         .padding(.vertical)
         .background(Color(.systemBackground))
@@ -162,21 +276,44 @@ struct DreamShareHubView: View {
             HStack {
                 Text("分享配置")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 
                 Spacer()
                 
-                Button("管理") {
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     showingConfigSheet = true
+                } label: {
+                    Text("管理")
+                        .font(.subheadline)
                 }
-                .font(.subheadline)
+                .accessibilityHint("管理分享配置")
             }
             .padding(.horizontal)
             
             if let defaultConfig = viewModel.defaultConfig {
                 ConfigCard(config: defaultConfig) {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     showingShareSheet = true
                 }
                 .padding(.horizontal)
+            } else {
+                VStack(spacing: 12) {
+                    Image(systemName: "slider.horizontal.3")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary.opacity(0.5))
+                    
+                    Text("暂无分享配置")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text("点击右上角齿轮创建默认配置")
+                        .font(.caption)
+                        .foregroundColor(.secondary.opacity(0.8))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .accessibilityLabel("暂无分享配置，请创建默认配置")
             }
         }
         .padding(.vertical)
@@ -190,25 +327,46 @@ struct DreamShareHubView: View {
             HStack {
                 Text("分享历史")
                     .font(.headline)
+                    .accessibilityAddTraits(.isHeader)
                 
                 Spacer()
                 
-                Button("查看全部") {
+                Button {
+                    UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     showingHistorySheet = true
+                } label: {
+                    Text("查看全部")
+                        .font(.subheadline)
                 }
-                .font(.subheadline)
+                .accessibilityHint("查看完整的分享历史记录")
             }
             .padding(.horizontal)
             
             if shareHistory.isEmpty {
-                Text("暂无分享记录")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .padding()
+                VStack(spacing: 12) {
+                    Image(systemName: "paperplane.circle.fill")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary.opacity(0.5))
+                    
+                    Text("暂无分享记录")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    Text("选择一个梦境开始分享吧")
+                        .font(.caption)
+                        .foregroundColor(.secondary.opacity(0.8))
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 24)
+                .accessibilityLabel("暂无分享记录")
             } else {
                 ForEach(shareHistory.prefix(5)) { history in
                     HistoryRow(history: history)
                         .padding(.horizontal)
+                        .transition(.asymmetric(
+                            insertion: .move(edge: .top).combined(with: .opacity),
+                            removal: .opacity
+                        ))
                 }
             }
         }
@@ -231,15 +389,20 @@ struct StatCard: View {
     let icon: String
     let color: Color
     
+    @State private var isHovering = false
+    
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(color)
+                .scaleEffect(isHovering ? 1.1 : 1.0)
+                .animation(.easeInOut(duration: 0.2), value: isHovering)
             
             Text(value)
                 .font(.title2)
                 .fontWeight(.bold)
+                .contentTransition(.numericText())
             
             Text(title)
                 .font(.caption)
@@ -247,8 +410,25 @@ struct StatCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(
+                    LinearGradient(
+                        colors: [color.opacity(0.1), color.opacity(0.05)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(color.opacity(isHovering ? 0.3 : 0.1), lineWidth: 1)
+                )
+                .shadow(color: color.opacity(isHovering ? 0.2 : 0.1), radius: isHovering ? 8 : 4, x: 0, y: 4)
+        )
+        .scaleEffect(isHovering ? 1.02 : 1.0)
+        .animation(.easeInOut(duration: 0.2), value: isHovering)
+        .accessibilityLabel("\(title): \(value)")
+        .accessibilityHint("")
     }
 }
 
@@ -258,21 +438,41 @@ struct PlatformButton: View {
     let platform: SharePlatform
     let action: () -> Void
     
+    @State private var isPressed = false
+    
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            action()
+        }) {
             VStack(spacing: 8) {
                 Image(systemName: platform.iconName)
                     .font(.title2)
                     .foregroundColor(platformColor(platform))
+                    .scaleEffect(isPressed ? 0.9 : 1.0)
+                    .animation(.easeInOut(duration: 0.15), value: isPressed)
                 
                 Text(platform.displayName)
                     .font(.caption2)
                     .lineLimit(1)
             }
             .frame(width: 70, height: 70)
-            .background(platformColor(platform).opacity(0.1))
-            .cornerRadius(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(platformColor(platform).opacity(isPressed ? 0.15 : 0.1))
+                    .shadow(color: platformColor(platform).opacity(0.2), radius: isPressed ? 2 : 4, x: 0, y: 2)
+            )
+            .scaleEffect(isPressed ? 0.95 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: isPressed)
         }
+        .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel("分享到 \(platform.displayName)")
+        .accessibilityHint("点击选择此平台进行分享")
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
     }
     
     private func platformColor(_ platform: SharePlatform) -> Color {
@@ -285,6 +485,8 @@ struct PlatformButton: View {
 struct ConfigCard: View {
     let config: ShareConfig
     let action: () -> Void
+    
+    @State private var isPressed = false
     
     var body: some View {
         Button(action: action) {
@@ -328,9 +530,26 @@ struct ConfigCard: View {
                     .foregroundColor(.secondary)
             }
             .padding()
-            .background(Color(.secondarySystemBackground))
-            .cornerRadius(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.secondarySystemBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.accentColor.opacity(isPressed ? 0.4 : 0.2), lineWidth: 1)
+                    )
+                    .shadow(color: .accentColor.opacity(isPressed ? 0.1 : 0.05), radius: isPressed ? 4 : 8, x: 0, y: 2)
+            )
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.15), value: isPressed)
         }
+        .buttonStyle(PlainButtonStyle())
+        .simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in isPressed = true }
+                .onEnded { _ in isPressed = false }
+        )
+        .accessibilityLabel("使用配置 \(config.name) 进行分享")
+        .accessibilityHint("包含 \(platformsFromConfig(config).count) 个平台，点击开始分享")
     }
     
     private func platformsFromConfig(_ config: ShareConfig) -> [SharePlatform] {
@@ -351,6 +570,8 @@ struct ConfigCard: View {
 struct HistoryRow: View {
     let history: ShareHistory
     
+    @State private var isHovering = false
+    
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
@@ -359,12 +580,13 @@ struct HistoryRow: View {
                     .lineLimit(1)
                 
                 HStack(spacing: 8) {
-                    Text("\(history.platforms.count) 个平台")
+                    Label("\(history.platforms.count) 个平台", systemImage: "app.badge")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
                     Text("•")
                         .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
                     
                     Text(successRate(history))
                         .font(.caption)
@@ -377,22 +599,47 @@ struct HistoryRow: View {
             Text(timeAgo(history.createdAt))
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.tertiarySystemBackground))
+                )
         }
-        .padding(.vertical, 8)
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(.systemBackground))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(isHovering ? Color.accentColor.opacity(0.3) : Color.clear, lineWidth: 1)
+                )
+        )
+        .scaleEffect(isHovering ? 1.01 : 1.0)
+        .animation(.easeInOut(duration: 0.15), value: isHovering)
+        .onHover { hovering in
+            withAnimation(.easeInOut(duration: 0.15)) {
+                isHovering = hovering
+            }
+        }
+        .accessibilityLabel("分享到 \(history.platforms.count) 个平台，\(successRate(history))，\(timeAgo(history.createdAt))")
+        .accessibilityHint("点击查看分享详情")
     }
     
     private func successRate(_ history: ShareHistory) -> String {
-        let total = history.successCount + history.failCount
-        guard total > 0 else { return "0%" }
-        let rate = Int(Double(history.successCount) / Double(total) * 100)
-        return "\(rate)% 成功"
+        let rate = history.platforms.filter { $0.isSuccess }.count
+        return "\(rate)/\(history.platforms.count) 成功"
     }
     
     private func successColor(_ history: ShareHistory) -> Color {
-        let rate = Double(history.successCount) / Double(history.successCount + history.failCount)
-        if rate >= 0.8 { return .green }
-        if rate >= 0.5 { return .yellow }
-        return .red
+        let successCount = history.platforms.filter { $0.isSuccess }.count
+        if successCount == history.platforms.count {
+            return .green
+        } else if successCount > 0 {
+            return .orange
+        } else {
+            return .red
+        }
     }
     
     private func timeAgo(_ date: Date) -> String {
