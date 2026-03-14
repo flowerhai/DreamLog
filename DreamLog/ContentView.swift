@@ -20,8 +20,10 @@ struct ContentView: View {
                 .environmentObject(dreamStore)
                 .tabItem {
                     Image(systemName: MainTab.dreams.icon)
+                        .accessibilityHidden(true)
                     Text(MainTab.dreams.title)
                 }
+                .accessibilityLabel(MainTab.dreams.title)
                 .tag(0)
             
             // 📊 分析
@@ -29,8 +31,10 @@ struct ContentView: View {
                 .environmentObject(dreamStore)
                 .tabItem {
                     Image(systemName: MainTab.insights.icon)
+                        .accessibilityHidden(true)
                     Text(MainTab.insights.title)
                 }
+                .accessibilityLabel(MainTab.insights.title)
                 .tag(1)
             
             // 🎮 探索
@@ -39,8 +43,10 @@ struct ContentView: View {
                 .environmentObject(challengeService)
                 .tabItem {
                     Image(systemName: MainTab.explore.icon)
+                        .accessibilityHidden(true)
                     Text(MainTab.explore.title)
                 }
+                .accessibilityLabel(MainTab.explore.title)
                 .tag(2)
             
             // 🧘 成长
@@ -48,8 +54,10 @@ struct ContentView: View {
                 .environmentObject(dreamStore)
                 .tabItem {
                     Image(systemName: MainTab.growth.icon)
+                        .accessibilityHidden(true)
                     Text(MainTab.growth.title)
                 }
+                .accessibilityLabel(MainTab.growth.title)
                 .tag(3)
             
             // ⚙️ 我的
@@ -58,8 +66,10 @@ struct ContentView: View {
                 .environmentObject(challengeService)
                 .tabItem {
                     Image(systemName: MainTab.profile.icon)
+                        .accessibilityHidden(true)
                     Text(MainTab.profile.title)
                 }
+                .accessibilityLabel(MainTab.profile.title)
                 .tag(4)
         }
         .tint(Color(hex: "9B7EBD"))
@@ -70,6 +80,7 @@ struct ContentView: View {
                 endPoint: .bottom
             )
         )
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -82,26 +93,31 @@ struct DreamsNavigationView: View {
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("常用功能")) {
+                Section(header: Text("常用功能").accessibilityHidden(true)) {
                     NavigationLink(destination: HomeView(), tag: "home", selection: $selectedViewId) {
                         Label("梦境列表", systemImage: "list.bullet")
+                            .accessibilityLabel("查看梦境列表")
                     }
                     NavigationLink(destination: CalendarView(), tag: "calendar", selection: $selectedViewId) {
                         Label("日历视图", systemImage: "calendar")
+                            .accessibilityLabel("查看日历视图")
                     }
                     NavigationLink(destination: QuickAddView(), tag: "quick-add", selection: $selectedViewId) {
                         Label("快速记录", systemImage: "plus.circle.fill")
+                            .accessibilityLabel("快速记录梦境")
                     }
                 }
                 
-                Section(header: Text("搜索")) {
+                Section(header: Text("搜索").accessibilityHidden(true)) {
                     NavigationLink(destination: GlobalSearchView(), tag: "search", selection: $selectedViewId) {
                         Label("全局搜索", systemImage: "magnifyingglass")
+                            .accessibilityLabel("全局搜索梦境")
                     }
                 }
             }
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("📖 梦境")
+            .accessibilityLabel("梦境功能导航")
         }
     }
 }
@@ -114,29 +130,35 @@ struct InsightsNavigationView: View {
     var body: some View {
         NavigationView {
             List {
-                Section(header: Text("核心分析")) {
+                Section(header: Text("核心分析").accessibilityHidden(true)) {
                     NavigationLink(destination: InsightsView()) {
                         Label("数据洞察", systemImage: "chart.bar")
+                            .accessibilityLabel("查看数据洞察")
                     }
                     NavigationLink(destination: DreamInsightsDashboardView()) {
                         Label("AI 解析", systemImage: "brain.head.profile")
+                            .accessibilityLabel("查看 AI 梦境解析")
                     }
                 }
                 
-                Section(header: Text("高级功能")) {
+                Section(header: Text("高级功能").accessibilityHidden(true)) {
                     NavigationLink(destination: DreamPredictionView()) {
                         Label("梦境预测", systemImage: "crystal.ball")
+                            .accessibilityLabel("查看梦境预测")
                     }
                     NavigationLink(destination: DreamWrappedView()) {
                         Label("梦境回顾", systemImage: "sparkles")
+                            .accessibilityLabel("查看梦境年度回顾")
                     }
                     NavigationLink(destination: AdvancedDashboardView()) {
                         Label("高级统计", systemImage: "chart.line.uptrend.xyaxis")
+                            .accessibilityLabel("查看高级统计数据")
                     }
                 }
             }
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("📊 分析")
+            .accessibilityLabel("分析功能导航")
         }
     }
 }
