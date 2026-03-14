@@ -241,7 +241,7 @@ enum SearchResultType {
     case dream(Dream)
     case tag(String)
     case emotion(String)
-    case communityPost(CommunityPost)
+    case communityPost(SharedDream)
     case challenge(DreamChallenge)
     
     var title: String {
@@ -249,7 +249,7 @@ enum SearchResultType {
         case .dream(let dream): return dream.title.isEmpty ? "无标题梦境" : dream.title
         case .tag(let tag): return "#\(tag)"
         case .emotion(let emotion): return emotion
-        case .communityPost(let post): return post.title
+        case .communityPost(let post): return post.dreamTitle
         case .challenge(let challenge): return challenge.title
         }
     }
@@ -263,7 +263,7 @@ enum SearchResultType {
         case .emotion(let emotion):
             return "\(DreamStore.shared.dreams.filter { $0.emotions.contains(where: { $0.rawValue == emotion }) }.count) 个梦境"
         case .communityPost(let post):
-            return "社区帖子"
+            return "社区帖子 • \(post.author?.anonymousId ?? "匿名用户")"
         case .challenge(let challenge):
             return challenge.type.displayName
         }

@@ -116,8 +116,22 @@ struct QuickAddView: View {
     }
     
     private func toggleRecording() {
-        isRecording.toggle()
-        // TODO: 实现语音识别功能
+        if isRecording {
+            // 停止录音
+            speechService.stopRecording()
+            // 将识别结果填充到内容字段
+            if !speechService.transcription.isEmpty {
+                if content.isEmpty {
+                    content = speechService.transcription
+                } else {
+                    content += "\n" + speechService.transcription
+                }
+            }
+        } else {
+            // 开始录音
+            speechService.startRecording()
+        }
+        isRecording = speechService.isRecording
     }
     
     // MARK: - 内容输入

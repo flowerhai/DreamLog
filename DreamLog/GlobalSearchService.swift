@@ -160,8 +160,34 @@ class GlobalSearchService: ObservableObject {
     
     /// 搜索社区帖子
     private func searchCommunityPosts(query: String) -> [SearchResult] {
-        // TODO: 实现社区帖子搜索
-        return []
+        let lowercaseQuery = query.lowercased()
+        let communityService = DreamCommunityService.shared
+        
+        return communityService.sharedDreams.compactMap { dream -> SearchResult? in
+            var relevance: Double = 0.0
+            
+            // 标题匹配 (权重最高)
+            if dream.title.lowercased().contains(lowercaseQuery) {
+                relevance += 0.6
+            }
+            
+            // 内容匹配
+            if dream.content.lowercased().contains(lowercaseQuery) {
+                relevance += 0.3
+            }
+            
+            // 标签匹配
+            if dream.tags.contains(where: { $0.lowercased().contains(lowercaseQuery) }) {
+                relevance += 0.2
+            }
+            
+            // 情绪匹配
+            if dream.emotions.contains(where: { $0.lowercased().contains(lowercaseQuery) }) {
+                relevance += 0.15
+            }
+            
+            return relevance > 0 ? SearchResult(type: .communityPost(dream), relevance: relevance) : nil
+        }
     }
     
     /// 搜索挑战
@@ -211,7 +237,22 @@ class GlobalSearchService: ObservableObject {
     
     /// 获取热门搜索
     func getPopularSearches() -> [String] {
-        // TODO: 基于搜索频率返回热门搜索
-        return ["清醒梦", "飞行", "坠落", "追逐", "考试"]
+        // 基于搜索历史频率返回热门搜索
+        guard !searchHistory.isEmpty else {
+            // 默认热门搜索
+            return ["清醒梦", "飞行", "坠落", "追逐", "考试", "迟到", "掉牙", "被追赶", "飞翔", "溺水"]
+        }
+        
+        // 统计搜索词频率
+        var frequencyMap: [String: Int] = [:]
+        for query in searchHistory {
+            frequencyMap[query, default: 0] += 1
+        }
+        
+        // 按频率排序
+        let sorted = frequencyMap.sorted { $0.value > $1.value }
+        
+        // 返回前 10 个热门搜索
+        return sorted.prefix(10).map { $0.key }
     }
 }

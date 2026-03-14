@@ -12,7 +12,9 @@ struct GlobalSearchView: View {
     @StateObject private var searchService = GlobalSearchService.shared
     @State private var searchText = ""
     @State private var selectedFilter: SearchFilter = .all
+    @State private var selectedResult: SearchResult?
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var dreamStore: DreamStore
     
     enum SearchFilter: String, CaseIterable {
         case all = "全部"
@@ -283,12 +285,41 @@ struct GlobalSearchView: View {
                 // 结果列表
                 ForEach(filteredResults) { result in
                     SearchResultRow(result: result) {
-                        // TODO: 导航到对应内容
-                        print("Selected: \(result.title)")
+                        handleResultSelection(result)
                     }
+                }
+                .navigationDestination(item: $selectedResult) { result in
+                    resultDestinationView(result)
                 }
             }
             .padding()
+        }
+    }
+    
+    // MARK: - 结果处理
+    
+    private func handleResultSelection(_ result: SearchResult) {
+        selectedResult = result
+    }
+    
+    @ViewBuilder
+    private func resultDestinationView(_ result: SearchResult) -> some View {
+        switch result.type {
+        case .dream(let dream):
+            // 导航到梦境详情
+            DreamDetailView(dream: dream, dreamStore: dreamStore)
+        case .tag(let tag):
+            // 导航到标签筛选视图
+            TagFilterView(selectedTag: tag)
+        case .emotion(let emotion):
+            // 导航到情绪筛选视图
+            EmotionFilterView(selectedEmotion: Emotion(rawValue: emotion) ?? .calm)
+        case .communityPost(let post):
+            // 导航到社区帖子详情
+            CommunityPostDetailView(sharedDream: post)
+        case .challenge(let challenge):
+            // 导航到挑战详情
+            ChallengeDetailView(challenge: challenge)
         }
     }
 }
