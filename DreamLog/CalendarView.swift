@@ -75,6 +75,8 @@ struct CalendarHeader: View {
                     .background(Color.white.opacity(0.1))
                     .clipShape(Circle())
             }
+            .accessibilityLabel("上个月")
+            .accessibilityHint("双击查看上一个月的梦境")
             
             Spacer()
             
@@ -83,12 +85,15 @@ struct CalendarHeader: View {
                     Text(selectedDate, style: .date)
                         .font(.headline)
                         .foregroundColor(.white)
+                        .accessibilityLabel("当前选择：\(selectedDate, style: .date)")
                     
                     Text("点击查看月份")
                         .font(.caption2)
                         .foregroundColor(.secondary)
+                        .accessibilityHidden(true)
                 }
             }
+            .accessibilityHint("双击选择月份")
             
             Spacer()
             
@@ -104,8 +109,12 @@ struct CalendarHeader: View {
                     .background(Color.white.opacity(0.1))
                     .clipShape(Circle())
             }
+            .accessibilityLabel("下个月")
+            .accessibilityHint("双击查看下一个月的梦境")
         }
         .padding(.horizontal)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("日历导航")
     }
 }
 
@@ -206,6 +215,7 @@ struct CalendarDayCell: View {
                                 .frame(width: 4, height: 4)
                         }
                     }
+                    .accessibilityLabel("\(dreamCount)个梦境\(hasLucidDream ? "，包含清醒梦" : "")")
                 }
             }
             .frame(maxWidth: .infinity)
@@ -223,6 +233,8 @@ struct CalendarDayCell: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(calendar.component(.day, from: date))日，\(dreamCount > 0 ? "\(dreamCount)个梦境" : "无梦境")")
+        .accessibilityHint(isSelected ? "已选择" : "双击选择此日期")
     }
 }
 
