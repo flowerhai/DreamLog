@@ -321,7 +321,7 @@ class DreamMusicService: ObservableObject {
         var instruments = template.instruments
         
         // 根据梦境内容添加特殊乐器
-        let content = (dream.content + " " + (dream.title ?? "")).lowercased()
+        let content = (dream.content + " " + dream.title).lowercased()
         
         if content.contains("水") || content.contains("海") || content.contains("河") || content.contains("雨") {
             instruments.append(.oceanWaves)
@@ -401,8 +401,8 @@ class DreamMusicService: ObservableObject {
         let date = DateFormatter.localizedString(from: dream.createdAt, dateStyle: .medium, timeStyle: .none)
         let moodName = mood.rawValue
         
-        if let title = dream.title, !title.isEmpty {
-            return "《\(title)》- \(moodName)混音"
+        if !dream.title.isEmpty {
+            return "《\(dream.title)》- \(moodName)混音"
         } else {
             return "\(date) 的梦境 - \(moodName)"
         }
