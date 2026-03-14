@@ -9,6 +9,7 @@
 import Foundation
 import SwiftData
 import UIKit
+import SwiftUI
 
 actor DreamShareHubService {
     
@@ -379,9 +380,17 @@ actor DreamShareHubService {
                 return ShareTaskResult(platform: platform, success: true)
                 
             case .image:
-                // 保存图片 (需要生成图片)
-                // TODO: 实现图片生成和保存
-                return ShareTaskResult(platform: platform, success: true)
+                // 生成并保存分享图片
+                if let image = await generateShareImage(content: content) {
+                    saveShareImage(image)
+                    return ShareTaskResult(platform: platform, success: true)
+                } else {
+                    return ShareTaskResult(
+                        platform: platform,
+                        success: false,
+                        errorMessage: "图片生成失败"
+                    )
+                }
                 
             default:
                 // 打开对应 App
@@ -478,6 +487,108 @@ actor DreamShareHubService {
         }
         
         return installed
+    }
+    
+    // MARK: - 图片生成
+    
+    /// 生成分享图片
+    @MainActor
+    private func generateShareImage(content: String) async -> UIImage? {
+        // 解析内容中的梦境信息
+        let lines = content.components(separatedBy: "\n")
+        let title = lines.first ?? "梦境分享"
+        let body = lines.dropFirst().joined(separator: "\n")
+        
+        // 图片尺寸 (1080x1080 正方形，适合社交媒体)
+        let size = CGSize(width: 1080, height: 1080)
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
+        
+        return renderer.image { context in
+            // 绘制渐变背景
+            let colors: [CGColor] = [
+                UIColor(red: 0.1, green: 0.1, blue: 0.3).cgColor,
+                UIColor(red: 0.2, green: 0.1, blue: 0.4).cgColor,
+                UIColor(red: 0.3, green: 0.1, blue: 0.5).cgColor
+            ]
+            let gradient = CGGradient(colorsSpace: .sRGB, colors: colors as CFArray, locations: [0, 0.5, 1])!
+            context.fillLinearGradient(
+                gradient,
+                start: CGPoint(x: 0, y: 0),
+                end: CGPoint(x: 0, y: size.height)
+            )
+            
+            // 绘制星空效果
+            for _ in 0..<100 {
+                let x = CGFloat.random(in: 0..<size.width)
+                let y = CGFloat.random(in: 0..<size.height)
+                let radius = CGFloat.random(in: 1..<3)
+                let alpha = CGFloat.random(in: 0.3..<0.8)
+                
+                context.setFillColor(UIColor.white.withAlphaComponent(alpha).cgColor)
+                context.fillEllipse(in: CGRect(x: x, y: y, width: radius * 2, height: radius * 2))
+            }
+            
+            // 绘制标题
+            let titleAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.boldSystemFont(ofSize: 72),
+                .foregroundColor: UIColor.white
+            ]
+            let titleString = "🌙 \(title)"
+            let titleRect = CGRect(x: 60, y: 120, width: size.width - 120, height: 200)
+            titleString.draw(in: titleRect, withAttributes: titleAttributes)
+            
+            // 绘制分隔线
+            let lineRect = CGRect(x: 60, y: 340, width: size.width - 120, height: 2)
+            context.setFillColor(UIColor.white.withAlphaComponent(0.3).cgColor)
+            context.fill(lineRect)
+            
+            // 绘制正文 (限制长度)
+            let maxBodyLength = 400
+            let truncatedBody = body.count > maxBodyLength ? String(body.prefix(maxBodyLength)) + "..." : body
+            
+            let bodyAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 42),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.9),
+                .paragraphStyle: {
+                    let style = NSMutableParagraphStyle()
+                    style.lineBreakMode = .byWordWrapping
+                    style.lineHeightMultiple = 1.4
+                    return style
+                }()
+            ]
+            
+            let bodyRect = CGRect(x: 60, y: 380, width: size.width - 120, height: 400)
+            truncatedBody.draw(in: bodyRect, withAttributes: bodyAttributes)
+            
+            // 绘制底部品牌标识
+            let footerString = "DreamLog · 记录你的每一个梦境"
+            let footerAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 32, weight: .medium),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.6)
+            ]
+            let footerSize = footerString.size(withAttributes: footerAttributes)
+            let footerRect = CGRect(
+                x: (size.width - footerSize.width) / 2,
+                y: size.height - 120,
+                width: footerSize.width,
+                height: footerSize.height
+            )
+            footerString.draw(in: footerRect, withAttributes: footerAttributes)
+            
+            // 绘制 DreamLog 图标 (月亮)
+            let iconRect = CGRect(x: (size.width - 80) / 2, y: size.height - 80, width: 80, height: 80)
+            let iconPath = UIBezierPath(ovalIn: iconRect)
+            context.setFillColor(UIColor.white.withAlphaComponent(0.8).cgColor)
+            iconPath.fill()
+        }
+    }
+    
+    /// 保存图片到相册
+    @MainActor
+    private func saveShareImage(_ image: UIImage) {
+        UIImageWriteToSavedPhotosAlbum(image, nil, nil, nil)
+        print("✅ 分享图片已保存到相册")
     }
 }
 
