@@ -1148,7 +1148,7 @@ struct ShareDreamSheet: View {
                     }
                 }) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(dream.title ?? "无标题")
+                        Text(dream.title.isEmpty ? "无标题" : dream.title)
                             .font(.headline)
                         
                         Text(dream.content.prefix(100))

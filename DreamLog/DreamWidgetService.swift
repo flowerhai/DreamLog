@@ -282,7 +282,7 @@ class DreamWidgetService {
             
             return RecentDreamsData.DreamSummary(
                 id: dream.id?.uuidString ?? UUID().uuidString,
-                title: dream.title ?? "无题梦境",
+                title: dream.title.isEmpty ? "无题梦境" : dream.title,
                 preview: preview,
                 date: dream.date ?? Date(),
                 emotions: dream.emotions.map { $0.rawValue },

@@ -473,7 +473,7 @@ class DreamReportExportService {
         
         for dream in dreams.prefix(20) {
             let dateStr = DateFormatter.localizedString(from: dream.date, dateStyle: .short, timeStyle: .none)
-            let title = dream.title ?? "无标题"
+            let title = dream.title.isEmpty ? "无标题" : dream.title
             let content = dream.content.prefix(100).replacingOccurrences(of: "\n", with: " ")
             
             drawText("\(dateStr) - \(title)", in: CGRect(x: rect.origin.x, y: currentY, width: rect.width, height: lineHeight), font: UIFont.boldSystemFont(ofSize: 10), color: .black)
