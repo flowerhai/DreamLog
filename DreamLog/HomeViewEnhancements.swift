@@ -95,16 +95,16 @@ struct RecentDreamCard: View {
                 // 情绪图标
                 ZStack {
                     Circle()
-                        .fill(dream.mood.color.opacity(0.2))
+                        .fill(Color(hex: (dream.emotions.first?.color ?? "808080")).opacity(0.2))
                         .frame(width: 44, height: 44)
                     
-                    Text(dream.mood.emoji)
+                    Text(dream.emotions.first?.icon ?? "😐")
                         .font(.title2)
                 }
                 
                 // 内容
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(dream.title ?? "无标题梦境")
+                    Text(dream.title.isEmpty ? "无标题梦境" : dream.title)
                         .font(.subheadline)
                         .fontWeight(.medium)
                         .foregroundColor(.white)

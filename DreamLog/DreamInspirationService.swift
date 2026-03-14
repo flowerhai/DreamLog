@@ -517,7 +517,7 @@ final class DreamInspirationService {
         }
         
         if result.contains("dreamEmotion") {
-            let emotions = dream.moods.map { $0.rawValue }.joined(separator: "、")
+            let emotions = dream.emotions.map { $0.rawValue }.joined(separator: "、")
             result = result.replacingOccurrences(of: "dreamEmotion", with: emotions.isEmpty ? "复杂" : emotions)
         }
         
@@ -538,7 +538,7 @@ final class DreamInspirationService {
         }
         
         if result.contains("dreamMood") {
-            result = result.replacingOccurrences(of: "dreamMood", with: dream.moods.first?.rawValue ?? "平静")
+            result = result.replacingOccurrences(of: "dreamMood", with: dream.emotions.first?.rawValue ?? "平静")
         }
         
         if result.contains("dreamSounds") {
