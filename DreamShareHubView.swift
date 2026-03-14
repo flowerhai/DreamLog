@@ -810,7 +810,7 @@ struct ShareHistoryDetailView: View {
 // MARK: - ViewModel
 
 @MainActor
-class ShareHubViewModel: ObservableMock {
+class ShareHubViewModel: ObservableObject {
     @Published var stats: ShareStats = .empty
     @Published var installedPlatforms: [SharePlatform] = []
     @Published var defaultConfig: ShareConfig?
