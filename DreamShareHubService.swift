@@ -511,12 +511,17 @@ actor DreamShareHubService {
                 UIColor(red: 0.2, green: 0.1, blue: 0.4).cgColor,
                 UIColor(red: 0.3, green: 0.1, blue: 0.5).cgColor
             ]
-            let gradient = CGGradient(colorsSpace: .sRGB, colors: colors as CFArray, locations: [0, 0.5, 1])!
-            context.fillLinearGradient(
-                gradient,
-                start: CGPoint(x: 0, y: 0),
-                end: CGPoint(x: 0, y: size.height)
-            )
+            if let gradient = CGGradient(colorsSpace: .sRGB, colors: colors as CFArray, locations: [0, 0.5, 1]) {
+                context.fillLinearGradient(
+                    gradient,
+                    start: CGPoint(x: 0, y: 0),
+                    end: CGPoint(x: 0, y: size.height)
+                )
+            } else {
+                // Fallback: fill with solid color if gradient creation fails
+                context.setFillColor(UIColor(red: 0.2, green: 0.1, blue: 0.4).cgColor)
+                context.fill(CGRect(origin: .zero, size: size))
+            }
             
             // 绘制星空效果
             for _ in 0..<100 {

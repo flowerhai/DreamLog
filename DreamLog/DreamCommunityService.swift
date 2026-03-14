@@ -10,6 +10,31 @@ import Foundation
 import SwiftData
 import Combine
 
+// MARK: - 错误类型
+
+enum DreamCommunityError: LocalizedError {
+    case modelContainerNotInitialized
+    case userNotFound
+    case dreamNotFound
+    case networkError
+    case invalidOperation
+    
+    var errorDescription: String? {
+        switch self {
+        case .modelContainerNotInitialized:
+            return "模型容器未初始化"
+        case .userNotFound:
+            return "用户不存在"
+        case .dreamNotFound:
+            return "梦境不存在"
+        case .networkError:
+            return "网络错误"
+        case .invalidOperation:
+            return "无效操作"
+        }
+    }
+}
+
 // MARK: - 社区服务
 
 /// 梦境社区服务
@@ -36,13 +61,20 @@ class DreamCommunityService: ObservableObject {
     @MainActor static var modelContainer: ModelContainer {
         get async {
             if _modelContainer == nil {
-                await setupModelContainer()
+                do {
+                    try await setupModelContainer()
+                } catch {
+                    fatalError("DreamCommunityService: SwiftData 容器初始化失败：\(error)")
+                }
             }
-            return _modelContainer!
+            guard let container = _modelContainer else {
+                fatalError("DreamCommunityService: 模型容器未初始化")
+            }
+            return container
         }
     }
     
-    @MainActor private static func setupModelContainer() async {
+    @MainActor private static func setupModelContainer() async throws {
         let schema = Schema([
             SharedDream.self,
             CommunityUser.self,
@@ -59,12 +91,8 @@ class DreamCommunityService: ObservableObject {
             cloudKitDatabase: .none
         )
         
-        do {
-            _modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            print("🌐 DreamCommunityService: SwiftData 容器初始化完成")
-        } catch {
-            print("❌ DreamCommunityService: SwiftData 容器初始化失败：\(error)")
-        }
+        _modelContainer = try ModelContainer(for: schema, configurations: [modelConfiguration])
+        print("🌐 DreamCommunityService: SwiftData 容器初始化完成")
     }
     
     private init() {

@@ -404,16 +404,19 @@ actor DreamCloudBackupService {
         var body = Data()
         
         // Metadata
-        let metadata = """
+        guard let metadata = """
         --\(boundary)\r\n
         Content-Type: application/json; charset=UTF-8\r\n\r\n
         {"name":"\(fileName)","parents":["appfolder"]}\r\n
         --\(boundary)\r\n
         Content-Type: application/octet-stream\r\n\r\n
-        """.data(using: .utf8)!
+        """.data(using: .utf8),
+        let boundaryEnd = "\r\n--\(boundary)--\r\n".data(using: .utf8) else {
+            throw CloudBackupError.uploadFailed
+        }
         body.append(metadata)
         body.append(data)
-        body.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+        body.append(boundaryEnd)
         
         request.httpBody = body
         
@@ -742,16 +745,24 @@ actor DreamCloudBackupService {
         case .all:
             return nil
         case .last7Days:
-            let startDate = Calendar.current.date(byAdding: .day, value: -7, to: now)!
+            guard let startDate = Calendar.current.date(byAdding: .day, value: -7, to: now) else {
+                return nil
+            }
             return #Predicate { $0.createdAt >= startDate }
         case .last30Days:
-            let startDate = Calendar.current.date(byAdding: .day, value: -30, to: now)!
+            guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: now) else {
+                return nil
+            }
             return #Predicate { $0.createdAt >= startDate }
         case .last3Months:
-            let startDate = Calendar.current.date(byAdding: .month, value: -3, to: now)!
+            guard let startDate = Calendar.current.date(byAdding: .month, value: -3, to: now) else {
+                return nil
+            }
             return #Predicate { $0.createdAt >= startDate }
         case .lastYear:
-            let startDate = Calendar.current.date(byAdding: .year, value: -1, to: now)!
+            guard let startDate = Calendar.current.date(byAdding: .year, value: -1, to: now) else {
+                return nil
+            }
             return #Predicate { $0.createdAt >= startDate }
         case .custom:
             return nil

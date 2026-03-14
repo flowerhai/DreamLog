@@ -156,8 +156,10 @@ class DreamTimeCapsuleService: ObservableObject {
         
         // 为过去年份创建年度回顾胶囊（如果不存在）
         for year in (currentYear - 3)..<currentYear {
-            let yearStartDate = calendar.date(from: DateComponents(year: year, month: 1, day: 1))!
-            let yearEndDate = calendar.date(from: DateComponents(year: year, month: 12, day: 31))!
+            guard let yearStartDate = calendar.date(from: DateComponents(year: year, month: 1, day: 1)),
+                  let yearEndDate = calendar.date(from: DateComponents(year: year, month: 12, day: 31)) else {
+                continue
+            }
             
             // 检查是否已存在该年份的胶囊
             let existing = capsules.first {
@@ -171,7 +173,9 @@ class DreamTimeCapsuleService: ObservableObject {
                 
                 if !dreamIds.isEmpty {
                     // 解锁日期设为次年 1 月 1 日
-                    let unlockDate = calendar.date(from: DateComponents(year: year + 1, month: 1, day: 1))!
+                    guard let unlockDate = calendar.date(from: DateComponents(year: year + 1, month: 1, day: 1)) else {
+                        continue
+                    }
                     
                     do {
                         _ = try await createCapsule(config: TimeCapsuleConfig(

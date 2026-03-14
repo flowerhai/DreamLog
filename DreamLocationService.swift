@@ -214,13 +214,19 @@ class DreamLocationService: NSObject, ObservableObject {
         case .all:
             return locations
         case .week:
-            let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now)!
+            guard let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now) else {
+                return locations
+            }
             return locations.filter { $0.timestamp >= weekAgo }
         case .month:
-            let monthAgo = Calendar.current.date(byAdding: .day, value: -30, to: now)!
+            guard let monthAgo = Calendar.current.date(byAdding: .day, value: -30, to: now) else {
+                return locations
+            }
             return locations.filter { $0.timestamp >= monthAgo }
         case .year:
-            let yearAgo = Calendar.current.date(byAdding: .year, value: -1, to: now)!
+            guard let yearAgo = Calendar.current.date(byAdding: .year, value: -1, to: now) else {
+                return locations
+            }
             return locations.filter { $0.timestamp >= yearAgo }
         case .custom:
             // 自定义范围需要额外参数，这里返回全部

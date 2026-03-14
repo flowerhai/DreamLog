@@ -122,10 +122,14 @@ actor DreamAudioExportService {
         case .all:
             break
         case .last7Days:
-            let startDate = calendar.date(byAdding: .day, value: -7, to: now)!
+            guard let startDate = calendar.date(byAdding: .day, value: -7, to: now) else {
+                return []
+            }
             dreams = dreams.filter { $0.date >= startDate }
         case .last30Days:
-            let startDate = calendar.date(byAdding: .day, value: -30, to: now)!
+            guard let startDate = calendar.date(byAdding: .day, value: -30, to: now) else {
+                return []
+            }
             dreams = dreams.filter { $0.date >= startDate }
         case .custom:
             if let start = customStartDate, let end = customEndDate {
@@ -243,10 +247,9 @@ actor DreamAudioExportService {
         audioEngine = AVAudioEngine()
         
         // 配置音频格式
-        let format = AVAudioFormat(
-            standardFormatWithSampleRate: 44100,
-            channels: 2
-        )!
+        guard let format = AVAudioFormat(standardFormatWithSampleRate: 44100, channels: 2) else {
+            throw AudioExportError.exportFailed("无法创建音频格式")
+        }
         
         // 创建输出文件
         audioFile = try AVAudioFile(forWriting: outputURL, settings: format.settings)

@@ -299,7 +299,7 @@ actor DreamChallengeService {
         for day in 0..<365 {
             guard let date = calendar.date(byAdding: .day, value: -day, to: now) else { break }
             let startOfDay = calendar.startOfDay(for: date)
-            let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+            guard let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) else { break }
             
             let descriptor = FetchDescriptor<DreamChallenge>(
                 predicate: #Predicate<DreamChallenge> { challenge in
