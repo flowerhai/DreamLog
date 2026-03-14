@@ -94,6 +94,7 @@ struct QuickRecordSection: View {
             Text("昨晚你梦见了什么？")
                 .font(.headline)
                 .foregroundColor(.white.opacity(0.9))
+                .accessibilityHidden(true)
             
             // 语音按钮
             Button(action: {
@@ -145,6 +146,8 @@ struct QuickRecordSection: View {
                     speechService.stopRecording()
                 }
             )
+            .accessibilityLabel(speechService.isRecording ? "录音中，松开结束" : "语音记录梦境，按住说话")
+            .accessibilityHint("长按按钮开始语音记录梦境")
             
             // 文字输入
             Button(action: { showingRecordSheet = true }) {
@@ -159,6 +162,8 @@ struct QuickRecordSection: View {
                 .background(Color.white.opacity(0.1))
                 .cornerRadius(20)
             }
+            .accessibilityLabel("文字记录梦境")
+            .accessibilityHint("双击打开文字输入界面记录梦境")
         }
         .padding(24)
         .background(
@@ -169,6 +174,8 @@ struct QuickRecordSection: View {
                         .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("快速记录区域")
     }
 }
 
@@ -275,6 +282,7 @@ struct DreamCard: View {
                     if dream.isLucid {
                         Image(systemName: "sparkles")
                             .foregroundColor(.yellow)
+                            .accessibilityLabel("清醒梦")
                     }
                     
                     // 分享按钮
@@ -283,12 +291,14 @@ struct DreamCard: View {
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.accentColor)
                     }
+                    .accessibilityLabel("分享梦境")
                 }
             }
             
             Text(dream.date.formatted(.dateTime.month().day().hour().minute()))
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .accessibilityLabel("记录时间：\(dream.date.formatted(.dateTime.month().day().hour().minute()))")
             
             // 内容预览
             Text(String(dream.content.prefix(100)))
@@ -310,6 +320,7 @@ struct DreamCard: View {
                 HStack(spacing: 4) {
                     ForEach(Array(dream.emotions.prefix(2)), id: \.self) { emotion in
                         Text(emotion.icon)
+                            .accessibilityLabel(emotion.name)
                     }
                 }
                 
@@ -318,8 +329,10 @@ struct DreamCard: View {
                 HStack(spacing: 4) {
                     Text(String(repeating: "⭐", count: dream.clarity))
                         .font(.caption2)
+                        .accessibilityLabel("清晰度：\(dream.clarity)星")
                     Text(String(repeating: "🔥", count: dream.intensity))
                         .font(.caption2)
+                        .accessibilityLabel("强度：\(dream.intensity)星")
                 }
             }
         }
@@ -332,6 +345,9 @@ struct DreamCard: View {
                         .stroke(Color.white.opacity(0.1), lineWidth: 1)
                 )
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("梦境：\(dream.title)")
+        .accessibilityHint("双击查看详情")
         .sheet(isPresented: $showingShareSheet) {
             ShareSheet(dream: dream)
         }

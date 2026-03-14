@@ -147,6 +147,7 @@ struct HeaderSection: View {
                     .font(.title2)
                     .fontWeight(.bold)
                     .foregroundColor(.white)
+                    .accessibilityLabel("梦境标题：\(dream.title)")
                 
                 Spacer()
                 
@@ -158,6 +159,7 @@ struct HeaderSection: View {
                         .padding(.vertical, 6)
                         .background(Color.yellow.opacity(0.2))
                         .cornerRadius(12)
+                        .accessibilityLabel("清醒梦标记")
                 }
             }
             
@@ -165,10 +167,12 @@ struct HeaderSection: View {
                 Label(dream.date.formatted(.dateTime.month().day().year()), systemImage: "calendar")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityLabel("记录日期：\(dream.date.formatted(.dateTime.month().day().year()))")
                 
                 Label(dream.timeOfDay.rawValue, systemImage: "clock")
                     .font(.caption)
                     .foregroundColor(.secondary)
+                    .accessibilityLabel("时间段：\(dream.timeOfDay.rawValue)")
             }
         }
         .padding()
@@ -176,6 +180,8 @@ struct HeaderSection: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("梦境头部信息")
     }
 }
 
@@ -188,17 +194,21 @@ struct ContentSection: View {
             Text("梦境内容")
                 .font(.headline)
                 .foregroundColor(.white)
+                .accessibilityHidden(true)
             
             Text(dream.content)
                 .font(.body)
                 .foregroundColor(.white.opacity(0.9))
                 .lineSpacing(4)
+                .accessibilityLabel("梦境内容：\(dream.content)")
         }
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("梦境详细内容")
     }
 }
 
@@ -313,6 +323,7 @@ struct TagsAndEmotionsSection: View {
                     Text("标签")
                         .font(.headline)
                         .foregroundColor(.white)
+                        .accessibilityHidden(true)
                     
                     FlowLayout(spacing: 8) {
                         ForEach(dream.tags, id: \.self) { tag in
@@ -323,6 +334,7 @@ struct TagsAndEmotionsSection: View {
                                 .background(Color.accentColor.opacity(0.2))
                                 .foregroundColor(.accentColor)
                                 .cornerRadius(16)
+                                .accessibilityLabel("标签：\(tag)")
                         }
                     }
                 }
@@ -334,20 +346,24 @@ struct TagsAndEmotionsSection: View {
                     Text("情绪")
                         .font(.headline)
                         .foregroundColor(.white)
+                        .accessibilityHidden(true)
                     
                     HStack(spacing: 12) {
                         ForEach(dream.emotions, id: \.rawValue) { emotion in
                             VStack(spacing: 4) {
                                 Text(emotion.icon)
                                     .font(.system(size: 28))
+                                    .accessibilityLabel(emotion.name)
                                 Text(emotion.rawValue)
                                     .font(.caption2)
                                     .foregroundColor(.white)
+                                    .accessibilityHidden(true)
                             }
                             .frame(width: 70)
                             .padding(.vertical, 8)
                             .background(Color(hex: emotion.color).opacity(0.3))
                             .cornerRadius(12)
+                            .accessibilityElement(children: .combine)
                         }
                     }
                 }
@@ -358,6 +374,8 @@ struct TagsAndEmotionsSection: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.white.opacity(0.05))
         )
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("标签和情绪信息")
     }
 }
 
@@ -375,14 +393,18 @@ struct DreamMetricsSection: View {
                             .font(.system(size: 16))
                     }
                 }
+                .accessibilityLabel("清晰度：\(dream.clarity)星")
                 
                 Text("清晰度")
                     .font(.caption2)
                     .foregroundColor(.secondary)
+                    .accessibilityHidden(true)
             }
+            .accessibilityElement(children: .combine)
             
             Divider()
                 .frame(height: 40)
+                .accessibilityHidden(true)
             
             // 强度
             HStack(spacing: 2) {
@@ -391,6 +413,7 @@ struct DreamMetricsSection: View {
                         .font(.system(size: 16))
                 }
             }
+            .accessibilityLabel("强度：\(dream.intensity)星")
             
             Text("强度")
                 .font(.caption2)
