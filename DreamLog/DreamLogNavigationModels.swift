@@ -80,6 +80,7 @@ enum MainTab: Int, CaseIterable {
             return [
                 NavigationViewItem(id: "sleep", title: "睡眠数据", icon: "moon.stars.fill", destination: AnyView(SleepDataView()), isFavorite: true),
                 NavigationViewItem(id: "meditation", title: "冥想音乐", icon: "music.note.house", destination: AnyView(MeditationView()), isFavorite: false),
+                NavigationViewItem(id: "incubation", title: "梦境孵育", icon: "sparkles", destination: AnyView(DreamIncubationView()), isFavorite: false),
                 NavigationViewItem(id: "lucid-training", title: "清醒梦训练", icon: "brain.head.profile", destination: AnyView(LucidTrainingView()), isFavorite: false),
                 NavigationViewItem(id: "goals", title: "梦境目标", icon: "target", destination: AnyView(DreamsGoalView()), isFavorite: false),
                 NavigationViewItem(id: "dictionary", title: "梦境词典", icon: "text.book.closed.fill", destination: AnyView(DreamDictionaryView()), isFavorite: false),
