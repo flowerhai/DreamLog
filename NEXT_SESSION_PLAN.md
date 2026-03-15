@@ -599,26 +599,34 @@
 ## ✅ Phase 51 增强 - 语音日记集成 🎙️🔗
 
 **完成时间**: 2026-03-15 18:04 UTC  
-**提交**: e430b9b  
+**提交**: ff3a7b2  
 **分支**: dev (已推送到 origin/dev)  
 **完成度**: 100% ✅
 
 ### Phase 51 增强摘要
 
-**修改文件 (3 个)**:
+**修改文件 (4 个)**:
 1. **ContentView.swift** - 添加语音日记到成长导航 (+8 行) 🧭
-2. **HomeView.swift** - 创建 VoiceJournalCard 组件并集成到首页 (+120 行) ✨
-3. **DreamVoiceJournalView.swift** - 修复 modelContext 传递 (+5 行) 🔧
+2. **HomeView.swift** - 创建 VoiceJournalCard 组件并集成到首页 (+145 行) ✨
+3. **DreamVoiceJournalView.swift** - 修复 modelContext 传递和时长格式 (+10 行) 🔧
+4. **NEXT_SESSION_PLAN.md** - 更新开发计划文档 (+32 行) 📝
 
-**总新增代码**: ~133 行
+**总新增代码**: ~195 行
 
 **核心改进**:
 - ✅ 语音日记添加到"成长"标签导航
 - ✅ 首页语音日记卡片 (VoiceJournalCard)
 - ✅ 卡片显示统计信息 (条目数/总时长)
 - ✅ 快速功能提示 (AI 转写/智能摘要/情绪分析)
+- ✅ 完整无障碍支持 (accessibilityLabel/accessibilityHint)
 - ✅ 修复 ViewModel modelContext 传递问题
 - ✅ 正确集成 SwiftData 上下文
+- ✅ 统一时长格式为中文 (小时/分钟/秒)
+
+**提交历史**:
+- `ff3a7b2` fix: 语音日记时长格式统一为中文 🎙️🌐
+- `8ca252c` a11y: 为语音日记卡片添加完整无障碍支持 ♿✨
+- `e430b9b` feat(phase51): 集成语音日记到主应用 🎙️✨
 
 **Phase 51 增强完成度**: 100% ✅
 
