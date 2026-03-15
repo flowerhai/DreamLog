@@ -238,11 +238,14 @@ struct DreamVoiceJournalView: View {
     private func formatDuration(_ seconds: TimeInterval) -> String {
         let hours = Int(seconds) / 3600
         let minutes = (Int(seconds) % 3600) / 60
+        let secs = Int(seconds) % 60
         
         if hours > 0 {
-            return "\(hours)h \(minutes)m"
+            return "\(hours)小时\(minutes)分钟"
+        } else if minutes > 0 {
+            return "\(minutes)分钟\(secs)秒"
         } else {
-            return "\(minutes)m"
+            return "\(secs)秒"
         }
     }
 }
