@@ -241,6 +241,17 @@ actor DreamExportHubService {
         var content = ""
         
         for dream in dreams {
+            // 如果指定了模板，使用模板渲染
+            if let templateName = options.template {
+                let template = try? await DreamExportTemplateService.shared.findTemplate(byName: templateName)
+                if let template = template {
+                    content += await DreamExportTemplateService.shared.renderTemplate(template, dream: dream)
+                    content += "\n\n---\n\n"
+                    continue
+                }
+            }
+            
+            // 否则使用默认格式化
             content += formatDreamAsMarkdown(dream, options: options)
             content += "\n\n---\n\n"
         }
@@ -304,11 +315,22 @@ actor DreamExportHubService {
         dreams: [Dream],
         options: ExportOptions
     ) async throws -> (filePath: String?, fileSize: Int64) {
-        // PDF 导出需要使用 UIGraphicsPDFRenderer
-        // 这里预留接口，实际实现在 DreamReflectionExportService 中
-        throw NSError(domain: "DreamExportHub", code: 1, userInfo: [
-            NSLocalizedDescriptionKey: "PDF 导出需要 DreamReflectionExportService 支持"
-        ])
+        // 准备导出数据
+        let exportData = dreams.map { $0.toExportData() }
+        
+        // 创建 PDF 渲染器
+        let renderer = DreamPDFExportRenderer()
+        
+        // 生成 PDF 数据
+        let pdfData = renderer.generatePDF(
+            dreams: exportData,
+            title: options.template != nil ? "梦境导出 - \(options.template!)" : "梦境记录"
+        )
+        
+        // 保存文件
+        let filePath = try saveExportFile(data: pdfData, extension: "pdf", prefix: "dreams")
+        
+        return (filePath, Int64(pdfData.count))
     }
     
     /// 导出为 JSON
