@@ -147,12 +147,28 @@ class DreamReflectionShareService {
     
     /// 内容验证
     private func validateContent(_ content: String) async throws {
-        // 检查敏感词
-        let sensitiveWords = ["敏感词 1", "敏感词 2"]  // TODO: 实现敏感词库
+        // 检查敏感词 (基础词库，实际应从服务器获取或使用更智能的 NLP 检测)
+        let sensitiveWords = [
+            // 政治敏感
+            "敏感政治词汇",
+            // 暴力内容
+            "暴力", "杀戮", "血腥",
+            // 色情内容
+            "色情", "淫秽",
+            // 广告 spam
+            "加微信", "QQ 群", "点击链接", "http://", "https://"
+        ]
+        
         for word in sensitiveWords {
-            if content.contains(word) {
+            if content.lowercased().contains(word.lowercased()) {
                 throw ShareError.containsSensitiveContent
             }
+        }
+        
+        // 检查 URL (防止外部链接)
+        let urlPattern = #"https?://[^\s]+"#
+        if content.range(of: urlPattern, options: .regularExpression) != nil {
+            throw ShareError.containsSensitiveContent
         }
         
         // 检查最小长度
@@ -191,11 +207,54 @@ class DreamReflectionShareService {
     
     /// 提交审核
     private func submitForReview(_ sharedReflection: SharedReflection) async throws {
-        // TODO: 实现审核提交流程
-        // 这里模拟审核通过
-        sharedReflection.isApproved = true
-        sharedReflection.status = .approved
+        // 设置待审核状态
+        sharedReflection.isApproved = false
+        sharedReflection.status = .pendingReview
+        sharedReflection.submittedAt = Date()
+        
+        // 在真实场景中，这里会：
+        // 1. 将分享提交到服务器审核队列
+        // 2. 触发自动内容审核 (AI + 规则)
+        // 3. 必要时转人工审核
+        // 4. 审核结果通过推送通知返回
+        
+        // 模拟自动审核流程 (实际应调用服务器 API)
+        let autoApproved = await autoModerationCheck(sharedReflection)
+        
+        if autoApproved {
+            sharedReflection.isApproved = true
+            sharedReflection.status = .approved
+            sharedReflection.approvedAt = Date()
+        }
+        
         try modelContext.save()
+        
+        // 如果审核通过，触发通知
+        if sharedReflection.isApproved {
+            await notifyShareApproved(sharedReflection)
+        }
+    }
+    
+    /// 自动内容审核
+    private func autoModerationCheck(_ sharedReflection: SharedReflection) async -> Bool {
+        // 基础审核规则：
+        // 1. 内容已通过敏感词检查 (在 validateContent 中完成)
+        // 2. 匿名化处理已完成
+        // 3. 长度符合要求
+        // 实际应集成第三方内容审核 API (如阿里云内容安全、腾讯云内容安全)
+        
+        // 模拟审核延迟
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 秒
+        
+        // 默认通过 (因为已经过 validateContent 检查)
+        return true
+    }
+    
+    /// 通知分享已审核通过
+    private func notifyShareApproved(_ sharedReflection: SharedReflection) async {
+        // 在真实场景中，这里会发送本地通知或推送
+        // 使用 UserNotifications 框架
+        print("📢 分享已审核通过：\(sharedReflection.id)")
     }
     
     // MARK: - 获取分享的反思

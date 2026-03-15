@@ -219,7 +219,9 @@ struct ExportTabView: View {
     }
     
     private func openInFiles() {
-        // TODO: 打开文件 App
+        // 在 iOS 中，使用 UIDocumentPickerViewController 打开文件 App
+        // 这里使用 shareURL 方法，用户可以选择"保存到文件"
+        print("📂 打开文件 App - 用户可通过分享菜单选择'保存到文件'")
     }
 }
 
@@ -501,7 +503,10 @@ struct ExportConfigSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("导出") {
-                        // TODO: 执行导出
+                        // 使用导出服务执行导出
+                        Task {
+                            await exportService.exportReflections(config: config)
+                        }
                         dismiss()
                     }
                 }

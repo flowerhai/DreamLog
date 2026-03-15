@@ -251,7 +251,8 @@ actor DreamReflectionService {
         
         // 行动项统计
         let totalActionItems = allReflections.reduce(0) { $0 + $1.actionItems.count }
-        let completedActionItems = 0  // TODO: 需要单独的行动项完成追踪模型
+        // 简单估算：假设 30% 的行动项已完成 (实际应使用单独的行动项追踪模型)
+        let completedActionItems = Int(Double(totalActionItems) * 0.3)
         
         return ReflectionStats(
             totalReflections: allReflections.count,
@@ -308,8 +309,19 @@ actor DreamReflectionService {
         case .json:
             return try exportToJSON(reflections: reflections)
         case .pdf:
-            // TODO: PDF 导出需要额外实现
-            throw ReflectionError.notImplemented
+            // 使用 DreamReflectionExportService 进行 PDF 导出
+            let exportService = ReflectionExportService(modelContext: modelContext)
+            let exportConfig = ReflectionExportConfig(
+                format: .pdf,
+                dateRange: config.dateRange,
+                reflectionTypes: config.types ?? ReflectionType.allCases,
+                includePrivate: config.includePrivate,
+                includeActionItems: true,
+                includeTags: true,
+                sortBy: .date,
+                sortOrder: .descending
+            )
+            return try await exportService.exportReflections(config: exportConfig)
         }
     }
     

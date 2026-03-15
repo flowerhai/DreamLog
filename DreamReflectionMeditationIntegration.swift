@@ -220,19 +220,68 @@ class ReflectionMeditationIntegration {
     func logMeditationSession(for reflection: DreamReflection,
                               meditationType: ReflectionMeditationRecommendation.MeditationType,
                               duration: Int) {
-        // TODO: 实现冥想会话记录
-        print("记录冥想会话：\(reflection.id) - \(meditationType) - \(duration)分钟")
+        let session = MeditationSession(
+            reflectionId: reflection.id,
+            meditationType: meditationType.rawValue,
+            duration: duration,
+            completedAt: Date()
+        )
+        
+        try? modelContext.insert(session)
+        try? modelContext.save()
+        
+        print("📝 记录冥想会话：\(reflection.id) - \(meditationType) - \(duration)分钟")
     }
     
     /// 获取反思冥想统计
     func getMeditationStats() -> ReflectionMeditationStats {
-        // TODO: 实现统计
+        let descriptor = FetchDescriptor<MeditationSession>()
+        let sessions = (try? modelContext.fetch(descriptor)) ?? []
+        
+        let totalSessions = sessions.count
+        let totalMinutes = sessions.reduce(0) { $0 + $1.duration }
+        
+        // 计算最喜欢的冥想类型
+        let typeCounts = Dictionary(grouping: sessions, by: { $0.meditationType })
+            .mapValues { $0.count }
+        let favoriteTypeRaw = typeCounts.max(by: { $0.value < $1.value })?.key ?? ReflectionMeditationRecommendation.MeditationType.mindfulness.rawValue
+        let favoriteType = ReflectionMeditationRecommendation.MeditationType(rawValue: favoriteTypeRaw) ?? .mindfulness
+        
+        // 计算连续天数
+        let streakDays = calculateStreak(sessions: sessions)
+        
         return ReflectionMeditationStats(
-            totalSessions: 0,
-            totalMinutes: 0,
-            favoriteType: .mindfulness,
-            streakDays: 0
+            totalSessions: totalSessions,
+            totalMinutes: totalMinutes,
+            favoriteType: favoriteType,
+            streakDays: streakDays
         )
+    }
+    
+    /// 计算连续冥想天数
+    private func calculateStreak(sessions: [MeditationSession]) -> Int {
+        guard !sessions.isEmpty else { return 0 }
+        
+        let calendar = Calendar.current
+        let sortedSessions = sessions.sorted { $0.completedAt > $1.completedAt }
+        
+        var streak = 1
+        var currentDate = calendar.startOfDay(for: sortedSessions[0].completedAt)
+        
+        for i in 1..<sortedSessions.count {
+            let sessionDate = calendar.startOfDay(for: sortedSessions[i].completedAt)
+            let daysDiff = calendar.dateComponents([.day], from: sessionDate, to: currentDate).day ?? 0
+            
+            if daysDiff == 1 {
+                streak += 1
+                currentDate = sessionDate
+            } else if daysDiff > 1 {
+                break
+            }
+            // daysDiff == 0 表示同一天多次冥想，继续
+        }
+        
+        return streak
     }
     
     // MARK: - 开始冥想
@@ -276,24 +325,104 @@ struct ReflectionMeditationStats {
     var streakDays: Int
 }
 
-// MARK: - 冥想服务占位
+// MARK: - 冥想会话模型
 
-/// 冥想服务 (占位，实际应使用 MeditationService)
-@MainActor
-class MeditationService {
-    static let shared = MeditationService()
+/// 冥想会话记录 (SwiftData 模型)
+@Model
+class MeditationSession {
+    var id: UUID
+    var reflectionId: UUID
+    var meditationType: String
+    var duration: Int  // 分钟
+    var completedAt: Date
     
-    func startMeditation(type: Any, duration: Int) async {
-        // TODO: 实现冥想服务
-        print("开始冥想：\(duration)分钟")
+    init(reflectionId: UUID,
+         meditationType: String,
+         duration: Int,
+         completedAt: Date = Date()) {
+        self.id = UUID()
+        self.reflectionId = reflectionId
+        self.meditationType = meditationType
+        self.duration = duration
+        self.completedAt = completedAt
     }
 }
 
-enum MeditationType {
-    case mindfulness
-    case lovingKindness
-    case bodyScan
-    case visualization
-    case breathing
-    case sleep
+// MARK: - 冥想服务
+
+/// 冥想服务
+@MainActor
+class MeditationService {
+    
+    static let shared = MeditationService()
+    
+    private var currentSession: UUID?
+    private var isPlaying: Bool = false
+    
+    /// 开始冥想
+    func startMeditation(type: MeditationType, duration: Int) async {
+        print("🧘 开始冥想：\(type) - \(duration)分钟")
+        
+        // 在真实场景中，这里会：
+        // 1. 播放冥想音频 (使用 AVPlayer)
+        // 2. 显示冥想引导界面
+        // 3. 设置定时器提醒结束
+        // 4. 追踪冥想进度
+        
+        isPlaying = true
+        currentSession = UUID()
+        
+        // 模拟冥想音频播放
+        try? await Task.sleep(nanoseconds: UInt64(duration * 60 * 1_000_000_000))
+        
+        isPlaying = false
+        currentSession = nil
+        
+        print("✅ 冥想完成")
+    }
+    
+    /// 暂停冥想
+    func pauseMeditation() {
+        isPlaying = false
+        print("⏸️ 冥想已暂停")
+    }
+    
+    /// 恢复冥想
+    func resumeMeditation() {
+        isPlaying = true
+        print("▶️ 冥想已恢复")
+    }
+    
+    /// 停止冥想
+    func stopMeditation() {
+        isPlaying = false
+        currentSession = nil
+        print("⏹️ 冥想已停止")
+    }
+    
+    /// 获取当前冥想状态
+    func isMeditating() -> Bool {
+        return isPlaying
+    }
+}
+
+/// 冥想类型
+enum MeditationType: String {
+    case mindfulness = "正念冥想"
+    case lovingKindness = "慈心冥想"
+    case bodyScan = "身体扫描"
+    case visualization = "可视化冥想"
+    case breathing = "呼吸冥想"
+    case sleep = "睡眠冥想"
+    
+    var icon: String {
+        switch self {
+        case .mindfulness: return "🧘"
+        case .lovingKindness: return "💖"
+        case .bodyScan: return "👤"
+        case .visualization: return "🌈"
+        case .breathing: return "🌬️"
+        case .sleep: return "😴"
+        }
+    }
 }
