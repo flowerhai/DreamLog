@@ -400,3 +400,7 @@ extension UITapGestureRecognizer {
         }
     }
 }
+
+// MARK: - Type Alias for Backward Compatibility
+/// Type alias to match existing references throughout the codebase
+typealias DreamHapticFeedback = DreamHapticFeedbackService
