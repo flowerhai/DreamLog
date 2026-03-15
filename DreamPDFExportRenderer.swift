@@ -383,11 +383,11 @@ extension Dream {
             title: title,
             content: content,
             date: date.formatted(.dateTime.year().month().day().hour().minute()),
-            emotions: emotions.map { $0.displayName },
-            tags: tags.map { $0.name },
-            aiAnalysis: aiAnalysis?.summary,
+            emotions: emotions.map { $0.rawValue },
+            tags: tags,
+            aiAnalysis: aiAnalysis,
             isLucid: isLucid,
-            rating: Int(rating)
+            rating: Int(clarity)
         )
     }
 }

@@ -279,31 +279,26 @@ actor DreamExportHubService {
         md += "\(dream.content)\n\n"
         
         if options.includeEmotions && !dream.emotions.isEmpty {
-            let emotionNames = dream.emotions.map { $0.displayName }
+            let emotionNames = dream.emotions.map { $0.rawValue }
             md += "**情绪**: \(emotionNames.joined(separator: ", "))\n\n"
         }
         
         if options.includeTags && !dream.tags.isEmpty {
-            let tagNames = dream.tags.map { "#\($0.name)" }
+            let tagNames = dream.tags.map { "#\($0)" }
             md += "**标签**: \(tagNames.joined(separator: " "))\n\n"
         }
         
-        if options.includeAIAnalysis, let analysis = dream.aiAnalysis {
+        if options.includeAIAnalysis, let analysis = dream.aiAnalysis, !analysis.isEmpty {
             md += "## AI 解析\n\n"
-            if let summary = analysis.summary {
-                md += "**摘要**: \(summary)\n\n"
-            }
-            if let interpretation = analysis.interpretation {
-                md += "**解读**: \(interpretation)\n\n"
-            }
+            md += "\(analysis)\n\n"
         }
         
         if options.includeLucidInfo && dream.isLucid {
             md += "**清醒梦**: ✅\n\n"
         }
         
-        if options.includeRating && dream.rating > 0 {
-            let stars = String(repeating: "⭐️", count: Int(dream.rating))
+        if options.includeRating && dream.clarity > 0 {
+            let stars = String(repeating: "⭐️", count: Int(dream.clarity))
             md += "**评分**: \(stars)\n\n"
         }
         
@@ -364,11 +359,11 @@ actor DreamExportHubService {
             content += "\(dream.content)\n\n"
             
             if !dream.emotions.isEmpty {
-                content += "情绪：\(dream.emotions.map { $0.displayName }.joined(separator: ", "))\n"
+                content += "情绪：\(dream.emotions.map { $0.rawValue }.joined(separator: ", "))\n"
             }
             
             if !dream.tags.isEmpty {
-                content += "标签：\(dream.tags.map { "#\($0.name)" }.joined(separator: " "))\n"
+                content += "标签：\(dream.tags.map { "#\($0)" }.joined(separator: " "))\n"
             }
             
             content += "\n"

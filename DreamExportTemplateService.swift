@@ -288,19 +288,19 @@ actor DreamExportTemplateService {
         content = content.replacingOccurrences(of: "{{datetime}}", with: dateFormatter.string(from: dream.date))
         
         // 情绪
-        let emotions = dream.emotions.map { $0.displayName }.joined(separator: ", ")
+        let emotions = dream.emotions.map { $0.rawValue }.joined(separator: ", ")
         content = content.replacingOccurrences(of: "{{emotions}}", with: emotions)
         
         // 标签
-        let tags = dream.tags.map { "#\($0.name)" }.joined(separator: " ")
+        let tags = dream.tags.map { "#\($0)" }.joined(separator: " ")
         content = content.replacingOccurrences(of: "{{tags}}", with: tags)
         
-        // AI 解析
-        if let analysis = dream.aiAnalysis {
-            content = content.replacingOccurrences(of: "{{aiAnalysis}}", with: "available")
-            content = content.replacingOccurrences(of: "{{aiSummary}}", with: analysis.summary ?? "")
-            content = content.replacingOccurrences(of: "{{aiInterpretation}}", with: analysis.interpretation ?? "")
-            content = content.replacingOccurrences(of: "{{aiKeywords}}", with: analysis.keywords?.joined(separator: ", ") ?? "")
+        // AI 解析 - aiAnalysis 是 String? 类型，直接显示内容
+        if let analysis = dream.aiAnalysis, !analysis.isEmpty {
+            content = content.replacingOccurrences(of: "{{aiAnalysis}}", with: analysis)
+            content = content.replacingOccurrences(of: "{{aiSummary}}", with: analysis)
+            content = content.replacingOccurrences(of: "{{aiInterpretation}}", with: analysis)
+            content = content.replacingOccurrences(of: "{{aiKeywords}}", with: "")
         } else {
             content = content.replacingOccurrences(of: "{{aiAnalysis}}", with: "")
             content = content.replacingOccurrences(of: "{{aiSummary}}", with: "")
@@ -311,9 +311,40 @@ actor DreamExportTemplateService {
         // 清醒梦
         content = content.replacingOccurrences(of: "{{isLucid}}", with: dream.isLucid ? "✅" : "❌")
         
-        // 评分
-        let rating = dream.rating > 0 ? String(repeating: "⭐️", count: Int(dream.rating)) : ""
+        // 评分 - 使用 clarity 代替 rating
+        let rating = dream.clarity > 0 ? String(repeating: "⭐️", count: Int(dream.clarity)) : ""
         content = content.replacingOccurrences(of: "{{rating}}", with: rating)
+        
+        // 时间段
+        content = content.replacingOccurrences(of: "{{timeOfDay}}", with: dream.timeOfDay.rawValue)
+        
+        // 梦境强度
+        let intensity = dream.intensity > 0 ? String(repeating: "🔥", count: Int(dream.intensity)) : ""
+        content = content.replacingOccurrences(of: "{{intensity}}", with: intensity)
+        
+        // 原始文本
+        content = content.replacingOccurrences(of: "{{originalText}}", with: dream.originalText)
+        
+        // AI 图片 URL
+        content = content.replacingOccurrences(of: "{{aiImageUrl}}", with: dream.aiImageUrl ?? "")
+        
+        // 公开标记
+        content = content.replacingOccurrences(of: "{{isPublic}}", with: dream.isPublic ? "🌍" : "🔒")
+        
+        // 点赞数
+        content = content.replacingOccurrences(of: "{{likeCount}}", with: "\(dream.likeCount)")
+        
+        // 创建时间
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm"
+        content = content.replacingOccurrences(of: "{{createdAt}}", with: dateFormatter.string(from: dream.createdAt))
+        
+        // 更新时间
+        content = content.replacingOccurrences(of: "{{updatedAt}}", with: dateFormatter.string(from: dream.updatedAt))
+        
+        // 未实现的变量替换为空字符串
+        content = content.replacingOccurrences(of: "{{sleepQuality}}", with: "")
+        content = content.replacingOccurrences(of: "{{duration}}", with: "")
+        content = content.replacingOccurrences(of: "{{location}}", with: "")
         
         // 处理条件语句 {{#if variable}}...{{/if}}
         content = processConditionals(content, dream: dream)
@@ -367,7 +398,7 @@ actor DreamExportTemplateService {
             }
         }
         
-        // 处理 {{#if rating}}...{{/if}}
+        // 处理 {{#if rating}}...{{/if}} - 使用 clarity 代替 rating
         let ratingPattern = #"\{\{#if rating\}\}(.*?)\{\{/if\}\}"#
         if let regex = try? NSRegularExpression(pattern: ratingPattern, options: [.dotMatchesLineSeparators]) {
             let range = NSRange(result.startIndex..., in: result)
@@ -375,9 +406,49 @@ actor DreamExportTemplateService {
             
             for match in matches {
                 if let range = Range(match.range, in: result) {
-                    if dream.rating > 0 {
+                    if dream.clarity > 0 {
                         let innerContent = String(result[range])
                             .replacingOccurrences(of: "{{#if rating}}", with: "")
+                            .replacingOccurrences(of: "{{/if}}", with: "")
+                        result.replaceSubrange(range, with: innerContent)
+                    } else {
+                        result.replaceSubrange(range, with: "")
+                    }
+                }
+            }
+        }
+        
+        // 处理 {{#if isPublic}}...{{/if}}
+        let isPublicPattern = #"\{\{#if isPublic\}\}(.*?)\{\{/if\}\}"#
+        if let regex = try? NSRegularExpression(pattern: isPublicPattern, options: [.dotMatchesLineSeparators]) {
+            let range = NSRange(result.startIndex..., in: result)
+            let matches = regex.matches(in: result, options: [], range: range).reversed()
+            
+            for match in matches {
+                if let range = Range(match.range, in: result) {
+                    if dream.isPublic {
+                        let innerContent = String(result[range])
+                            .replacingOccurrences(of: "{{#if isPublic}}", with: "")
+                            .replacingOccurrences(of: "{{/if}}", with: "")
+                        result.replaceSubrange(range, with: innerContent)
+                    } else {
+                        result.replaceSubrange(range, with: "")
+                    }
+                }
+            }
+        }
+        
+        // 处理 {{#if intensity}}...{{/if}}
+        let intensityPattern = #"\{\{#if intensity\}\}(.*?)\{\{/if\}\}"#
+        if let regex = try? NSRegularExpression(pattern: intensityPattern, options: [.dotMatchesLineSeparators]) {
+            let range = NSRange(result.startIndex..., in: result)
+            let matches = regex.matches(in: result, options: [], range: range).reversed()
+            
+            for match in matches {
+                if let range = Range(match.range, in: result) {
+                    if dream.intensity > 0 {
+                        let innerContent = String(result[range])
+                            .replacingOccurrences(of: "{{#if intensity}}", with: "")
                             .replacingOccurrences(of: "{{/if}}", with: "")
                         result.replaceSubrange(range, with: innerContent)
                     } else {

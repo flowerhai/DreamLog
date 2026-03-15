@@ -366,7 +366,7 @@ actor DreamAudioExportService {
         }
         
         if config.includeEmotions && !dream.emotions.isEmpty {
-            let emotionNames = dream.emotions.map { $0.displayName }
+            let emotionNames = dream.emotions.map { $0.rawValue }
             text += "情绪：\(emotionNames.joined(separator: "、"))\n\n"
         }
         

@@ -550,7 +550,7 @@ final class DreamInspirationService {
         }
         
         if result.contains("dreamTheme") {
-            result = result.replacingOccurrences(of: "dreamTheme", with: dream.tags.map { $0.name }.joined(separator: "、"))
+            result = result.replacingOccurrences(of: "dreamTheme", with: dream.tags.joined(separator: "、"))
         }
         
         if result.contains("dreamCore") {
