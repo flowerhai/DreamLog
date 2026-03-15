@@ -1383,3 +1383,90 @@ struct CommunityDreamCard: View {
         DreamCommunityScreenshotView()
     }
 }
+
+#Preview("首页截图") {
+    NavigationStack {
+        HomeScreenshotView()
+    }
+}
+
+#Preview("AI 解析截图") {
+    NavigationStack {
+        AIAnalysisScreenshotView()
+    }
+}
+
+#Preview("AR 可视化截图") {
+    NavigationStack {
+        ARVisualizationScreenshotView()
+    }
+}
+
+#Preview("分享中心截图") {
+    NavigationStack {
+        ShareHubScreenshotView()
+    }
+}
+
+// MARK: - App Store Screenshot Guide
+
+/*
+ ## App Store 截图尺寸要求
+ 
+ ### iPhone 截图 (必须)
+ - 6.7" iPhone (1290x2796) - iPhone 14/15 Pro Max
+ - 6.5" iPhone (1242x2688) - iPhone 11 Pro Max/XS Max
+ - 5.5" iPhone (1242x2208) - iPhone 8 Plus/7 Plus
+ 
+ ### iPad 截图 (可选但推荐)
+ - 12.9" iPad Pro (2048x2732)
+ - 11" iPad Pro (1668x2388)
+ - 10.2" iPad (1620x2160)
+ 
+ ## 推荐截图内容 (5 张)
+ 
+ 1. **首页 - 快速记录**
+    - 展示语音记录按钮和统计卡片
+    - 文案："30 秒记录你的梦境"
+    - 使用 HomeScreenshotView
+ 
+ 2. **AI 梦境解析**
+    - 展示三层解析结果
+    - 文案："AI 深度解析梦境含义"
+    - 使用 AIAnalysisScreenshotView
+ 
+ 3. **数据洞察**
+    - 展示情绪图表和趋势分析
+    - 文案："发现你的梦境模式"
+    - 使用 InsightsDashboardScreenshotView
+ 
+ 4. **AR 梦境世界**
+    - 展示 3D 梦境元素和交互
+    - 文案："让梦境栩栩如生"
+    - 使用 ARVisualizationScreenshotView
+ 
+ 5. **时间胶囊**
+    - 展示时间胶囊列表和解锁进度
+    - 文案："给未来的自己发送梦境"
+    - 使用 TimeCapsuleScreenshotView
+ 
+ ## 截图技巧
+ 
+ 1. 在 Xcode 中运行预览
+ 2. 使用截图工具 (Cmd+Shift+4)
+ 3. 裁剪到设备边框
+ 4. 添加设备框架 (可选)
+ 5. 上传到 App Store Connect
+ 
+ ## 预览视频脚本 (30 秒)
+ 
+ | 时间 | 画面 | 文案 |
+ |------|------|------|
+ | 0-3s | 应用图标 + 名称 | "DreamLog - 你的 AI 梦境日记" |
+ | 3-8s | 语音记录梦境 | "按住说话，30 秒记录梦境" |
+ | 8-13s | AI 解析动画 | "AI 深度解析，发现隐藏含义" |
+ | 13-18s | 数据图表展示 | "智能洞察，追踪梦境模式" |
+ | 18-23s | AR 梦境可视化 | "AR 技术，让梦境可视化" |
+ | 23-27s | 特色功能快速切换 | "时间胶囊、清醒梦、冥想音效..." |
+ | 27-30s | App Store 下载按钮 | "立即下载，探索潜意识世界" |
+ */
