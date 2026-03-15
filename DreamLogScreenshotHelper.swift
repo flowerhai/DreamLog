@@ -692,3 +692,694 @@ struct DreamCard: View {
         ShareHubScreenshotView()
     }
 }
+
+// MARK: - 统计洞察截图视图
+
+/// 统计洞察截图预览 - 展示数据可视化和智能洞察
+struct InsightsDashboardScreenshotView: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // 头部统计
+                headerStats
+                
+                // 情绪分布
+                moodDistributionSection
+                
+                // 时间分析
+                timeAnalysisSection
+                
+                // 热门标签
+                popularTagsSection
+                
+                // 智能洞察
+                insightsSection
+            }
+            .padding()
+        }
+        .navigationTitle("智能洞察")
+        .navigationBarTitleDisplayMode(.large)
+    }
+    
+    private var headerStats: some View {
+        HStack(spacing: 16) {
+            StatCard(value: "128", title: "总梦境", icon: "moon.fill", color: .purple)
+            StatCard(value: "23", title: "清醒梦", icon: "star.fill", color: .yellow)
+        }
+    }
+    
+    private var moodDistributionSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("情绪分布")
+                .font(.headline)
+            
+            HStack(spacing: 12) {
+                MoodIndicator(mood: "积极", percentage: 45, color: .green)
+                MoodIndicator(mood: "平静", percentage: 30, color: .blue)
+                MoodIndicator(mood: "好奇", percentage: 15, color: .purple)
+                MoodIndicator(mood: "其他", percentage: 10, color: .gray)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+    
+    private var timeAnalysisSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("做梦时段分析")
+                .font(.headline)
+            
+            HStack(spacing: 8) {
+                TimeBar(hour: "凌晨", percentage: 15, height: 30)
+                TimeBar(hour: "清晨", percentage: 45, height: 80)
+                TimeBar(hour: "上午", percentage: 10, height: 20)
+                TimeBar(hour: "下午", percentage: 5, height: 15)
+                TimeBar(hour: "夜晚", percentage: 25, height: 50)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+    
+    private var popularTagsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("热门标签")
+                .font(.headline)
+            
+            FlowLayout(spacing: 8) {
+                TagBadge(text: "#冒险", count: 23)
+                TagBadge(text: "#飞行", count: 18)
+                TagBadge(text: "#奇幻", count: 15)
+                TagBadge(text: "#海洋", count: 12)
+                TagBadge(text: "#回忆", count: 10)
+                TagBadge(text: "#未来", count: 8)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+    
+    private var insightsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("💡 智能洞察")
+                .font(.headline)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                InsightRow(icon: "📈", text: "近期冒险主题梦境增多，创造力处于高峰期")
+                InsightRow(icon: "🌙", text: "清晰度持续提升，清醒梦练习效果显著")
+                InsightRow(icon: "⏰", text: "主要在清晨做梦，建议床头放置记录工具")
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - 梦境孵育截图视图
+
+/// 梦境孵育截图预览 - 展示孵育类型和模板
+struct DreamIncubationScreenshotView: View {
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                // 头部说明
+                headerSection
+                
+                // 孵育类型
+                incubationTypesSection
+                
+                // 推荐模板
+                recommendedTemplatesSection
+            }
+            .padding()
+        }
+        .navigationTitle("梦境孵育")
+        .navigationBarTitleDisplayMode(.large)
+    }
+    
+    private var headerSection: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "sparkles")
+                .font(.system(size: 50))
+                .foregroundColor(.purple)
+            
+            Text("设定意图，引导梦境")
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text("选择一个孵育类型，睡前进行仪式，晨间记录反思")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(16)
+    }
+    
+    private var incubationTypesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("孵育类型")
+                .font(.headline)
+            
+            VStack(spacing: 12) {
+                IncubationTypeCard(
+                    icon: "🧩",
+                    title: "问题解答",
+                    description: "在梦中寻求问题的答案",
+                    duration: "10 分钟",
+                    color: .blue
+                )
+                
+                IncubationTypeCard(
+                    icon: "💡",
+                    title: "创意启发",
+                    description: "激发创意灵感和艺术创作",
+                    duration: "10 分钟",
+                    color: .orange
+                )
+                
+                IncubationTypeCard(
+                    icon: "❤️",
+                    title: "情感疗愈",
+                    description: "处理情感创伤和内心冲突",
+                    duration: "15 分钟",
+                    color: .pink
+                )
+            }
+        }
+    }
+    
+    private var recommendedTemplatesSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("推荐模板")
+                .font(.headline)
+            
+            TemplateCard(
+                name: "创意突破",
+                type: "创意启发",
+                steps: 3,
+                color: .orange
+            )
+        }
+    }
+}
+
+// MARK: - 时间胶囊截图视图
+
+/// 时间胶囊截图预览 - 展示胶囊列表和创建界面
+struct TimeCapsuleScreenshotView: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            // 头部统计
+            headerSection
+            
+            Divider()
+            
+            // 胶囊列表
+            capsulesList
+        }
+        .navigationTitle("时间胶囊")
+        .navigationBarTitleDisplayMode(.large)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Image(systemName: "plus.circle.fill")
+                    .foregroundColor(.accentColor)
+            }
+        }
+    }
+    
+    private var headerSection: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 20) {
+                CapsuleStat(icon: "📦", value: "5", label: "已创建")
+                CapsuleStat(icon: "🔓", value: "2", label: "已解锁")
+                CapsuleStat(icon: "⏳", value: "3", label: "等待中")
+            }
+            
+            Text("给未来的自己发送梦境")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.purple.opacity(0.1), Color(.systemBackground)],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+        )
+    }
+    
+    private var capsulesList: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                TimeCapsuleCard(
+                    title: "给一年后的自己",
+                    dreamCount: 3,
+                    unlockDate: Date().addingTimeInterval(31536000),
+                    status: "waiting"
+                )
+                
+                TimeCapsuleCard(
+                    title: "生日惊喜",
+                    dreamCount: 5,
+                    unlockDate: Date().addingTimeInterval(-86400),
+                    status: "unlocked"
+                )
+                
+                TimeCapsuleCard(
+                    title: "百日纪念",
+                    dreamCount: 10,
+                    unlockDate: Date().addingTimeInterval(86400 * 50),
+                    status: "waiting"
+                )
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - 梦境社区截图视图
+
+/// 梦境社区截图预览 - 展示社区动态和互动
+struct DreamCommunityScreenshotView: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            // 筛选器
+            filterSection
+            
+            Divider()
+            
+            // 梦境列表
+            communityDreamsList
+        }
+        .navigationTitle("梦境社区")
+        .navigationBarTitleDisplayMode(.large)
+    }
+    
+    private var filterSection: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                FilterChip(text: "🔥 热门", active: true)
+                FilterChip(text: "🕐 最新", active: false)
+                FilterChip(text: "⭐ Top", active: false)
+                FilterChip(text: "👁️ 清醒梦", active: false)
+                FilterChip(text: "👥 关注", active: false)
+            }
+            .padding()
+        }
+    }
+    
+    private var communityDreamsList: some View {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                CommunityDreamCard(
+                    author: "匿名梦友",
+                    avatar: "🌙",
+                    title: "昨晚的奇幻冒险",
+                    preview: "我梦见自己在天空中飞翔，穿越云层...",
+                    likes: 234,
+                    comments: 45,
+                    tags: ["冒险", "飞行", "奇幻"]
+                )
+                
+                CommunityDreamCard(
+                    author: "匿名梦友",
+                    avatar: "🌊",
+                    title: "深海探险",
+                    preview: "在一片神秘的海洋中，我遇到了会说话的鱼...",
+                    likes: 189,
+                    comments: 32,
+                    tags: ["海洋", "探索", "奇幻"]
+                )
+                
+                CommunityDreamCard(
+                    author: "匿名梦友",
+                    avatar: "✨",
+                    title: "清醒梦体验",
+                    preview: "意识到自己在做梦后，我尝试控制梦境...",
+                    likes: 456,
+                    comments: 78,
+                    tags: ["清醒梦", "控制", "体验"]
+                )
+            }
+            .padding()
+        }
+    }
+}
+
+// MARK: - 组件视图
+
+struct MoodIndicator: View {
+    let mood: String
+    let percentage: Int
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text("\(percentage)%")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(color)
+            
+            RoundedRectangle(cornerRadius: 2)
+                .fill(color.opacity(0.3))
+                .frame(height: 4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 2)
+                        .fill(color)
+                        .frame(width: 40 * CGFloat(percentage) / 100, height: 4),
+                    alignment: .leading
+                )
+            
+            Text(mood)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+struct TimeBar: View {
+    let hour: String
+    let percentage: Int
+    let height: CGFloat
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text("\(percentage)%")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+            
+            RoundedRectangle(cornerRadius: 2)
+                .fill(
+                    LinearGradient(
+                        colors: [.purple.opacity(0.3), .purple],
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
+                )
+                .frame(width: 40, height: height)
+            
+            Text(hour)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+                .lineLimit(1)
+        }
+    }
+}
+
+struct FlowLayout: View {
+    let spacing: CGFloat
+    @ViewBuilder let content: () -> some View
+    
+    var body: some View {
+        Group {
+            content()
+        }
+    }
+}
+
+struct TagBadge: View {
+    let text: String
+    let count: Int
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(text)
+                .font(.caption)
+                .foregroundColor(.accentColor)
+            
+            Text("(\(count))")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(Color.accentColor.opacity(0.1))
+        .cornerRadius(8)
+    }
+}
+
+struct IncubationTypeCard: View {
+    let icon: String
+    let title: String
+    let description: String
+    let duration: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            Text(icon)
+                .font(.system(size: 40))
+            
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(title)
+                        .font(.headline)
+                    
+                    Spacer()
+                    
+                    Text(duration)
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(color.opacity(0.1))
+                        .foregroundColor(color)
+                        .cornerRadius(4)
+                }
+                
+                Text(description)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+}
+
+struct TemplateCard: View {
+    let name: String
+    let type: String
+    let steps: Int
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "wand.and.stars")
+                .font(.title2)
+                .foregroundColor(color)
+                .frame(width: 50, height: 50)
+                .background(color.opacity(0.1))
+                .cornerRadius(10)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(name)
+                    .font(.headline)
+                
+                Text("\(type) · \(steps) 个步骤")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            Image(systemName: "chevron.right")
+                .foregroundColor(.secondary)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+}
+
+struct CapsuleStat: View {
+    let icon: String
+    let value: String
+    let label: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(icon)
+                .font(.title2)
+            Text(value)
+                .font(.title)
+                .fontWeight(.bold)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+struct TimeCapsuleCard: View {
+    let title: String
+    let dreamCount: Int
+    let unlockDate: Date
+    let status: String
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            Image(systemName: status == "unlocked" ? "lock.open.fill" : "lock.fill")
+                .font(.title2)
+                .foregroundColor(status == "unlocked" ? .green : .orange)
+                .frame(width: 50, height: 50)
+                .background((status == "unlocked" ? Color.green : Color.orange).opacity(0.1))
+                .cornerRadius(10)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(.headline)
+                
+                Text("\(dreamCount) 个梦境 · 解锁：\(formatDate(unlockDate))")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            if status == "unlocked" {
+                Text("已解锁")
+                    .font(.caption)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.green.opacity(0.1))
+                    .foregroundColor(.green)
+                    .cornerRadius(8)
+            }
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy/MM/dd"
+        return formatter.string(from: date)
+    }
+}
+
+struct FilterChip: View {
+    let text: String
+    let active: Bool
+    
+    var body: some View {
+        Text(text)
+            .font(.subheadline)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(active ? Color.accentColor : Color(.secondarySystemBackground))
+            .foregroundColor(active ? .white : .primary)
+            .cornerRadius(20)
+    }
+}
+
+struct CommunityDreamCard: View {
+    let author: String
+    let avatar: String
+    let title: String
+    let preview: String
+    let likes: Int
+    let comments: Int
+    let tags: [String]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Text(avatar)
+                    .font(.title)
+                    .frame(width: 44, height: 44)
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(22)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(author)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    
+                    Text("2 小时前")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "ellipsis")
+                    .foregroundColor(.secondary)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                
+                Text(preview)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+            
+            HStack(spacing: 8) {
+                ForEach(tags.prefix(3), id: \.self) { tag in
+                    Text("#\(tag)")
+                        .font(.caption)
+                        .foregroundColor(.accentColor)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.accentColor.opacity(0.1))
+                        .cornerRadius(8)
+                }
+            }
+            
+            HStack(spacing: 20) {
+                Label("\(likes)", systemImage: "heart.fill")
+                    .foregroundColor(.red)
+                
+                Label("\(comments)", systemImage: "message.fill")
+                    .foregroundColor(.blue)
+                
+                Spacer()
+                
+                Image(systemName: "share")
+                    .foregroundColor(.secondary)
+            }
+            .font(.caption)
+        }
+        .padding()
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Additional Previews
+
+#Preview("统计洞察截图") {
+    NavigationStack {
+        InsightsDashboardScreenshotView()
+    }
+}
+
+#Preview("梦境孵育截图") {
+    NavigationStack {
+        DreamIncubationScreenshotView()
+    }
+}
+
+#Preview("时间胶囊截图") {
+    NavigationStack {
+        TimeCapsuleScreenshotView()
+    }
+}
+
+#Preview("梦境社区截图") {
+    NavigationStack {
+        DreamCommunityScreenshotView()
+    }
+}
