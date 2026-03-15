@@ -84,7 +84,8 @@ enum MainTab: Int, CaseIterable {
                 NavigationViewItem(id: "lucid-training", title: "清醒梦训练", icon: "brain.head.profile", destination: AnyView(LucidTrainingView()), isFavorite: false),
                 NavigationViewItem(id: "goals", title: "梦境目标", icon: "target", destination: AnyView(DreamsGoalView()), isFavorite: false),
                 NavigationViewItem(id: "dictionary", title: "梦境词典", icon: "text.book.closed.fill", destination: AnyView(DreamDictionaryView()), isFavorite: false),
-                NavigationViewItem(id: "music", title: "梦境音乐", icon: "music.note.house.fill", destination: AnyView(DreamMusicView()), isFavorite: false)
+                NavigationViewItem(id: "music", title: "梦境音乐", icon: "music.note.house.fill", destination: AnyView(DreamMusicView()), isFavorite: false),
+                NavigationViewItem(id: "reflections", title: "反思日记", icon: "book.closed.fill", destination: AnyView(DreamReflectionView()), isFavorite: false)
             ]
         case .profile:
             return [

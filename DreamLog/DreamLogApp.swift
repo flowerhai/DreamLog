@@ -24,11 +24,12 @@ struct DreamLogApp: App {
         PerformanceOptimizationService.shared.recordLaunchStart()
         
         // 初始化 SwiftData 模型容器
-        // 注意：Dream 使用 UserDefaults 持久化，只有 DreamTimeCapsule 和 DreamPrediction 使用 SwiftData
+        // 注意：Dream 使用 UserDefaults 持久化，SwiftData 用于高级功能
         do {
             let schema = Schema([
                 DreamTimeCapsule.self,
-                DreamPrediction.self
+                DreamPrediction.self,
+                DreamReflection.self
             ])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
