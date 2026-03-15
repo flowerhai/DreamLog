@@ -209,7 +209,7 @@ class DreamReflectionShareService {
     private func submitForReview(_ sharedReflection: SharedReflection) async throws {
         // 设置待审核状态
         sharedReflection.isApproved = false
-        sharedReflection.status = .pendingReview
+        sharedReflection.status = .pending
         sharedReflection.submittedAt = Date()
         
         // 在真实场景中，这里会：
