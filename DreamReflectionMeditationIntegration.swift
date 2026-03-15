@@ -65,7 +65,15 @@ class ReflectionMeditationIntegration {
     
     init(modelContext: ModelContext? = nil,
          meditationService: MeditationService = .shared) {
-        self.modelContext = modelContext ?? (try? AppController.shared?.modelContext) ?? AppController.createPreviewContext()
+        if let context = modelContext {
+            self.modelContext = context
+        } else if let container = SharedModelContainer.main {
+            self.modelContext = try! ModelContext(container)
+        } else {
+            // Fallback to in-memory context for previews/tests
+            let container = try! ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            self.modelContext = ModelContext(container)
+        }
         self.meditationService = meditationService
     }
     

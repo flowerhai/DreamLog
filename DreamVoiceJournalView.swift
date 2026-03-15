@@ -19,7 +19,15 @@ struct DreamVoiceJournalView: View {
     @State private var searchText = ""
     
     init(modelContext: ModelContext? = nil) {
-        _viewModel = StateObject(wrappedValue: VoiceJournalViewModel(modelContext: modelContext ?? ModelContext()))
+        let context = modelContext ?? {
+            if let container = SharedModelContainer.main {
+                return try! ModelContext(container)
+            } else {
+                let container = try! ModelContainer(for: VoiceJournalEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                return ModelContext(container)
+            }
+        }()
+        _viewModel = StateObject(wrappedValue: VoiceJournalViewModel(modelContext: context))
     }
     
     var body: some View {

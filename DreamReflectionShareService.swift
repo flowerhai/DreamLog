@@ -28,6 +28,8 @@ final class SharedReflection {
     var status: ShareStatus
     var createdAt: Date
     var updatedAt: Date
+    var submittedAt: Date?
+    var approvedAt: Date?
     
     @Relationship var originalReflection: DreamReflection?
     
@@ -55,12 +57,14 @@ final class SharedReflection {
         status: ShareStatus = .pending,
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
+        submittedAt: Date? = nil,
+        approvedAt: Date? = nil,
         originalReflection: DreamReflection? = nil
     ) {
         self.id = id
         self.reflectionId = reflectionId
         self.anonymousId = anonymousId
-        self.type = type.rawValue
+        self.type = type
         self.content = content
         self.tags = tags
         self.rating = rating
@@ -71,6 +75,8 @@ final class SharedReflection {
         self.status = status
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.submittedAt = submittedAt
+        self.approvedAt = approvedAt
         self.originalReflection = originalReflection
     }
     
@@ -98,7 +104,15 @@ class DreamReflectionShareService {
     
     init(modelContext: ModelContext? = nil,
          userDefaults: UserDefaults = .standard) {
-        self.modelContext = modelContext ?? (try? AppController.shared?.modelContext) ?? AppController.createPreviewContext()
+        if let context = modelContext {
+            self.modelContext = context
+        } else if let container = SharedModelContainer.main {
+            self.modelContext = try! ModelContext(container)
+        } else {
+            // Fallback to in-memory context for previews/tests
+            let container = try! ModelContainer(for: SharedReflection.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            self.modelContext = ModelContext(container)
+        }
         self.userDefaults = userDefaults
     }
     
@@ -129,7 +143,7 @@ class DreamReflectionShareService {
         let sharedReflection = SharedReflection(
             reflectionId: reflection.id,
             anonymousId: anonymousId,
-            type: reflection.type,
+            type: reflection.type.rawValue,
             content: anonymizedContent,
             tags: reflection.tags,
             rating: reflection.rating,
