@@ -44,6 +44,12 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 8)
                 
+                // 语音日记卡片 ✨ NEW (Phase 51)
+                VoiceJournalCard()
+                    .environmentObject(dreamStore)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                
                 // 搜索栏
                 HStack {
                     SearchBar(text: $searchText)
@@ -606,6 +612,132 @@ struct DreamStoriesCard: View {
         )
         .sheet(isPresented: $showingStories) {
             DreamStoryView()
+        }
+    }
+}
+
+// MARK: - 🎙️ 语音日记卡片 (Phase 51)
+
+struct VoiceJournalCard: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @Environment(\.modelContext) private var modelContext
+    @State private var showingVoiceJournal = false
+    @State private var entryCount: Int = 0
+    @State private var totalDuration: TimeInterval = 0
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "mic.fill")
+                            .font(.title2)
+                            .foregroundColor(.orange)
+                        
+                        Text("语音日记")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    
+                    Text(entryCount > 0
+                         ? "已录制 \(entryCount) 条语音日记 (\(formatDuration(totalDuration)))"
+                         : "用语音快速记录梦境")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                Button(action: { showingVoiceJournal = true }) {
+                    HStack(spacing: 4) {
+                        Text(entryCount > 0 ? "查看日记" : "开始录制")
+                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                    }
+                    .foregroundColor(.orange)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.orange.opacity(0.2))
+                    .cornerRadius(8)
+                }
+            }
+            
+            // 快速操作提示
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Image(systemName: "waveform")
+                        .font(.caption)
+                        .foregroundColor(.orange.opacity(0.8))
+                    Text("AI 转写")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.caption)
+                        .foregroundColor(.orange.opacity(0.8))
+                    Text("智能摘要")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "heart.fill")
+                        .font(.caption)
+                        .foregroundColor(.orange.opacity(0.8))
+                    Text("情绪分析")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding(.top, 4)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "E67E22").opacity(0.3), Color(hex: "F39C12").opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "E67E22").opacity(0.3), lineWidth: 1)
+                )
+        )
+        .task {
+            await loadStats()
+        }
+        .sheet(isPresented: $showingVoiceJournal) {
+            DreamVoiceJournalView(modelContext: modelContext)
+        }
+    }
+    
+    @MainActor
+    private func loadStats() async {
+        do {
+            let service = DreamVoiceJournalService(modelContext: modelContext)
+            let stats = try await service.getStats()
+            entryCount = stats.totalEntries
+            totalDuration = stats.totalDuration
+        } catch {
+            print("加载语音日记统计失败：\(error)")
+        }
+    }
+    
+    private func formatDuration(_ seconds: TimeInterval) -> String {
+        let hours = Int(seconds) / 3600
+        let minutes = (Int(seconds) % 3600) / 60
+        if hours > 0 {
+            return "\(hours)小时\(minutes)分钟"
+        } else if minutes > 0 {
+            return "\(minutes)分钟"
+        } else {
+            return "\(Int(seconds))秒"
         }
     }
 }

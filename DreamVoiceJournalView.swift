@@ -18,8 +18,8 @@ struct DreamVoiceJournalView: View {
     @State private var selectedEntry: VoiceJournalEntry?
     @State private var searchText = ""
     
-    init() {
-        _viewModel = StateObject(wrappedValue: VoiceJournalViewModel())
+    init(modelContext: ModelContext? = nil) {
+        _viewModel = StateObject(wrappedValue: VoiceJournalViewModel(modelContext: modelContext ?? ModelContext()))
     }
     
     var body: some View {
@@ -651,10 +651,9 @@ class VoiceJournalViewModel: ObservableObject {
     
     private let service: DreamVoiceJournalService
     
-    init() {
+    init(modelContext: ModelContext) {
         // 初始化服务
-        let context = ModelContext()
-        service = DreamVoiceJournalService(modelContext: context)
+        service = DreamVoiceJournalService(modelContext: modelContext)
     }
     
     func loadEntries() async {

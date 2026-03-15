@@ -233,6 +233,13 @@ struct GrowthNavigationView: View {
                         Label("梦境音乐", systemImage: "music.note.house.fill")
                     }
                 }
+                
+                Section(header: Text("语音日记")) {
+                    NavigationLink(destination: DreamVoiceJournalView()) {
+                        Label("语音日记", systemImage: "mic.fill")
+                            .accessibilityLabel("语音日记 - 录音记录梦境")
+                    }
+                }
             }
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("🧘 成长")
