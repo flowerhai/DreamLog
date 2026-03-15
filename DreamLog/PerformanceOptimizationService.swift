@@ -8,6 +8,7 @@
 
 import Foundation
 import UIKit
+import SwiftUI
 
 /// 性能优化服务
 class PerformanceOptimizationService: ObservableObject {
