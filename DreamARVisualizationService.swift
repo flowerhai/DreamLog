@@ -38,7 +38,7 @@ actor DreamARVisualizationService {
     /// 为梦境创建 AR 场景
     func createScene(for dreamID: UUID, dreamContent: String, dreamSymbols: [String], emotions: [String]) async throws -> ARDreamScene {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         let sceneName = "梦境 AR 场景 - \(formatDate(Date()))"
@@ -66,7 +66,7 @@ actor DreamARVisualizationService {
     /// 获取梦境的 AR 场景
     func getScene(for dreamID: UUID) async throws -> ARDreamScene? {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         // 先检查缓存
@@ -86,7 +86,7 @@ actor DreamARVisualizationService {
     /// 获取所有 AR 场景
     func getAllScenes() async throws -> [ARDreamScene] {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         let descriptor = FetchDescriptor<ARDreamScene>(
@@ -99,7 +99,7 @@ actor DreamARVisualizationService {
     /// 删除场景
     func deleteScene(_ scene: ARDreamScene) async throws {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         sceneCache.removeValue(forKey: scene.dreamID)
@@ -110,7 +110,7 @@ actor DreamARVisualizationService {
     /// 更新场景收藏状态
     func toggleFavorite(for scene: ARDreamScene) async throws {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         scene.isFavorite.toggle()
@@ -128,7 +128,7 @@ actor DreamARVisualizationService {
     /// 添加元素到场景
     func addElement(to scene: ARDreamScene, element: ARDreamElement) async throws {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         context.insert(element)
@@ -139,7 +139,7 @@ actor DreamARVisualizationService {
     /// 删除元素
     func deleteElement(_ element: ARDreamElement, from scene: ARDreamScene) async throws {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         if let index = scene.elements.firstIndex(where: { $0.id == element.id }) {
@@ -152,7 +152,7 @@ actor DreamARVisualizationService {
     /// 更新元素位置
     func updateElementPosition(_ element: ARDreamElement, to position: SIMD3<Float>) async throws {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         element.position = position
@@ -165,7 +165,7 @@ actor DreamARVisualizationService {
     /// 添加锚点到场景
     func addAnchor(to scene: ARDreamScene, anchor: ARDreamAnchor) async throws {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         context.insert(anchor)
@@ -176,7 +176,7 @@ actor DreamARVisualizationService {
     /// 删除锚点
     func deleteAnchor(_ anchor: ARDreamAnchor, from scene: ARDreamScene) async throws {
         guard let context = modelContext else {
-            throw ARError.modelContextNotConfigured
+            throw ARVisualizationError.modelContextNotConfigured
         }
         
         if let index = scene.anchors.firstIndex(where: { $0.id == anchor.id }) {
@@ -293,9 +293,9 @@ actor DreamARVisualizationService {
     }
 }
 
-// MARK: - AR 错误
+// MARK: - AR 可视化错误
 
-enum ARError: LocalizedError {
+enum ARVisualizationError: LocalizedError {
     case modelContextNotConfigured
     case sceneNotFound
     case elementNotFound

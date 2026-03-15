@@ -473,6 +473,7 @@ enum ARError: LocalizedError {
     case cameraPermissionDenied
     case recordingFailed
     case sharingFailed
+    case modelContextNotConfigured
     
     var errorDescription: String? {
         switch self {
@@ -481,6 +482,7 @@ enum ARError: LocalizedError {
         case .cameraPermissionDenied: return "相机权限被拒绝"
         case .recordingFailed: return "录制失败"
         case .sharingFailed: return "分享失败"
+        case .modelContextNotConfigured: return "模型上下文未配置"
         }
     }
 }
