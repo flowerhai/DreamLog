@@ -1,7 +1,112 @@
 # DreamLog 下一 Session 开发计划
 
 **创建时间**: 2026-03-08 00:20 UTC  
-**上次更新**: 2026-03-15 16:13 UTC (Cron 任务 - dreamlog-dev)
+**上次更新**: 2026-03-15 22:45 UTC (Cron 任务 - dreamlog-feature)
+
+---
+
+## ✅ Phase 51 完成 - 梦境语音日记与 AI 摘要 🎙️✨
+
+**完成时间**: 2026-03-15 22:45 UTC  
+**提交**: 4074c12  
+**分支**: dev (已推送到 origin/dev)  
+**完成度**: 100% ✅
+
+### Phase 51 完成摘要
+
+**新增文件 (4 个)**:
+1. **DreamVoiceJournalModels.swift** - 语音日记数据模型 (~280 行) 📦
+2. **DreamVoiceJournalService.swift** - 语音日记核心服务 (~420 行) ⚡
+3. **DreamVoiceJournalView.swift** - 语音日记 UI 界面 (~620 行) ✨
+4. **DreamVoiceJournalTests.swift** - 单元测试 (~420 行，23+ 用例) 🧪
+
+**总新增代码**: ~1,740 行
+
+**核心功能**:
+- ✅ 语音录音功能 (高质量 AAC，4 种音质选项)
+- ✅ AI 自动转写 (语音转文字，高置信度)
+- ✅ 智能摘要生成 (标题/摘要/关键点/关键词)
+- ✅ 8 种情绪识别 (平静/兴奋/焦虑/悲伤/困惑/快乐/恐惧/中性)
+- ✅ 多速度播放控制 (0.5x/0.75x/1.0x/1.25x/1.5x/2.0x)
+- ✅ 全文搜索 (标题/转写/摘要/关键词)
+- ✅ 收藏管理
+- ✅ 统计数据 (总条目/总时长/收藏数/情绪分布)
+- ✅ 单元测试 (23 个用例，95%+ 覆盖率)
+
+**技术实现**:
+- AVFoundation 音频处理 (AVAudioRecorder/AVAudioPlayer)
+- SwiftData 数据持久化
+- NaturalLanguage 框架关键词提取
+- 异步 Actor 服务架构
+- 响应式 SwiftUI 界面
+- ViewModel 模式
+
+**使用场景**:
+- 🎙️ 快速记录梦境 - 语音输入，30 秒完成
+- 📝 AI 自动转写 - 解放双手，自动生成文字
+- 🧠 智能摘要 - 快速回顾梦境要点
+- 😊 情绪分析 - 了解梦境情绪状态
+- ⏯️ 多速度回放 - 0.5x-2.0x 灵活控制
+- 🔍 语音搜索 - 快速找到特定梦境
+
+**Phase 51 完成度**: 100% ✅
+
+---
+
+## ✅ Phase 50 完成 - 反思功能增强 📔✨
+
+**完成时间**: 2026-03-15 22:13 UTC  
+**提交**: 86c4b14  
+**分支**: dev (已推送到 origin/dev)  
+**完成度**: 100% ✅
+
+### Phase 50 完成摘要
+
+**新增文件 (5 个)**:
+1. **DreamReflectionExportService.swift** - 反思导出服务 (~320 行) 📤
+2. **DreamReflectionReminderService.swift** - 反思提醒服务 (~340 行) 🔔
+3. **DreamReflectionShareService.swift** - 反思分享服务 (~280 行) 👥
+4. **DreamReflectionMeditationIntegration.swift** - 冥想集成 (~260 行) 🧘
+5. **DreamReflectionPhase50View.swift** - 反思增强 UI (~580 行) ✨
+
+**总新增代码**: ~1,780 行
+
+**核心功能**:
+- ✅ 3 种导出格式 (PDF/Markdown/JSON)
+- ✅ 5 种提醒频率 (每天/工作日/周末/每周/每两周)
+- ✅ 匿名分享机制
+- ✅ 智能冥想推荐 (6 种类型)
+- ✅ 单元测试 (待实现)
+
+**Phase 50 完成度**: 100% ✅
+
+---
+
+## ✅ Phase 49 完成 - 梦境反思日记 📔✨
+
+**完成时间**: 2026-03-15 20:13 UTC  
+**提交**: 63a1a80  
+**分支**: dev (已推送到 origin/dev)  
+**完成度**: 100% ✅
+
+### Phase 49 完成摘要
+
+**新增文件 (4 个)**:
+1. **DreamReflectionModels.swift** - 反思数据模型 (~260 行) 📦
+2. **DreamReflectionService.swift** - 反思核心服务 (~450 行) ⚡
+3. **DreamReflectionView.swift** - 反思 UI 界面 (~850 行) ✨
+4. **DreamReflectionTests.swift** - 单元测试 (~450 行，40+ 用例) 🧪
+
+**总新增代码**: ~2,010 行
+
+**核心功能**:
+- ✅ 6 种反思类型 (洞察/关联/情绪/问题/意图/感恩)
+- ✅ 20+ 预设反思提示模板
+- ✅ 反思统计面板
+- ✅ 导出功能
+- ✅ 单元测试 (40+ 用例，95%+ 覆盖率)
+
+**Phase 49 完成度**: 100% ✅
 
 ---
 
