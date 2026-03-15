@@ -96,10 +96,10 @@ struct HomeScreenshotView: View {
     
     private var sampleDreams: [Dream] {
         [
-            Dream(title: "昨晚的奇幻冒险", date: Date(), mood: .excited, clarity: 9, tags: ["冒险", "飞行", "奇幻"]),
-            Dream(title: "深海探险", date: Date().addingTimeInterval(-86400), mood: .calm, clarity: 8, tags: ["海洋", "探索", "宁静"]),
-            Dream(title: "与故人重逢", date: Date().addingTimeInterval(-172800), mood: .happy, clarity: 7, tags: ["回忆", "情感", "温暖"]),
-            Dream(title: "未来城市", date: Date().addingTimeInterval(-259200), mood: .curious, clarity: 8, tags: ["科幻", "未来", "城市"]),
+            Dream(title: "昨晚的奇幻冒险", content: "梦见自己在空中自由飞翔，穿越云层，俯瞰大地", date: Date(), emotions: [.excited], clarity: 9, tags: ["冒险", "飞行", "奇幻"]),
+            Dream(title: "深海探险", content: "在深海中探索，周围是发光的海洋生物，宁静而神秘", date: Date().addingTimeInterval(-86400), emotions: [.calm], clarity: 8, tags: ["海洋", "探索", "宁静"]),
+            Dream(title: "与故人重逢", content: "梦见了很久未见的朋友，我们一起聊天，感觉很温暖", date: Date().addingTimeInterval(-172800), emotions: [.happy], clarity: 7, tags: ["回忆", "情感", "温暖"]),
+            Dream(title: "未来城市", content: "来到了一座未来城市，高科技建筑悬浮在空中，充满科幻感", date: Date().addingTimeInterval(-259200), emotions: [.surprised], clarity: 8, tags: ["科幻", "未来", "城市"]),
         ]
     }
 }
@@ -471,6 +471,36 @@ struct StreakCard: View {
     }
 }
 
+struct StatCard: View {
+    let value: String
+    let title: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 28))
+                .foregroundColor(color)
+            
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+                .foregroundColor(.primary)
+            
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(color.opacity(0.15))
+        )
+    }
+}
+
 struct AnalysisLayerCard: View {
     let title: String
     let content: String
@@ -620,17 +650,19 @@ struct DreamCard: View {
                 
                 Spacer()
                 
-                Image(systemName: moodIcon(dream.mood))
-                    .foregroundColor(moodColor(dream.mood))
+                if let primaryEmotion = dream.emotions.first {
+                    Text(primaryEmotion.icon)
+                        .font(.system(size: 18))
+                }
             }
             
-            Text(dream.contentPreview)
+            Text(String(dream.content.prefix(80)) + "...")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .lineLimit(2)
             
             HStack {
-                ForEach(dream.tags.prefix(3), id: \.self) { tag in
+                ForEach(Array(dream.tags.prefix(3)), id: \.self) { tag in
                     Text("#\(tag)")
                         .font(.caption)
                         .foregroundColor(.accentColor)
@@ -644,26 +676,6 @@ struct DreamCard: View {
         .padding()
         .background(Color(.secondarySystemBackground))
         .cornerRadius(12)
-    }
-    
-    private func moodIcon(_ mood: DreamMood) -> String {
-        switch mood {
-        case .happy: return "face.smiling"
-        case .calm: return "face.relaxed"
-        case .excited: return "star.fill"
-        case .curious: return "eye.fill"
-        default: return "face.smiling"
-        }
-    }
-    
-    private func moodColor(_ mood: DreamMood) -> Color {
-        switch mood {
-        case .happy: return .yellow
-        case .calm: return .blue
-        case .excited: return .orange
-        case .curious: return .purple
-        default: return .gray
-        }
     }
 }
 
