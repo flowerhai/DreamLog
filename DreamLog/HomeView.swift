@@ -633,6 +633,7 @@ struct VoiceJournalCard: View {
                         Image(systemName: "mic.fill")
                             .font(.title2)
                             .foregroundColor(.orange)
+                            .accessibilityHidden(true)
                         
                         Text("语音日记")
                             .font(.headline)
@@ -645,6 +646,7 @@ struct VoiceJournalCard: View {
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
                 
                 Spacer()
                 
@@ -654,6 +656,7 @@ struct VoiceJournalCard: View {
                             .font(.caption)
                         Image(systemName: "chevron.right")
                             .font(.caption)
+                            .accessibilityHidden(true)
                     }
                     .foregroundColor(.orange)
                     .padding(.horizontal, 12)
@@ -661,6 +664,7 @@ struct VoiceJournalCard: View {
                     .background(Color.orange.opacity(0.2))
                     .cornerRadius(8)
                 }
+                .accessibilityLabel(entryCount > 0 ? "查看语音日记" : "开始录制语音日记")
             }
             
             // 快速操作提示
@@ -669,28 +673,34 @@ struct VoiceJournalCard: View {
                     Image(systemName: "waveform")
                         .font(.caption)
                         .foregroundColor(.orange.opacity(0.8))
+                        .accessibilityHidden(true)
                     Text("AI 转写")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("AI 语音转写功能")
                 
                 HStack(spacing: 6) {
                     Image(systemName: "brain.head.profile")
                         .font(.caption)
                         .foregroundColor(.orange.opacity(0.8))
+                        .accessibilityHidden(true)
                     Text("智能摘要")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("AI 智能摘要功能")
                 
                 HStack(spacing: 6) {
                     Image(systemName: "heart.fill")
                         .font(.caption)
                         .foregroundColor(.orange.opacity(0.8))
+                        .accessibilityHidden(true)
                     Text("情绪分析")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("情绪分析功能")
             }
             .padding(.top, 4)
         }
@@ -709,6 +719,9 @@ struct VoiceJournalCard: View {
                         .stroke(Color(hex: "E67E22").opacity(0.3), lineWidth: 1)
                 )
         )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("语音日记卡片")
+        .accessibilityHint(entryCount > 0 ? "双击查看 \(entryCount) 条语音日记" : "双击开始录制语音日记")
         .task {
             await loadStats()
         }
