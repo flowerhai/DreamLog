@@ -1,7 +1,7 @@
 # DreamLog 下一 Session 开发计划
 
 **创建时间**: 2026-03-08 00:20 UTC  
-**上次更新**: 2026-03-15 12:14 UTC (Cron 任务 - dreamlog-dev)
+**上次更新**: 2026-03-15 06:04 UTC (Cron 任务 - dreamlog-dev)
 
 ---
 
@@ -313,17 +313,44 @@
 
 ## 📋 下一步计划
 
-### 当前任务：Phase 38 - App Store 发布准备 (优先级：高)
+### ✅ Phase 38 进度 - App Store 发布准备 (优先级：高)
 
-Phase 47 已完成！现在专注于 App Store 发布准备。
+**最新进度**: 2026-03-15 06:04 UTC  
+**提交**: 4db8500  
+**分支**: dev (已推送到 origin/dev)  
+**完成度**: 60% 📈
 
-**Phase 38 剩余工作**:
-- [ ] App Store 截图（所有尺寸：6.7"/6.5"/5.5"/12.9" iPad）
-- [ ] 预览视频（30 秒，展示核心功能）
-- [ ] 元数据优化（标题/副标题/关键词/描述）
-- [ ] TestFlight 测试（内部测试 + 外部测试）
-- [ ] 隐私政策 final
-- [ ] App Store Connect 提交
+#### 本次 Session 完成
+
+**新增文件 (1 个)**:
+1. **Docs/APP_STORE_CHECKLIST.md** - 完整的 App Store 发布检查清单 (~170 行) 📋
+
+**修改文件 (1 个)**:
+1. **DreamLogScreenshotHelper.swift** - 增强截图辅助功能
+   - 添加 8 个 #Preview 预览视图
+   - 添加详细的截图制作指南
+   - 添加预览视频脚本
+   - 新增代码：~80 行
+
+**核心改进**:
+- ✅ 完整的 App Store 发布检查清单
+- ✅ 截图尺寸要求和制作步骤
+- ✅ 推荐截图内容（5 张）
+- ✅ 预览视频脚本（30 秒）
+- ✅ TestFlight 测试计划
+- ✅ 发布后监控计划
+- ✅ 紧急联系和升级流程
+
+#### Phase 38 剩余工作
+
+- [ ] 实际截图制作（使用 Screenshot Helper）
+  - [ ] 6.7" iPhone (1290x2796)
+  - [ ] 6.5" iPhone (1242x2688)
+  - [ ] 5.5" iPhone (1242x2208)
+- [ ] 预览视频录制和剪辑
+- [ ] TestFlight 内部测试设置
+- [ ] TestFlight 外部测试招募
+- [ ] App Store Connect 元数据提交
 
 **Phase 46 集成** (可选):
 - [ ] 将 DreamShareAnalyticsView 集成到主导航
