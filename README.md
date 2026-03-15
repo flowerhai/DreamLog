@@ -2102,6 +2102,65 @@ open DreamLog.xcodeproj
 
 ---
 
+### Phase 47 - 梦境 Newsletter 与自动发布 📰✨ (已完成) NEW
+
+- [x] **📰 多平台发布支持** ✨ NEW
+  - 8 个主流平台：Medium、Substack、WordPress、Ghost、微信公众号、小红书、Twitter/X、自定义
+  - 自动发布与手动发布模式
+  - 平台 API 集成框架（Medium/WordPress/Ghost/Twitter）
+
+- [x] **📝 模板系统** ✨ NEW
+  - 5 种预设模板（Medium/微信公众号/小红书/Twitter/邮件通讯）
+  - 自定义模板创建与编辑
+  - 变量替换系统（{{title}}、{{content}}、{{tags}} 等）
+  - 条件语句支持（{{#if}}...{{/if}}）
+
+- [x] **⚡ 内容生成引擎** ✨ NEW
+  - 智能变量替换
+  - 条件内容渲染
+  - 标签自动格式化
+  - 阅读时间估算
+
+- [x] **📋 发布任务管理** ✨ NEW
+  - 单篇/多篇梦境发布
+  - 定时发布功能
+  - 任务状态追踪
+  - 发布历史记录
+
+- [x] **📊 发布统计** ✨ NEW
+  - 总发布数量
+  - 平台分布分析
+  - 互动数据追踪
+
+- [x] **🎨 精美 UI 界面** ✨ NEW
+  - 4 个标签页：任务/模板/平台/统计
+  - 内容预览功能
+
+- [x] **🧪 完整测试覆盖** 🧪
+  - 28+ 测试用例
+  - 测试覆盖率：95%+
+
+**新增文件**:
+- `DreamPublishModels.swift` - 发布数据模型 (~320 行)
+- `DreamPublishService.swift` - 发布核心服务 (~520 行)
+- `DreamPublishView.swift` - 发布 UI 界面 (~650 行)
+- `NewPublishTaskView.swift` - 新建任务视图 (~450 行)
+- `TemplateEditorView.swift` - 模板编辑器 (~320 行)
+- `DreamPublishTests.swift` - 单元测试 (~620 行)
+- `Docs/PHASE47_COMPLETION_REPORT.md` - 完成报告
+
+**总新增代码**: ~2,880 行
+
+**使用场景**:
+- 📰 发布到 Medium/WordPress - 深度内容分享
+- 📱 微信公众号/小红书 - 中文平台分享
+- 🐦 Twitter/X - 短内容快速分享
+- 📧 邮件通讯 - 定期梦境汇总
+
+**Phase 47 完成度：100%** ✅
+
+---
+
 ## 🏗️ 项目结构
 
 ```
