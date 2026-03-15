@@ -2,24 +2,29 @@
 //  DreamExportHubModels.swift
 //  DreamLog
 //
-//  Phase 31 - Dream Export Hub & Knowledge Base Integration
-//  统一导出中心数据模型
+//  Phase 52 - 梦境导出中心
+//  创建时间：2026-03-16
 //
 
 import Foundation
+import SwiftData
 
-// MARK: - 导出平台枚举
+// MARK: - 导出目标平台
 
-enum ExportPlatform: String, CaseIterable, Identifiable, Codable {
+/// 支持导出的目标平台
+enum ExportPlatform: String, Codable, CaseIterable, Identifiable {
     case notion = "notion"
     case obsidian = "obsidian"
-    case logseq = "logseq"
-    case dayone = "dayone"
-    case csv = "csv"
-    case json = "json"
+    case dayOne = "dayOne"
+    case evernote = "evernote"
+    case bear = "bear"
+    case appleNotes = "appleNotes"
     case markdown = "markdown"
     case pdf = "pdf"
-    case html = "html"
+    case json = "json"
+    case email = "email"
+    case wechat = "wechat"
+    case custom = "custom"
     
     var id: String { rawValue }
     
@@ -27,13 +32,16 @@ enum ExportPlatform: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .notion: return "Notion"
         case .obsidian: return "Obsidian"
-        case .logseq: return "Logseq"
-        case .dayone: return "Day One"
-        case .csv: return "CSV"
-        case .json: return "JSON"
+        case .dayOne: return "Day One"
+        case .evernote: return "印象笔记"
+        case .bear: return "Bear"
+        case .appleNotes: return "苹果备忘录"
         case .markdown: return "Markdown"
         case .pdf: return "PDF"
-        case .html: return "HTML"
+        case .json: return "JSON"
+        case .email: return "电子邮件"
+        case .wechat: return "微信"
+        case .custom: return "自定义"
         }
     }
     
@@ -41,301 +49,430 @@ enum ExportPlatform: String, CaseIterable, Identifiable, Codable {
         switch self {
         case .notion: return "📓"
         case .obsidian: return "🪨"
-        case .logseq: return "📝"
-        case .dayone: return "📖"
-        case .csv: return "📊"
-        case .json: return "📄"
-        case .markdown: return "📝"
+        case .dayOne: return "📔"
+        case .evernote: return "🐘"
+        case .bear: return "🐻"
+        case .appleNotes: return "📝"
+        case .markdown: return "📄"
         case .pdf: return "📕"
-        case .html: return "🌐"
+        case .json: return "📋"
+        case .email: return "📧"
+        case .wechat: return "💬"
+        case .custom: return "⚙️"
         }
     }
     
     var description: String {
         switch self {
-        case .notion: return "同步到 Notion 数据库"
-        case .obsidian: return "导出到 Obsidian 知识库"
-        case .logseq: return "导出到 Logseq 日记"
-        case .dayone: return "导出到 Day One 日记"
-        case .csv: return "导出为 CSV 表格"
-        case .json: return "导出为 JSON 数据"
+        case .notion: return "导出到 Notion 数据库，支持双向同步"
+        case .obsidian: return "导出为 Markdown 文件，支持双向链接"
+        case .dayOne: return "导出到 Day One 日记应用"
+        case .evernote: return "导出到印象笔记，支持标签同步"
+        case .bear: return "导出到 Bear 笔记，支持标签"
+        case .appleNotes: return "导出到苹果备忘录"
         case .markdown: return "导出为 Markdown 文件"
-        case .pdf: return "导出为 PDF 文档"
-        case .html: return "导出为 HTML 网页"
+        case .pdf: return "导出为精美 PDF 文档"
+        case .json: return "导出为 JSON 数据格式"
+        case .email: return "通过邮件发送梦境"
+        case .wechat: return "分享到微信"
+        case .custom: return "自定义导出格式和路径"
         }
     }
     
-    var requiresConfig: Bool {
-        [.notion, .obsidian, .logseq, .dayone].contains(self)
+    var supportsBatch: Bool {
+        switch self {
+        case .notion, .obsidian, .markdown, .pdf, .json, .email:
+            return true
+        default:
+            return false
+        }
     }
-}
-
-// MARK: - 导出配置协议
-
-protocol ExportPlatformConfig: Codable {
-    var platform: ExportPlatform { get }
-    var isEnabled: Bool { get set }
-}
-
-// MARK: - Notion 配置
-
-struct NotionConfig: ExportPlatformConfig {
-    var platform: ExportPlatform = .notion
-    var isEnabled: Bool = false
-    var apiKey: String = ""
-    var databaseId: String = ""
-    var syncAutomatically: Bool = false
-    var syncFrequency: SyncFrequency = .daily
     
-    enum SyncFrequency: String, Codable, CaseIterable {
-        case manual = "manual"
-        case daily = "daily"
-        case weekly = "weekly"
-        
-        var displayName: String {
-            switch self {
-            case .manual: return "手动"
-            case .daily: return "每天"
-            case .weekly: return "每周"
-            }
+    var supportsScheduled: Bool {
+        switch self {
+        case .notion, .obsidian, .email, .custom:
+            return true
+        default:
+            return false
         }
     }
 }
 
-// MARK: - Obsidian 配置
+// MARK: - 导出格式
 
-struct ObsidianConfig: ExportPlatformConfig {
-    var platform: ExportPlatform = .obsidian
-    var isEnabled: Bool = false
-    var vaultPath: String = ""
-    var folderName: String = "Dreams"
-    var templateFile: String? = nil
-    var useBacklinks: Bool = true
-    var useTags: Bool = true
-    var includeAIAnalysis: Bool = true
-}
-
-// MARK: - Logseq 配置
-
-struct LogseqConfig: ExportPlatformConfig {
-    var platform: ExportPlatform = .logseq
-    var isEnabled: Bool = false
-    var graphPath: String = ""
-    var journalFolder: String = "journals"
-    var pagesFolder: String = "pages"
-    var useJournalFormat: Bool = true
-    var includeTags: Bool = true
-    var includeProperties: Bool = true
+/// 导出文件格式
+enum ExportFormat: String, Codable, CaseIterable {
+    case markdown = "markdown"
+    case html = "html"
+    case pdf = "pdf"
+    case json = "json"
+    case plainText = "plainText"
+    case richText = "richText"
     
-    var defaultTags: [String] = ["dream", "dreamlog"]
-}
-
-// MARK: - Day One 配置
-
-struct DayOneConfig: ExportPlatformConfig {
-    var platform: ExportPlatform = .dayone
-    var isEnabled: Bool = false
-    var exportPath: String = ""
-    var includePhotos: Bool = true
-    var includeAudio: Bool = true
-    var useDayOneFormat: Bool = true
+    var displayName: String {
+        switch self {
+        case .markdown: return "Markdown"
+        case .html: return "HTML"
+        case .pdf: return "PDF"
+        case .json: return "JSON"
+        case .plainText: return "纯文本"
+        case .richText: return "富文本"
+        }
+    }
     
-    var defaultTags: [String] = ["dream", "dreamlog"]
+    var fileExtension: String {
+        switch self {
+        case .markdown: return "md"
+        case .html: return "html"
+        case .pdf: return "pdf"
+        case .json: return "json"
+        case .plainText: return "txt"
+        case .richText: return "rtf"
+        }
+    }
 }
 
-// MARK: - 通用导出配置
+// MARK: - 导出配置
 
+/// 导出配置选项
 struct ExportOptions: Codable {
-    var includeContent: Bool = true
-    var includeAIAnalysis: Bool = true
-    var includeTags: Bool = true
+    var includeTitle: Bool = true
+    var includeDate: Bool = true
+    var includeTime: Bool = false
     var includeEmotions: Bool = true
+    var includeTags: Bool = true
+    var includeAIAnalysis: Bool = true
+    var includeImages: Bool = true
     var includeAudio: Bool = false
-    var includeImages: Bool = false
-    var dateRange: DateRange = .all
-    var selectedDreamIds: [UUID] = []
+    var includeLucidInfo: Bool = true
+    var includeRating: Bool = true
+    var dateFormat: String = "yyyy-MM-dd HH:mm"
+    var template: String? = nil
+    var customFields: [String: String] = [:]
     
-    enum DateRange: Codable, CaseIterable {
-        case all
-        case last7Days
-        case last30Days
-        case last90Days
-        case custom
-        
-        var displayName: String {
-            switch self {
-            case .all: return "全部梦境"
-            case .last7Days: return "最近 7 天"
-            case .last30Days: return "最近 30 天"
-            case .last90Days: return "最近 90 天"
-            case .custom: return "自定义范围"
-            }
-        }
+    static var `default`: ExportOptions {
+        ExportOptions()
+    }
+    
+    static var minimal: ExportOptions {
+        ExportOptions(
+            includeTitle: true,
+            includeDate: true,
+            includeTime: false,
+            includeEmotions: false,
+            includeTags: false,
+            includeAIAnalysis: false,
+            includeImages: false,
+            includeAudio: false,
+            includeLucidInfo: false,
+            includeRating: false
+        )
+    }
+    
+    static var detailed: ExportOptions {
+        ExportOptions(
+            includeTitle: true,
+            includeDate: true,
+            includeTime: true,
+            includeEmotions: true,
+            includeTags: true,
+            includeAIAnalysis: true,
+            includeImages: true,
+            includeAudio: true,
+            includeLucidInfo: true,
+            includeRating: true
+        )
     }
 }
 
-// MARK: - 导出结果
+// MARK: - 导出任务模型
 
-struct ExportResult {
-    var success: Bool
-    var platform: ExportPlatform
-    var exportedCount: Int = 0
-    var failedCount: Int = 0
-    var outputPath: String? = nil
-    var errorMessage: String? = nil
-    var warnings: [String] = []
-    var duration: TimeInterval = 0
-    
-    var summary: String {
-        if success {
-            return "✅ 成功导出 \(exportedCount) 条梦境到 \(platform.displayName)"
-        } else {
-            return "❌ 导出失败：\(errorMessage ?? "未知错误")"
-        }
-    }
-}
-
-// MARK: - 导出历史
-
-struct ExportHistory: Identifiable, Codable {
-    var id: UUID = UUID()
-    var timestamp: Date = Date()
-    var platform: ExportPlatform
-    var exportedCount: Int
-    var options: ExportOptions
-    var outputPath: String?
-    var success: Bool
-    var duration: TimeInterval
-    
-    var formattedDate: String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        formatter.locale = Locale(identifier: "zh_CN")
-        return formatter.string(from: timestamp)
-    }
-    
-    var fileSize: String? {
-        guard let path = outputPath else { return nil }
-        let url = URL(fileURLWithPath: path)
-        guard let size = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int64 else {
-            return nil
-        }
-        return ByteCountFormatter.string(fromByteCount: size, countStyle: .file)
-    }
-}
-
-// MARK: - 导出模板
-
-struct ExportTemplate: Identifiable, Codable {
-    var id: UUID = UUID()
+/// 导出任务
+@Model
+final class ExportTask {
+    @Attribute(.unique) var id: UUID
     var name: String
-    var platform: ExportPlatform
-    var templateContent: String
-    var isDefault: Bool = false
-    var createdAt: Date = Date()
-    var updatedAt: Date = Date()
+    var platform: String
+    var format: String
+    var dreamIds: [UUID]
+    var exportAll: Bool
+    var dateRange: DateRange?
+    var options: Data  // ExportOptions encoded
+    var status: String
+    var scheduledTime: Date?
+    var repeatInterval: String?  // "daily", "weekly", "monthly"
+    var lastExportTime: Date?
+    var nextExportTime: Date?
+    var exportCount: Int
+    var destinationPath: String?
+    var apiKey: String?  // For platforms like Notion
+    var webhookUrl: String?
+    var isEnabled: Bool
+    var createdAt: Date
+    var updatedAt: Date
     
-    static var defaultTemplates: [ExportTemplate] {
-        [
-            ExportTemplate(
-                name: "简约风格",
-                platform: .markdown,
-                templateContent: """
-                # {{title}}
-                
-                **日期**: {{date}}
-                **标签**: {{tags}}
-                
-                {{content}}
-                
-                ---
-                _由 DreamLog 导出_
-                """,
-                isDefault: true
-            ),
-            ExportTemplate(
-                name: "详细分析",
-                platform: .markdown,
-                templateContent: """
-                ---
-                title: {{title}}
-                date: {{date}}
-                tags: {{tags}}
-                emotions: {{emotions}}
-                clarity: {{clarity}}
-                intensity: {{intensity}}
-                lucid: {{lucid}}
-                ---
-                
-                # {{title}}
-                
-                ## 🌙 梦境内容
-                
-                {{content}}
-                
-                ## 📊 统计
-                
-                - **清晰度**: {{clarity}}/5
-                - **强度**: {{intensity}}/5
-                - **清醒梦**: {{lucid}}
-                
-                ## 🧠 AI 解析
-                
-                {{aiAnalysis}}
-                
-                ---
-                _由 DreamLog 导出 | #梦境 #日记_
-                """,
-                isDefault: true
-            ),
-            ExportTemplate(
-                name: "Obsidian 标准",
-                platform: .obsidian,
-                templateContent: """
-                ---
-                tags: [{{tags}}]
-                emotions: [{{emotions}}]
-                clarity: {{clarity}}
-                intensity: {{intensity}}
-                lucid: {{lucid}}
-                date: {{date}}
-                exported: {{exportDate}}
-                ---
-                
-                # {{title}}
-                
-                ## 梦境内容
-                
-                {{content}}
-                
-                ## AI 解析
-                
-                {{aiAnalysis}}
-                
-                ## 相关链接
-                
-                {{backlinks}}
-                
-                ---
-                _由 DreamLog 导出_
-                """,
-                isDefault: true
-            )
-        ]
+    init(
+        id: UUID = UUID(),
+        name: String,
+        platform: ExportPlatform,
+        format: ExportFormat = .markdown,
+        dreamIds: [UUID] = [],
+        exportAll: Bool = false,
+        dateRange: DateRange? = nil,
+        options: ExportOptions = .default,
+        status: ExportStatus = .pending,
+        scheduledTime: Date? = nil,
+        repeatInterval: String? = nil,
+        lastExportTime: Date? = nil,
+        nextExportTime: Date? = nil,
+        exportCount: Int = 0,
+        destinationPath: String? = nil,
+        apiKey: String? = nil,
+        webhookUrl: String? = nil,
+        isEnabled: Bool = true,
+        createdAt: Date = Date(),
+        updatedAt: Date = Date()
+    ) {
+        self.id = id
+        self.name = name
+        self.platform = platform.rawValue
+        self.format = format.rawValue
+        self.dreamIds = dreamIds
+        self.exportAll = exportAll
+        self.dateRange = dateRange
+        self.options = try? JSONEncoder().encode(options)
+        self.status = status.rawValue
+        self.scheduledTime = scheduledTime
+        self.repeatInterval = repeatInterval
+        self.lastExportTime = lastExportTime
+        self.nextExportTime = nextExportTime
+        self.exportCount = exportCount
+        self.destinationPath = destinationPath
+        self.apiKey = apiKey
+        self.webhookUrl = webhookUrl
+        self.isEnabled = isEnabled
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
+    
+    var platformEnum: ExportPlatform {
+        ExportPlatform(rawValue: platform) ?? .markdown
+    }
+    
+    var formatEnum: ExportFormat {
+        ExportFormat(rawValue: format) ?? .markdown
+    }
+    
+    var statusEnum: ExportStatus {
+        ExportStatus(rawValue: status) ?? .pending
+    }
+    
+    var exportOptions: ExportOptions {
+        guard let data = options,
+              let decoded = try? JSONDecoder().decode(ExportOptions.self, from: data) else {
+            return .default
+        }
+        return decoded
+    }
+}
+
+// MARK: - 导出历史记录
+
+/// 导出历史记录
+@Model
+final class ExportHistory {
+    @Attribute(.unique) var id: UUID
+    var taskId: UUID?
+    var platform: String
+    var format: String
+    var dreamCount: Int
+    var fileSize: Int64
+    var filePath: String?
+    var status: String
+    var errorMessage: String?
+    var duration: TimeInterval
+    var createdAt: Date
+    
+    init(
+        id: UUID = UUID(),
+        taskId: UUID? = nil,
+        platform: ExportPlatform,
+        format: ExportFormat,
+        dreamCount: Int,
+        fileSize: Int64 = 0,
+        filePath: String? = nil,
+        status: ExportStatus = .pending,
+        errorMessage: String? = nil,
+        duration: TimeInterval = 0,
+        createdAt: Date = Date()
+    ) {
+        self.id = id
+        self.taskId = taskId
+        self.platform = platform.rawValue
+        self.format = format.rawValue
+        self.dreamCount = dreamCount
+        self.fileSize = fileSize
+        self.filePath = filePath
+        self.status = status.rawValue
+        self.errorMessage = errorMessage
+        self.duration = duration
+        self.createdAt = createdAt
+    }
+    
+    var platformEnum: ExportPlatform {
+        ExportPlatform(rawValue: platform) ?? .markdown
+    }
+    
+    var formatEnum: ExportFormat {
+        ExportFormat(rawValue: format) ?? .markdown
+    }
+    
+    var statusEnum: ExportStatus {
+        ExportStatus(rawValue: status) ?? .pending
+    }
+}
+
+// MARK: - 导出状态
+
+/// 导出任务状态
+enum ExportStatus: String, Codable, CaseIterable {
+    case pending = "pending"
+    case processing = "processing"
+    case completed = "completed"
+    case failed = "failed"
+    case cancelled = "cancelled"
+    case scheduled = "scheduled"
+    
+    var displayName: String {
+        switch self {
+        case .pending: return "等待中"
+        case .processing: return "处理中"
+        case .completed: return "已完成"
+        case .failed: return "失败"
+        case .cancelled: return "已取消"
+        case .scheduled: return "已计划"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .pending: return "⏳"
+        case .processing: return "⚙️"
+        case .completed: return "✅"
+        case .failed: return "❌"
+        case .cancelled: return "🚫"
+        case .scheduled: return "📅"
+        }
+    }
+}
+
+// MARK: - 日期范围
+
+/// 日期范围
+struct DateRange: Codable {
+    var startDate: Date
+    var endDate: Date
+    
+    init(startDate: Date, endDate: Date) {
+        self.startDate = startDate
+        self.endDate = endDate
+    }
+    
+    static var thisWeek: DateRange {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
+        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek)!
+        return DateRange(startDate: startOfWeek, endDate: endOfWeek)
+    }
+    
+    static var thisMonth: DateRange {
+        let calendar = Calendar.current
+        let now = Date()
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
+        let endOfMonth = calendar.date(byAdding: .day, value: -1, to: calendar.date(byAdding: .month, value: 1, to: startOfMonth)!)!
+        return DateRange(startDate: startOfMonth, endDate: endOfMonth)
+    }
+    
+    static var last30Days: DateRange {
+        let now = Date()
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: now)!
+        return DateRange(startDate: thirtyDaysAgo, endDate: now)
     }
 }
 
 // MARK: - 导出统计
 
-struct ExportStatistics {
-    var totalExports: Int = 0
-    var exportsByPlatform: [ExportPlatform: Int] = [:]
-    var totalDreamsExported: Int = 0
+/// 导出统计数据
+struct ExportStats {
+    var totalExports: Int
+    var totalDreamsExported: Int
+    var totalDataSize: Int64
+    var exportsByPlatform: [String: Int]
+    var exportsByFormat: [String: Int]
     var lastExportDate: Date?
-    var averageExportSize: Int64 = 0
+    var averageExportSize: Double {
+        guard totalExports > 0 else { return 0 }
+        return Double(totalDataSize) / Double(totalExports)
+    }
+}
+
+// MARK: - 预设模板
+
+extension ExportOptions {
+    /// Notion 导出模板
+    static var notionTemplate: ExportOptions {
+        ExportOptions(
+            includeTitle: true,
+            includeDate: true,
+            includeTime: true,
+            includeEmotions: true,
+            includeTags: true,
+            includeAIAnalysis: true,
+            includeImages: true,
+            includeAudio: false,
+            includeLucidInfo: true,
+            includeRating: true,
+            dateFormat: "yyyy-MM-dd HH:mm"
+        )
+    }
     
-    var mostUsedPlatform: ExportPlatform? {
-        exportsByPlatform.max(by: { $0.value < $1.value })?.key
+    /// Obsidian 导出模板
+    static var obsidianTemplate: ExportOptions {
+        ExportOptions(
+            includeTitle: true,
+            includeDate: true,
+            includeTime: false,
+            includeEmotions: true,
+            includeTags: true,
+            includeAIAnalysis: true,
+            includeImages: false,
+            includeAudio: false,
+            includeLucidInfo: true,
+            includeRating: false,
+            dateFormat: "yyyy-MM-dd"
+        )
+    }
+    
+    /// PDF 导出模板
+    static var pdfTemplate: ExportOptions {
+        ExportOptions.detailed
+    }
+    
+    /// 分享模板（微信/邮件）
+    static var shareTemplate: ExportOptions {
+        ExportOptions(
+            includeTitle: true,
+            includeDate: true,
+            includeTime: false,
+            includeEmotions: true,
+            includeTags: true,
+            includeAIAnalysis: false,
+            includeImages: true,
+            includeAudio: false,
+            includeLucidInfo: false,
+            includeRating: false,
+            dateFormat: "MM/dd"
+        )
     }
 }
