@@ -65,6 +65,9 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
     /// 最后修改时间
     var modifiedAt: Date
     
+    /// 用户信息字典（用于存储额外数据，如 LOD 级别）
+    var userInfo: [String: String] = [:]
+    
     init(
         id: UUID = UUID(),
         name: String,
@@ -101,6 +104,7 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
         self.downloadStatus = downloadStatus
         self.createdAt = createdAt
         self.modifiedAt = modifiedAt
+        self.userInfo = [:]
     }
     
     /// 从 Phase 21 的 ARDreamElement 转换
@@ -120,6 +124,7 @@ struct DreamARElement3D: Codable, Identifiable, Hashable {
         self.downloadStatus = .notDownloaded
         self.createdAt = Date()
         self.modifiedAt = Date()
+        self.userInfo = [:]
     }
     
     /// 转换为 Phase 21 的 ARDreamElement

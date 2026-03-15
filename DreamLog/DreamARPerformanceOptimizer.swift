@@ -367,11 +367,14 @@ class ARDebugOverlay {
 extension DreamARElement3D {
     var currentLOD: LODLevel {
         get {
-            // 从 userInfo 中读取 LOD 级别
-            return userInfo["lodLevel"] as? LODLevel ?? .high
+            // 从 userInfo 中读取 LOD 级别（存储为 rawValue 字符串）
+            if let lodRaw = userInfo["lodLevel"], let lod = LODLevel(rawValue: Int(lodRaw) ?? 3) {
+                return lod
+            }
+            return .high
         }
         set {
-            userInfo["lodLevel"] = newValue
+            userInfo["lodLevel"] = String(newValue.rawValue)
         }
     }
 }

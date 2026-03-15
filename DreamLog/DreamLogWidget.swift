@@ -41,7 +41,7 @@ struct DreamTimelineProvider: TimelineProvider {
         // 从 UserDefaults 加载梦境数据
         let dreamCount = UserDefaults.standard.integer(forKey: "dreamCount")
         let lastDreamTitle = UserDefaults.standard.string(forKey: "lastDreamTitle") ?? "记录你的梦"
-        let lastMoodRaw = UserDefaults.standard.integer(forKey: "lastMood")
+        let lastMoodRaw = UserDefaults.standard.string(forKey: "lastMood") ?? "中性"
         let lastMood = Emotion(rawValue: lastMoodRaw) ?? .neutral
         
         // 加载小组件配置
