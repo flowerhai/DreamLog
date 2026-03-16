@@ -38,6 +38,8 @@ struct DreamExportHubView: View {
                     Button(action: { showingNewTaskSheet = true }) {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel("创建新导出任务")
+                    .accessibilityHint("双击打开新建导出任务表单")
                 }
                 
                 ToolbarItem(placement: .secondaryAction) {
@@ -47,6 +49,8 @@ struct DreamExportHubView: View {
                             .animation(isLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isLoading)
                     }
                     .disabled(isLoading)
+                    .accessibilityLabel("刷新导出任务列表")
+                    .accessibilityHint("双击重新加载导出任务")
                 }
             }
             .sheet(isPresented: $showingNewTaskSheet) {
@@ -126,18 +130,21 @@ struct DreamExportHubView: View {
                         value: "\(stats.totalExports)",
                         label: "总导出"
                     )
+                    .accessibilityLabel("总导出次数：\(stats.totalExports)")
                     
                     StatItemView(
                         icon: "doc.text",
                         value: "\(stats.totalDreamsExported)",
                         label: "导出梦境"
                     )
+                    .accessibilityLabel("已导出梦境数量：\(stats.totalDreamsExported)")
                     
                     StatItemView(
                         icon: "disk",
                         value: formatFileSize(stats.totalDataSize),
                         label: "总大小"
                     )
+                    .accessibilityLabel("导出数据总大小：\(formatFileSize(stats.totalDataSize))")
                 }
                 
                 if let lastDate = stats.lastExportDate {
@@ -148,6 +155,7 @@ struct DreamExportHubView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    .accessibilityLabel("上次导出时间：\(formatRelativeDate(lastDate))")
                 }
             }
             .padding(.vertical, 8)
@@ -169,6 +177,7 @@ struct DreamExportHubView: View {
                     await quickExport(platform: .markdown, format: .markdown)
                 }
             }
+            .accessibilityLabel("导出为 Markdown 格式，适合 Obsidian 和 Logseq 笔记应用")
             
             QuickExportButton(
                 icon: "doc.richtext",
@@ -179,6 +188,7 @@ struct DreamExportHubView: View {
                     await quickExport(platform: .pdf, format: .pdf)
                 }
             }
+            .accessibilityLabel("导出为 PDF 格式，精美排版适合分享和打印")
             
             QuickExportButton(
                 icon: "data",
@@ -189,6 +199,7 @@ struct DreamExportHubView: View {
                     await quickExport(platform: .json, format: .json)
                 }
             }
+            .accessibilityLabel("导出为 JSON 格式，包含原始数据结构")
             
             QuickExportButton(
                 icon: "envelope",
@@ -199,6 +210,7 @@ struct DreamExportHubView: View {
                     await quickExport(platform: .email, format: .plainText)
                 }
             }
+            .accessibilityLabel("通过电子邮件分享梦境")
         } header: {
             Text("快速导出")
         }
@@ -266,6 +278,7 @@ struct DreamExportHubView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 32)
         }
+        .accessibilityLabel("暂无导出任务，点击右上角添加按钮创建新的导出任务")
     }
     
     // MARK: - 操作
