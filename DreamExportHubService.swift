@@ -495,7 +495,7 @@ actor DreamExportHubService {
         // 生成 PDF 数据
         let pdfData = renderer.generatePDF(
             dreams: exportData,
-            title: options.template != nil ? "梦境导出 - \(options.template!)" : "梦境记录"
+            title: options.template.map { "梦境导出 - \($0)" } ?? "梦境记录"
         )
         
         // 保存文件
