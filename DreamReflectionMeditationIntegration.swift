@@ -67,12 +67,13 @@ class ReflectionMeditationIntegration {
          meditationService: MeditationService = .shared) {
         if let context = modelContext {
             self.modelContext = context
-        } else if let container = SharedModelContainer.main {
-            self.modelContext = try! ModelContext(container)
+        } else if let container = SharedModelContainer.main,
+                  let context = try? ModelContext(container) {
+            self.modelContext = context
         } else {
             // Fallback to in-memory context for previews/tests
-            let container = try! ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-            self.modelContext = ModelContext(container)
+            let container = try? ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            self.modelContext = ModelContext(container ?? try! ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true)))
         }
         self.meditationService = meditationService
     }

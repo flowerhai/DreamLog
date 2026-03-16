@@ -21,12 +21,12 @@ struct DreamVoiceJournalView: View {
     init(modelContext: ModelContext? = nil) {
         let context = modelContext ?? {
             if let container = SharedModelContainer.main {
-                return try! ModelContext(container)
+                return try? ModelContext(container)
             } else {
-                let container = try! ModelContainer(for: VoiceJournalEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-                return ModelContext(container)
+                let container = try? ModelContainer(for: VoiceJournalEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                return container.map { ModelContext($0) }
             }
-        }()
+        }() ?? ModelContext(try! ModelContainer(for: VoiceJournalEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true)))
         _viewModel = StateObject(wrappedValue: VoiceJournalViewModel(modelContext: context))
     }
     
