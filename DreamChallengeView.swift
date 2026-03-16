@@ -92,9 +92,13 @@ struct DreamChallengeView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { viewModel.showStatsDetail = true }) {
                         Image(systemName: "chart.bar.fill")
+                            .accessibilityLabel("查看挑战统计")
+                            .accessibilityHint("显示详细的挑战完成统计和进度")
                     }
                 }
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("梦境挑战")
             .sheet(item: $viewModel.showBadgeDetail) { badge in
                 BadgeDetailView(badge: badge)
             }
@@ -203,6 +207,7 @@ struct ActiveChallengeCard: View {
             HStack {
                 Text(template?.icon ?? "🎯")
                     .font(.system(size: 32))
+                    .accessibilityHidden(true)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(template?.title ?? "挑战")
@@ -212,6 +217,7 @@ struct ActiveChallengeCard: View {
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                 }
+                .accessibilityElement(children: .combine)
                 
                 Spacer()
                 
@@ -306,6 +312,7 @@ struct RecommendedChallengeCard: View {
                 .frame(width: 60, height: 60)
                 .background(Color(hex: template.backgroundColor).opacity(0.1))
                 .cornerRadius(12)
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading, spacing: 4) {
                 Text(template.title)
@@ -331,11 +338,13 @@ struct RecommendedChallengeCard: View {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 24))
                     .foregroundColor(.green)
+                    .accessibilityLabel("已开始")
             } else {
                 Button(action: onStart) {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 28))
                         .foregroundColor(Color(hex: template.backgroundColor))
+                        .accessibilityLabel("开始挑战：\(template.title)")
                 }
             }
         }
@@ -343,6 +352,8 @@ struct RecommendedChallengeCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(12)
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(template.title) - \(template.description) - 奖励\(template.rewardPoints)积分")
     }
 }
 
