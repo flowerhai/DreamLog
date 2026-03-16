@@ -38,6 +38,8 @@ struct DreamExportTemplateEditorView: View {
                     Button(action: { showingCreateSheet = true }) {
                         Label("新建", systemImage: "plus")
                     }
+                    .accessibilityLabel("创建新模板")
+                    .accessibilityHint("双击打开新建模板表单")
                 }
                 
                 ToolbarItem(placement: .secondaryAction) {
@@ -47,6 +49,8 @@ struct DreamExportTemplateEditorView: View {
                             .animation(isLoading ? .linear(duration: 1).repeatForever(autoreverses: false) : .default, value: isLoading)
                     }
                     .disabled(isLoading)
+                    .accessibilityLabel("刷新模板列表")
+                    .accessibilityHint("双击重新加载模板")
                 }
             }
             .sheet(isPresented: $showingCreateSheet) {
