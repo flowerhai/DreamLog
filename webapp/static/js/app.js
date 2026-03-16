@@ -50,7 +50,20 @@ function setupEventListeners() {
         if (e.key === 'Escape' && recordModal.classList.contains('active')) {
             closeRecordModal();
         }
+        if (e.key === 'Escape' && document.getElementById('dreamDetailModal')?.classList.contains('active')) {
+            closeDreamDetailModal();
+        }
     });
+    
+    // 梦境详情模态框点击外部关闭
+    const dreamDetailModal = document.getElementById('dreamDetailModal');
+    if (dreamDetailModal) {
+        dreamDetailModal.addEventListener('click', (e) => {
+            if (e.target === dreamDetailModal) {
+                closeDreamDetailModal();
+            }
+        });
+    }
 }
 
 // 加载梦境列表
@@ -324,13 +337,132 @@ function calculateStreak(dreams) {
     return streak;
 }
 
+// 当前查看的梦境 ID
+let currentDetailDreamId = null;
+
 // 查看梦境详情
 function viewDream(id) {
     const dream = dreams.find(d => d.id === id);
     if (!dream) return;
     
-    showToast(`查看梦境：${dream.title}`, 'info');
-    // TODO: 打开梦境详情模态框
+    currentDetailDreamId = id;
+    
+    // 填充详情模态框内容
+    const detailTitle = document.getElementById('detailTitle');
+    const detailDate = document.getElementById('detailDate');
+    const detailEmotion = document.getElementById('detailEmotion');
+    const detailLucid = document.getElementById('detailLucid');
+    const detailContent = document.getElementById('detailContent');
+    const tagList = document.getElementById('tagList');
+    
+    if (detailTitle) detailTitle.textContent = dream.title || '无标题梦境';
+    if (detailDate) {
+        const date = new Date(dream.date);
+        detailDate.textContent = date.toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    if (detailEmotion) {
+        const emotionMap = {
+            'happy': '😊 快乐',
+            'sad': '😢 悲伤',
+            'anxious': '😰 焦虑',
+            'excited': '🤩 兴奋',
+            'confused': '😕 困惑',
+            'peaceful': '😌 平静',
+            'scared': '😱 恐惧',
+            'surprised': '😲 惊讶'
+        };
+        detailEmotion.textContent = dream.emotions?.map(e => emotionMap[e] || e).join(', ') || '😐 中性';
+    }
+    if (detailLucid) {
+        detailLucid.textContent = dream.isLucid ? '🌟 清醒梦' : '';
+        detailLucid.style.display = dream.isLucid ? 'inline' : 'none';
+    }
+    if (detailContent) detailContent.textContent = dream.content || '无内容';
+    
+    // 渲染标签
+    if (tagList) {
+        tagList.innerHTML = '';
+        const tags = dream.tags || [];
+        if (tags.length === 0) {
+            tagList.parentElement.style.display = 'none';
+        } else {
+            tagList.parentElement.style.display = 'block';
+            tags.forEach(tag => {
+                const tagEl = document.createElement('span');
+                tagEl.className = 'tag';
+                tagEl.textContent = tag;
+                tagList.appendChild(tagEl);
+            });
+        }
+    }
+    
+    // 显示 AI 解析（如果有）
+    const analysisSection = document.getElementById('detailAnalysis');
+    if (analysisSection) {
+        if (dream.aiAnalysis) {
+            analysisSection.style.display = 'block';
+            document.getElementById('analysisContent').innerHTML = dream.aiAnalysis;
+        } else {
+            analysisSection.style.display = 'none';
+        }
+    }
+    
+    // 打开模态框
+    const modal = document.getElementById('dreamDetailModal');
+    if (modal) {
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+// 关闭梦境详情模态框
+function closeDreamDetailModal() {
+    const modal = document.getElementById('dreamDetailModal');
+    if (modal) {
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+    currentDetailDreamId = null;
+}
+
+// 从详情模态框切换收藏
+function toggleFavoriteFromDetail() {
+    if (currentDetailDreamId) {
+        toggleFavorite(currentDetailDreamId);
+        viewDream(currentDetailDreamId); // 刷新显示
+    }
+}
+
+// 从详情模态框分享
+function shareDreamFromDetail() {
+    if (currentDetailDreamId) {
+        shareDream(currentDetailDreamId);
+    }
+}
+
+// 从详情模态框编辑
+function editDreamFromDetail() {
+    if (currentDetailDreamId) {
+        const dream = dreams.find(d => d.id === currentDetailDreamId);
+        if (dream) {
+            closeDreamDetailModal();
+            openRecordModal();
+            // 填充表单
+            document.getElementById('dreamTitle').value = dream.title || '';
+            document.getElementById('dreamContent').value = dream.content || '';
+            document.getElementById('isLucid').checked = dream.isLucid || false;
+            // 设置情绪标签
+            document.querySelectorAll('input[name="emotions"]').forEach(cb => {
+                cb.checked = dream.emotions?.includes(cb.value) || false;
+            });
+        }
+    }
 }
 
 // 分享梦境

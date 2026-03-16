@@ -679,6 +679,97 @@ section {
     padding: 24px;
 }
 
+/* 梦境详情模态框 */
+.modal-large {
+    max-width: 800px;
+}
+
+.dream-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.detail-meta {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.detail-date {
+    color: var(--text-muted);
+    font-size: 14px;
+}
+
+.detail-emotion {
+    background: var(--background-hover);
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.detail-lucid {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.detail-content h3,
+.detail-analysis h3,
+.detail-tags h3 {
+    font-size: 18px;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.detail-text {
+    background: var(--background-hover);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    line-height: 1.8;
+    color: var(--text-primary);
+    white-space: pre-wrap;
+}
+
+#analysisContent {
+    background: var(--background-hover);
+    padding: 16px;
+    border-radius: var(--radius-md);
+    line-height: 1.8;
+}
+
+.tag-list {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: var(--primary-color);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+}
+
+.detail-actions {
+    display: flex;
+    gap: 12px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.detail-actions .btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
 /* 表单 */
 .form-group {
     margin-bottom: 24px;

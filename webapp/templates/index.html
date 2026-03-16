@@ -257,6 +257,48 @@
         </div>
     </div>
 
+    <!-- 梦境详情模态框 -->
+    <div class="modal" id="dreamDetailModal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="detailTitle">梦境详情</h2>
+                <button class="modal-close" onclick="closeDreamDetailModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="dream-detail">
+                    <div class="detail-meta">
+                        <span class="detail-date" id="detailDate"></span>
+                        <span class="detail-emotion" id="detailEmotion"></span>
+                        <span class="detail-lucid" id="detailLucid"></span>
+                    </div>
+                    <div class="detail-content">
+                        <h3>梦境内容</h3>
+                        <p id="detailContent" class="detail-text"></p>
+                    </div>
+                    <div class="detail-analysis" id="detailAnalysis">
+                        <h3>AI 解析</h3>
+                        <div id="analysisContent"></div>
+                    </div>
+                    <div class="detail-tags" id="detailTags">
+                        <h3>标签</h3>
+                        <div class="tag-list" id="tagList"></div>
+                    </div>
+                    <div class="detail-actions">
+                        <button class="btn btn-secondary" onclick="toggleFavoriteFromDetail()">
+                            <span>⭐</span> 收藏
+                        </button>
+                        <button class="btn btn-secondary" onclick="shareDreamFromDetail()">
+                            <span>📤</span> 分享
+                        </button>
+                        <button class="btn btn-primary" onclick="editDreamFromDetail()">
+                            <span>✏️</span> 编辑
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 页脚 -->
     <footer class="footer">
         <div class="footer-content">
