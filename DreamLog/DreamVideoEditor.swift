@@ -412,7 +412,7 @@ class DreamVideoEditor: ObservableObject {
             }
             
             // 绘制文字
-            overlay.text.draw(in: CGRect(x: x - textSize.width / 2,
+            (overlay.text as NSString).draw(in: CGRect(x: x - textSize.width / 2,
                                          y: y,
                                          width: textSize.width,
                                          height: textSize.height),
