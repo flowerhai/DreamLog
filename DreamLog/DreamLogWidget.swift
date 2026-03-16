@@ -149,7 +149,7 @@ struct DreamLogWidgetEntryView: View {
                         HStack {
                             Text(entry.mood.icon)
                                 .font(.caption)
-                            Text(entry.mood.name)
+                            Text(entry.mood.rawValue)
                                 .font(.caption2)
                                 .foregroundColor(config.theme.textColorValue.opacity(0.8))
                         }
