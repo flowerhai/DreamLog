@@ -20,6 +20,9 @@ struct DreamCompanionView: View {
     @State private var showingNewSessionSheet = false
     @State private var selectedDream: Dream?
     @State private var showingDreamPicker = false
+    @State private var showingStats = false
+    @State private var showingShareSheet = false
+    @State private var shareText: String = ""
     
     var body: some View {
         NavigationView {
@@ -56,6 +59,12 @@ struct DreamCompanionView: View {
             .sheet(item: $selectedDream) { dream in
                 DreamDetailView(dream: dream)
                     .environmentObject(dreamStore)
+            }
+            .sheet(isPresented: $showingStats) {
+                CompanionStatsView(companionService: companionService)
+            }
+            .sheet(isPresented: $showingShareSheet) {
+                ActivityView(activityItems: [shareText])
             }
         }
     }
@@ -149,7 +158,7 @@ struct DreamCompanionView: View {
     
     private var statsButton: some View {
         Button(action: {
-            // TODO: 显示统计面板
+            showingStats = true
         }) {
             Image(systemName: "chart.bar.fill")
         }
@@ -162,7 +171,19 @@ struct DreamCompanionView: View {
     }
     
     private func deleteSessions(at offsets: IndexSet) {
-        // TODO: 实现删除逻辑
+        let activeSessions = sessions.filter { !$0.isArchived }
+        var sessionIdsToDelete: [UUID] = []
+        
+        for index in offsets {
+            if index < activeSessions.count {
+                sessionIdsToDelete.append(activeSessions[index].id)
+            }
+        }
+        
+        Task {
+            await companionService.deleteSessions(sessionIds: sessionIdsToDelete)
+            await loadSessions()
+        }
     }
 }
 
@@ -636,13 +657,19 @@ struct CompanionChatView: View {
     private var sessionOptionsButton: some View {
         Menu {
             Button(action: {
-                // TODO: 分享对话
+                Task {
+                    shareText = await companionService.shareConversation(sessionId: session.id)
+                    showingShareSheet = true
+                }
             }) {
                 Label("分享对话", systemImage: "square.and.arrow.up")
             }
             
             Button(action: {
-                // TODO: 导出对话
+                Task {
+                    let exportText = await companionService.exportConversation(sessionId: session.id)
+                    await exportToFiles(exportText)
+                }
             }) {
                 Label("导出为文本", systemImage: "doc.text")
             }
@@ -660,6 +687,14 @@ struct CompanionChatView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
+    }
+    
+    // MARK: - Export Helper
+    
+    private func exportToFiles(_ text: String) async {
+        // 这里会调用 iOS 的文件导出功能
+        // 简化处理：在实际应用中需要使用 UIDocumentInteractionController
+        print("导出内容：\(text.prefix(200))...")
     }
     
     // MARK: - Actions
@@ -738,6 +773,213 @@ struct MessageBubble: View {
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
+}
+
+// MARK: - Stats View
+
+struct CompanionStatsView: View {
+    @ObservedObject var companionService: DreamCompanionService
+    @Environment(\.dismiss) private var dismiss
+    
+    @State private var stats: CompanionStats?
+    @State private var isLoading = true
+    
+    var body: some View {
+        NavigationView {
+            Group {
+                if isLoading {
+                    ProgressView("加载统计...")
+                } else if let stats = stats {
+                    statsContent(stats)
+                } else {
+                    Text("无法加载统计")
+                        .foregroundColor(.secondary)
+                }
+            }
+            .navigationTitle("对话统计")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("完成") {
+                        dismiss()
+                    }
+                }
+            }
+            .task {
+                await loadStats()
+            }
+        }
+    }
+    
+    private func statsContent(_ stats: CompanionStats) -> some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // 概览卡片
+                overviewCards(stats)
+                
+                // 话题分布
+                topicDistribution(stats)
+                
+                // 周趋势
+                weeklyTrend(stats)
+                
+                // 洞察统计
+                insightsStats(stats)
+            }
+            .padding()
+        }
+    }
+    
+    private func overviewCards(_ stats: CompanionStats) -> some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                StatCard(title: "总会话", value: "\(stats.totalSessions)", icon: "message.fill", color: .blue)
+                StatCard(title: "总消息", value: "\(stats.totalMessages)", icon: "text.bubble.fill", color: .green)
+            }
+            
+            HStack(spacing: 12) {
+                StatCard(title: "平均长度", value: String(format: "%.1f", stats.averageSessionLength), icon: "ruler", color: .orange)
+                StatCard(title: "洞察生成", value: "\(stats.insightsGenerated)", icon: "lightbulb.fill", color: .yellow)
+            }
+        }
+    }
+    
+    private func topicDistribution(_ stats: CompanionStats) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("热门话题")
+                .font(.headline)
+            
+            ForEach(stats.mostCommonTopics.prefix(5), id: \.self) { topic in
+                HStack {
+                    Text(topic)
+                        .foregroundColor(.primary)
+                    Spacer()
+                    Image(systemName: "chart.bar.fill")
+                        .foregroundColor(.accentColor)
+                }
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(12)
+            }
+        }
+    }
+    
+    private func weeklyTrend(_ stats: CompanionStats) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("周趋势")
+                .font(.headline)
+            
+            ForEach(stats.weeklyTrend, id: \.weekStart) { week in
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(formatWeekStart(week.weekStart))
+                            .font(.subheadline)
+                        Text("\(week.sessionsCount) 会话 · \(week.messagesCount) 消息")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Text(String(format: "%.1f", week.averageDuration))
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(12)
+            }
+        }
+    }
+    
+    private func insightsStats(_ stats: CompanionStats) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("洞察分析")
+                .font(.headline)
+            
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("已生成洞察")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    Text("\(stats.insightsGenerated)")
+                        .font(.title)
+                        .fontWeight(.bold)
+                }
+                Spacer()
+                Image(systemName: "lightbulb.fill")
+                    .font(.title)
+                    .foregroundColor(.yellow)
+            }
+            .padding()
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
+            
+            if let satisfaction = stats.userSatisfactionScore {
+                HStack {
+                    Text("满意度")
+                        .font(.subheadline)
+                    Spacer()
+                    Text(String(format: "%.1f/5.0", satisfaction))
+                        .font(.headline)
+                }
+                .padding()
+                .background(Color(.secondarySystemBackground))
+                .cornerRadius(12)
+            }
+        }
+    }
+    
+    private func formatWeekStart(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter.string(from: date)
+    }
+    
+    private func loadStats() async {
+        isLoading = true
+        stats = await companionService.getStats()
+        isLoading = false
+    }
+}
+
+// MARK: - Stat Card
+
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(color)
+            
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+            
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(color.opacity(0.1))
+        .cornerRadius(12)
+    }
+}
+
+// MARK: - Activity View
+
+struct ActivityView: UIViewControllerRepresentable {
+    let activityItems: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview

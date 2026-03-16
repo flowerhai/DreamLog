@@ -601,6 +601,217 @@ struct DreamContext {
     var date: Date
 }
 
+// MARK: - Additional Service Methods
+
+extension DreamCompanionService {
+    
+    /// 批量删除会话
+    func deleteSessions(sessionIds: [UUID]) async {
+        guard let context = modelContext else { return }
+        
+        for sessionId in sessionIds {
+            let descriptor = FetchDescriptor<CompanionSession>(
+                predicate: #Predicate { $0.id == sessionId }
+            )
+            
+            do {
+                let sessions = try context.fetch(descriptor)
+                for session in sessions {
+                    context.delete(session)
+                }
+            } catch {
+                print("删除会话失败：\(sessionId), 错误：\(error)")
+            }
+        }
+        
+        try? context.save()
+    }
+    
+    /// 获取对话统计
+    func getStats() async -> CompanionStats {
+        guard let context = modelContext else {
+            return CompanionStats(
+                totalSessions: 0,
+                totalMessages: 0,
+                averageSessionLength: 0,
+                mostCommonTopics: [],
+                insightsGenerated: 0,
+                userSatisfactionScore: nil,
+                weeklyTrend: []
+            )
+        }
+        
+        do {
+            let descriptor = FetchDescriptor<CompanionSession>()
+            let sessions = try context.fetch(descriptor)
+            
+            let totalSessions = sessions.count
+            let totalMessages = sessions.reduce(0) { $0 + $1.messageCount }
+            let averageSessionLength = totalSessions > 0 ? Double(totalMessages) / Double(totalSessions) : 0
+            
+            // 统计话题
+            let topicCounts = Dictionary(grouping: sessions) { $0.topic }
+                .mapValues { $0.count }
+                .sorted { $0.value > $1.value }
+            let mostCommonTopics = topicCounts.prefix(5).map { $0.key }
+            
+            // 统计洞察数量（消息类型为 insight 的数量）
+            let insightsGenerated = sessions.reduce(0) { total, session in
+                total + session.messages.filter { $0.messageType == .insight }.count
+            }
+            
+            // 计算周趋势
+            let calendar = Calendar.current
+            let now = Date()
+            var weeklyTrend: [CompanionStats.WeeklyStat] = []
+            
+            for weekOffset in 0..<4 {
+                let weekStart = calendar.date(byAdding: .weekOfYear, value: -weekOffset, to: now) ?? now
+                let weekEnd = calendar.date(byAdding: .day, value: 1, to: weekStart) ?? now
+                
+                let sessionsInWeek = sessions.filter { session in
+                    session.createdAt >= weekStart && session.createdAt < weekEnd
+                }
+                
+                let messagesInWeek = sessionsInWeek.reduce(0) { $0 + $1.messageCount }
+                let avgDuration = sessionsInWeek.isEmpty ? 0 : Double(messagesInWeek) / Double(sessionsInWeek.count)
+                
+                weeklyTrend.append(CompanionStats.WeeklyStat(
+                    weekStart: weekStart,
+                    sessionsCount: sessionsInWeek.count,
+                    messagesCount: messagesInWeek,
+                    averageDuration: avgDuration
+                ))
+            }
+            
+            return CompanionStats(
+                totalSessions: totalSessions,
+                totalMessages: totalMessages,
+                averageSessionLength: averageSessionLength,
+                mostCommonTopics: mostCommonTopics,
+                insightsGenerated: insightsGenerated,
+                userSatisfactionScore: nil,  // 需要用户反馈
+                weeklyTrend: weeklyTrend.reversed()
+            )
+        } catch {
+            print("获取统计失败：\(error)")
+            return CompanionStats(
+                totalSessions: 0,
+                totalMessages: 0,
+                averageSessionLength: 0,
+                mostCommonTopics: [],
+                insightsGenerated: 0,
+                userSatisfactionScore: nil,
+                weeklyTrend: []
+            )
+        }
+    }
+    
+    /// 导出对话为文本
+    func exportConversation(sessionId: UUID) async -> String {
+        guard let context = modelContext else { return "" }
+        
+        let descriptor = FetchDescriptor<CompanionSession>(
+            predicate: #Predicate { $0.id == sessionId }
+        )
+        
+        do {
+            let sessions = try context.fetch(descriptor)
+            guard let session = sessions.first else { return "" }
+            
+            let messages = session.messages.sorted { $0.timestamp < $1.timestamp }
+            
+            var exportText = """
+            # DreamLog AI 伙伴对话导出
+            主题：\(session.topic)
+            创建时间：\(formatDate(session.createdAt))
+            导出时间：\(formatDate(Date()))
+            
+            ---
+            
+            """
+            
+            for message in messages {
+                let sender = message.isFromUser ? "我" : "AI 伙伴"
+                let time = formatTime(message.timestamp)
+                exportText += """
+                [\(time)] \(sender):
+                \(message.content)
+                
+                """
+            }
+            
+            exportText += """
+            
+            ---
+            共 \(messages.count) 条消息
+            """
+            
+            return exportText
+        } catch {
+            print("导出对话失败：\(error)")
+            return ""
+        }
+    }
+    
+    /// 分享对话（生成分享文本）
+    func shareConversation(sessionId: UUID) async -> String {
+        guard let context = modelContext else { return "" }
+        
+        let descriptor = FetchDescriptor<CompanionSession>(
+            predicate: #Predicate { $0.id == sessionId }
+        )
+        
+        do {
+            let sessions = try context.fetch(descriptor)
+            guard let session = sessions.first else { return "" }
+            
+            let messages = session.messages.sorted { $0.timestamp < $1.timestamp }
+            
+            // 只分享 AI 的洞察和建议
+            let insights = messages.filter { !$0.isFromUser && ($0.messageType == .insight || $0.messageType == .suggestion) }
+            
+            var shareText = """
+            🌙 DreamLog AI 伙伴 · \(session.topic)
+            
+            """
+            
+            if !insights.isEmpty {
+                shareText += "💡 本次对话的洞察：\n\n"
+                for insight in insights.prefix(3) {
+                    shareText += "• \(insight.content)\n\n"
+                }
+            } else {
+                shareText += "一次有意义的梦境探索之旅 ✨\n\n"
+            }
+            
+            shareText += """
+            
+            共 \(session.messageCount) 条消息
+            通过 DreamLog AI 伙伴生成
+            """
+            
+            return shareText
+        } catch {
+            print("分享对话失败：\(error)")
+            return ""
+        }
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
+    }
+}
+
 // MARK: - Symbol Database
 
 struct SymbolInterpretation {
