@@ -57,9 +57,13 @@ struct DreamRecommendationsView: View {
                     HStack {
                         if unreadCount > 0 {
                             BadgeView(count: unreadCount)
+                                .accessibilityLabel("\(unreadCount) 条未读推荐")
+                                .accessibilityHint("查看未读的智能推荐数量")
                         }
                         Button(action: { showingConfig = true }) {
                             Image(systemName: "gearshape")
+                                .accessibilityLabel("推荐设置")
+                                .accessibilityHint("双击打开推荐配置界面")
                         }
                     }
                 }
@@ -71,6 +75,9 @@ struct DreamRecommendationsView: View {
                 RecommendationConfigView()
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("智能推荐页面")
+        .accessibilityHint("浏览和管理 AI 生成的梦境推荐")
     }
     
     private var recommendationsList: some View {
@@ -103,8 +110,13 @@ struct DreamRecommendationsView: View {
                         isSelected: selectedFilter == filter,
                         action: { selectedFilter = filter }
                     )
+                    .accessibilityLabel("\(filter.displayName) 筛选")
+                    .accessibilityHint(selectedFilter == filter ? "已选中" : "双击筛选\(filter.displayName)推荐")
+                    .accessibilityState(selectedFilter == filter ? .isSelected : .notSelected)
                 }
             }
+            .accessibilityLabel("推荐筛选器")
+            .accessibilityHint("左右滑动浏览筛选选项，双击选择筛选条件")
         }
     }
     
@@ -159,6 +171,7 @@ struct RecommendationCard: View {
                 Image(systemName: recommendation.type.icon)
                     .font(.title2)
                     .foregroundColor(Color(recommendation.type.color))
+                    .accessibilityHidden(true)
                 
                 VStack(alignment: .leading) {
                     Text(recommendation.type.displayName)
@@ -168,12 +181,18 @@ struct RecommendationCard: View {
                     Text(recommendation.title)
                         .font(.headline)
                 }
+                .accessibilityElement(children: .combine)
                 
                 Spacer()
                 
                 // 置信度指示器
                 ConfidenceIndicator(confidence: recommendation.confidence)
+                    .accessibilityLabel("置信度 \(Int(recommendation.confidence * 100))%")
+                    .accessibilityHint("推荐的可信程度")
             }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("\(recommendation.type.displayName): \(recommendation.title)")
+            .accessibilityHint("置信度 \(Int(recommendation.confidence * 100))%")
             
             // 描述
             Text(recommendation.description)
@@ -211,11 +230,15 @@ struct RecommendationCard: View {
                 }
                 .buttonStyle(.bordered)
                 .tint(.blue)
+                .accessibilityLabel(recommendation.isRead ? "已标记为已读" : "标记为已读")
+                .accessibilityHint(recommendation.isRead ? "已阅读此推荐" : "双击标记此推荐为已读")
                 
                 Button(action: { Task { await onLike() } }) {
                     Image(systemName: recommendation.isLiked ? "heart.fill" : "heart")
                         .foregroundColor(recommendation.isLiked ? .red : .gray)
                 }
+                .accessibilityLabel(recommendation.isLiked ? "已喜欢" : "喜欢")
+                .accessibilityHint(recommendation.isLiked ? "已收藏此推荐" : "双击收藏此推荐")
                 
                 Spacer()
                 
@@ -223,12 +246,18 @@ struct RecommendationCard: View {
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel(isExpanded ? "收起详情" : "展开详情")
+                .accessibilityHint(isExpanded ? "双击收起推荐理由" : "双击展开查看推荐理由")
                 
                 Button(action: { Task { await onDismiss() } }) {
                     Image(systemName: "xmark.circle")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("关闭推荐")
+                .accessibilityHint("双击关闭并隐藏此推荐")
             }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("推荐操作")
         }
         .padding()
         .background(Color(.systemBackground))
@@ -288,6 +317,9 @@ struct FilterChip: View {
                 .foregroundColor(isSelected ? .white : .primary)
                 .cornerRadius(16)
         }
+        .accessibilityLabel("\(title) 筛选")
+        .accessibilityHint(isSelected ? "已选中\(title)筛选" : "双击选择\(title)筛选")
+        .accessibilityState(isSelected ? .isSelected : .notSelected)
     }
 }
 
@@ -299,6 +331,7 @@ struct EmptyStateView: View {
             Image(systemName: "sparkles")
                 .font(.system(size: 60))
                 .foregroundColor(.gray.opacity(0.5))
+                .accessibilityHidden(true)
             
             Text("暂无推荐")
                 .font(.title2)
@@ -311,6 +344,9 @@ struct EmptyStateView: View {
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("暂无推荐")
+        .accessibilityHint("继续记录梦境，获取更多个性化推荐")
     }
 }
 

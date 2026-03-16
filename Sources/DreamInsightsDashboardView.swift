@@ -64,6 +64,8 @@ struct DreamInsightsDashboardView: View {
                         Image(systemName: showingImportantOnly ? "star.fill" : "star")
                             .foregroundColor(showingImportantOnly ? .yellow : .secondary)
                     }
+                    .accessibilityLabel(showingImportantOnly ? "已显示重要洞察" : "仅显示重要洞察")
+                    .accessibilityHint(showingImportantOnly ? "双击显示所有洞察" : "双击仅显示重要洞察")
                 }
             }
             .refreshable {
@@ -73,6 +75,9 @@ struct DreamInsightsDashboardView: View {
                 await loadStats()
             }
         }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("梦境洞察仪表板")
+        .accessibilityHint("查看 AI 生成的梦境洞察和统计分析")
     }
     
     // MARK: - 统计概览
