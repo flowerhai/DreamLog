@@ -826,8 +826,8 @@ actor DreamExportHubService {
                 if !dream.tags.isEmpty {
                     content += "**标签**: \(dream.tags.prefix(5).joined(separator: ", "))\n"
                 }
-                if let mood = dream.mood {
-                    content += "**情绪**: \(mood.displayName)\n"
+                if !dream.emotions.isEmpty {
+                    content += "**情绪**: \(dream.emotions.map { $0.rawValue }.joined(separator: ", "))\n"
                 }
                 content += "\n"
             }
@@ -853,7 +853,7 @@ actor DreamExportHubService {
                 "title": dream.title,
                 "date": formatDate(dream.date),
                 "content": String(dream.content.prefix(200)) + "...",
-                "mood": dream.mood?.rawValue ?? "unknown",
+                "emotions": dream.emotions.map { $0.rawValue },
                 "tags": Array(dream.tags.prefix(5))
             ]
         }
@@ -897,7 +897,7 @@ actor DreamExportHubService {
                 <h1>\(dream.title)</h1>
                 <div class="meta">
                     <p>日期：\(formatDate(dream.date))</p>
-                    \(dream.mood != nil ? "<p>情绪：\(dream.mood!.displayName)</p>" : "")
+                    \(dream.emotions.isEmpty ? "" : "<p>情绪：\(dream.emotions.map { $0.rawValue }.joined(separator: ", "))</p>")
                 </div>
                 <div class="content">
                     <p>\(dream.content.prefix(300))...</p>

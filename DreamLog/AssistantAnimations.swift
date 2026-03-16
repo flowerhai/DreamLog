@@ -462,7 +462,7 @@ struct EmotionBubble: View {
             Text(emotion.icon)
                 .font(.body)
             
-            Text(emotion.displayName)
+            Text(emotion.rawValue)
                 .font(.caption)
                 .fontWeight(.medium)
             

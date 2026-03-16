@@ -174,7 +174,7 @@ struct ShortcutLibrarySheet: View {
                     .fontWeight(.bold)
                 
                 Text("在快捷指令 App 中搜索\"DreamLog\"，\n添加喜欢的快捷指令到 Siri")
-                    .textStyle(.body)
+                    .font(.body)
                     .multilineTextAlignment(.center)
                     .foregroundColor(.secondary)
                 

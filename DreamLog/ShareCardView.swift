@@ -135,7 +135,7 @@ struct ShareCardView: View {
                     ForEach(dream.emotions.prefix(3), id: \.self) { emotion in
                         HStack(spacing: 4) {
                             Text(emotion.icon)
-                            Text(emotion.displayName)
+                            Text(emotion.rawValue)
                                 .font(.system(size: config.fontSize * 0.8))
                         }
                         .padding(.horizontal, 10)
