@@ -9,14 +9,20 @@
 import Foundation
 import SwiftData
 import UserNotifications
+import Combine
 
-actor DreamChallengeService {
+@MainActor
+class DreamChallengeService: ObservableObject {
+    
+    // MARK: - Singleton
+    
+    static let shared = DreamChallengeService(modelContext: SharedModelContainer.main.context)
     
     // MARK: - Properties
     
-    private let modelContext: ModelContext
-    private var challenges: [DreamChallenge] = []
-    private var badges: [ChallengeBadge] = []
+    @Published private let modelContext: ModelContext
+    @Published private var challenges: [DreamChallenge] = []
+    @Published private var badges: [ChallengeBadge] = []
     
     // MARK: - Initialization
     

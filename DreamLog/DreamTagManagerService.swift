@@ -8,15 +8,17 @@
 
 import Foundation
 import NaturalLanguage
+import Combine
 
-actor DreamTagManagerService {
+@MainActor
+class DreamTagManagerService: ObservableObject {
     
     // MARK: - Properties
     
-    private var dreamStore: DreamStore
-    private var tags: [String: TagInfo] = [:]  // normalized name -> TagInfo
-    private var suggestions: [TagSuggestion] = []
-    private var cleanupSuggestions: [TagCleanupSuggestion] = []
+    @Published private var dreamStore: DreamStore
+    @Published private var tags: [String: TagInfo] = [:]  // normalized name -> TagInfo
+    @Published private var suggestions: [TagSuggestion] = []
+    @Published private var cleanupSuggestions: [TagCleanupSuggestion] = []
     private var config: TagManagerConfig = .default
     
     // MARK: - Initialization

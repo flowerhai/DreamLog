@@ -9,13 +9,16 @@
 import Foundation
 import SwiftData
 
-actor DreamCompanionService {
+import Combine
+
+@MainActor
+class DreamCompanionService: ObservableObject {
     
     // MARK: - Properties
     
-    private var modelContext: ModelContext?
-    private var currentSession: CompanionSession?
-    private var conversationHistory: [CompanionMessage] = []
+    @Published private var modelContext: ModelContext?
+    @Published private var currentSession: CompanionSession?
+    @Published private var conversationHistory: [CompanionMessage] = []
     private let maxHistoryLength = 50
     
     // 对话模板库

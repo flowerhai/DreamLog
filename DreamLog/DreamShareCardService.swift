@@ -10,8 +10,10 @@ import Foundation
 import SwiftUI
 import UIKit
 import CoreGraphics
+import Combine
 
-actor DreamShareCardService {
+@MainActor
+class DreamShareCardService: ObservableObject {
     
     // MARK: - 单例
     
@@ -19,9 +21,9 @@ actor DreamShareCardService {
     
     // MARK: - 属性
     
-    private let fileManager = FileManager.default
-    private var generatedCards: [GeneratedShareCard] = []
-    private var shareHistory: [ShareHistoryEntry] = []
+    @Published private let fileManager = FileManager.default
+    @Published private var generatedCards: [GeneratedShareCard] = []
+    @Published private var shareHistory: [ShareHistoryEntry] = []
     
     private var cardsDirectory: URL {
         let documents = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
