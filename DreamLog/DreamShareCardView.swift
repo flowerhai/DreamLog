@@ -68,6 +68,8 @@ struct DreamShareCardView: View {
             Text("卡片预览")
                 .font(.headline)
                 .foregroundColor(.secondary)
+                .accessibilityLabel("卡片预览")
+                .accessibilityHint("显示即将分享的梦境卡片效果")
             
             ZStack {
                 ShareCardView(
@@ -81,6 +83,8 @@ struct DreamShareCardView: View {
             .frame(maxWidth: 350)
             .background(Color(.systemBackground))
             .cornerRadius(16)
+            .accessibilityLabel("梦境卡片预览")
+            .accessibilityHint("显示当前配置的卡片样式和效果")
         }
     }
     
@@ -91,6 +95,8 @@ struct DreamShareCardView: View {
             Text("选择平台")
                 .font(.headline)
                 .foregroundColor(.secondary)
+                .accessibilityLabel("选择分享平台")
+                .accessibilityHint("选择要分享梦境卡片到的社交平台")
             
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 80))], spacing: 12) {
                 ForEach(SocialPlatform.allCases) { platform in
@@ -206,6 +212,8 @@ struct DreamShareCardView: View {
                 .background(Color.accentColor)
                 .cornerRadius(12)
             }
+            .accessibilityLabel("分享梦境卡片")
+            .accessibilityHint("双击生成并分享梦境卡片到社交平台")
             
             Button(action: {
                 Task {
@@ -223,6 +231,8 @@ struct DreamShareCardView: View {
                 .background(Color.accentColor.opacity(0.1))
                 .cornerRadius(12)
             }
+            .accessibilityLabel("保存到相册")
+            .accessibilityHint("双击将生成的梦境卡片保存到设备相册")
             
             if viewModel.generatedCards.count > 0 {
                 NavigationLink(destination: ShareHistoryView(cards: viewModel.generatedCards)) {
@@ -237,6 +247,8 @@ struct DreamShareCardView: View {
                     .background(Color(.systemGray5))
                     .cornerRadius(12)
                 }
+                .accessibilityLabel("查看分享历史，共 \(viewModel.generatedCards.count) 张卡片")
+                .accessibilityHint("双击查看过往分享的梦境卡片记录")
             }
         }
         .padding(.horizontal)
