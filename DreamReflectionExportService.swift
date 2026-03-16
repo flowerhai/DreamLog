@@ -127,10 +127,10 @@ class ReflectionExportService {
             let endDate = Date()
             let startDate: Date
             switch config.dateRange {
-            case .last7Days: startDate = Calendar.current.date(byAdding: .day, value: -7, to: endDate)!
-            case .last30Days: startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate)!
-            case .last3Months: startDate = Calendar.current.date(byAdding: .month, value: -3, to: endDate)!
-            case .lastYear: startDate = Calendar.current.date(byAdding: .year, value: -1, to: endDate)!
+            case .last7Days: startDate = Calendar.current.date(byAdding: .day, value: -7, to: endDate) ?? endDate
+            case .last30Days: startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate) ?? endDate
+            case .last3Months: startDate = Calendar.current.date(byAdding: .month, value: -3, to: endDate) ?? endDate
+            case .lastYear: startDate = Calendar.current.date(byAdding: .year, value: -1, to: endDate) ?? endDate
             case .all, .custom: startDate = Date.distantPast
             }
             descriptor.predicate = #Predicate<DreamReflection> { reflection in

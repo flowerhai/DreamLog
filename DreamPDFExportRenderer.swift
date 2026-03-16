@@ -174,8 +174,13 @@ class DreamPDFExportRenderer {
         
         // 背景渐变
         let gradientColors = [config.theme.primaryColor, config.theme.backgroundColor]
-        let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: gradientColors as CFArray, locations: [0, 1])!
-        context.cgContext.drawLinearGradient(gradient, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 0, y: bounds.height), options: [])
+        if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: gradientColors as CFArray, locations: [0, 1]) {
+            context.cgContext.drawLinearGradient(gradient, start: CGPoint(x: 0, y: 0), end: CGPoint(x: 0, y: bounds.height), options: [])
+        } else {
+            // Fallback to solid color if gradient creation fails
+            config.theme.backgroundColor.setFill()
+            context.cgContext.fill(bounds)
+        }
         
         // 标题
         let titleAttributes: [NSAttributedString.Key: Any] = [

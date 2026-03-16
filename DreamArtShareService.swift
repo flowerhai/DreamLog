@@ -239,12 +239,11 @@ actor DreamArtShareService {
             // 创建渐变
             let colors = [startColor.cgColor, endColor.cgColor] as CFArray
             let colorSpace = CGColorSpaceCreateDeviceRGB()
-            let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0])!
-            
-            let startPoint = CGPoint(x: size.width / 2, y: 0)
-            let endPoint = CGPoint(x: size.width / 2, y: size.height)
-            
-            context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
+            if let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0]) {
+                let startPoint = CGPoint(x: size.width / 2, y: 0)
+                let endPoint = CGPoint(x: size.width / 2, y: size.height)
+                context.drawLinearGradient(gradient, start: startPoint, end: endPoint, options: [])
+            }
         } else if let bgColor = hexToColor(template.backgroundColor) {
             context.setFillColor(bgColor)
             context.fill(CGRect(origin: .zero, size: size))
@@ -316,7 +315,7 @@ actor DreamArtShareService {
             accentColor.withAlphaComponent(0.3).cgColor
         ] as CFArray
         let colorSpace = CGColorSpaceCreateDeviceRGB()
-        let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0])!
+        guard let gradient = CGGradient(colorsSpace: colorSpace, colors: colors, locations: [0.0, 1.0]) else { return }
         
         let startPoint = CGPoint(x: 0, y: 0)
         let endPoint = CGPoint(x: size.width, y: size.height)

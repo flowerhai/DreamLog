@@ -381,22 +381,23 @@ struct DateRange: Codable {
     static var thisWeek: DateRange {
         let calendar = Calendar.current
         let now = Date()
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek)!
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)) ?? now
+        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? now
         return DateRange(startDate: startOfWeek, endDate: endOfWeek)
     }
     
     static var thisMonth: DateRange {
         let calendar = Calendar.current
         let now = Date()
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-        let endOfMonth = calendar.date(byAdding: .day, value: -1, to: calendar.date(byAdding: .month, value: 1, to: startOfMonth)!)!
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let endOfMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth)
+            .flatMap { calendar.date(byAdding: .day, value: -1, to: $0) } ?? now
         return DateRange(startDate: startOfMonth, endDate: endOfMonth)
     }
     
     static var last30Days: DateRange {
         let now = Date()
-        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: now)!
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now
         return DateRange(startDate: thirtyDaysAgo, endDate: now)
     }
 }
