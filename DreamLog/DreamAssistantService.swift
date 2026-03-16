@@ -394,7 +394,7 @@ class DreamAssistantService: ObservableObject {
             // 统计情绪
             let emotionCounts = Dictionary(grouping: filteredDreams.flatMap { $0.emotions }, by: { $0 })
             if let topEmotion = emotionCounts.max(by: { $0.value.count < $1.value.count })?.key {
-                stats["topEmotion"] = topEmotion.displayName
+                stats["topEmotion"] = topEmotion.rawValue
             }
         }
         
@@ -419,7 +419,7 @@ class DreamAssistantService: ObservableObject {
         let emotionCounts = Dictionary(grouping: dreams.flatMap { $0.emotions }, by: { $0 })
             .mapValues { $0.count }
             .sorted { $0.value > $1.value }
-        patterns["topEmotions"] = emotionCounts.prefix(3).map { $0.key.displayName }
+        patterns["topEmotions"] = emotionCounts.prefix(3).map { $0.key.rawValue }
         
         // 时间模式
         let hourCounts = Dictionary(grouping: dreams, by: { Calendar.current.component(.hour, from: $0.date) })

@@ -118,14 +118,13 @@ struct EmotionTrendChartAccessibility: View {
     }
     
     private func calculateTrend() -> String {
-        guard dataPoints.count >= 2 else { return "数据不足" }
+        guard dataPoints.count >= 2,
+              let first = dataPoints.first,
+              let last = dataPoints.last else { return "数据不足" }
         
-        let first = dataPoints.first!.value
-        let last = dataPoints.last!.value
-        
-        if last > first + 0.2 {
+        if last.value > first.value + 0.2 {
             return "上升"
-        } else if last < first - 0.2 {
+        } else if last.value < first.value - 0.2 {
             return "下降"
         } else {
             return "平稳"

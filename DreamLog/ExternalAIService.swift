@@ -600,7 +600,7 @@ class ExternalAIService: ExternalAIServiceProtocol {
         // 生成洞察
         let insights: [String] = [
             "你最常见的梦境主题是「\(topThemes.first?.theme ?? "未知")」",
-            "主要情绪是「\(emotionDistribution.max(by: { $0.value < $1.value })?.key.displayName ?? "未知")」",
+            "主要情绪是「\(emotionDistribution.max(by: { $0.value < $1.value })?.key.rawValue ?? "未知")」",
             "最佳记录时间是\(bestRecallTime)"
         ]
         

@@ -249,7 +249,7 @@ final class DreamPredictionMLService {
             let confidence = min(0.5 + Double(features.count) * 0.05, 0.9)
             return (value, confidence)
             
-        case .lucidDreamProbability:
+        case .lucidProbability:
             // 基于清醒梦历史和记录习惯
             let lucidFeature = features.first { $0.name == "清醒梦比例" }
             let frequencyFeature = features.first { $0.name == "每周记录频率" }

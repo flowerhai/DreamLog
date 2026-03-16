@@ -12,7 +12,6 @@ import SwiftData
 // MARK: - 推荐类型枚举
 
 /// 推荐类型
-@Model
 public enum DreamRecommendationType: String, CaseIterable, Codable {
     // 梦境推荐
     case similarDream = "similar_dream"          // 相似梦境

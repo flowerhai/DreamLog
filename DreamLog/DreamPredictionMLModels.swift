@@ -82,7 +82,7 @@ final class MLPredictionFeature {
 /// ML 预测类型
 enum MLPredictionType: String, Codable, CaseIterable {
     case emotionTrend = "情绪趋势"
-    case lucidDreamProbability = "清醒梦概率"
+    case lucidProbability = "清醒梦概率"
     case dreamClarity = "梦境清晰度"
     case themeEvolution = "主题演变"
     case recallQuality = "回忆质量"
@@ -95,7 +95,7 @@ enum MLPredictionType: String, Codable, CaseIterable {
     var icon: String {
         switch self {
         case .emotionTrend: return "heart.fill"
-        case .lucidDreamProbability: return "brain.head.profile"
+        case .lucidProbability: return "brain.head.profile"
         case .dreamClarity: return "eye.fill"
         case .themeEvolution: return "chart.line.uptrend.xyaxis"
         case .recallQuality: return "memorychip"
@@ -107,7 +107,7 @@ enum MLPredictionType: String, Codable, CaseIterable {
         switch self {
         case .emotionTrend:
             return "预测未来 7 天的情绪趋势变化"
-        case .lucidDreamProbability:
+        case .lucidProbability:
             return "预测未来做清醒梦的概率"
         case .dreamClarity:
             return "预测未来梦境的清晰度"
@@ -121,6 +121,25 @@ enum MLPredictionType: String, Codable, CaseIterable {
     }
 }
 
+// MARK: - 模型类型
+
+/// ML 模型类型
+enum MLModelType: String, Codable, CaseIterable {
+    case auto = "auto"
+    case emotion = "emotion"
+    case theme = "theme"
+    case lucid = "lucid"
+    
+    var displayName: String {
+        switch self {
+        case .auto: return "自动选择"
+        case .emotion: return "情绪预测"
+        case .theme: return "主题演变"
+        case .lucid: return "清醒梦概率"
+        }
+    }
+}
+
 // MARK: - 预测配置
 
 /// ML 预测配置
@@ -130,7 +149,7 @@ struct MLPredictionConfig: Codable {
     /// 预测时间范围（天数）
     var predictionHorizon: Int = 7
     /// 最小训练数据量（梦境数量）
-    var minTrainingData: Int = 30
+    var minTrainingData: Int = 10
     /// 模型自动更新
     var autoUpdateModel: Bool = true
     /// 更新频率（天）
@@ -139,6 +158,14 @@ struct MLPredictionConfig: Codable {
     var confidenceThreshold: Double = 0.6
     /// 使用本地 Core ML 模型
     var useLocalModel: Bool = true
+    /// 预测模型类型
+    var modelType: MLModelType = .auto
+    /// 显示特征重要性
+    var showFeatureImportance: Bool = true
+    /// 包含个性化建议
+    var includeSuggestions: Bool = true
+    /// 追踪预测准确度
+    var trackAccuracy: Bool = true
     
     static let `default` = MLPredictionConfig()
 }
@@ -358,7 +385,7 @@ struct PredictionExplainer {
                 return "情绪趋势略有下降，建议关注梦境中反复出现的主题，可能反映潜在压力。"
             }
             
-        case .lucidDreamProbability:
+        case .lucidProbability:
             if predictedValue > 0.6 {
                 return "清醒梦概率较高！你的 \(getTopFeature(from: features)) 为清醒梦创造了良好条件。"
             } else if predictedValue > 0.3 {

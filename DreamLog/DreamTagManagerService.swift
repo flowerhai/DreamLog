@@ -275,9 +275,10 @@ actor DreamTagManagerService {
         var suggestedTags: Set<String> = []
         
         // 提取名词
-        tagger.enumerateTags(in: tagger.string!.startIndex..<tagger.string!.endIndex, unit: .word, scheme: .lexicalClass) { tag, range in
+        guard let taggerString = tagger.string else { return [] }
+        tagger.enumerateTags(in: taggerString.startIndex..<taggerString.endIndex, unit: .word, scheme: .lexicalClass) { tag, range in
             if let tag = tag, tag == .noun {
-                let word = String(tagger.string![range])
+                let word = String(taggerString[range])
                 if word.count > 2 && !existingTags.contains(where: { $0.lowercased() == word.lowercased() }) {
                     suggestedTags.insert(word)
                 }
@@ -450,7 +451,8 @@ actor DreamTagManagerService {
         
         var keywords: [String] = []
         
-        tagger.enumerateTags(in: tagger.string!.startIndex..<tagger.string!.endIndex, unit: .word, scheme: .nameType) { tag, _ in
+        guard let taggerString = tagger.string else { return [] }
+        tagger.enumerateTags(in: taggerString.startIndex..<taggerString.endIndex, unit: .word, scheme: .nameType) { tag, _ in
             if let tag = tag {
                 keywords.append(tag.rawValue)
             }
