@@ -11,34 +11,37 @@
     <link rel="manifest" href="/static/manifest.json">
 </head>
 <body>
+    <!-- 跳过导航链接 (无障碍支持) -->
+    <a href="#main-content" class="skip-link">跳到主要内容</a>
+    
     <!-- 导航栏 -->
-    <nav class="navbar">
+    <nav class="navbar" role="navigation" aria-label="主导航">
         <div class="nav-container">
-            <a href="/" class="nav-brand">
-                <span class="logo">🌙</span>
+            <a href="/" class="nav-brand" aria-label="DreamLog 首页">
+                <span class="logo" aria-hidden="true">🌙</span>
                 <span class="brand-name">DreamLog</span>
             </a>
-            <div class="nav-links">
-                <a href="#dreams" class="nav-link">梦境</a>
-                <a href="#analysis" class="nav-link">分析</a>
-                <a href="#gallery" class="nav-link">画廊</a>
-                <a href="#stats" class="nav-link">统计</a>
-                <a href="/weekly-report" class="nav-link">周报</a>
+            <div class="nav-links" role="menubar" aria-label="导航菜单">
+                <a href="#dreams" class="nav-link" role="menuitem">梦境</a>
+                <a href="#analysis" class="nav-link" role="menuitem">分析</a>
+                <a href="#gallery" class="nav-link" role="menuitem">画廊</a>
+                <a href="#stats" class="nav-link" role="menuitem">统计</a>
+                <a href="/weekly-report" class="nav-link" role="menuitem">周报</a>
             </div>
             <div class="nav-actions">
-                <button class="btn btn-primary" onclick="openRecordModal()">
-                    <span>✨</span> 记录梦境
+                <button class="btn btn-primary" onclick="openRecordModal()" aria-label="记录新梦境">
+                    <span aria-hidden="true">✨</span> 记录梦境
                 </button>
             </div>
         </div>
     </nav>
 
     <!-- 主内容区 -->
-    <main class="main-content">
+    <main class="main-content" id="main-content" role="main">
         <!-- 英雄区 -->
-        <section class="hero">
+        <section class="hero" aria-labelledby="hero-heading">
             <div class="hero-content">
-                <h1 class="hero-title">
+                <h1 class="hero-title" id="hero-heading">
                     <span class="gradient-text">记录你的梦</span>
                     <br>
                     发现潜意识的秘密
@@ -48,29 +51,29 @@
                     DreamLog 帮你捕捉那些珍贵瞬间，用 AI 解析梦境背后的含义。
                 </p>
                 <div class="hero-actions">
-                    <button class="btn btn-primary btn-lg" onclick="openRecordModal()">
-                        🎤 快速记录
+                    <button class="btn btn-primary btn-lg" onclick="openRecordModal()" aria-label="快速记录梦境">
+                        <span aria-hidden="true">🎤</span> 快速记录
                     </button>
-                    <button class="btn btn-secondary btn-lg" onclick="scrollToDreams()">
-                        📖 查看梦境
+                    <button class="btn btn-secondary btn-lg" onclick="scrollToDreams()" aria-label="查看梦境列表">
+                        <span aria-hidden="true">📖</span> 查看梦境
                     </button>
                 </div>
-                <div class="hero-stats">
+                <div class="hero-stats" role="region" aria-label="统计概览">
                     <div class="stat-item">
-                        <span class="stat-number" id="totalDreams">0</span>
+                        <span class="stat-number" id="totalDreams" aria-live="polite">0</span>
                         <span class="stat-label">已记录梦境</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number" id="lucidDreams">0</span>
+                        <span class="stat-number" id="lucidDreams" aria-live="polite">0</span>
                         <span class="stat-label">清醒梦</span>
                     </div>
                     <div class="stat-item">
-                        <span class="stat-number" id="currentStreak">0</span>
+                        <span class="stat-number" id="currentStreak" aria-live="polite">0</span>
                         <span class="stat-label">连续记录天数</span>
                     </div>
                 </div>
             </div>
-            <div class="hero-visual">
+            <div class="hero-visual" aria-hidden="true">
                 <div class="floating-moon">🌙</div>
                 <div class="floating-stars">
                     <span class="star" style="--delay: 0s">✨</span>
@@ -83,12 +86,12 @@
         </section>
 
         <!-- 梦境列表 -->
-        <section id="dreams" class="dreams-section">
+        <section id="dreams" class="dreams-section" aria-labelledby="dreams-heading">
             <div class="section-header">
-                <h2 class="section-title">我的梦境</h2>
-                <div class="section-actions">
-                    <input type="text" class="search-input" placeholder="搜索梦境..." id="searchInput">
-                    <select class="filter-select" id="filterSelect">
+                <h2 class="section-title" id="dreams-heading">我的梦境</h2>
+                <div class="section-actions" role="search" aria-label="梦境搜索和筛选">
+                    <input type="text" class="search-input" placeholder="搜索梦境..." id="searchInput" aria-label="搜索梦境">
+                    <select class="filter-select" id="filterSelect" aria-label="筛选梦境类型">
                         <option value="all">全部梦境</option>
                         <option value="lucid">清醒梦</option>
                         <option value="recent">最近 7 天</option>
@@ -96,15 +99,15 @@
                     </select>
                 </div>
             </div>
-            <div class="dreams-grid" id="dreamsGrid">
+            <div class="dreams-grid" id="dreamsGrid" role="list" aria-live="polite" aria-label="梦境列表">
                 <!-- 梦境卡片将通过 JS 动态加载 -->
             </div>
-            <div class="loading-state" id="loadingState">
-                <div class="spinner"></div>
+            <div class="loading-state" id="loadingState" role="status" aria-live="polite">
+                <div class="spinner" aria-hidden="true"></div>
                 <p>加载梦境中...</p>
             </div>
-            <div class="empty-state" id="emptyState" style="display: none;">
-                <div class="empty-icon">🌙</div>
+            <div class="empty-state" id="emptyState" style="display: none;" role="status">
+                <div class="empty-icon" aria-hidden="true">🌙</div>
                 <h3>还没有梦境记录</h3>
                 <p>开始记录你的第一个梦吧！</p>
                 <button class="btn btn-primary" onclick="openRecordModal()">记录梦境</button>
@@ -188,25 +191,25 @@
     </main>
 
     <!-- 记录梦境模态框 -->
-    <div class="modal" id="recordModal">
+    <div class="modal" id="recordModal" role="dialog" aria-labelledby="recordModalTitle" aria-modal="true">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>记录梦境</h2>
-                <button class="modal-close" onclick="closeRecordModal()">×</button>
+                <h2 id="recordModalTitle">记录梦境</h2>
+                <button class="modal-close" onclick="closeRecordModal()" aria-label="关闭模态框">×</button>
             </div>
             <div class="modal-body">
-                <form id="dreamForm">
+                <form id="dreamForm" aria-label="梦境记录表单">
                     <div class="form-group">
                         <label for="dreamTitle">梦境标题</label>
-                        <input type="text" id="dreamTitle" class="form-control" placeholder="给你的梦起个名字" required>
+                        <input type="text" id="dreamTitle" class="form-control" placeholder="给你的梦起个名字" required aria-required="true">
                     </div>
                     <div class="form-group">
                         <label for="dreamContent">梦境内容</label>
-                        <textarea id="dreamContent" class="form-control" rows="6" placeholder="描述你的梦境..." required></textarea>
+                        <textarea id="dreamContent" class="form-control" rows="6" placeholder="描述你的梦境..." required aria-required="true"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>情绪标签</label>
-                        <div class="emotion-tags">
+                        <label id="emotionsLabel">情绪标签</label>
+                        <div class="emotion-tags" role="group" aria-labelledby="emotionsLabel">
                             <label class="emotion-tag">
                                 <input type="checkbox" name="emotions" value="happy"> 😊 快乐
                             </label>
@@ -240,8 +243,8 @@
                         </label>
                     </div>
                     <div class="form-group">
-                        <label for="clarity">清晰度</label>
-                        <input type="range" id="clarity" class="form-range" min="1" max="5" value="3">
+                        <label for="clarity">清晰度 <span aria-hidden="true">(1-5)</span></label>
+                        <input type="range" id="clarity" class="form-range" min="1" max="5" value="3" aria-valuemin="1" aria-valuemax="5" aria-valuenow="3">
                         <div class="range-labels">
                             <span>模糊</span>
                             <span>一般</span>
@@ -258,40 +261,40 @@
     </div>
 
     <!-- 梦境详情模态框 -->
-    <div class="modal" id="dreamDetailModal">
+    <div class="modal" id="dreamDetailModal" role="dialog" aria-labelledby="dreamDetailTitle" aria-modal="true">
         <div class="modal-content modal-large">
             <div class="modal-header">
-                <h2 id="detailTitle">梦境详情</h2>
-                <button class="modal-close" onclick="closeDreamDetailModal()">×</button>
+                <h2 id="dreamDetailTitle">梦境详情</h2>
+                <button class="modal-close" onclick="closeDreamDetailModal()" aria-label="关闭详情">×</button>
             </div>
             <div class="modal-body">
-                <div class="dream-detail">
+                <div class="dream-detail" role="article" aria-label="梦境详细信息">
                     <div class="detail-meta">
                         <span class="detail-date" id="detailDate"></span>
                         <span class="detail-emotion" id="detailEmotion"></span>
                         <span class="detail-lucid" id="detailLucid"></span>
                     </div>
                     <div class="detail-content">
-                        <h3>梦境内容</h3>
-                        <p id="detailContent" class="detail-text"></p>
+                        <h3 id="contentHeading">梦境内容</h3>
+                        <p id="detailContent" class="detail-text" aria-labelledby="contentHeading"></p>
                     </div>
                     <div class="detail-analysis" id="detailAnalysis">
-                        <h3>AI 解析</h3>
-                        <div id="analysisContent"></div>
+                        <h3 id="analysisHeading">AI 解析</h3>
+                        <div id="analysisContent" aria-labelledby="analysisHeading"></div>
                     </div>
                     <div class="detail-tags" id="detailTags">
-                        <h3>标签</h3>
-                        <div class="tag-list" id="tagList"></div>
+                        <h3 id="tagsHeading">标签</h3>
+                        <div class="tag-list" id="tagList" role="list" aria-labelledby="tagsHeading"></div>
                     </div>
-                    <div class="detail-actions">
-                        <button class="btn btn-secondary" onclick="toggleFavoriteFromDetail()">
-                            <span>⭐</span> 收藏
+                    <div class="detail-actions" role="group" aria-label="梦境操作">
+                        <button class="btn btn-secondary" onclick="toggleFavoriteFromDetail()" aria-label="收藏此梦境">
+                            <span aria-hidden="true">⭐</span> 收藏
                         </button>
-                        <button class="btn btn-secondary" onclick="shareDreamFromDetail()">
-                            <span>📤</span> 分享
+                        <button class="btn btn-secondary" onclick="shareDreamFromDetail()" aria-label="分享此梦境">
+                            <span aria-hidden="true">📤</span> 分享
                         </button>
-                        <button class="btn btn-primary" onclick="editDreamFromDetail()">
-                            <span>✏️</span> 编辑
+                        <button class="btn btn-primary" onclick="editDreamFromDetail()" aria-label="编辑此梦境">
+                            <span aria-hidden="true">✏️</span> 编辑
                         </button>
                     </div>
                 </div>

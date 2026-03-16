@@ -18,6 +18,12 @@ const dreamForm = document.getElementById('dreamForm');
 const searchInput = document.getElementById('searchInput');
 const filterSelect = document.getElementById('filterSelect');
 
+// 无障碍支持：记录上一个聚焦的元素
+let lastFocusedElement = null;
+
+// 可聚焦元素选择器
+const FOCUSABLE_SELECTORS = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🌙 DreamLog Web 已加载');
@@ -172,30 +178,50 @@ function renderDreams(dreamsToRender) {
     dreamsGrid.style.display = 'grid';
     emptyState.style.display = 'none';
     
-    dreamsGrid.innerHTML = dreamsToRender.map(dream => `
-        <div class="dream-card fade-in" onclick="viewDream(${dream.id})">
+    dreamsGrid.innerHTML = dreamsToRender.map((dream, index) => `
+        <div class="dream-card fade-in" 
+             role="listitem" 
+             tabindex="0"
+             aria-label="${escapeHtml(dream.title)}，${formatDate(dream.date)}，${dream.isLucid ? '清醒梦，' : ''}${dream.emotions?.join('、') || '无情绪'}"
+             onclick="viewDream(${dream.id})"
+             onkeydown="if(event.key==='Enter'||event.key===' '){viewDream(${dream.id});event.preventDefault();}">
             <div class="dream-card-header">
                 <div>
                     <h3 class="dream-title">${escapeHtml(dream.title)}</h3>
                     <span class="dream-date">${formatDate(dream.date)}</span>
                 </div>
-                ${dream.isLucid ? '<span class="tag lucid">👁️ 清醒梦</span>' : ''}
+                ${dream.isLucid ? '<span class="tag lucid" aria-label="清醒梦">👁️ 清醒梦</span>' : ''}
             </div>
             <p class="dream-content">${escapeHtml(dream.content)}</p>
-            <div class="dream-tags">
-                ${dream.tags.map(tag => `<span class="tag">#${escapeHtml(tag)}</span>`).join('')}
+            <div class="dream-tags" role="list" aria-label="标签">
+                ${dream.tags.map(tag => `<span class="tag" role="listitem">#${escapeHtml(tag)}</span>`).join('')}
             </div>
             <div class="dream-footer">
-                <div class="dream-emotions">
-                    ${dream.emotions.map(emotion => `<span class="emotion">${getEmotionEmoji(emotion)}</span>`).join('')}
+                <div class="dream-emotions" aria-label="情绪">
+                    ${dream.emotions.map(emotion => `<span class="emotion" aria-label="${getEmotionLabel(emotion)}">${getEmotionEmoji(emotion)}</span>`).join('')}
                 </div>
                 <div class="dream-actions">
-                    <button class="action-btn" onclick="event.stopPropagation(); shareDream(${dream.id})" title="分享">📤</button>
-                    <button class="action-btn" onclick="event.stopPropagation(); toggleFavorite(${dream.id})" title="收藏">⭐</button>
+                    <button class="action-btn" onclick="event.stopPropagation(); shareDream(${dream.id})" aria-label="分享梦境：${escapeHtml(dream.title)}">📤</button>
+                    <button class="action-btn" onclick="event.stopPropagation(); toggleFavorite(${dream.id})" aria-label="${dream.isFavorite ? '取消收藏' : '收藏'}梦境：${escapeHtml(dream.title)}">⭐</button>
                 </div>
             </div>
         </div>
     `).join('');
+}
+
+// 获取情绪标签的文本描述
+function getEmotionLabel(emotion) {
+    const emotionLabels = {
+        'happy': '快乐',
+        'sad': '悲伤',
+        'anxious': '焦虑',
+        'excited': '兴奋',
+        'confused': '困惑',
+        'peaceful': '平静',
+        'scared': '恐惧',
+        'surprised': '惊讶'
+    };
+    return emotionLabels[emotion] || emotion;
 }
 
 // 筛选梦境
@@ -234,10 +260,48 @@ function filterDreams() {
     renderDreams(filtered);
 }
 
+// 获取模态框内所有可聚焦元素
+function getFocusableElements(modal) {
+    return modal.querySelectorAll(FOCUSABLE_SELECTORS);
+}
+
+// 焦点陷阱：在模态框内循环聚焦
+function trapFocus(e, modal) {
+    const focusableElements = getFocusableElements(modal);
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+    
+    if (e.key === 'Tab') {
+        if (e.shiftKey) {
+            if (document.activeElement === firstElement) {
+                e.preventDefault();
+                lastElement.focus();
+            }
+        } else {
+            if (document.activeElement === lastElement) {
+                e.preventDefault();
+                firstElement.focus();
+            }
+        }
+    }
+}
+
 // 打开记录模态框
 function openRecordModal() {
+    // 记录当前聚焦元素
+    lastFocusedElement = document.activeElement;
+    
     recordModal.classList.add('active');
     document.body.style.overflow = 'hidden';
+    
+    // 聚焦到第一个可聚焦元素
+    const focusableElements = getFocusableElements(recordModal);
+    if (focusableElements.length > 0) {
+        focusableElements[0].focus();
+    }
+    
+    // 添加焦点陷阱
+    recordModal.addEventListener('keydown', (e) => trapFocus(e, recordModal));
 }
 
 // 关闭记录模态框
@@ -245,6 +309,15 @@ function closeRecordModal() {
     recordModal.classList.remove('active');
     document.body.style.overflow = '';
     dreamForm.reset();
+    
+    // 移除焦点陷阱
+    recordModal.removeEventListener('keydown', trapFocus);
+    
+    // 恢复聚焦到之前的元素
+    if (lastFocusedElement) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
 }
 
 // 处理表单提交
@@ -416,8 +489,20 @@ function viewDream(id) {
     // 打开模态框
     const modal = document.getElementById('dreamDetailModal');
     if (modal) {
+        // 记录当前聚焦元素
+        lastFocusedElement = document.activeElement;
+        
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
+        
+        // 聚焦到第一个可聚焦元素（关闭按钮）
+        const focusableElements = getFocusableElements(modal);
+        if (focusableElements.length > 0) {
+            focusableElements[0].focus();
+        }
+        
+        // 添加焦点陷阱
+        modal.addEventListener('keydown', (e) => trapFocus(e, modal));
     }
 }
 
@@ -427,8 +512,17 @@ function closeDreamDetailModal() {
     if (modal) {
         modal.classList.remove('active');
         document.body.style.overflow = '';
+        
+        // 移除焦点陷阱
+        modal.removeEventListener('keydown', trapFocus);
     }
     currentDetailDreamId = null;
+    
+    // 恢复聚焦到之前的元素
+    if (lastFocusedElement) {
+        lastFocusedElement.focus();
+        lastFocusedElement = null;
+    }
 }
 
 // 从详情模态框切换收藏
