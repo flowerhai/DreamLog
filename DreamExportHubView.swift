@@ -507,6 +507,9 @@ struct NewExportTaskView: View {
     @State private var repeatInterval: String? = nil
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var showingPreview = false
+    @State private var preview: ExportPreview?
+    @State private var isGeneratingPreview = false
     
     var body: some View {
         NavigationStack {
@@ -533,6 +536,32 @@ struct NewExportTaskView: View {
                     }
                 } header: {
                     Text("导出设置")
+                }
+                
+                // 预览按钮
+                Section {
+                    Button(action: generatePreview) {
+                        HStack {
+                            if isGeneratingPreview {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                                Text("生成中...")
+                            } else {
+                                Image(systemName: "eye")
+                                Text("预览导出内容")
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                    .disabled(name.isEmpty || isGeneratingPreview)
+                    
+                    if let preview = preview {
+                        PreviewSummaryView(preview: preview)
+                    }
+                } header: {
+                    Text("导出预览")
+                } footer: {
+                    Text("预览显示前 3 个梦境的导出效果，实际导出可能包含更多梦境")
                 }
                 
                 Section {
@@ -594,6 +623,47 @@ struct NewExportTaskView: View {
             } message: {
                 Text(errorMessage)
             }
+            .sheet(isPresented: $showingPreview) {
+                if let preview = preview {
+                    ExportPreviewView(preview: preview)
+                }
+            }
+        }
+    }
+    
+    private func generatePreview() {
+        Task {
+            isGeneratingPreview = true
+            
+            do {
+                let options = ExportOptions(
+                    includeEmotions: includeEmotions,
+                    includeTags: includeTags,
+                    includeAIAnalysis: includeAIAnalysis,
+                    includeImages: includeImages
+                )
+                
+                let preview = try await DreamExportHubService.shared.generateExportPreview(
+                    dreamIds: [],
+                    exportAll: exportAll,
+                    dateRange: nil,
+                    options: options,
+                    platform: selectedPlatform,
+                    format: selectedFormat
+                )
+                
+                await MainActor.run {
+                    self.preview = preview
+                    showingPreview = true
+                    isGeneratingPreview = false
+                }
+            } catch {
+                await MainActor.run {
+                    errorMessage = "生成预览失败：\(error.localizedDescription)"
+                    showingError = true
+                    isGeneratingPreview = false
+                }
+            }
         }
     }
     
@@ -622,6 +692,99 @@ struct NewExportTaskView: View {
             errorMessage = error.localizedDescription
             showingError = true
         }
+    }
+}
+
+// MARK: - 预览摘要视图
+
+struct PreviewSummaryView: View {
+    let preview: ExportPreview
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Label("梦境数量", systemImage: "moon.stars")
+                Spacer()
+                Text("\(preview.dreamCount) 个")
+                    .foregroundColor(.secondary)
+            }
+            
+            HStack {
+                Label("字符数", systemImage: "text.alignleft")
+                Spacer()
+                Text("\(preview.totalCharacters) 字符")
+                    .foregroundColor(.secondary)
+            }
+            
+            HStack {
+                Label("预估大小", systemImage: "doc.badge.gearshape")
+                Spacer()
+                Text(preview.formattedFileSize)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .font(.caption)
+        .padding(.vertical, 4)
+    }
+}
+
+// MARK: - 导出预览详情视图
+
+struct ExportPreviewView: View {
+    let preview: ExportPreview
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // 统计信息
+                HStack(spacing: 20) {
+                    StatBox(icon: "moon.stars", value: "\(preview.dreamCount)", label: "梦境")
+                    StatBox(icon: "text.alignleft", value: "\(preview.totalCharacters)", label: "字符")
+                    StatBox(icon: "doc.badge.gearshape", value: preview.formattedFileSize, label: "大小")
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                
+                Divider()
+                
+                // 预览内容
+                ScrollView {
+                    Text(preview.previewContent)
+                        .font(.system(.body, design: .monospaced))
+                        .padding()
+                        .textSelection(.enabled)
+                }
+                .background(Color(.systemBackground))
+            }
+            .navigationTitle("导出预览")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") { dismiss() }
+                }
+            }
+        }
+    }
+}
+
+struct StatBox: View {
+    let icon: String
+    let value: String
+    let label: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundColor(.accentColor)
+            Text(value)
+                .font(.headline)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 

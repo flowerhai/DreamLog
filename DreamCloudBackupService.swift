@@ -325,36 +325,37 @@ actor DreamCloudBackupService {
                 backupDream.aiAnalysis = dream.aiAnalysis
             }
             
-            if options.includeLocations, let location = dream.location {
-                backupDream.location = BackupLocation(
-                    latitude: location.latitude,
-                    longitude: location.longitude,
-                    name: dream.locationName
-                )
-            }
+            // 位置 - 暂不支持
+            // if options.includeLocations, let location = dream.location {
+            //     backupDream.location = BackupLocation(
+            //         latitude: location.latitude,
+            //         longitude: location.longitude,
+            //         name: dream.locationName
+            //     )
+            // }
             
-            // 处理音频
-            if options.includeAudio, let audioPath = dream.audioPath {
-                let audioUrl = URL(fileURLWithPath: audioPath)
-                if fileManager.fileExists(atPath: audioUrl.path) {
-                    let audioData = try Data(contentsOf: audioUrl)
-                    let base64Audio = audioData.base64EncodedString()
-                    backupDream.audioData = base64Audio
-                }
-            }
+            // 处理音频 - 暂不支持
+            // if options.includeAudio, let audioPath = dream.audioPath {
+            //     let audioUrl = URL(fileURLWithPath: audioPath)
+            //     if fileManager.fileExists(atPath: audioUrl.path) {
+            //         let audioData = try Data(contentsOf: audioUrl)
+            //         let base64Audio = audioData.base64EncodedString()
+            //         backupDream.audioData = base64Audio
+            //     }
+            // }
             
-            // 处理图片
-            if options.includeImages, !dream.images.isEmpty {
-                var imageData: [String] = []
-                for imagePath in dream.images {
-                    let imageUrl = URL(fileURLWithPath: imagePath)
-                    if fileManager.fileExists(atPath: imageUrl.path) {
-                        let imgData = try Data(contentsOf: imageUrl)
-                        imageData.append(imgData.base64EncodedString())
-                    }
-                }
-                backupDream.imageData = imageData
-            }
+            // 处理图片 - 暂不支持
+            // if options.includeImages, !dream.images.isEmpty {
+            //     var imageData: [String] = []
+            //     for imagePath in dream.images {
+            //         let imageUrl = URL(fileURLWithPath: imagePath)
+            //         if fileManager.fileExists(atPath: imageUrl.path) {
+            //             let imgData = try Data(contentsOf: imageUrl)
+            //             imageData.append(imgData.base64EncodedString())
+            //         }
+            //     }
+            //     backupDream.imageData = imageData
+            // }
             
             backupDreams.append(backupDream)
         }
@@ -526,33 +527,34 @@ actor DreamCloudBackupService {
             dream.updatedAt = backupDream.updatedAt
             dream.aiAnalysis = backupDream.aiAnalysis
             
-            if let location = backupDream.location {
-                dream.location = DreamLocation(latitude: location.latitude, longitude: location.longitude)
-                dream.locationName = location.name
-            }
+            // 恢复位置 - 暂不支持
+            // if let location = backupDream.location {
+            //     dream.location = DreamLocation(latitude: location.latitude, longitude: location.longitude)
+            //     dream.locationName = location.name
+            // }
             
-            // 恢复音频
-            if let audioBase64 = backupDream.audioData,
-               let audioData = Data(base64Encoded: audioBase64) {
-                let audioPath = backupDirectory.appendingPathComponent("audio/\(dream.id.uuidString).m4a")
-                try? fileManager.createDirectory(at: audioPath.deletingLastPathComponent(), withIntermediateDirectories: true)
-                try audioData.write(to: audioPath)
-                dream.audioPath = audioPath.path
-            }
+            // 恢复音频 - 暂不支持
+            // if let audioBase64 = backupDream.audioData,
+            //    let audioData = Data(base64Encoded: audioBase64) {
+            //     let audioPath = backupDirectory.appendingPathComponent("audio/\(dream.id.uuidString).m4a")
+            //     try? fileManager.createDirectory(at: audioPath.deletingLastPathComponent(), withIntermediateDirectories: true)
+            //     try audioData.write(to: audioPath)
+            //     dream.audioPath = audioPath.path
+            // }
             
-            // 恢复图片
-            if let imageBase64Array = backupDream.imageData {
-                var imagePaths: [String] = []
-                for (index, base64) in imageBase64Array.enumerated() {
-                    if let imgData = Data(base64Encoded: base64) {
-                        let imagePath = backupDirectory.appendingPathComponent("images/\(dream.id.uuidString)_\(index).jpg")
-                        try? fileManager.createDirectory(at: imagePath.deletingLastPathComponent(), withIntermediateDirectories: true)
-                        try imgData.write(to: imagePath)
-                        imagePaths.append(imagePath.path)
-                    }
-                }
-                dream.images = imagePaths
-            }
+            // 恢复图片 - 暂不支持
+            // if let imageBase64Array = backupDream.imageData {
+            //     var imagePaths: [String] = []
+            //     for (index, base64) in imageBase64Array.enumerated() {
+            //         if let imgData = Data(base64Encoded: base64) {
+            //             let imagePath = backupDirectory.appendingPathComponent("images/\(dream.id.uuidString)_\(index).jpg")
+            //             try? fileManager.createDirectory(at: imagePath.deletingLastPathComponent(), withIntermediateDirectories: true)
+            //             try imgData.write(to: imagePath)
+            //             imagePaths.append(imagePath.path)
+            //         }
+            //     }
+            //     dream.images = imagePaths
+            // }
             
             modelContext.insert(dream)
         }

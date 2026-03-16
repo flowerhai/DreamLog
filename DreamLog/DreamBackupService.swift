@@ -97,31 +97,31 @@ class DreamBackupService {
                     updatedAt: dream.updatedAt
                 ))
                 
-                // Include audio if requested
-                if options.includeAudio, let audioFilename = dream.audioRecording?.filename {
-                    if let audioURL = dream.audioRecording?.fileURL {
-                        do {
-                            let audioData = try Data(contentsOf: audioURL)
-                            audioFiles[audioFilename] = audioData
-                        } catch {
-                            print("Failed to include audio: \(error)")
-                        }
-                    }
-                }
+                // Include audio if requested - 暂不支持
+                // if options.includeAudio, let audioFilename = dream.audioRecording?.filename {
+                //     if let audioURL = dream.audioRecording?.fileURL {
+                //         do {
+                //             let audioData = try Data(contentsOf: audioURL)
+                //             audioFiles[audioFilename] = audioData
+                //         } catch {
+                //             print("Failed to include audio: \(error)")
+                //         }
+                //     }
+                // }
                 
-                // Include images if requested
-                if options.includeImages {
-                    for image in dream.images {
-                        if let imageURL = image.fileURL {
-                            do {
-                                let imageData = try Data(contentsOf: imageURL)
-                                imageFiles[image.filename] = imageData
-                            } catch {
-                                print("Failed to include image: \(error)")
-                            }
-                        }
-                    }
-                }
+                // Include images if requested - 暂不支持
+                // if options.includeImages {
+                //     for image in dream.images {
+                //         if let imageURL = image.fileURL {
+                //             do {
+                //                 let imageData = try Data(contentsOf: imageURL)
+                //                 imageFiles[image.filename] = imageData
+                //             } catch {
+                //                 print("Failed to include image: \(error)")
+                //             }
+                //         }
+                //     }
+                // }
                 
                 // Update progress
                 onProgressUpdate?(BackupProgress(

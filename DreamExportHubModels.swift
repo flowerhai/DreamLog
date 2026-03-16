@@ -476,3 +476,32 @@ extension ExportOptions {
         )
     }
 }
+
+// MARK: - 导出队列统计
+
+/// 导出队列统计数据
+struct ExportQueueStats {
+    let pending: Int
+    let processing: Int
+    let scheduled: Int
+    let paused: Int
+    let completed: Int
+    let failed: Int
+    let cancelled: Int
+    let total: Int
+    
+    /// 活跃任务数（待处理 + 处理中）
+    var activeTasks: Int {
+        pending + processing
+    }
+    
+    /// 是否有正在处理的任务
+    var hasProcessingTasks: Bool {
+        processing > 0
+    }
+    
+    /// 是否有待处理的任务
+    var hasPendingTasks: Bool {
+        pending > 0
+    }
+}

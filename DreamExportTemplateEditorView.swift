@@ -895,16 +895,82 @@ struct ShareTemplateView: View {
     
     let template: DreamExportTemplate
     
+    @State private var isExporting = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var shareItems: [Any] = []
+    @State private var showingShareSheet = false
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 20) {
-                Text("分享模板功能开发中...")
-                    .foregroundColor(.secondary)
+                // 模板信息
+                VStack(spacing: 12) {
+                    HStack {
+                        Image(systemName: template.category.icon)
+                            .font(.title)
+                        VStack(alignment: .leading) {
+                            Text(template.name)
+                                .font(.headline)
+                            Text(template.category.displayName)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                    }
+                    
+                    if !template.description.isEmpty {
+                        Text(template.description)
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                    
+                    Divider()
+                    
+                    // 统计信息
+                    HStack(spacing: 30) {
+                        StatItemView(
+                            icon: "square.and.arrow.up",
+                            value: "\(template.usageCount)",
+                            label: "使用次数"
+                        )
+                        StatItemView(
+                            icon: "variable",
+                            value: "\(template.variables.count)",
+                            label: "变量数"
+                        )
+                    }
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
                 
-                Button("导出为 JSON") {
-                    // TODO: 实现导出功能
+                // 导出按钮
+                Button(action: exportTemplate) {
+                    HStack {
+                        if isExporting {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                            Text("导出中...")
+                        } else {
+                            Image(systemName: "arrow.down.circle")
+                            Text("导出为 JSON")
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(isExporting)
+                
+                // 导入说明
+                Text("导出的 JSON 文件可以分享给其他用户，或通过导入功能添加到他们的模板库")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal)
+                
+                Spacer()
             }
             .padding()
             .navigationTitle("分享模板")
@@ -914,6 +980,81 @@ struct ShareTemplateView: View {
                     Button("完成") { dismiss() }
                 }
             }
+            .alert("导出失败", isPresented: $showError) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
+            .sheet(isPresented: $showingShareSheet) {
+                ShareSheet(items: shareItems)
+            }
         }
     }
+    
+    // MARK: - 功能方法
+    
+    private func exportTemplate() {
+        Task {
+            isExporting = true
+            
+            do {
+                let exportData = try await DreamExportTemplateService.shared.exportTemplate(template)
+                
+                // 创建临时文件
+                let tempDir = FileManager.default.temporaryDirectory
+                let fileName = "\(template.name.replacingOccurrences(of: " ", with: "_")).json"
+                let fileURL = tempDir.appendingPathComponent(fileName)
+                
+                try exportData.write(to: fileURL)
+                
+                // 准备分享内容
+                shareItems = [fileURL]
+                
+                await MainActor.run {
+                    isExporting = false
+                    showingShareSheet = true
+                }
+            } catch {
+                await MainActor.run {
+                    isExporting = false
+                    errorMessage = "导出失败：\(error.localizedDescription)"
+                    showError = true
+                }
+            }
+        }
+    }
+}
+
+// MARK: - 统计项组件
+
+struct StatItemView: View {
+    let icon: String
+    let value: String
+    let label: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.title2)
+                .foregroundColor(.accentColor)
+            Text(value)
+                .font(.headline)
+            Text(label)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+// MARK: - ShareSheet 封装
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        let controller = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) { }
 }
