@@ -22,7 +22,9 @@ webapp/
 │       ├── config.py        # 配置管理
 │       └── database.py      # 数据库连接
 ├── templates/
-│   └── index.html           # 主页面
+│   ├── index.html           # 主页面
+│   ├── dashboard.html       # 统计仪表板
+│   └── weekly-report.html   # 梦境周报
 ├── static/
 │   ├── css/style.css        # 样式
 │   └── js/app.js            # 前端逻辑
@@ -102,9 +104,13 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 | 方法 | 路径 | 描述 |
 |------|------|------|
 | GET | /api/stats/overview | 统计概览 |
+| GET | /api/stats/enhanced | 增强统计数据（仪表板） |
 | GET | /api/stats/patterns | 模式分析 |
 | GET | /api/stats/timeline | 时间线 |
-| GET | /api/stats/export | 导出数据 |
+| GET | /api/stats/weekly-report | 梦境周报 |
+| GET | /api/stats/export | 导出数据（JSON） |
+| GET | /api/stats/export/csv | 导出 CSV 数据 |
+| GET | /api/stats/export/stats | 导出统计数据（JSON） |
 
 ## 功能特性
 
@@ -133,12 +139,17 @@ uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
    - 主题分析
    - 时间规律
    - 模式识别
+   - 统计仪表板（6 种可视化图表）
+   - 梦境周报
+   - 智能洞察与建议
+   - 时间范围筛选（7 天/30 天/90 天/1 年/全部）
 
 5. **数据管理**
    - SQLite 存储
    - 标签系统
    - 搜索筛选
-   - 数据导出
+   - 数据导出（JSON/CSV）
+   - 打印支持
 
 ### 🚧 待开发
 
