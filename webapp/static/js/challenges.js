@@ -153,21 +153,72 @@ document.addEventListener('DOMContentLoaded', () => {
     loadChallenges();
     loadBadges();
     setupFilters();
-    updateStats();
+    loadStats();
 });
 
 // 加载挑战
-function loadChallenges() {
-    // 从 API 加载挑战（如果后端支持）
-    // 这里使用预设数据演示
-    challenges = PRESET_CHALLENGES;
-    renderChallenges(challenges);
+async function loadChallenges() {
+    try {
+        const response = await fetch(`${API_BASE}/challenges`);
+        const result = await response.json();
+        
+        if (result.success) {
+            challenges = result.data;
+            renderChallenges(challenges);
+            updateStats();
+        } else {
+            console.error('加载挑战失败:', result);
+            // 降级到预设数据
+            challenges = PRESET_CHALLENGES;
+            renderChallenges(challenges);
+        }
+    } catch (error) {
+        console.error('加载挑战出错:', error);
+        // 降级到预设数据
+        challenges = PRESET_CHALLENGES;
+        renderChallenges(challenges);
+    }
 }
 
 // 加载徽章
-function loadBadges() {
-    badges = PRESET_BADGES;
-    renderBadges(badges);
+async function loadBadges() {
+    try {
+        const response = await fetch(`${API_BASE}/challenges/badges`);
+        const result = await response.json();
+        
+        if (result.success) {
+            badges = result.data;
+            renderBadges(badges);
+        } else {
+            console.error('加载徽章失败:', result);
+            // 降级到预设数据
+            badges = PRESET_BADGES;
+            renderBadges(badges);
+        }
+    } catch (error) {
+        console.error('加载徽章出错:', error);
+        // 降级到预设数据
+        badges = PRESET_BADGES;
+        renderBadges(badges);
+    }
+}
+
+// 加载统计
+async function loadStats() {
+    try {
+        const response = await fetch(`${API_BASE}/challenges/stats`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.data;
+            document.getElementById('totalChallenges').textContent = stats.total_challenges;
+            document.getElementById('completedChallenges').textContent = stats.completed;
+            document.getElementById('inProgressChallenges').textContent = stats.in_progress;
+            document.getElementById('totalPoints').textContent = stats.total_points;
+        }
+    } catch (error) {
+        console.error('加载统计出错:', error);
+    }
 }
 
 // 设置筛选器
@@ -187,7 +238,7 @@ function setupFilters() {
 }
 
 // 筛选挑战
-function filterChallenges() {
+async function filterChallenges() {
     let filtered = [...challenges];
     
     switch (currentFilter) {
@@ -211,6 +262,36 @@ function filterChallenges() {
     }
     
     renderChallenges(filtered);
+}
+
+// 开始挑战
+async function handleStartChallenge(e) {
+    const challengeId = parseInt(e.target.dataset.challengeId);
+    
+    try {
+        const response = await fetch(`${API_BASE}/challenges/${challengeId}/start`, {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(`✅ 已开始挑战：${result.data.title}`, 'success');
+            // 重新加载挑战列表
+            await loadChallenges();
+        } else {
+            showToast(`❌ ${result.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('开始挑战出错:', error);
+        // 降级到本地处理
+        const challenge = challenges.find(c => c.id === challengeId);
+        if (challenge) {
+            challenge.status = 'in-progress';
+            showToast(`✅ 已开始挑战：${challenge.title}`, 'success');
+            filterChallenges();
+            updateStats();
+        }
+    }
 }
 
 // 渲染挑战列表
@@ -344,7 +425,30 @@ function calculateProgress(challenge) {
 }
 
 // 更新统计
-function updateStats() {
+async function updateStats() {
+    try {
+        const response = await fetch(`${API_BASE}/challenges/stats`);
+        const result = await response.json();
+        
+        if (result.success) {
+            const stats = result.data;
+            document.getElementById('totalChallenges').textContent = stats.total_challenges;
+            document.getElementById('completedChallenges').textContent = stats.completed;
+            document.getElementById('inProgressChallenges').textContent = stats.in_progress;
+            document.getElementById('totalPoints').textContent = stats.total_points;
+        } else {
+            // 降级到本地计算
+            updateStatsLocal();
+        }
+    } catch (error) {
+        console.error('加载统计出错:', error);
+        // 降级到本地计算
+        updateStatsLocal();
+    }
+}
+
+// 本地统计更新（降级方案）
+function updateStatsLocal() {
     const total = challenges.length;
     const completed = challenges.filter(c => c.status === 'completed').length;
     const inProgress = challenges.filter(c => c.status === 'in-progress').length;
@@ -359,30 +463,65 @@ function updateStats() {
 }
 
 // 处理任务变更
-function handleTaskChange(e) {
+async function handleTaskChange(e) {
     const challengeId = parseInt(e.target.dataset.challengeId);
     const taskId = parseInt(e.target.dataset.taskId);
+    const completed = e.target.checked;
     
-    // 更新任务状态
-    const challenge = challenges.find(c => c.id === challengeId);
-    if (challenge) {
-        const task = challenge.tasks.find(t => t.id === taskId);
-        if (task) {
-            task.completed = e.target.checked;
-            
-            // 检查是否完成所有任务
-            const allCompleted = challenge.tasks.every(t => t.completed);
-            if (allCompleted && challenge.status !== 'completed') {
-                challenge.status = 'completed';
-                showToast(`🎉 恭喜完成挑战：${challenge.title}！`, 'success');
-                updateStats();
-            } else if (e.target.checked && challenge.status === 'available') {
-                challenge.status = 'in-progress';
+    try {
+        const response = await fetch(`${API_BASE}/challenges/${challengeId}/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ completed })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            // 更新本地数据
+            const challenge = challenges.find(c => c.id === challengeId);
+            if (challenge) {
+                const task = challenge.tasks.find(t => t.id === taskId);
+                if (task) {
+                    task.completed = completed;
+                }
+                // 同步状态
+                challenge.status = result.data.status;
             }
             
-            // 重新渲染
-            filterChallenges();
-            updateStats();
+            if (result.message.includes('恭喜完成')) {
+                showToast(result.message, 'success');
+            }
+            
+            // 重新加载挑战列表和统计
+            await loadChallenges();
+        } else {
+            showToast(`❌ ${result.message}`, 'error');
+            // 恢复复选框状态
+            e.target.checked = !completed;
+        }
+    } catch (error) {
+        console.error('更新任务出错:', error);
+        // 降级到本地处理
+        const challenge = challenges.find(c => c.id === challengeId);
+        if (challenge) {
+            const task = challenge.tasks.find(t => t.id === taskId);
+            if (task) {
+                task.completed = completed;
+                
+                const allCompleted = challenge.tasks.every(t => t.completed);
+                if (allCompleted && challenge.status !== 'completed') {
+                    challenge.status = 'completed';
+                    showToast(`🎉 恭喜完成挑战：${challenge.title}！`, 'success');
+                    updateStats();
+                } else if (completed && challenge.status === 'available') {
+                    challenge.status = 'in-progress';
+                }
+                
+                filterChallenges();
+                updateStats();
+            }
         }
     }
 }
@@ -411,12 +550,37 @@ function showToast(message, type = 'info') {
         document.body.appendChild(toast);
     }
     
-    toast.querySelector('.toast-message')?.remove();
+    // 移除旧的消息
+    toast.innerHTML = '';
+    
+    // 添加图标
+    const icon = document.createElement('span');
+    icon.style.fontSize = '1.25rem';
+    if (type === 'success') {
+        icon.textContent = '✅';
+        toast.classList.add('success');
+        toast.classList.remove('error');
+    } else if (type === 'error') {
+        icon.textContent = '❌';
+        toast.classList.add('error');
+        toast.classList.remove('success');
+    } else {
+        icon.textContent = 'ℹ️';
+        toast.classList.remove('success', 'error');
+    }
+    toast.appendChild(icon);
+    
+    // 添加消息
     const messageEl = document.createElement('span');
     messageEl.className = 'toast-message';
     messageEl.textContent = message;
     toast.appendChild(messageEl);
     
+    // 显示动画
     toast.classList.add('show');
-    setTimeout(() => toast.classList.remove('show'), 3000);
+    
+    // 3 秒后自动隐藏
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
 }

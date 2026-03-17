@@ -16,7 +16,7 @@ from contextlib import asynccontextmanager
 
 from src.utils.config import settings
 from src.utils.database import init_db
-from src.routes import dreams, analysis, gallery, stats
+from src.routes import dreams, analysis, gallery, stats, challenges
 
 
 # 配置日志
@@ -82,6 +82,7 @@ app.include_router(dreams.router, prefix="/api/dreams", tags=["梦境管理"])
 app.include_router(analysis.router, prefix="/api/analysis", tags=["AI 解析"])
 app.include_router(gallery.router, prefix="/api/gallery", tags=["梦境画廊"])
 app.include_router(stats.router, prefix="/api/stats", tags=["统计分析"])
+app.include_router(challenges.router, prefix="/api/challenges", tags=["梦境挑战"])
 
 
 @app.get("/")
