@@ -426,10 +426,36 @@
                 <button class="filter-btn" data-range="all" onclick="setTimeRange('all')">全部</button>
             </div>
 
-            <!-- 加载中状态 -->
-            <div id="loadingState" class="loading-spinner" role="status" aria-live="polite">
-                <div class="spinner" aria-hidden="true"></div>
-                <p style="margin-top: 1rem; color: #666;">加载统计数据中...</p>
+            <!-- 骨架屏加载状态 -->
+            <div id="skeletonLoading" role="status" aria-live="polite" aria-label="加载统计数据中">
+                <!-- 概览卡片骨架屏 -->
+                <div class="skeleton-stats">
+                    <div class="skeleton-stat-card skeleton"></div>
+                    <div class="skeleton-stat-card skeleton"></div>
+                    <div class="skeleton-stat-card skeleton"></div>
+                    <div class="skeleton-stat-card skeleton"></div>
+                    <div class="skeleton-stat-card skeleton"></div>
+                    <div class="skeleton-stat-card skeleton"></div>
+                </div>
+                <!-- 图表骨架屏 -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="skeleton skeleton-text short" style="width: 150px; margin-bottom: 1rem;"></div>
+                        <div class="skeleton skeleton-chart"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="skeleton skeleton-text short" style="width: 150px; margin-bottom: 1rem;"></div>
+                        <div class="skeleton skeleton-chart"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="skeleton skeleton-text short" style="width: 150px; margin-bottom: 1rem;"></div>
+                        <div class="skeleton skeleton-chart"></div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="skeleton skeleton-text short" style="width: 150px; margin-bottom: 1rem;"></div>
+                        <div class="skeleton skeleton-chart"></div>
+                    </div>
+                </div>
             </div>
 
             <!-- 仪表板内容 -->
@@ -481,6 +507,9 @@
                         <h3><span aria-hidden="true">😊</span> 情绪分布</h3>
                         <div class="chart-container">
                             <canvas id="emotionChart"></canvas>
+                            <button class="chart-download-btn" onclick="downloadChart('emotionChart', '情绪分布')" aria-label="下载情绪分布图表">
+                                <span aria-hidden="true">📥</span> 下载
+                            </button>
                         </div>
                     </div>
 
@@ -489,6 +518,9 @@
                         <h3><span aria-hidden="true">📈</span> 梦境记录趋势</h3>
                         <div class="chart-container">
                             <canvas id="trendChart"></canvas>
+                            <button class="chart-download-btn" onclick="downloadChart('trendChart', '梦境趋势')" aria-label="下载梦境趋势图表">
+                                <span aria-hidden="true">📥</span> 下载
+                            </button>
                         </div>
                     </div>
 
@@ -497,6 +529,9 @@
                         <h3><span aria-hidden="true">🕐</span> 时间段分布</h3>
                         <div class="chart-container">
                             <canvas id="timeChart"></canvas>
+                            <button class="chart-download-btn" onclick="downloadChart('timeChart', '时间段分布')" aria-label="下载时间段分布图表">
+                                <span aria-hidden="true">📥</span> 下载
+                            </button>
                         </div>
                     </div>
 
@@ -505,6 +540,9 @@
                         <h3><span aria-hidden="true">💤</span> 睡眠质量分析</h3>
                         <div class="chart-container">
                             <canvas id="sleepChart"></canvas>
+                            <button class="chart-download-btn" onclick="downloadChart('sleepChart', '睡眠质量')" aria-label="下载睡眠质量图表">
+                                <span aria-hidden="true">📥</span> 下载
+                            </button>
                         </div>
                     </div>
 
@@ -587,10 +625,13 @@
 
         // 加载仪表板数据
         async function loadDashboardData() {
-            const loadingState = document.getElementById('loadingState');
+            const skeletonLoading = document.getElementById('skeletonLoading');
             const dashboardContent = document.getElementById('dashboardContent');
             
-            loadingState.style.display = 'flex';
+            // 显示骨架屏
+            if (skeletonLoading) {
+                skeletonLoading.style.display = 'block';
+            }
             dashboardContent.style.display = 'none';
             
             try {
@@ -609,9 +650,6 @@
                 
                 const stats = statsResult.data || {};
                 
-                // 更新概览卡片
-                updateOverviewCards(stats, weekly);
-                
                 // 渲染图表
                 renderEmotionChart(stats);
                 renderTrendChart(stats);
@@ -619,22 +657,34 @@
                 renderSleepChart(stats);
                 renderTagCloud(stats);
                 renderHeatmap(stats);
+                
+                // 更新概览卡片
+                updateOverviewCards(stats, weekly);
+                
+                // 渲染智能洞察
                 renderInsights(weekly);
                 
                 // 更新最后更新时间
                 updateLastUpdated();
                 
-                loadingState.style.display = 'none';
+                // 隐藏骨架屏，显示内容
+                if (skeletonLoading) {
+                    skeletonLoading.style.display = 'none';
+                }
                 dashboardContent.style.display = 'block';
                 
             } catch (error) {
                 console.error('加载数据失败:', error);
-                loadingState.innerHTML = `
-                    <p style="color: #EF4444;">加载失败，请刷新页面重试</p>
-                    <button class="btn btn-primary" onclick="location.reload()" style="margin-top: 1rem;">
-                        刷新页面
-                    </button>
-                `;
+                if (skeletonLoading) {
+                    skeletonLoading.innerHTML = `
+                        <div style="text-align: center; padding: 4rem;">
+                            <p style="color: #EF4444; font-size: 1.2rem; margin-bottom: 1rem;">加载失败，请刷新页面重试</p>
+                            <button class="btn btn-primary" onclick="location.reload()">
+                                刷新页面
+                            </button>
+                        </div>
+                    `;
+                }
             }
         }
 
@@ -1004,6 +1054,43 @@
             } catch (error) {
                 console.error('导出失败:', error);
                 showNotification('导出失败，请重试', 'error');
+            }
+        }
+
+        // 下载图表为 PNG
+        function downloadChart(canvasId, chartName) {
+            try {
+                const canvas = document.getElementById(canvasId);
+                if (!canvas) {
+                    showNotification('图表未找到', 'error');
+                    return;
+                }
+                
+                // 创建临时 canvas 以提高分辨率
+                const tempCanvas = document.createElement('canvas');
+                const ctx = tempCanvas.getContext('2d');
+                const scale = 2; // 2x 分辨率
+                
+                tempCanvas.width = canvas.width * scale;
+                tempCanvas.height = canvas.height * scale;
+                
+                // 复制背景
+                ctx.fillStyle = '#1A1A2E';
+                ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // 绘制原 canvas 内容
+                ctx.drawImage(canvas, 0, 0, tempCanvas.width, tempCanvas.height);
+                
+                // 下载
+                const link = document.createElement('a');
+                link.download = `dreamlog_${chartName}_${new Date().toISOString().split('T')[0]}.png`;
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+                
+                showNotification('图表下载成功！', 'success');
+            } catch (error) {
+                console.error('下载失败:', error);
+                showNotification('下载失败，请重试', 'error');
             }
         }
 

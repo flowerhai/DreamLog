@@ -482,6 +482,58 @@ section {
     to { transform: rotate(360deg); }
 }
 
+/* 骨架屏加载动画 */
+.skeleton {
+    background: linear-gradient(90deg, var(--background-card) 25%, var(--background-hover) 50%, var(--background-card) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+    border-radius: var(--radius-md);
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    height: 200px;
+    margin-bottom: 1rem;
+}
+
+.skeleton-chart {
+    height: 300px;
+    margin-bottom: 1.5rem;
+}
+
+.skeleton-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.skeleton-stat-card {
+    height: 150px;
+}
+
+.skeleton-text {
+    height: 20px;
+    margin-bottom: 0.5rem;
+}
+
+.skeleton-text.short {
+    width: 60%;
+}
+
+.skeleton-text.medium {
+    width: 80%;
+}
+
+/* 隐藏类 */
+.hidden {
+    display: none !important;
+}
+
 .empty-icon {
     font-size: 80px;
     margin-bottom: 24px;
@@ -1187,4 +1239,184 @@ textarea.form-control {
     position: absolute;
     left: 0;
     color: var(--secondary-color);
+}
+
+/* 图表下载按钮 */
+.chart-download-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 8px 12px;
+    background: rgba(107, 76, 154, 0.2);
+    border: 1px solid rgba(107, 76, 154, 0.3);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all var(--transition-fast);
+    opacity: 0;
+}
+
+.chart-container:hover .chart-download-btn {
+    opacity: 1;
+}
+
+.chart-download-btn:hover {
+    background: rgba(107, 76, 154, 0.4);
+    border-color: var(--primary-color);
+}
+
+.chart-container {
+    position: relative;
+    margin-bottom: 2rem;
+}
+
+/* 响应式设计 - 移动端优化 */
+@media (max-width: 768px) {
+    .dashboard-container {
+        padding: 1rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .dashboard-header p {
+        font-size: 0.95rem;
+    }
+
+    .dashboard-filters {
+        gap: 0.5rem;
+    }
+
+    .filter-btn {
+        padding: 0.6rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    .stats-overview-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .overview-card {
+        padding: 1rem;
+    }
+
+    .overview-icon {
+        font-size: 2rem;
+    }
+
+    .overview-number {
+        font-size: 1.8rem;
+    }
+
+    .overview-label {
+        font-size: 0.8rem;
+    }
+
+    /* 移动端图表优化 */
+    .charts-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .chart-card {
+        min-height: 280px;
+    }
+
+    .chart-container canvas {
+        max-height: 250px !important;
+    }
+
+    /* 移动端隐藏图表下载按钮，改为始终显示 */
+    .chart-download-btn {
+        opacity: 1;
+        position: relative;
+        top: auto;
+        right: auto;
+        margin-top: 8px;
+        justify-self: end;
+    }
+
+    .chart-container {
+        margin-bottom: 1.5rem;
+    }
+
+    /* 移动端优化洞察卡片 */
+    .insights-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .insight-card {
+        padding: 1rem;
+    }
+
+    /* 移动端按钮优化 */
+    .export-btn,
+    .print-btn,
+    .refresh-btn {
+        padding: 0.7rem 1rem;
+        font-size: 0.85rem;
+    }
+
+    /* 移动端模态框优化 */
+    .modal-content {
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* 超小屏幕优化 */
+@media (max-width: 480px) {
+    .stats-overview-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-filters {
+        flex-direction: column;
+    }
+
+    .filter-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .action-buttons button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* 打印样式优化 */
+@media print {
+    .chart-download-btn,
+    .export-btn,
+    .print-btn,
+    .refresh-btn,
+    .dashboard-filters,
+    .navbar {
+        display: none !important;
+    }
+
+    .dashboard-container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .chart-card {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+
+    .overview-card {
+        break-inside: avoid;
+    }
 }
