@@ -99,20 +99,26 @@ struct QuickActionsTabView: View {
                     HStack {
                         Image(systemName: "hand.tap.fill")
                             .foregroundColor(.blue)
+                            .accessibilityHidden(true)
                         Text("长按 DreamLog 图标")
                     }
+                    .accessibilityLabel("第一步：长按 DreamLog 图标")
                     
                     HStack {
                         Image(systemName: "list.bullet")
                             .foregroundColor(.blue)
+                            .accessibilityHidden(true)
                         Text("选择快捷操作")
                     }
+                    .accessibilityLabel("第二步：选择快捷操作")
                     
                     HStack {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
+                            .accessibilityHidden(true)
                         Text("快速进入功能")
                     }
+                    .accessibilityLabel("第三步：快速进入功能")
                 }
                 .font(.caption)
             }
@@ -134,6 +140,7 @@ struct QuickActionRow: View {
                 .font(.title2)
                 .foregroundColor(.blue)
                 .frame(width: 40)
+                .accessibilityHidden(true)
             
             VStack(alignment: .leading) {
                 Text(action.displayName)
@@ -150,8 +157,13 @@ struct QuickActionRow: View {
                 set: { onToggle($0) }
             ))
             .labelsHidden()
+            .accessibilityLabel("启用\(action.displayName)")
+            .accessibilityHint("双击以\(isEnabled ? "禁用" : "启用")此快捷操作")
         }
         .padding(.vertical, 4)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(action.displayName)，\(action.subtitle)")
+        .accessibilityHint("\(isEnabled ? "已启用" : "已禁用")，双击切换状态")
     }
 }
 
