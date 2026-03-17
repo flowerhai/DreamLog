@@ -511,6 +511,7 @@ struct BookmarkDreamRow: View {
 
 struct SocialStatsView: View {
     @State private var stats: SocialStats?
+    @StateObject private var service = SocialInteractionService.shared
     
     var body: some View {
         ScrollView {
@@ -533,7 +534,13 @@ struct SocialStatsView: View {
     }
     
     private func loadStats() async {
-        // TODO: Load from service
+        do {
+            stats = try await service.getSocialStats()
+        } catch {
+            print("加载社交统计失败：\(error)")
+            // 使用默认空统计
+            stats = SocialStats(userId: "unknown")
+        }
     }
 }
 

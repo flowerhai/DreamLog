@@ -750,7 +750,22 @@ actor SocialInteractionService {
     private func updateLikeStats(dreamId: UUID) async throws {
         // 更新收到的点赞数
         let receivedCount = try getLikeCount(for: dreamId)
-        // TODO: 更新梦境的 likeCount 字段
+        
+        // 注意：要更新梦境作者的 totalLikesReceived，需要知道梦境的作者 ID
+        // 当前实现中，SocialLike 只存储 dreamId，没有直接关联作者
+        // 完整实现需要：
+        // 1. 添加 SocialDream 模型存储梦境元数据（包括作者 ID）
+        // 2. 或者与后端集成，通过 dreamId 查询作者信息
+        // 3. 或者在点赞时传入作者 ID 参数
+        
+        // 临时方案：更新当前用户的总点赞数（给出的点赞）
+        let givenCount = try getUserLikes().count
+        try await updateStats { $0.totalLikesGiven = givenCount }
+        
+        // TODO: 当 SocialDream 模型添加后，在此处更新作者的 totalLikesReceived
+        // if let authorId = try await getDreamAuthorId(dreamId) {
+        //     try await updateAuthorStats(authorId) { $0.totalLikesReceived = receivedCount }
+        // }
     }
     
     private func updateCommentStats() async throws {
