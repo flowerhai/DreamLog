@@ -8,6 +8,8 @@ const API_BASE = '/api';
 // 全局状态
 let dreams = [];
 let isLoading = false;
+let autoRefreshInterval = null;
+const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 分钟
 
 // DOM 元素
 const dreamsGrid = document.getElementById('dreamsGrid');
@@ -31,7 +33,35 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     updateStats();
     loadWeeklyReport();  // 加载周报
+    startAutoRefresh();  // 启动自动刷新
 });
+
+// 启动自动刷新
+function startAutoRefresh() {
+    // 清除现有的定时器
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    
+    // 设置新的定时器
+    autoRefreshInterval = setInterval(() => {
+        console.log('🔄 自动刷新数据...');
+        loadDreams();
+        updateStats();
+        showToast('数据已更新', 'info');
+    }, AUTO_REFRESH_INTERVAL);
+    
+    console.log(`⏰ 自动刷新已启动（每${AUTO_REFRESH_INTERVAL / 1000}秒）`);
+}
+
+// 停止自动刷新
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+        console.log('⏸️ 自动刷新已停止');
+    }
+}
 
 // 设置事件监听
 function setupEventListeners() {
@@ -773,3 +803,5 @@ window.viewDream = viewDream;
 window.shareDream = shareDream;
 window.toggleFavorite = toggleFavorite;
 window.loadWeeklyReport = loadWeeklyReport;
+window.startAutoRefresh = startAutoRefresh;
+window.stopAutoRefresh = stopAutoRefresh;
