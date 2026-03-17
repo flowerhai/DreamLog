@@ -4,12 +4,15 @@
 统计分析 API 路由
 """
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime, timedelta
 from collections import Counter
 from typing import Optional, Dict, Any
+import csv
+import io
 
 from src.utils.database import get_db
 from src.models.dream import DreamModel, TagModel
@@ -391,6 +394,83 @@ async def export_data(db: AsyncSession = Depends(get_db)):
         "count": len(export_data),
         "exported_at": datetime.utcnow().isoformat(),
         "data": export_data
+    }
+
+
+@router.get("/export/csv", summary="导出 CSV 数据")
+async def export_csv(db: AsyncSession = Depends(get_db)):
+    """
+    导出所有梦境数据（CSV 格式）
+    
+    适合导入 Excel、Google Sheets 等工具进行进一步分析
+    """
+    result = await db.execute(
+        select(DreamModel).order_by(DreamModel.dream_date.desc())
+    )
+    
+    dreams = result.scalars().all()
+    
+    # 创建 CSV 文件
+    output = io.StringIO()
+    fieldnames = [
+        'id', 'title', 'content', 'dream_date', 'mood', 
+        'mood_intensity', 'sleep_quality', 'clarity', 
+        'is_lucid', 'analysis', 'themes', 'tags'
+    ]
+    
+    writer = csv.DictWriter(output, fieldnames=fieldnames)
+    writer.writeheader()
+    
+    for dream in dreams:
+        writer.writerow({
+            'id': dream.id,
+            'title': dream.title or '',
+            'content': dream.content.replace('\n', ' ').replace('\r', '')[:5000],  # 限制长度
+            'dream_date': dream.dream_date.strftime('%Y-%m-%d %H:%M:%S'),
+            'mood': dream.mood or '',
+            'mood_intensity': dream.mood_intensity or 0,
+            'sleep_quality': dream.sleep_quality or 0,
+            'clarity': dream.clarity or 0,
+            'is_lucid': 1 if dream.is_lucid else 0,
+            'analysis': (dream.analysis or '').replace('\n', ' ').replace('\r', '')[:2000],
+            'themes': '|'.join(dream.themes) if dream.themes else '',
+            'tags': '|'.join([tag.name for tag in dream.tags]) if dream.tags else ''
+        })
+    
+    # 生成 CSV 文件
+    csv_content = output.getvalue()
+    output.close()
+    
+    # 创建响应
+    filename = f"dreamlog_export_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    return StreamingResponse(
+        io.BytesIO(csv_content.encode('utf-8-sig')),  # UTF-8 with BOM for Excel
+        media_type="text/csv",
+        headers={
+            "Content-Disposition": f"attachment; filename={filename}"
+        }
+    )
+
+
+@router.get("/export/stats", summary="导出统计数据")
+async def export_stats(
+    days: Optional[int] = 30,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    导出统计数据（JSON 格式）
+    
+    包含所有仪表板使用的统计数据
+    """
+    # 复用增强统计数据
+    enhanced_stats = await get_enhanced_stats(days=days, db=db)
+    
+    return {
+        "success": True,
+        "exported_at": datetime.utcnow().isoformat(),
+        "period": enhanced_stats.get("period", {}),
+        "data": enhanced_stats.get("data", {})
     }
 
 

@@ -331,8 +331,20 @@
 
             <!-- 仪表板头部 -->
             <header class="dashboard-header">
-                <h1>📊 梦境统计仪表板</h1>
-                <p>深度分析你的梦境模式与潜意识趋势</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <h1 style="margin-bottom: 0.5rem;">📊 梦境统计仪表板</h1>
+                        <p style="margin: 0; opacity: 0.9;">深度分析你的梦境模式与潜意识趋势</p>
+                    </div>
+                    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="exportStats()" aria-label="导出统计数据">
+                            <span aria-hidden="true">📥</span> 导出统计
+                        </button>
+                        <button class="btn" style="background: white; border: 2px solid rgba(255,255,255,0.5); color: white;" onclick="exportCSV()" aria-label="导出 CSV 数据">
+                            <span aria-hidden="true">📊</span> 导出 CSV
+                        </button>
+                    </div>
+                </div>
             </header>
 
             <!-- 时间范围筛选 -->
@@ -857,6 +869,118 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardData();
         });
+
+        // 导出统计数据（JSON）
+        async function exportStats() {
+            try {
+                const url = currentTimeRange === 'all'
+                    ? '/api/stats/export/stats'
+                    : `/api/stats/export/stats?days=${currentTimeRange}`;
+                
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                // 创建下载链接
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = `dreamlog_stats_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+                
+                // 显示成功提示
+                showNotification('统计数据导出成功！', 'success');
+            } catch (error) {
+                console.error('导出失败:', error);
+                showNotification('导出失败，请重试', 'error');
+            }
+        }
+
+        // 导出 CSV 数据
+        async function exportCSV() {
+            try {
+                const response = await fetch('/api/stats/export/csv');
+                
+                if (!response.ok) {
+                    throw new Error('导出失败');
+                }
+                
+                // 获取文件名
+                const disposition = response.headers.get('Content-Disposition');
+                let filename = 'dreamlog_export.csv';
+                if (disposition) {
+                    const matches = /filename="?(.+)"?/.exec(disposition);
+                    if (matches && matches.length > 1) {
+                        filename = matches[1];
+                    }
+                }
+                
+                // 下载文件
+                const blob = await response.blob();
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(downloadUrl);
+                
+                // 显示成功提示
+                showNotification('CSV 数据导出成功！', 'success');
+            } catch (error) {
+                console.error('导出失败:', error);
+                showNotification('导出失败，请重试', 'error');
+            }
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 1rem 1.5rem;
+                background: ${type === 'success' ? '#10B981' : type === 'error' ? '#EF4444' : '#3B82F6'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+                font-weight: 500;
+            `;
+            notification.textContent = message;
+            
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(notification);
+            
+            // 3 秒后移除
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                    document.head.removeChild(style);
+                }, 300);
+            }, 3000);
+        }
     </script>
 </body>
 </html>
