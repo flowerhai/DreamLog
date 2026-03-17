@@ -96,6 +96,12 @@ async def weekly_report(request: Request):
     return templates.TemplateResponse("weekly-report.html", {"request": request})
 
 
+@app.get("/dashboard")
+async def dashboard(request: Request):
+    """统计仪表板页面"""
+    return templates.TemplateResponse("dashboard.html", {"request": request})
+
+
 @app.get("/health")
 async def health_check():
     """健康检查"""

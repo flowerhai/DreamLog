@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from datetime import datetime, timedelta
 from collections import Counter
-from typing import Optional
+from typing import Optional, Dict, Any
 
 from src.utils.database import get_db
 from src.models.dream import DreamModel, TagModel
@@ -19,6 +19,173 @@ from src.models.schemas import (
 from src.services.pattern import pattern_analyzer
 
 router = APIRouter()
+
+
+@router.get("/enhanced", summary="获取增强统计数据")
+async def get_enhanced_stats(
+    days: Optional[int] = 30,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    获取增强的统计数据，用于仪表板
+    
+    包括:
+    - 基础统计
+    - 情绪分布
+    - 主题分布
+    - 时间段分析
+    - 趋势数据
+    - 睡眠质量统计
+    """
+    # 计算日期范围
+    if days:
+        start_date = datetime.utcnow() - timedelta(days=days)
+    else:
+        start_date = datetime.min
+    
+    # 基础统计
+    total_query = select(func.count()).select_from(DreamModel)
+    if days:
+        total_query = total_query.where(DreamModel.dream_date >= start_date)
+    
+    total_result = await db.execute(total_query)
+    total_dreams = total_result.scalar() or 0
+    
+    # 清醒梦统计
+    lucid_query = select(func.count()).where(DreamModel.is_lucid == 1)
+    if days:
+        lucid_query = lucid_query.where(DreamModel.dream_date >= start_date)
+    lucid_result = await db.execute(lucid_query)
+    lucid_count = lucid_result.scalar() or 0
+    
+    # 平均清晰度
+    clarity_query = select(func.avg(DreamModel.clarity))
+    if days:
+        clarity_query = clarity_query.where(DreamModel.dream_date >= start_date)
+    clarity_result = await db.execute(clarity_query)
+    avg_clarity = round(clarity_result.scalar() or 0, 2)
+    
+    # 情绪分布
+    mood_query = select(DreamModel.mood, func.count())
+    if days:
+        mood_query = mood_query.where(DreamModel.dream_date >= start_date)
+    mood_query = mood_query.group_by(DreamModel.mood)
+    mood_result = await db.execute(mood_query)
+    mood_counts = mood_result.fetchall()
+    
+    mood_distribution = [
+        {"mood": mood or "未标记", "count": count, "percentage": round(count / total_dreams * 100, 1) if total_dreams > 0 else 0}
+        for mood, count in sorted(mood_counts, key=lambda x: x[1], reverse=True)
+    ]
+    
+    # 主题/标签分布
+    all_dreams_result = await db.execute(select(DreamModel))
+    all_dreams = all_dreams_result.scalars().all()
+    
+    all_tags = []
+    for dream in all_dreams:
+        if dream.tags:
+            all_tags.extend([tag.name for tag in dream.tags])
+        if dream.themes:
+            all_tags.extend(dream.themes)
+    
+    tag_counts = Counter(all_tags)
+    theme_distribution = [
+        {"theme": tag, "count": count, "percentage": round(count / len(all_tags) * 100, 1) if all_tags else 0}
+        for tag, count in tag_counts.most_common(20)
+    ]
+    
+    # 时间段分布
+    time_distribution = {
+        "清晨 (5-8 点)": 0,
+        "上午 (8-12 点)": 0,
+        "下午 (12-18 点)": 0,
+        "夜晚 (18-23 点)": 0,
+        "深夜 (23-5 点)": 0
+    }
+    
+    for dream in all_dreams:
+        if days and dream.dream_date < start_date:
+            continue
+        hour = dream.dream_date.hour
+        if 5 <= hour < 8:
+            time_distribution["清晨 (5-8 点)"] += 1
+        elif 8 <= hour < 12:
+            time_distribution["上午 (8-12 点)"] += 1
+        elif 12 <= hour < 18:
+            time_distribution["下午 (12-18 点)"] += 1
+        elif 18 <= hour < 23:
+            time_distribution["夜晚 (18-23 点)"] += 1
+        else:
+            time_distribution["深夜 (23-5 点)"] += 1
+    
+    # 趋势数据（按天统计）
+    trend_data = []
+    if days:
+        for i in range(days):
+            date = datetime.utcnow() - timedelta(days=days - i - 1)
+            date_str = date.strftime("%Y-%m-%d")
+            day_count = await db.execute(
+                select(func.count()).where(
+                    func.date(DreamModel.dream_date) == date.date()
+                )
+            )
+            count = day_count.scalar() or 0
+            trend_data.append({"date": date_str, "count": count})
+    
+    # 睡眠质量统计
+    sleep_quality_query = select(DreamModel.sleep_quality)
+    if days:
+        sleep_quality_query = sleep_quality_query.where(DreamModel.dream_date >= start_date)
+    sleep_result = await db.execute(sleep_quality_query)
+    sleep_qualities = sleep_result.scalars().all()
+    
+    sleep_stats = {
+        "average": round(sum(sleep_qualities) / len(sleep_qualities), 2) if sleep_qualities else 0,
+        "distribution": dict(Counter(sleep_qualities))
+    }
+    
+    # 计算连续记录天数
+    recording_streak = 0
+    if all_dreams:
+        dream_dates = sorted(set(d.dream_date.date() for d in all_dreams if not days or d.dream_date >= start_date.date()))
+        if dream_dates:
+            streak = 1
+            for i in range(1, len(dream_dates)):
+                if (dream_dates[i] - dream_dates[i-1]).days == 1:
+                    streak += 1
+                else:
+                    streak = 1
+            recording_streak = streak
+    
+    # 周平均
+    weeks = max(1, days // 7) if days else 1
+    avg_per_week = round(total_dreams / weeks, 2)
+    
+    return {
+        "success": True,
+        "data": {
+            "overview": {
+                "total_dreams": total_dreams,
+                "lucid_dreams": lucid_count,
+                "lucid_percentage": round(lucid_count / total_dreams * 100, 1) if total_dreams > 0 else 0,
+                "avg_clarity": avg_clarity,
+                "recording_streak": recording_streak,
+                "avg_per_week": avg_per_week,
+                "total_tags": len(tag_counts)
+            },
+            "mood_distribution": mood_distribution,
+            "theme_distribution": theme_distribution,
+            "time_distribution": time_distribution,
+            "trend_data": trend_data,
+            "sleep_stats": sleep_stats
+        },
+        "period": {
+            "days": days,
+            "start_date": start_date.isoformat() if days else None,
+            "end_date": datetime.utcnow().isoformat()
+        }
+    }
 
 
 @router.get("/overview", response_model=StatsResponse, summary="获取统计概览")
