@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#6B4C9A">
+    <meta name="description" content="DreamLog 梦境挑战 - 完成挑战获得成就徽章">
+    <title>DreamLog 🌙 - 梦境挑战</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="/static/images/moon.svg">
+    <style>
+        .challenges-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .challenges-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #6B4C9A 0%, #9B7EBD 100%);
+            border-radius: 16px;
+            color: white;
+            box-shadow: 0 4px 20px rgba(107, 76, 154, 0.3);
+        }
+
+        .challenges-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .challenges-header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        /* 统计概览 */
+        .challenges-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #6B4C9A;
+            display: block;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.25rem;
+        }
+
+        /* 筛选器 */
+        .challenges-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid rgba(107, 76, 154, 0.3);
+            background: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            background: #6B4C9A;
+            color: white;
+            border-color: #6B4C9A;
+        }
+
+        /* 挑战卡片 */
+        .challenges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .challenge-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #6B4C9A;
+        }
+
+        .challenge-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(107, 76, 154, 0.2);
+        }
+
+        .challenge-card.available {
+            border-left-color: #10B981;
+        }
+
+        .challenge-card.completed {
+            border-left-color: #F59E0B;
+            opacity: 0.8;
+        }
+
+        .challenge-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .challenge-title {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #1F2937;
+            margin-bottom: 0.25rem;
+        }
+
+        .challenge-type {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .type-daily {
+            background: #DBEAFE;
+            color: #1E40AF;
+        }
+
+        .type-weekly {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .type-special {
+            background: #F3E8FF;
+            color: #6B21A8;
+        }
+
+        .type-achievement {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .challenge-difficulty {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .difficulty-easy {
+            background: #D1FAE5;
+            color: #065F46;
+        }
+
+        .difficulty-medium {
+            background: #FEF3C7;
+            color: #92400E;
+        }
+
+        .difficulty-hard {
+            background: #FEE2E2;
+            color: #991B1B;
+        }
+
+        .difficulty-expert {
+            background: #F3E8FF;
+            color: #6B21A8;
+        }
+
+        .challenge-description {
+            color: #6B7280;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .challenge-tasks {
+            background: #F9FAFB;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .task-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .task-completed {
+            text-decoration: line-through;
+            color: #9CA3AF;
+        }
+
+        .challenge-progress {
+            margin-bottom: 1rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #E5E7EB;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6B4C9A, #9B7EBD);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: #6B7280;
+            text-align: right;
+        }
+
+        .challenge-reward {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 1rem;
+            border-top: 1px solid #E5E7EB;
+        }
+
+        .reward-badges {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            font-size: 1.5rem;
+            cursor: help;
+        }
+
+        .challenge-points {
+            font-weight: bold;
+            color: #F59E0B;
+            font-size: 1.1rem;
+        }
+
+        .challenge-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: #6B4C9A;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5A3A7A;
+        }
+
+        .btn-secondary {
+            background: #F3F4F6;
+            color: #1F2937;
+        }
+
+        .btn-secondary:hover {
+            background: #E5E7EB;
+        }
+
+        .btn-success {
+            background: #10B981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        /* 徽章展示区 */
+        .badges-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .badges-section h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #1F2937;
+        }
+
+        .badges-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+        }
+
+        .badge-item {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .badge-item:hover {
+            background: #F9FAFB;
+            transform: scale(1.05);
+        }
+
+        .badge-item.locked {
+            opacity: 0.4;
+            filter: grayscale(100%);
+        }
+
+        .badge-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .badge-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #1F2937;
+        }
+
+        .badge-desc {
+            font-size: 0.75rem;
+            color: #6B7280;
+            margin-top: 0.25rem;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #6B7280;
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #1F2937;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-brand">
+                <span class="logo">🌙</span>
+                <span class="brand-name">DreamLog</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">首页</a>
+                <a href="/dashboard">统计</a>
+                <a href="/challenges" class="active">挑战</a>
+                <a href="/weekly-report">周报</a>
+            </div>
+            <div class="nav-actions">
+                <a href="/" class="btn btn-primary">记录梦境</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main class="challenges-container">
+        <!-- 头部 -->
+        <section class="challenges-header">
+            <h1>🎯 梦境挑战</h1>
+            <p>完成挑战，解锁成就徽章，成为梦境大师！</p>
+        </section>
+
+        <!-- 统计概览 -->
+        <section class="challenges-stats" id="challengesStats">
+            <div class="stat-card">
+                <div class="stat-icon">📋</div>
+                <span class="stat-number" id="totalChallenges">0</span>
+                <span class="stat-label">总挑战数</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <span class="stat-number" id="completedChallenges">0</span>
+                <span class="stat-label">已完成</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔥</div>
+                <span class="stat-number" id="inProgressChallenges">0</span>
+                <span class="stat-label">进行中</span>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⭐</div>
+                <span class="stat-number" id="totalPoints">0</span>
+                <span class="stat-label">总积分</span>
+            </div>
+        </section>
+
+        <!-- 筛选器 -->
+        <section class="challenges-filters">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="available">可进行</button>
+            <button class="filter-btn" data-filter="in-progress">进行中</button>
+            <button class="filter-btn" data-filter="completed">已完成</button>
+            <button class="filter-btn" data-filter="daily">每日</button>
+            <button class="filter-btn" data-filter="weekly">每周</button>
+        </section>
+
+        <!-- 挑战列表 -->
+        <section class="challenges-grid" id="challengesGrid">
+            <!-- 挑战卡片将通过 JS 动态加载 -->
+        </section>
+
+        <!-- 徽章展示 -->
+        <section class="badges-section">
+            <h2>🏆 成就徽章</h2>
+            <div class="badges-grid" id="badgesGrid">
+                <!-- 徽章将通过 JS 动态加载 -->
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>DreamLog 🌙</h4>
+                <p>记录你的梦，发现潜意识的秘密</p>
+            </div>
+            <div class="footer-section">
+                <h4>链接</h4>
+                <a href="/">首页</a>
+                <a href="/dashboard">统计</a>
+                <a href="/challenges">挑战</a>
+                <a href="/weekly-report">周报</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 DreamLog. Made with ❤️</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/challenges.js"></script>
+</body>
+</html>

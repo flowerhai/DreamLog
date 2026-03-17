@@ -102,6 +102,12 @@ async def dashboard(request: Request):
     return templates.TemplateResponse("dashboard.html", {"request": request})
 
 
+@app.get("/challenges")
+async def challenges(request: Request):
+    """梦境挑战页面"""
+    return templates.TemplateResponse("challenges.html", {"request": request})
+
+
 @app.get("/health")
 async def health_check():
     """健康检查"""

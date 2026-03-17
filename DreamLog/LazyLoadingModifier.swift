@@ -147,6 +147,7 @@ struct LazyImageView: View {
 // MARK: - 数据分页加载
 
 /// 分页数据加载器
+@MainActor
 class PaginationLoader<Item>: ObservableObject {
     @Published var items: [Item] = []
     @Published var isLoading = false
@@ -235,6 +236,7 @@ extension View {
 // MARK: - 预加载管理器
 
 /// 预加载管理器
+@MainActor
 class PrefetchManager<Item: Identifiable>: ObservableObject {
     private var prefetchQueue: [Item] = []
     private let maxPrefetchCount: Int
