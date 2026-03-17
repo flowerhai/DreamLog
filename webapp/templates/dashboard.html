@@ -296,6 +296,67 @@
                 grid-template-columns: repeat(2, 1fr);
             }
         }
+
+        /* 打印样式 */
+        @media print {
+            .navbar,
+            .footer,
+            .dashboard-filters,
+            .back-link,
+            .nav-actions,
+            button,
+            .btn {
+                display: none !important;
+            }
+
+            .dashboard-container {
+                max-width: 100%;
+                padding: 0;
+                margin: 0;
+            }
+
+            .dashboard-header {
+                background: white !important;
+                color: #333 !important;
+                box-shadow: none !important;
+                padding: 1rem 0;
+                margin-bottom: 1rem;
+            }
+
+            .dashboard-header h1 {
+                color: #333 !important;
+                font-size: 2rem;
+            }
+
+            .dashboard-header p {
+                color: #666 !important;
+            }
+
+            .overview-card,
+            .chart-card,
+            .insights-section {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+                break-inside: avoid;
+            }
+
+            .stats-overview-grid,
+            .charts-grid,
+            .insights-grid {
+                display: block !important;
+            }
+
+            .overview-card,
+            .chart-card {
+                margin-bottom: 1rem;
+                page-break-inside: avoid;
+            }
+
+            body {
+                background: white !important;
+                color: #333 !important;
+            }
+        }
     </style>
 </head>
 <body>
@@ -337,6 +398,9 @@
                         <p style="margin: 0; opacity: 0.9;">深度分析你的梦境模式与潜意识趋势</p>
                     </div>
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn" style="background: white; border: 2px solid rgba(255,255,255,0.5); color: white;" onclick="window.print()" aria-label="打印仪表板">
+                            <span aria-hidden="true">🖨️</span> 打印
+                        </button>
                         <button class="btn btn-primary" onclick="exportStats()" aria-label="导出统计数据">
                             <span aria-hidden="true">📥</span> 导出统计
                         </button>
