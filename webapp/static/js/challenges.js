@@ -398,7 +398,7 @@ function createChallengeCard(challenge) {
                 ${isCompleted ? 
                     `<button class="btn btn-secondary" disabled>已完成</button>` : 
                     ''}
-                <button class="btn btn-secondary">详情</button>
+                <button class="btn btn-secondary" onclick="showChallengeDetail(${challenge.id})">详情</button>
             </div>
         </div>
     `;
@@ -538,6 +538,130 @@ function handleStartChallenge(e) {
         updateStats();
     }
 }
+
+// 显示挑战详情
+function showChallengeDetail(challengeId) {
+    const challenge = challenges.find(c => c.id === challengeId);
+    if (!challenge) return;
+    
+    const modal = document.getElementById('challengeModal');
+    const modalBody = document.getElementById('modalBody');
+    const modalFooter = document.getElementById('modalFooter');
+    
+    const typeLabels = {
+        daily: '每日',
+        weekly: '每周',
+        special: '特殊',
+        achievement: '成就'
+    };
+    
+    const difficultyLabels = {
+        easy: '简单',
+        medium: '中等',
+        hard: '困难',
+        expert: '专家'
+    };
+    
+    const progress = calculateProgress(challenge);
+    
+    modalBody.innerHTML = `
+        <div style="margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+                <span class="challenge-type type-${challenge.type}">${typeLabels[challenge.type]}</span>
+                <span class="challenge-difficulty difficulty-${challenge.difficulty}">${difficultyLabels[challenge.difficulty]}</span>
+                ${challenge.status === 'completed' ? '<span style="background: #D1FAE5; color: #065F46; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">✅ 已完成</span>' : ''}
+            </div>
+            <p style="color: #6B7280; line-height: 1.6;">${challenge.description}</p>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; color: #1F2937;">📋 任务列表</h3>
+            <div style="background: #F9FAFB; padding: 1rem; border-radius: 8px;">
+                ${challenge.tasks.map((task, index) => `
+                    <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0; ${index < challenge.tasks.length - 1 ? 'border-bottom: 1px solid #E5E7EB' : ''}">
+                        <input type="checkbox" ${task.completed ? 'checked disabled' : 'disabled'} style="width: 18px; height: 18px;">
+                        <span style="${task.completed ? 'text-decoration: line-through; color: #9CA3AF' : 'color: #1F2937'}">${task.title}</span>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.75rem; color: #1F2937;">📊 进度</h3>
+            <div style="background: #E5E7EB; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 0.5rem;">
+                <div style="width: ${progress}%; height: 100%; background: linear-gradient(90deg, #6B4C9A, #9B7EBD);"></div>
+            </div>
+            <div style="text-align: right; color: #6B7280; font-size: 0.9rem;">${challenge.tasks.filter(t => t.completed).length}/${challenge.tasks.length} (${progress}%)</div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #FEF3C7; border-radius: 8px;">
+            <div>
+                <div style="font-size: 0.9rem; color: #92400E; margin-bottom: 0.25rem;">🏆 完成奖励</div>
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                    ${challenge.badges.map(badge => `<span class="badge" style="font-size: 1.5rem;" title="成就徽章">${badge}</span>`).join('')}
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.9rem; color: #92400E;">积分奖励</div>
+                <div style="font-size: 1.5rem; font-weight: bold; color: #F59E0B;">+${challenge.points}</div>
+            </div>
+        </div>
+    `;
+    
+    modalFooter.innerHTML = `
+        <button class="btn btn-secondary" onclick="closeModal()">关闭</button>
+        ${challenge.status === 'available' ? `<button class="btn btn-primary" onclick="startChallengeFromModal(${challengeId})">开始挑战</button>` : ''}
+        ${challenge.status === 'completed' ? `<button class="btn btn-success" disabled>已完成</button>` : ''}
+    `;
+    
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+}
+
+// 从模态框开始挑战
+async function startChallengeFromModal(challengeId) {
+    try {
+        const response = await fetch(`${API_BASE}/challenges/${challengeId}/start`, {
+            method: 'POST'
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast(result.message, 'success');
+            closeModal();
+            await loadChallenges();
+        } else {
+            showToast(result.message, 'error');
+        }
+    } catch (error) {
+        console.error('开始挑战出错:', error);
+        showToast('网络错误，请稍后重试', 'error');
+    }
+}
+
+// 关闭模态框
+function closeModal() {
+    const modal = document.getElementById('challengeModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+}
+
+// 点击遮罩层关闭
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('challengeModal');
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeModal();
+        }
+    });
+    
+    // ESC 键关闭
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    });
+});
 
 // Toast 通知
 function showToast(message, type = 'info') {
