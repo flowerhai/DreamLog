@@ -635,3 +635,134 @@ extension SocialAchievement {
         ]
     }
 }
+
+// MARK: - 社交梦境元数据
+
+/// 社交梦境元数据 - 用于关联梦境与作者信息
+@Model
+final class SocialDream {
+    @Attribute(.unique) var id: UUID
+    var dreamId: UUID // 关联的梦境 ID
+    var authorId: String // 作者用户 ID
+    var authorName: String // 作者显示名称
+    var authorAvatar: String? // 作者头像 URL
+    var title: String // 梦境标题
+    var preview: String // 梦境预览内容
+    var mood: String? // 情绪
+    var isLucid: Bool // 是否清醒梦
+    var isPublic: Bool // 是否公开
+    var tags: [String] // 标签列表
+    
+    // 社交统计 (缓存，避免频繁计算)
+    var likeCount: Int // 点赞数
+    var commentCount: Int // 评论数
+    var bookmarkCount: Int // 收藏数
+    var viewCount: Int // 浏览次数
+    
+    var createdAt: Date
+    var updatedAt: Date
+    var publishedAt: Date? // 发布时间 (公开时设置)
+    
+    init(
+        dreamId: UUID,
+        authorId: String,
+        authorName: String,
+        authorAvatar: String? = nil,
+        title: String,
+        preview: String,
+        mood: String? = nil,
+        isLucid: Bool = false,
+        isPublic: Bool = true,
+        tags: [String] = []
+    ) {
+        self.id = UUID()
+        self.dreamId = dreamId
+        self.authorId = authorId
+        self.authorName = authorName
+        self.authorAvatar = authorAvatar
+        self.title = title
+        self.preview = preview
+        self.mood = mood
+        self.isLucid = isLucid
+        self.isPublic = isPublic
+        self.tags = tags
+        self.likeCount = 0
+        self.commentCount = 0
+        self.bookmarkCount = 0
+        self.viewCount = 0
+        self.createdAt = Date()
+        self.updatedAt = Date()
+        self.publishedAt = isPublic ? Date() : nil
+    }
+    
+    /// 更新社交统计
+    func updateStats(likes: Int, comments: Int, bookmarks: Int, views: Int) {
+        self.likeCount = likes
+        self.commentCount = comments
+        self.bookmarkCount = bookmarks
+        self.viewCount = views
+        self.updatedAt = Date()
+    }
+    
+    /// 切换公开状态
+    func togglePublic() {
+        self.isPublic.toggle()
+        self.publishedAt = isPublic ? Date() : nil
+        self.updatedAt = Date()
+    }
+    
+    /// 显示用的格式化时间
+    var displayTime: String {
+        let date = publishedAt ?? createdAt
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+    
+    /// 梦境完整预览 (带截断)
+    var truncatedPreview: String {
+        if preview.count <= 100 {
+            return preview
+        }
+        return String(preview.prefix(100)) + "..."
+    }
+}
+
+// MARK: - 社交梦境排序选项
+
+/// 社交梦境排序选项
+enum SocialDreamSortOption: String, CaseIterable {
+    case latest = "latest"           // 最新发布
+    case popular = "popular"         // 最受欢迎
+    case mostCommented = "mostCommented" // 最多评论
+    case mostViewed = "mostViewed"   // 最多浏览
+    
+    var displayName: String {
+        switch self {
+        case .latest: return "最新"
+        case .popular: return "热门"
+        case .mostCommented: return "讨论"
+        case .mostViewed: return "浏览"
+        }
+    }
+}
+
+// MARK: - 梦境浏览历史
+
+/// 用户浏览梦境历史记录
+@Model
+final class DreamViewHistory {
+    @Attribute(.unique) var id: UUID
+    var userId: String
+    var dreamId: UUID
+    var viewedAt: Date
+    var viewDuration: TimeInterval // 浏览时长 (秒)
+    
+    init(userId: String, dreamId: UUID, viewDuration: TimeInterval = 0) {
+        self.id = UUID()
+        self.userId = userId
+        self.dreamId = dreamId
+        self.viewedAt = Date()
+        self.viewDuration = viewDuration
+    }
+}

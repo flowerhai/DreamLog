@@ -25,7 +25,9 @@ final class SocialInteractionTests: XCTestCase {
             SocialFollow.self,
             SocialActivity.self,
             SocialAchievement.self,
-            SocialStats.self
+            SocialStats.self,
+            SocialDream.self,
+            DreamViewHistory.self
         ])
         let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         modelContainer = try ModelContainer(for: schema, configurations: [configuration])
@@ -492,5 +494,250 @@ final class SocialInteractionTests: XCTestCase {
         
         // 验证内容完整
         XCTAssertEqual(comment.content, longContent)
+    }
+    
+    // MARK: - 社交梦境元数据测试
+    
+    func testCreateSocialDream() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        let dreamId = UUID()
+        
+        // 创建社交梦境元数据
+        let socialDream = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "测试梦境",
+            preview: "这是一个测试梦境的预览内容",
+            mood: "happy",
+            isLucid: false,
+            isPublic: true,
+            tags: ["测试", "梦境"]
+        )
+        
+        // 验证创建成功
+        XCTAssertEqual(socialDream.dreamId, dreamId)
+        XCTAssertEqual(socialDream.title, "测试梦境")
+        XCTAssertEqual(socialDream.preview, "这是一个测试梦境的预览内容")
+        XCTAssertEqual(socialDream.mood, "happy")
+        XCTAssertEqual(socialDream.isLucid, false)
+        XCTAssertEqual(socialDream.isPublic, true)
+        XCTAssertEqual(socialDream.tags, ["测试", "梦境"])
+        XCTAssertNotNil(socialDream.publishedAt)
+    }
+    
+    func testUpdateSocialDream() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        let dreamId = UUID()
+        
+        // 首次创建
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "初始标题",
+            preview: "初始预览",
+            isPublic: true
+        )
+        
+        // 更新
+        let updatedDream = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "更新后的标题",
+            preview: "更新后的预览",
+            mood: "sad",
+            isLucid: true,
+            isPublic: false,
+            tags: ["更新"]
+        )
+        
+        // 验证更新
+        XCTAssertEqual(updatedDream.title, "更新后的标题")
+        XCTAssertEqual(updatedDream.preview, "更新后的预览")
+        XCTAssertEqual(updatedDream.mood, "sad")
+        XCTAssertEqual(updatedDream.isLucid, true)
+        XCTAssertEqual(updatedDream.isPublic, false)
+        XCTAssertEqual(updatedDream.tags, ["更新"])
+    }
+    
+    func testGetSocialDream() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        let dreamId = UUID()
+        
+        // 创建
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "测试梦境",
+            preview: "预览内容",
+            isPublic: true
+        )
+        
+        // 获取
+        let retrieved = try await service.getSocialDream(dreamId: dreamId)
+        
+        // 验证
+        XCTAssertNotNil(retrieved)
+        XCTAssertEqual(retrieved?.title, "测试梦境")
+    }
+    
+    func testGetPublicSocialDreams() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        
+        // 创建多个梦境
+        for i in 1...5 {
+            _ = try await service.createOrUpdateSocialDream(
+                dreamId: UUID(),
+                title: "梦境 \(i)",
+                preview: "预览 \(i)",
+                isPublic: i % 2 == 0 // 偶数公开，奇数私密
+            )
+        }
+        
+        // 获取公开梦境
+        let publicDreams = try await service.getPublicSocialDreams(limit: 10)
+        
+        // 验证只返回公开的 (2, 4)
+        XCTAssertEqual(publicDreams.count, 2)
+        XCTAssertTrue(publicDreams.allSatisfy { $0.isPublic })
+    }
+    
+    func testUpdateSocialDreamStats() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        let dreamId = UUID()
+        
+        // 创建梦境
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "测试梦境",
+            preview: "预览",
+            isPublic: true
+        )
+        
+        // 添加点赞
+        try await service.likeDream(dreamId, reaction: .like)
+        try await service.likeDream(dreamId, reaction: .love)
+        
+        // 添加评论
+        _ = try await service.createComment(dreamId: dreamId, content: "测试评论")
+        
+        // 更新统计
+        try await service.updateSocialDreamStats(dreamId: dreamId)
+        
+        // 获取更新后的梦境
+        let socialDream = try await service.getSocialDream(dreamId: dreamId)
+        
+        // 验证统计
+        XCTAssertEqual(socialDream?.likeCount, 2)
+        XCTAssertEqual(socialDream?.commentCount, 1)
+    }
+    
+    func testIncrementViewCount() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        let dreamId = UUID()
+        
+        // 创建梦境
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "测试梦境",
+            preview: "预览",
+            isPublic: true
+        )
+        
+        // 增加浏览次数
+        try await service.incrementViewCount(dreamId: dreamId, viewDuration: 30.0)
+        try await service.incrementViewCount(dreamId: dreamId, viewDuration: 45.0)
+        
+        // 获取梦境
+        let socialDream = try await service.getSocialDream(dreamId: dreamId)
+        
+        // 验证浏览次数
+        XCTAssertEqual(socialDream?.viewCount, 2)
+        
+        // 验证浏览历史
+        let history = try modelContainer.mainContext.fetch(FetchDescriptor<DreamViewHistory>())
+        XCTAssertEqual(history.count, 2)
+    }
+    
+    func testToggleDreamPublic() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        let dreamId = UUID()
+        
+        // 创建公开梦境
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "测试梦境",
+            preview: "预览",
+            isPublic: true
+        )
+        
+        // 切换为私密
+        let isPublicAfterToggle = try await service.toggleDreamPublic(dreamId: dreamId)
+        XCTAssertFalse(isPublicAfterToggle)
+        
+        // 验证梦境状态
+        let socialDream = try await service.getSocialDream(dreamId: dreamId)
+        XCTAssertFalse(socialDream?.isPublic ?? true)
+        
+        // 再次切换回公开
+        let isPublicAgain = try await service.toggleDreamPublic(dreamId: dreamId)
+        XCTAssertTrue(isPublicAgain)
+    }
+    
+    func testDeleteSocialDream() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        let dreamId = UUID()
+        
+        // 创建
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dreamId,
+            title: "测试梦境",
+            preview: "预览",
+            isPublic: true
+        )
+        
+        // 删除
+        try await service.deleteSocialDream(dreamId: dreamId)
+        
+        // 验证已删除
+        let retrieved = try await service.getSocialDream(dreamId: dreamId)
+        XCTAssertNil(retrieved)
+    }
+    
+    func testSocialDreamSortOptions() async throws {
+        let service = SocialInteractionService(modelContainer: modelContainer)
+        
+        // 创建不同热度的梦境
+        let dream1 = UUID()
+        let dream2 = UUID()
+        let dream3 = UUID()
+        
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dream1,
+            title: "热门梦境",
+            preview: "预览",
+            isPublic: true
+        )
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dream2,
+            title: "普通梦境",
+            preview: "预览",
+            isPublic: true
+        )
+        _ = try await service.createOrUpdateSocialDream(
+            dreamId: dream3,
+            title: "新梦境",
+            preview: "预览",
+            isPublic: true
+        )
+        
+        // 给 dream1 添加更多点赞
+        for _ in 0..<10 {
+            try await service.likeDream(dream1, reaction: .like)
+        }
+        
+        // 更新统计
+        try await service.updateSocialDreamStats(dreamId: dream1)
+        try await service.updateSocialDreamStats(dreamId: dream2)
+        try await service.updateSocialDreamStats(dreamId: dream3)
+        
+        // 按热门排序
+        let popularDreams = try await service.getPublicSocialDreams(limit: 10, sortBy: .popular)
+        XCTAssertEqual(popularDreams.first?.title, "热门梦境")
     }
 }

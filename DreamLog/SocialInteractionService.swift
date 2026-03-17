@@ -289,6 +289,15 @@ actor SocialInteractionService {
         ).count
     }
     
+    /// 获取收藏数
+    func getBookmarkCount(for dreamId: UUID) async throws -> Int {
+        try modelContext.fetch(
+            FetchDescriptor<SocialBookmark>(
+                predicate: #Predicate { $0.dreamId == dreamId }
+            )
+        ).count
+    }
+    
     // MARK: - 收藏管理
     
     /// 创建收藏夹
@@ -462,6 +471,168 @@ actor SocialInteractionService {
     /// 获取收藏总数
     func getTotalBookmarkCount() async throws -> Int {
         try modelContext.fetch(FetchDescriptor<SocialBookmark>()).count
+    }
+    
+    // MARK: - 社交梦境元数据管理
+    
+    /// 创建或更新社交梦境元数据
+    func createOrUpdateSocialDream(
+        dreamId: UUID,
+        title: String,
+        preview: String,
+        mood: String? = nil,
+        isLucid: Bool = false,
+        isPublic: Bool = true,
+        tags: [String] = []
+    ) async throws -> SocialDream {
+        // 检查是否已存在
+        if let existing = try modelContext.fetch(
+            FetchDescriptor<SocialDream>(
+                predicate: #Predicate { $0.dreamId == dreamId }
+            )
+        ).first {
+            // 更新现有记录
+            existing.title = title
+            existing.preview = preview
+            existing.mood = mood
+            existing.isLucid = isLucid
+            existing.isPublic = isPublic
+            existing.tags = tags
+            existing.updatedAt = Date()
+            if isPublic && existing.publishedAt == nil {
+                existing.publishedAt = Date()
+            }
+            try modelContext.save()
+            return existing
+        } else {
+            // 创建新记录
+            let socialDream = SocialDream(
+                dreamId: dreamId,
+                authorId: userId,
+                authorName: currentUserName,
+                title: title,
+                preview: preview,
+                mood: mood,
+                isLucid: isLucid,
+                isPublic: isPublic,
+                tags: tags
+            )
+            modelContext.insert(socialDream)
+            try modelContext.save()
+            
+            // 创建社交统计
+            try await updateStats { _ in }
+            
+            return socialDream
+        }
+    }
+    
+    /// 获取社交梦境
+    func getSocialDream(dreamId: UUID) async throws -> SocialDream? {
+        try modelContext.fetch(
+            FetchDescriptor<SocialDream>(
+                predicate: #Predicate { $0.dreamId == dreamId }
+            )
+        ).first
+    }
+    
+    /// 获取公开的社交梦境列表
+    func getPublicSocialDreams(
+        limit: Int = 50,
+        sortBy: SocialDreamSortOption = .latest
+    ) async throws -> [SocialDream] {
+        var descriptor = FetchDescriptor<SocialDream>(
+            predicate: #Predicate { $0.isPublic },
+            sortBy: [SortDescriptor(\.publishedAt, order: .reverse)]
+        )
+        descriptor.fetchLimit = limit
+        
+        let dreams = try modelContext.fetch(descriptor)
+        
+        // 根据排序选项排序
+        switch sortBy {
+        case .latest:
+            return dreams.sorted { ($0.publishedAt ?? $0.createdAt) > ($1.publishedAt ?? $1.createdAt) }
+        case .popular:
+            return dreams.sorted { $0.likeCount > $1.likeCount }
+        case .mostCommented:
+            return dreams.sorted { $0.commentCount > $1.commentCount }
+        case .mostViewed:
+            return dreams.sorted { $0.viewCount > $1.viewCount }
+        }
+    }
+    
+    /// 更新社交梦境统计
+    func updateSocialDreamStats(dreamId: UUID) async throws {
+        guard let socialDream = try getSocialDream(dreamId: dreamId) else {
+            return
+        }
+        
+        let likes = try getLikeCount(for: dreamId)
+        let comments = try getCommentCount(for: dreamId)
+        let bookmarks = try getBookmarkCount(for: dreamId)
+        
+        socialDream.updateStats(
+            likes: likes,
+            comments: comments,
+            bookmarks: bookmarks,
+            views: socialDream.viewCount
+        )
+        
+        try modelContext.save()
+    }
+    
+    /// 增加浏览次数
+    func incrementViewCount(dreamId: UUID, viewDuration: TimeInterval = 0) async throws {
+        guard let socialDream = try getSocialDream(dreamId: dreamId) else {
+            return
+        }
+        
+        socialDream.viewCount += 1
+        socialDream.updatedAt = Date()
+        
+        // 记录浏览历史
+        let history = DreamViewHistory(
+            userId: userId,
+            dreamId: dreamId,
+            viewDuration: viewDuration
+        )
+        modelContext.insert(history)
+        
+        try modelContext.save()
+    }
+    
+    /// 切换梦境公开状态
+    func toggleDreamPublic(dreamId: UUID) async throws -> Bool {
+        guard let socialDream = try getSocialDream(dreamId: dreamId) else {
+            throw NSError(domain: "SocialDream", code: 404, userInfo: [NSLocalizedDescriptionKey: "梦境不存在"])
+        }
+        
+        socialDream.togglePublic()
+        try modelContext.save()
+        
+        // 创建活动动态
+        if socialDream.isPublic {
+            try await createActivity(
+                type: .dreamPublished,
+                userId: userId,
+                userName: currentUserName,
+                dreamId: dreamId,
+                dreamTitle: socialDream.title,
+                dreamPreview: socialDream.preview,
+                content: "\(currentUserName) 分享了梦境「\(socialDream.title)」"
+            )
+        }
+        
+        return socialDream.isPublic
+    }
+    
+    /// 删除社交梦境元数据
+    func deleteSocialDream(dreamId: UUID) async throws {
+        if let socialDream = try getSocialDream(dreamId: dreamId) {
+            modelContext.delete(socialDream)
+            try modelContext.save()
+        }
     }
     
     // MARK: - 关注管理
@@ -751,21 +922,24 @@ actor SocialInteractionService {
         // 更新收到的点赞数
         let receivedCount = try getLikeCount(for: dreamId)
         
-        // 注意：要更新梦境作者的 totalLikesReceived，需要知道梦境的作者 ID
-        // 当前实现中，SocialLike 只存储 dreamId，没有直接关联作者
-        // 完整实现需要：
-        // 1. 添加 SocialDream 模型存储梦境元数据（包括作者 ID）
-        // 2. 或者与后端集成，通过 dreamId 查询作者信息
-        // 3. 或者在点赞时传入作者 ID 参数
+        // 查找梦境作者并更新其收到的点赞统计
+        if let socialDream = try modelContext.fetch(
+            FetchDescriptor<SocialDream>(
+                predicate: #Predicate { $0.dreamId == dreamId }
+            )
+        ).first {
+            // 更新梦境的点赞计数
+            socialDream.likeCount = receivedCount
+            
+            // 更新作者收到的点赞统计
+            try await updateAuthorStats(socialDream.authorId) { stats in
+                stats.totalLikesReceived = receivedCount
+            }
+        }
         
-        // 临时方案：更新当前用户的总点赞数（给出的点赞）
+        // 更新当前用户的总点赞数（给出的点赞）
         let givenCount = try getUserLikes().count
         try await updateStats { $0.totalLikesGiven = givenCount }
-        
-        // TODO: 当 SocialDream 模型添加后，在此处更新作者的 totalLikesReceived
-        // if let authorId = try await getDreamAuthorId(dreamId) {
-        //     try await updateAuthorStats(authorId) { $0.totalLikesReceived = receivedCount }
-        // }
     }
     
     private func updateCommentStats() async throws {
@@ -775,12 +949,43 @@ actor SocialInteractionService {
         
         // 更新用户统计
         try await updateStats { $0.totalComments = commentCount }
+        
+        // 更新梦境作者的评论收到统计
+        let comments = try modelContext.fetch(FetchDescriptor<SocialComment>(
+            predicate: #Predicate { $0.userId == userId }
+        ))
+        
+        for comment in comments {
+            if let socialDream = try modelContext.fetch(
+                FetchDescriptor<SocialDream>(
+                    predicate: #Predicate { $0.dreamId == comment.dreamId }
+                )
+            ).first {
+                try await updateAuthorStats(socialDream.authorId) { stats in
+                    stats.totalCommentLikes += 1
+                }
+            }
+        }
     }
     
     private func updateBookmarkStats() async throws {
         let bookmarkCount = try getTotalBookmarkCount()
         
         try await updateStats { $0.totalBookmarks = bookmarkCount }
+        
+        // 更新梦境作者的被收藏统计
+        let bookmarks = try modelContext.fetch(FetchDescriptor<SocialBookmark>())
+        for bookmark in bookmarks {
+            if let socialDream = try modelContext.fetch(
+                FetchDescriptor<SocialDream>(
+                    predicate: #Predicate { $0.dreamId == bookmark.dreamId }
+                )
+            ).first {
+                try await updateAuthorStats(socialDream.authorId) { stats in
+                    stats.totalBookmarksReceived += 1
+                }
+            }
+        }
     }
     
     private func updateFollowStats() async throws {
@@ -817,6 +1022,30 @@ actor SocialInteractionService {
         
         if stats == nil {
             let newStats = SocialStats(userId: userId)
+            modelContext.insert(newStats)
+            stats = newStats
+        }
+        
+        if let stats = stats {
+            update(stats)
+            stats.updatedAt = Date()
+            stats.calculateInfluenceScore()
+        }
+        
+        try modelContext.save()
+    }
+    
+    /// 更新作者统计 (用于更新梦境作者的收到点赞等统计)
+    private func updateAuthorStats(_ authorId: String, _ update: (SocialStats) -> Void) async throws {
+        var stats = try modelContext.fetch(
+            FetchDescriptor<SocialStats>(
+                predicate: #Predicate { $0.userId == authorId }
+            )
+        ).first
+        
+        if stats == nil {
+            // 如果作者还没有统计记录，创建一个新的
+            let newStats = SocialStats(userId: authorId)
             modelContext.insert(newStats)
             stats = newStats
         }
