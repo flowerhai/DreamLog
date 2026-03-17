@@ -29,7 +29,9 @@ struct DreamLogApp: App {
             let schema = Schema([
                 DreamTimeCapsule.self,
                 DreamPrediction.self,
-                DreamReflection.self
+                DreamReflection.self,
+                SmartNotificationConfig.self,
+                PendingNotificationInsight.self
             ])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,
@@ -57,6 +59,7 @@ struct DreamLogApp: App {
     @ObservedObject private var timelineService = DreamTimelineService.shared
     @ObservedObject private var smartReminderService = SmartReminderService.shared
     @ObservedObject private var challengeService = DreamChallengeService.shared
+    @StateObject private var smartNotificationService = DreamSmartNotificationService.shared
     @StateObject private var hapticService = DreamHapticFeedback.shared
     
     var body: some Scene {
@@ -71,6 +74,7 @@ struct DreamLogApp: App {
                 .environmentObject(trendService)
                 .environmentObject(timelineService)
                 .environmentObject(challengeService)
+                .environmentObject(smartNotificationService)
                 .environmentObject(hapticService)
                 .environmentObject(performanceService)
                 .environmentObject(accessibilityMonitor)
@@ -164,6 +168,10 @@ struct RootView: View {
         // 初始化智能提醒服务
         smartReminderService.checkAuthorization()
         smartReminderService.updateAnalysis(from: dreamStore)
+        
+        // 初始化智能通知服务
+        smartNotificationService.initialize(modelContext: modelContainer.mainContext)
+        smartNotificationService.checkAuthorization()
         
         // 初始化挑战系统
         challengeService.setupDreamListener()

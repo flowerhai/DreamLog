@@ -969,10 +969,10 @@ struct AdvancedDashboardView: View {
         
         Task {
             // 并行加载数据
-            async let _ = correlationService.generateCorrelationReport(dreams: dreamStore.dreams, periodDays: selectedPeriod)
-            async let _ = trendService.generateTrendReport(dreams: dreamStore.dreams, periodDays: selectedPeriod)
+            async let correlationReport = correlationService.generateCorrelationReport(dreams: dreamStore.dreams, periodDays: selectedPeriod)
+            async let trendReport = trendService.generateTrendReport(dreams: dreamStore.dreams, periodDays: selectedPeriod)
             
-            _ = await (_ , _)
+            _ = await (correlationReport, trendReport)
             
             await MainActor.run {
                 isRefreshing = false

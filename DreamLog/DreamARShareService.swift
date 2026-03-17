@@ -14,6 +14,7 @@ import MultipeerConnectivity
 
 /// AR 场景分享服务
 /// 支持多人实时共享 AR 场景，使用 MultipeerConnectivity 框架
+@MainActor
 class DreamARShareService: NSObject, ObservableObject {
     
     // MARK: - Singleton
@@ -235,8 +236,8 @@ class DreamARShareService: NSObject, ObservableObject {
 
 extension DreamARShareService: MCSessionDelegate {
     
-    func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
-        DispatchQueue.main.async {
+    nonisolated func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+        Task { @MainActor in
             switch state {
             case .connected:
                 if !self.participants.contains(where: { $0.peerID == peerID.displayName }) {
@@ -272,23 +273,23 @@ extension DreamARShareService: MCSessionDelegate {
         }
     }
     
-    func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
-        DispatchQueue.main.async {
+    nonisolated func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+        Task { @MainActor in
             // 处理接收到的数据
             // 可能是场景更新、聊天消息或位置更新
             print("📥 收到来自 \(peerID.displayName) 的数据：\(data.count) 字节")
         }
     }
     
-    func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+    nonisolated func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
         // 处理流数据
     }
     
-    func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
+    nonisolated func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
         // 处理资源接收
     }
     
-    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
+    nonisolated func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
         // 处理资源接收完成
     }
 }

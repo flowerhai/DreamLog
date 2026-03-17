@@ -229,6 +229,15 @@ struct SettingsView: View {
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
+                    
+                    // 智能通知系统入口 (Phase 61)
+                    NavigationLink(destination: DreamSmartNotificationSettingsView()) {
+                        Label("🔔 智能通知与推送", systemImage: "bell.badge.fill")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
                 }
                 
                 // 数据与同步
