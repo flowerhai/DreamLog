@@ -9,8 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var dreamStore: DreamStore
-    @StateObject private var challengeService = DreamChallengeService.shared
-    @StateObject private var favoriteManager = FavoriteManager.shared
+    @ObservedObject private var challengeService = DreamChallengeService.shared
+    @ObservedObject private var favoriteManager = FavoriteManager.shared
     @AppStorage("selectedMainTab") private var selectedTab = 0
     
     var body: some View {

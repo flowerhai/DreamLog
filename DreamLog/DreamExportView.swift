@@ -11,7 +11,7 @@ import UniformTypeIdentifiers
 
 struct DreamExportView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var exportService = DreamExportService.shared
+    @ObservedObject private var exportService = DreamExportService.shared
     
     @State private var selectedFormat: ExportFormat = .json
     @State private var dateRange: ExportDateRange = .all
@@ -28,8 +28,8 @@ struct DreamExportView: View {
     
     // Integration states
     @State private var selectedTab = 0
-    @StateObject private var notionService = NotionIntegrationService.shared
-    @StateObject private var obsidianService = ObsidianIntegrationService.shared
+    @ObservedObject private var notionService = NotionIntegrationService.shared
+    @ObservedObject private var obsidianService = ObsidianIntegrationService.shared
     
     @State private var notionApiKey = ""
     @State private var notionDatabaseId = ""

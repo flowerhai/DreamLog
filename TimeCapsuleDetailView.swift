@@ -11,7 +11,7 @@ import SwiftData
 struct TimeCapsuleDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var service = DreamTimeCapsuleService.shared
+    @ObservedObject private var service = DreamTimeCapsuleService.shared
     
     let capsule: DreamTimeCapsule
     let onDismiss: () -> Void

@@ -61,6 +61,8 @@ class CommunityPost: Identifiable, ObservableObject {
 /// 社区服务类
 @MainActor
 class CommunityService: ObservableObject {
+    static let shared = CommunityService()
+    
     @Published var posts: [CommunityPost] = []
     @Published var isLoading: Bool = false
     @Published var error: String?

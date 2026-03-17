@@ -15,7 +15,7 @@ import Charts
 /// ML 预测主界面 - 展示基于 Core ML 的梦境预测
 struct DreamPredictionMLView: View {
     @Environment(\.modelContext) private var modelContext
-    @StateObject private var mlService = DreamPredictionMLService.shared
+    @ObservedObject private var mlService = DreamPredictionMLService.shared
     @State private var predictions: [MLPredictionResult] = []
     @State private var isRefreshing = false
     @State private var selectedType: MLPredictionType?
@@ -562,7 +562,7 @@ struct MiniAccuracyChartView: View {
 
 struct MLPredictionConfigView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var service = DreamPredictionMLService.shared
+    @ObservedObject private var service = DreamPredictionMLService.shared
     @State private var config = MLPredictionConfig.default
     
     var body: some View {
@@ -641,7 +641,7 @@ struct MLPredictionConfigView: View {
 
 struct PredictionAccuracyDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var service = DreamPredictionMLService.shared
+    @ObservedObject private var service = DreamPredictionMLService.shared
     @State private var stats = PredictionAccuracyStats()
     
     var body: some View {

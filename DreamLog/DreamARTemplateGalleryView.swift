@@ -12,7 +12,7 @@ import SwiftUI
 
 /// AR 场景模板画廊界面
 struct DreamARTemplateGalleryView: View {
-    @StateObject private var templateService = DreamARTemplateService.shared
+    @ObservedObject private var templateService = DreamARTemplateService.shared
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedCategory: TemplateCategory? = nil

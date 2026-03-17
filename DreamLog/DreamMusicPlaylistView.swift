@@ -10,7 +10,7 @@ import SwiftUI
 
 /// 梦境音乐播放列表主界面
 struct DreamMusicPlaylistView: View {
-    @StateObject private var playlistService = DreamMusicPlaylistService.shared
+    @ObservedObject private var playlistService = DreamMusicPlaylistService.shared
     @State private var showingCreatePlaylist = false
     @State private var selectedPlaylist: DreamMusicPlaylist?
     @State private var showingSleepTimer = false

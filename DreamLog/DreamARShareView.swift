@@ -12,8 +12,8 @@ import SwiftUI
 
 /// AR 场景分享界面
 struct DreamARShareView: View {
-    @StateObject private var shareService = DreamARShareService.shared
-    @StateObject private var socialService = DreamARSocialService.shared
+    @ObservedObject private var shareService = DreamARShareService.shared
+    @ObservedObject private var socialService = DreamARSocialService.shared
     
     let sceneId: String
     let sceneTitle: String

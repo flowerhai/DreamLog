@@ -12,7 +12,7 @@ import SwiftData
 
 struct DreamInspirationView: View {
     @Environment(\.modelContext) private var modelContext
-    @StateObject private var service = DreamInspirationService.shared
+    @ObservedObject private var service = DreamInspirationService.shared
     
     @Query(sort: \CreativePrompt.createdAt, order: .reverse)
     private var prompts: [CreativePrompt]

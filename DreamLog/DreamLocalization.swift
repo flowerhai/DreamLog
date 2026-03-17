@@ -415,7 +415,7 @@ extension View {
 
 struct LanguageSettingsView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var localizationService = DreamLocalizationService.shared
+    @ObservedObject private var localizationService = DreamLocalizationService.shared
     @State private var showingFeedbackAlert = false
     
     var body: some View {

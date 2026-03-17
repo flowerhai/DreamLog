@@ -13,7 +13,7 @@ import Photos
 // MARK: - 周报主视图
 
 struct DreamWeeklyReportView: View {
-    @StateObject private var service = DreamWeeklyReportService.shared
+    @ObservedObject private var service = DreamWeeklyReportService.shared
     @State private var selectedTheme: WeeklyReportCard.ReportCardTheme = .starry
     @State private var showingShareSheet = false
     @State private var showingSettings = false
@@ -607,7 +607,7 @@ struct HistoryReportRow: View {
 
 struct WeeklyReportSettingsView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var service = DreamWeeklyReportService.shared
+    @ObservedObject private var service = DreamWeeklyReportService.shared
     
     var body: some View {
         NavigationView {

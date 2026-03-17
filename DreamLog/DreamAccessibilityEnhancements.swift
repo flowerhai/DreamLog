@@ -332,7 +332,7 @@ struct PerformanceStatus {
 // MARK: - 无障碍设置视图
 
 struct AccessibilitySettingsView: View {
-    @StateObject private var service = DreamAccessibilityService.shared
+    @ObservedObject private var service = DreamAccessibilityService.shared
     
     var body: some View {
         Form {

@@ -11,7 +11,7 @@ import WatchKit
 struct WatchContentView: View {
     @EnvironmentObject var dreamStore: DreamStore
     @EnvironmentObject var hapticFeedback: HapticFeedback
-    @StateObject private var syncService = DreamWatchSyncService.shared
+    @ObservedObject private var syncService = DreamWatchSyncService.shared
     @State private var selectedTab = 0
     @State private var isRecording = false
     @State private var showingHandoffPrompt = false

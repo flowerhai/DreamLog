@@ -14,8 +14,8 @@ struct DreamLogApp: App {
     
     let modelContainer: ModelContainer
     
-    @StateObject private var performanceService = PerformanceOptimizationService.shared
-    @StateObject private var accessibilityMonitor = AccessibilitySettingsMonitor.shared
+    @ObservedObject private var performanceService = PerformanceOptimizationService.shared
+    @ObservedObject private var accessibilityMonitor = AccessibilitySettingsMonitor.shared
     
     init() {
         Self.shared = self
@@ -59,8 +59,9 @@ struct DreamLogApp: App {
     @ObservedObject private var timelineService = DreamTimelineService.shared
     @ObservedObject private var smartReminderService = SmartReminderService.shared
     @ObservedObject private var challengeService = DreamChallengeService.shared
-    @StateObject private var smartNotificationService = DreamSmartNotificationService.shared
-    @StateObject private var hapticService = DreamHapticFeedback.shared
+    @ObservedObject private var smartNotificationService = DreamSmartNotificationService.shared
+    @ObservedObject private var hapticService = DreamHapticFeedback.shared
+    @ObservedObject private var communityService = CommunityService.shared
     
     var body: some Scene {
         WindowGroup {
@@ -78,6 +79,7 @@ struct DreamLogApp: App {
                 .environmentObject(hapticService)
                 .environmentObject(performanceService)
                 .environmentObject(accessibilityMonitor)
+                .environmentObject(communityService)
                 .modelContainer(modelContainer)
                 .onAppear {
                     // 启动完成
@@ -131,6 +133,7 @@ struct RootView: View {
                     .environmentObject(timelineService)
                     .environmentObject(challengeService)
                     .environmentObject(hapticService)
+                    .environmentObject(communityService)
             }
         }
         .onAppear {

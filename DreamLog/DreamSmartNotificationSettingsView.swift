@@ -14,7 +14,7 @@ struct DreamSmartNotificationSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var configs: [SmartNotificationConfig]
     
-    @StateObject private var service = DreamSmartNotificationService.shared
+    @ObservedObject private var service = DreamSmartNotificationService.shared
     @State private var showingPermissionAlert = false
     @State private var selectedConfig: SmartNotificationConfig?
     

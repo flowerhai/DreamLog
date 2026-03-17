@@ -11,7 +11,7 @@ import SwiftUI
 
 struct DreamWidgetConfigurationView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject private var widgetService = DreamWidgetService.shared
+    @ObservedObject private var widgetService = DreamWidgetService.shared
     
     @State private var selectedTheme: WidgetTheme = WidgetTheme.default
     @State private var selectedLayout: WidgetLayout = WidgetLayout.default

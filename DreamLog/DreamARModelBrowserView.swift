@@ -12,7 +12,7 @@ import SwiftUI
 
 /// 3D 模型浏览器界面
 struct DreamARModelBrowserView: View {
-    @StateObject private var modelsLibrary = DreamARModelsLibrary.shared
+    @ObservedObject private var modelsLibrary = DreamARModelsLibrary.shared
     @Environment(\.dismiss) private var dismiss
     
     @State private var selectedCategory: ModelCategory? = nil

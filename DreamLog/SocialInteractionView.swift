@@ -15,7 +15,7 @@ struct SocialInteractionView: View {
     @Query private var activities: [SocialActivity]
     @Query private var bookmarks: [SocialBookmarkCollection]
     
-    @StateObject private var service = SocialInteractionService.shared
+    @ObservedObject private var service = SocialInteractionService.shared
     @State private var selectedTab = 0
     @State private var showingCreateCollection = false
     @State private var selectedActivityFilter: ActivityType?
@@ -511,7 +511,7 @@ struct BookmarkDreamRow: View {
 
 struct SocialStatsView: View {
     @State private var stats: SocialStats?
-    @StateObject private var service = SocialInteractionService.shared
+    @ObservedObject private var service = SocialInteractionService.shared
     
     var body: some View {
         ScrollView {

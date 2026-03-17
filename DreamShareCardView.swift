@@ -11,7 +11,7 @@ import SwiftUI
 // MARK: - 分享卡片主视图
 
 struct DreamShareCardView: View {
-    @StateObject private var service = DreamShareCardService.shared
+    @ObservedObject private var service = DreamShareCardService.shared
     @State private var cards: [DreamShareCard] = []
     @State private var selectedCard: DreamShareCard?
     @State private var showingCreateSheet = false
@@ -188,7 +188,7 @@ struct CardThumbnailView: View {
 
 struct CreateCardView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var service = DreamShareCardService.shared
+    @ObservedObject private var service = DreamShareCardService.shared
     @State private var selectedDream: Dream?
     @State private var selectedTemplate: ShareCardTemplate = .presets[0]
     @State private var selectedTheme: ShareCardTheme = .starry
@@ -397,7 +397,7 @@ struct ThemeButton: View {
 
 struct CardDetailView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var service = DreamShareCardService.shared
+    @ObservedObject private var service = DreamShareCardService.shared
     let card: DreamShareCard
     @State private var cardImage: UIImage?
     @State private var showingShareSheet = false

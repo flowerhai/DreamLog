@@ -283,8 +283,10 @@ class DreamSmartNotificationService: ObservableObject {
         // 计算本周日期范围
         let calendar = Calendar.current
         let now = Date()
-        let weekStartDate = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-        let weekEndDate = calendar.date(byAdding: .day, value: 6, to: weekStartDate)!
+        guard let weekStartDate = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)),
+              let weekEndDate = calendar.date(byAdding: .day, value: 6, to: weekStartDate) else {
+            return
+        }
         
         // 检查是否已发送
         if let lastSent = lastWeeklySummaryDate,

@@ -10,7 +10,7 @@ import SwiftData
 
 struct DreamTimeCapsuleView: View {
     @Environment(\.modelContext) private var modelContext
-    @StateObject private var service = DreamTimeCapsuleService.shared
+    @ObservedObject private var service = DreamTimeCapsuleService.shared
     @State private var showingCreateSheet = false
     @State private var selectedCapsule: DreamTimeCapsule?
     @State private var showingDetail = false

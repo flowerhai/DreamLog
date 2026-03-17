@@ -11,7 +11,7 @@ import SwiftData
 struct CreateTimeCapsuleView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var service = DreamTimeCapsuleService.shared
+    @ObservedObject private var service = DreamTimeCapsuleService.shared
     
     @State private var config = TimeCapsuleConfig()
     @State private var showingDreamPicker = false

@@ -12,7 +12,7 @@ import SwiftData
 /// 社交成就界面
 struct SocialAchievementView: View {
     @Query(sort: \SocialAchievement.unlockedAt, order: .reverse) private var achievements: [SocialAchievement]
-    @StateObject private var service = SocialInteractionService.shared
+    @ObservedObject private var service = SocialInteractionService.shared
     @State private var selectedFilter: AchievementFilter = .all
     @State private var showingAchievementDetail = false
     @State private var selectedAchievement: SocialAchievement?

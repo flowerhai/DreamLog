@@ -14,7 +14,7 @@ import SwiftData
 /// 梦境孵育主视图
 struct DreamIncubationView: View {
     @Environment(\.modelContext) private var modelContext
-    @StateObject private var service = DreamIncubationService.shared
+    @ObservedObject private var service = DreamIncubationService.shared
     @State private var showingCreateSheet = false
     @State private var selectedType: IncubationType?
     @State private var showingTemplateDetail = false

@@ -12,7 +12,7 @@ import SwiftData
 // MARK: - 社区主界面
 
 struct DreamCommunityView: View {
-    @StateObject private var service = DreamCommunityService.shared
+    @ObservedObject private var service = DreamCommunityService.shared
     @State private var selectedFilter: CommunityFilter = .hot
     @State private var showingShareSheet = false
     @State private var selectedDream: SharedDream?
@@ -373,8 +373,8 @@ struct DreamCard: View {
 
 struct ShareDreamView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var service = DreamCommunityService.shared
-    @StateObject private var dreamStore = DreamStore.shared
+    @ObservedObject private var service = DreamCommunityService.shared
+    @ObservedObject private var dreamStore = DreamStore.shared
     @State private var selectedDream: Dream?
     @State private var title = ""
     @State private var allowAIAnalysis = true

@@ -9,7 +9,7 @@ import SwiftUI
 
 /// 全局搜索视图
 struct GlobalSearchView: View {
-    @StateObject private var searchService = GlobalSearchService.shared
+    @ObservedObject private var searchService = GlobalSearchService.shared
     @State private var searchText = ""
     @State private var selectedFilter: SearchFilter = .all
     @State private var selectedResult: SearchResult?
