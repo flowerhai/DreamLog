@@ -492,6 +492,7 @@ async function handleTaskChange(e) {
             
             if (result.message.includes('恭喜完成')) {
                 showToast(result.message, 'success');
+                celebrateChallengeCompletion(challengeId);
             }
             
             // 重新加载挑战列表和统计
@@ -514,6 +515,7 @@ async function handleTaskChange(e) {
                 if (allCompleted && challenge.status !== 'completed') {
                     challenge.status = 'completed';
                     showToast(`🎉 恭喜完成挑战：${challenge.title}！`, 'success');
+                    celebrateChallengeCompletion(challengeId);
                     updateStats();
                 } else if (completed && challenge.status === 'available') {
                     challenge.status = 'in-progress';
@@ -662,6 +664,171 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+// 庆祝挑战完成动画
+function celebrateChallengeCompletion(challengeId) {
+    const challenge = challenges.find(c => c.id === challengeId);
+    if (!challenge) return;
+    
+    // 创建庆祝容器
+    const celebration = document.createElement('div');
+    celebration.className = 'celebration-overlay';
+    celebration.innerHTML = `
+        <div class="celebration-content">
+            <div class="celebration-icon">🎉</div>
+            <h2>恭喜完成挑战！</h2>
+            <p>${challenge.title}</p>
+            <div class="celebration-rewards">
+                <span class="reward-badge">${challenge.badges.join(' ')}</span>
+                <span class="reward-points">+${challenge.points} 积分</span>
+            </div>
+        </div>
+    `;
+    
+    // 添加样式
+    celebration.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        animation: fadeIn 0.3s ease;
+    `;
+    
+    const content = celebration.querySelector('.celebration-content');
+    content.style.cssText = `
+        background: linear-gradient(135deg, #6B4C9A 0%, #9B7EBD 100%);
+        color: white;
+        padding: 3rem;
+        border-radius: 24px;
+        text-align: center;
+        max-width: 500px;
+        margin: 2rem;
+        box-shadow: 0 20px 60px rgba(107, 76, 154, 0.4);
+        animation: scaleUp 0.5s ease;
+    `;
+    
+    const icon = celebration.querySelector('.celebration-icon');
+    icon.style.cssText = `
+        font-size: 5rem;
+        margin-bottom: 1rem;
+        animation: bounce 1s infinite;
+    `;
+    
+    const h2 = celebration.querySelector('h2');
+    h2.style.cssText = `
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    `;
+    
+    const p = celebration.querySelector('p');
+    p.style.cssText = `
+        font-size: 1.25rem;
+        opacity: 0.9;
+        margin-bottom: 1.5rem;
+    `;
+    
+    const rewards = celebration.querySelector('.celebration-rewards');
+    rewards.style.cssText = `
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        align-items: center;
+    `;
+    
+    const badge = celebration.querySelector('.reward-badge');
+    badge.style.cssText = `
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-size: 2rem;
+    `;
+    
+    const points = celebration.querySelector('.reward-points');
+    points.style.cssText = `
+        background: rgba(245, 158, 11, 0.3);
+        padding: 0.75rem 1.5rem;
+        border-radius: 50px;
+        font-size: 1.5rem;
+        font-weight: bold;
+    `;
+    
+    // 添加动画 keyframes
+    if (!document.getElementById('celebration-styles')) {
+        const style = document.createElement('style');
+        style.id = 'celebration-styles';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes scaleUp {
+                from { transform: scale(0.5); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            @keyframes bounce {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-20px); }
+            }
+            @keyframes confettiFall {
+                from { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+                to { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(celebration);
+    
+    // 创建五彩纸屑效果
+    createConfetti(celebration);
+    
+    // 3 秒后自动关闭
+    setTimeout(() => {
+        celebration.style.animation = 'fadeOut 0.3s ease';
+        setTimeout(() => {
+            celebration.remove();
+        }, 300);
+    }, 3000);
+    
+    // 点击关闭
+    celebration.addEventListener('click', (e) => {
+        if (e.target === celebration) {
+            celebration.style.animation = 'fadeOut 0.3s ease';
+            setTimeout(() => {
+                celebration.remove();
+            }, 300);
+        }
+    });
+}
+
+// 创建五彩纸屑效果
+function createConfetti(container) {
+    const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'];
+    const confettiCount = 50;
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confetti = document.createElement('div');
+        confetti.style.cssText = `
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+            left: ${Math.random() * 100}%;
+            top: -10px;
+            border-radius: ${Math.random() > 0.5 ? '50%' : '2px'};
+            animation: confettiFall ${2 + Math.random() * 2}s linear forwards;
+            opacity: 0.8;
+        `;
+        container.appendChild(confetti);
+    }
+}
 
 // Toast 通知
 function showToast(message, type = 'info') {
