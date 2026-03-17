@@ -50,6 +50,12 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 8)
                 
+                // 模式预测卡片 ✨ NEW (Phase 55)
+                PatternPredictionCard()
+                    .environmentObject(dreamStore)
+                    .padding(.horizontal)
+                    .padding(.bottom, 8)
+                
                 // 搜索栏
                 HStack {
                     SearchBar(text: $searchText)

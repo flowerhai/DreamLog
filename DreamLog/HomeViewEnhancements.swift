@@ -282,6 +282,80 @@ struct DailyTipCard: View {
     }
 }
 
+// MARK: - 模式预测卡片 (Phase 55)
+
+struct PatternPredictionCard: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @State private var showingPrediction = false
+    
+    var predictionCount: Int {
+        dreamStore.dreams.count
+    }
+    
+    var hasEnoughData: Bool {
+        predictionCount >= 5
+    }
+    
+    var body: some View {
+        Button(action: { showingPrediction = true }) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.title2)
+                            .foregroundColor(Color(hex: "9B7EBD"))
+                        
+                        Text("模式预测 🔮")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.caption)
+                        .foregroundColor(.gray)
+                }
+                
+                if hasEnoughData {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("基于 \(predictionCount) 个梦境，AI 将预测你的未来梦境模式")
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+                            .lineLimit(2)
+                        
+                        HStack(spacing: 12) {
+                            Label("主题预测", systemImage: "tag.fill")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "5B9BD5"))
+                            
+                            Label("情绪趋势", systemImage: "heart.fill")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "FF6B6B"))
+                            
+                            Label("清醒梦概率", systemImage: "brain.head.profile")
+                                .font(.caption)
+                                .foregroundColor(Color(hex: "70AD47"))
+                        }
+                    }
+                } else {
+                    Text("需要至少 5 个梦境才能生成预测 (当前：\(predictionCount))")
+                        .font(.subheadline)
+                        .foregroundColor(.orange)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(hex: "16213E"))
+            .cornerRadius(12)
+        }
+        .sheet(isPresented: $showingPrediction) {
+            DreamPatternPredictionView()
+                .environmentObject(dreamStore)
+        }
+    }
+}
+
 // MARK: - 梦境颜色扩展
 
 extension Mood {
