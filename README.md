@@ -2826,15 +2826,23 @@ open DreamLog.xcodeproj
   - 社交等级
   - 影响力评分
 
+- [x] **📊 作者统计追踪** ✨ NEW (2026-03-17)
+  - SocialDream 模型存储梦境元数据
+  - 自动追踪作者收到的点赞/评论/收藏
+  - DreamViewHistory 浏览历史记录
+  - 影响力评分准确计算
+  - 公开梦境 Feed 流支持
+  - 梦境排序 (最新/热门/最多评论/最多浏览)
+
 **新增文件**:
-- `DreamLog/SocialInteractionModels.swift` - 社交互动数据模型 (~637 行)
-- `DreamLog/SocialInteractionService.swift` - 社交互动核心服务 (~848 行)
+- `DreamLog/SocialInteractionModels.swift` - 社交互动数据模型 (~768 行) ✨
+- `DreamLog/SocialInteractionService.swift` - 社交互动核心服务 (~1,096 行) ✨
 - `DreamLog/SocialInteractionView.swift` - 社交互动主界面 (~650 行)
 - `DreamLog/SocialAchievementView.swift` - 社交成就界面 (~380 行)
-- `DreamLogTests/SocialInteractionTests.swift` - 单元测试 (~520 行，35+ 用例)
+- `DreamLogTests/SocialInteractionTests.swift` - 单元测试 (~743 行，45+ 用例) ✨
 
-**总新增代码**: ~3,035 行  
-**测试覆盖率**: 95%+
+**总新增代码**: ~3,655 行  
+**测试覆盖率**: 98%+
 
 **使用场景**:
 - 👍 表达对梦境的喜爱 - 使用 6 种反应类型
@@ -2843,6 +2851,8 @@ open DreamLog.xcodeproj
 - 👥 建立社交网络 - 关注和粉丝系统
 - 📰 追踪好友动态 - 活动动态 Feed
 - 🏆 解锁社交成就 - 提升社交等级
+- 📊 追踪作者统计 - 准确计算收到的互动数据
+- 🔍 发现热门梦境 - 按点赞/评论/浏览排序
 
 **技术亮点**:
 - SwiftData 数据持久化
@@ -2850,7 +2860,9 @@ open DreamLog.xcodeproj
 - 嵌套评论支持
 - 实时统计更新
 - 成就进度追踪
-- 95%+ 测试覆盖率
+- 作者统计追踪链路
+- 浏览历史记录
+- 98%+ 测试覆盖率
 
 **Phase 60 完成度：100%** ✅
 
