@@ -170,7 +170,9 @@ struct RootView: View {
         smartReminderService.updateAnalysis(from: dreamStore)
         
         // 初始化智能通知服务
-        smartNotificationService.initialize(modelContext: modelContainer.mainContext)
+        if let modelContext = SharedModelContainer.main?.mainContext {
+            smartNotificationService.initialize(modelContext: modelContext)
+        }
         smartNotificationService.checkAuthorization()
         
         // 初始化挑战系统

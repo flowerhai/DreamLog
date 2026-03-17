@@ -816,13 +816,16 @@ actor SocialInteractionService {
         ).first
         
         if stats == nil {
-            stats = SocialStats(userId: userId)
-            modelContext.insert(stats!)
+            let newStats = SocialStats(userId: userId)
+            modelContext.insert(newStats)
+            stats = newStats
         }
         
-        update(stats!)
-        stats!.updatedAt = Date()
-        stats!.calculateInfluenceScore()
+        if let stats = stats {
+            update(stats)
+            stats.updatedAt = Date()
+            stats.calculateInfluenceScore()
+        }
         
         try modelContext.save()
     }
@@ -836,12 +839,13 @@ actor SocialInteractionService {
         ).first
         
         if stats == nil {
-            stats = SocialStats(userId: userId)
-            modelContext.insert(stats!)
+            let newStats = SocialStats(userId: userId)
+            modelContext.insert(newStats)
+            stats = newStats
             try modelContext.save()
         }
         
-        return stats!
+        return stats ?? SocialStats(userId: userId)
     }
     
     // MARK: - 通知
