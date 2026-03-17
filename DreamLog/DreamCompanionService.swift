@@ -146,14 +146,27 @@ class DreamCompanionService: ObservableObject {
     
     /// 发送用户消息并获取 AI 响应
     func sendMessage(_ content: String, dreamId: UUID? = nil) async -> CompanionResponse {
-        guard let session = currentSession else {
-            // 自动创建新会话
+        // 确保有会话
+        if currentSession == nil {
             _ = await createSession(dreamId: dreamId)
+        }
+        
+        guard let session = currentSession else {
+            // 如果仍然没有会话，返回错误响应
+            return CompanionResponse(
+                message: "无法创建对话会话，请稍后重试。",
+                messageType: .error,
+                tone: .supportive,
+                suggestedQuestions: [],
+                relatedDreams: [],
+                insights: [],
+                actions: []
+            )
         }
         
         // 添加用户消息
         let userMessage = CompanionMessage(
-            sessionId: currentSession!.id,
+            sessionId: session.id,
             messageType: .question,
             content: content,
             dreamId: dreamId,
@@ -167,7 +180,7 @@ class DreamCompanionService: ObservableObject {
         
         // 添加 AI 响应消息
         let aiMessage = CompanionMessage(
-            sessionId: currentSession!.id,
+            sessionId: session.id,
             messageType: response.messageType,
             tone: response.tone,
             content: response.message,

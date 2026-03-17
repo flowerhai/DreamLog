@@ -237,8 +237,10 @@ struct DreamReflectionView: View {
     // MARK: - Load Data
     
     private func loadReflections() async {
-        service = DreamReflectionService(modelContext: modelContext)
-        service?.onReflectionsChanged = {
+        let reflectionService = DreamReflectionService(modelContext: modelContext)
+        service = reflectionService
+        
+        reflectionService.onReflectionsChanged = {
             Task { @MainActor in
                 await loadReflections()
             }
@@ -246,11 +248,11 @@ struct DreamReflectionView: View {
         
         do {
             if !searchQuery.isEmpty {
-                reflections = try await service!.searchReflections(query: searchQuery)
+                reflections = try await reflectionService.searchReflections(query: searchQuery)
             } else {
-                reflections = try await service!.fetchAllReflections(limit: 50)
+                reflections = try await reflectionService.fetchAllReflections(limit: 50)
             }
-            stats = try await service!.getReflectionStats()
+            stats = try await reflectionService.getReflectionStats()
         } catch {
             print("加载反思失败：\(error)")
         }
