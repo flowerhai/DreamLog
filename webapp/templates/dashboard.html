@@ -401,6 +401,9 @@
                         </p>
                     </div>
                     <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                        <button class="btn" style="background: white; border: 2px solid rgba(255,255,255,0.5); color: white;" onclick="refreshData()" aria-label="刷新数据">
+                            <span aria-hidden="true">🔄</span> 刷新
+                        </button>
                         <button class="btn" style="background: white; border: 2px solid rgba(255,255,255,0.5); color: white;" onclick="window.print()" aria-label="打印仪表板">
                             <span aria-hidden="true">🖨️</span> 打印
                         </button>
@@ -563,6 +566,8 @@
         // 全局变量存储图表实例
         let charts = {};
         let currentTimeRange = 30;
+        let autoRefreshInterval = null;
+        const AUTO_REFRESH_MS = 5 * 60 * 1000; // 5 分钟
 
         // 设置时间范围
         async function setTimeRange(days) {
@@ -1047,6 +1052,47 @@
             }, 3000);
         }
 
+        // 刷新数据
+        async function refreshData() {
+            // 显示加载状态
+            const refreshBtn = event?.target?.closest('button');
+            if (refreshBtn) {
+                const originalContent = refreshBtn.innerHTML;
+                refreshBtn.innerHTML = '<span aria-hidden="true">⏳</span> 刷新中...';
+                refreshBtn.disabled = true;
+                
+                try {
+                    await loadDashboardData();
+                    showNotification('数据已刷新', 'success');
+                } catch (error) {
+                    showNotification('刷新失败，请重试', 'error');
+                } finally {
+                    refreshBtn.innerHTML = originalContent;
+                    refreshBtn.disabled = false;
+                }
+            } else {
+                await loadDashboardData();
+            }
+        }
+
+        // 启动自动刷新
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            autoRefreshInterval = setInterval(() => {
+                loadDashboardData();
+            }, AUTO_REFRESH_MS);
+        }
+
+        // 停止自动刷新
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
         // 更新最后更新时间
         function updateLastUpdated() {
             const now = new Date();
@@ -1066,6 +1112,16 @@
         // 页面加载时初始化
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardData();
+            startAutoRefresh();
+        });
+
+        // 页面可见性变化时控制自动刷新
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopAutoRefresh();
+            } else {
+                startAutoRefresh();
+            }
         });
     </script>
 </body>
