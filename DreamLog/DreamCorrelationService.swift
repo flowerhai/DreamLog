@@ -10,6 +10,7 @@ import Foundation
 import Combine
 
 /// 梦境关联分析服务
+@MainActor
 class DreamCorrelationService: ObservableObject {
     static let shared = DreamCorrelationService()
     

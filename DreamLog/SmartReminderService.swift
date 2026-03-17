@@ -171,6 +171,7 @@ struct RecordingHabitAnalysis {
 }
 
 // MARK: - 智能提醒服务
+@MainActor
 class SmartReminderService: ObservableObject {
     static let shared = SmartReminderService()
     

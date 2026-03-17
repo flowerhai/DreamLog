@@ -9,6 +9,7 @@ import Foundation
 import SwiftUI
 import UIKit
 
+@MainActor
 class ShareService: ObservableObject {
     @Published var isGenerating: Bool = false
     @Published var generatedImage: UIImage?

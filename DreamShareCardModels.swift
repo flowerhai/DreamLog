@@ -8,6 +8,7 @@
 
 import Foundation
 import SwiftUI
+import SwiftData
 
 // MARK: - 分享卡片数据模型
 

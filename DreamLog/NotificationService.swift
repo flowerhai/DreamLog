@@ -8,6 +8,7 @@
 import Foundation
 import UserNotifications
 
+@MainActor
 class NotificationService: ObservableObject {
     @Published var isAuthorized: Bool = false
     @Published var hasPendingNotifications: Bool = false

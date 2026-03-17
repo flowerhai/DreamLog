@@ -135,6 +135,7 @@ extension Notification.Name {
 }
 
 /// 监听无障碍设置变化
+@MainActor
 class AccessibilitySettingsMonitor: ObservableObject {
     static let shared = AccessibilitySettingsMonitor()
     

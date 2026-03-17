@@ -250,6 +250,7 @@ enum VideoEditError: LocalizedError {
 // MARK: - 视频编辑服务
 
 /// 梦境视频编辑服务
+@MainActor
 class DreamVideoEditor: ObservableObject {
     static let shared = DreamVideoEditor()
     

@@ -299,6 +299,7 @@ struct SocialMediaPreset {
 // MARK: - 视频增强服务
 
 /// 梦境视频增强服务
+@MainActor
 class DreamVideoEnhancementService: ObservableObject {
     static let shared = DreamVideoEnhancementService()
     
@@ -923,6 +924,7 @@ struct VideoQualityMetrics {
 // MARK: - 视频分析服务 (Video Analytics Service)
 
 /// 视频观看分析
+@MainActor
 class VideoAnalyticsService: ObservableObject {
     @Published var totalViews: Int = 0
     @Published var totalShares: Int = 0

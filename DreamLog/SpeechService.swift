@@ -11,6 +11,7 @@ import AVFoundation
 import Combine
 import SwiftUI
 
+@MainActor
 class SpeechService: ObservableObject {
     @Published var isRecording: Bool = false
     @Published var transcription: String = ""

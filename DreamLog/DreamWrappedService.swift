@@ -125,6 +125,7 @@ struct DreamWrappedData: Codable, Equatable {
 
 // MARK: - Dream Wrapped Service
 
+@MainActor
 class DreamWrappedService: ObservableObject {
     static let shared = DreamWrappedService()
     

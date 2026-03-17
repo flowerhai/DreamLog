@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 class DreamStore: ObservableObject {
     static let shared = DreamStore()
     

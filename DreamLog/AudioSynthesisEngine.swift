@@ -15,6 +15,7 @@ import Combine
 
 /// 真实音频合成引擎
 /// 使用 AVAudioEngine 和 AudioKit 风格的合成器生成梦境音乐
+@MainActor
 class AudioSynthesisEngine: ObservableObject {
     static let shared = AudioSynthesisEngine()
     

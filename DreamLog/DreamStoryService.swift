@@ -11,6 +11,7 @@ import NaturalLanguage
 
 /// Dream Story Generation Service
 /// Converts dream records into polished narrative stories
+@MainActor
 class DreamStoryService: ObservableObject {
     
     static let shared = DreamStoryService()

@@ -612,6 +612,7 @@ extension VideoTemplate {
 // MARK: - 模板市场服务
 
 /// 梦境视频模板市场服务
+@MainActor
 class DreamVideoTemplateMarket: ObservableObject {
     static let shared = DreamVideoTemplateMarket()
     

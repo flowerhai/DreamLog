@@ -9,6 +9,7 @@ import Foundation
 import Combine
 
 /// 全局搜索服务
+@MainActor
 class GlobalSearchService: ObservableObject {
     static let shared = GlobalSearchService()
     

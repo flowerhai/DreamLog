@@ -54,6 +54,7 @@ struct SyncConflict {
 }
 
 /// 云同步服务
+@MainActor
 class CloudSyncService: ObservableObject {
     @Published var syncStatus: CloudSyncStatus = .idle
     @Published var isCloudEnabled: Bool = false

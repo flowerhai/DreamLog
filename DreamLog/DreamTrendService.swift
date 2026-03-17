@@ -10,6 +10,7 @@ import Foundation
 import Combine
 
 /// 梦境趋势预测服务
+@MainActor
 class DreamTrendService: ObservableObject {
     static let shared = DreamTrendService()
     

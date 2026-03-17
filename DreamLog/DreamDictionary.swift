@@ -52,6 +52,7 @@ struct DreamSymbol: Identifiable, Codable {
 }
 
 /// 梦境词典服务
+@MainActor
 class DreamDictionaryService: ObservableObject {
     @Published var symbols: [DreamSymbol] = []
     @Published var searchQuery: String = ""

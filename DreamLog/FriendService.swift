@@ -154,6 +154,7 @@ class FriendComment: Identifiable, ObservableObject {
 }
 
 /// 好友服务类
+@MainActor
 class FriendService: ObservableObject {
     @Published var friends: [Friend] = []
     @Published var pendingRequests: [FriendRequest] = []

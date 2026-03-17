@@ -129,6 +129,7 @@ struct NavigationViewItem: Identifiable, Hashable {
 // MARK: - 收藏夹管理
 
 /// 收藏夹管理器
+@MainActor
 class FavoriteManager: ObservableObject {
     static let shared = FavoriteManager()
     
@@ -165,6 +166,7 @@ class FavoriteManager: ObservableObject {
 // MARK: - 导航历史
 
 /// 导航历史管理器
+@MainActor
 class NavigationHistory: ObservableObject {
     static let shared = NavigationHistory()
     

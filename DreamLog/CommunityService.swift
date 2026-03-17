@@ -59,6 +59,7 @@ class CommunityPost: Identifiable, ObservableObject {
 }
 
 /// 社区服务类
+@MainActor
 class CommunityService: ObservableObject {
     @Published var posts: [CommunityPost] = []
     @Published var isLoading: Bool = false

@@ -186,6 +186,7 @@ struct TrainingPlan: Identifiable, Codable {
 
 // MARK: - 训练服务
 
+@MainActor
 class LucidTrainingService: ObservableObject {
     static let shared = LucidTrainingService()
     

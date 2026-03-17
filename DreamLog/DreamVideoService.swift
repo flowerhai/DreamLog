@@ -116,6 +116,7 @@ struct DreamVideo: Identifiable, Codable {
 // MARK: - 视频生成服务
 
 /// 梦境视频生成服务
+@MainActor
 class DreamVideoService: ObservableObject {
     static let shared = DreamVideoService()
     

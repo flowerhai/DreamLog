@@ -13,6 +13,7 @@ import Combine
 
 /// AR 场景社交服务
 /// 管理点赞、评论、收藏、热门场景等社交功能
+@MainActor
 class DreamARSocialService: ObservableObject {
     
     // MARK: - Singleton

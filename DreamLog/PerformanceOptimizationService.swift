@@ -11,6 +11,7 @@ import UIKit
 import SwiftUI
 
 /// 性能优化服务
+@MainActor
 class PerformanceOptimizationService: ObservableObject {
     static let shared = PerformanceOptimizationService()
     

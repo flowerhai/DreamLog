@@ -11,6 +11,7 @@ import Combine
 
 // MARK: - 周报服务
 
+@MainActor
 class DreamWeeklyReportService: ObservableObject {
     static let shared = DreamWeeklyReportService()
     
