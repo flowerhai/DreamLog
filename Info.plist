@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+	</dict>
+	<key>UILaunchScreen</key>
+	<dict/>
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	
+	<!-- ActivityKit - 实时活动支持 -->
+	<key>NSSupportsLiveActivities</key>
+	<true/>
+	<key>NSSupportsLiveActivitiesFrequentUpdates</key>
+	<true/>
+	
+	<!-- NSUserActivityTypes - 用户活动类型（用于实时活动） -->
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>DreamChallengeActivity</string>
+		<string>DreamIncubationActivity</string>
+	</array>
+	
+	<!-- 通知权限 -->
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>DreamLog 需要发送通知来提醒你记录梦境、查看挑战和接收梦境洞察。</string>
+	
+	<!-- 位置权限（用于梦境地点记录） -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>DreamLog 使用你的位置来记录梦境发生的地点，帮助你发现地点与梦境的关联。</string>
+	
+	<!-- 健康数据权限（用于睡眠分析） -->
+	<key>NSHealthShareUsageDescription</key>
+	<string>DreamLog 读取你的睡眠数据来分析梦境与睡眠质量的关系。</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>DreamLog 可以写入梦境记录数据到你的健康应用。</string>
+	
+	<!-- 麦克风权限（用于语音记录梦境） -->
+	<key>NSMicrophoneUsageDescription</key>
+	<string>DreamLog 使用麦克风来录制你的语音梦境日记。</string>
+	
+	<!-- 相机权限（用于梦境相关照片） -->
+	<key>NSCameraUsageDescription</key>
+	<string>DreamLog 使用相机来拍摄与梦境相关的照片。</string>
+	
+	<!-- 照片库权限 -->
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>DreamLog 访问你的照片库来保存和分享梦境分享卡片。</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>DreamLog 保存梦境分享卡片到你的照片库。</string>
+</dict>
+</plist>
