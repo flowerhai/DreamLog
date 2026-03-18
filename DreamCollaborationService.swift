@@ -148,6 +148,43 @@ class DreamCollaborationService: ObservableObject {
         await loadSessions()
     }
     
+    /// 完成会话（标记为已完成）
+    func completeSession(_ session: DreamCollaborationSession) async throws {
+        guard let context = modelContext else {
+            throw CollaborationError.noModelContext
+        }
+        
+        session.status = .completed
+        session.updatedAt = Date()
+        try context.save()
+        
+        // 通知所有参与者
+        for participant in session.participants {
+            await createNotification(
+                userId: participant.userId,
+                sessionId: session.id,
+                type: .sessionEnding,
+                title: "会话已完成",
+                message: "\"\(session.title)\" 已被标记为已完成"
+            )
+        }
+        
+        await loadSessions()
+    }
+    
+    /// 归档会话
+    func archiveSession(_ session: DreamCollaborationSession) async throws {
+        guard let context = modelContext else {
+            throw CollaborationError.noModelContext
+        }
+        
+        session.status = .archived
+        session.updatedAt = Date()
+        try context.save()
+        
+        await loadSessions()
+    }
+    
     /// 加入协作会话
     func joinSession(sessionId: UUID, inviteCode: String) async throws -> DreamCollaborationSession {
         guard let context = modelContext else {
