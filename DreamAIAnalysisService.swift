@@ -1,739 +1,608 @@
 //
 //  DreamAIAnalysisService.swift
-//  DreamLog - Phase 28: AI 梦境解析增强与智能洞察 2.0
+//  DreamLog
 //
-//  AI 梦境解析增强服务
+//  Phase 66: AI 梦境解析增强 🧠✨
+//  核心服务层 - AI 梦境解析引擎
+//
+//  Created: 2026-03-18
+//  Copyright © 2026 DreamLog. All rights reserved.
 //
 
 import Foundation
+import SwiftData
 import NaturalLanguage
 
-@MainActor
-class DreamAIAnalysisService: ObservableObject {
-    static let shared = DreamAIAnalysisService()
+// MARK: - AI 分析服务
+
+/// AI 梦境解析服务
+public actor DreamAIAnalysisService {
+    /// 共享实例
+    public static let shared = DreamAIAnalysisService()
     
-    @Published var isAnalyzing = false
-    @Published var currentProgress: Double = 0.0
-    @Published var lastAnalysisResult: DreamAnalysisResult?
+    /// 符号词典
+    private let symbolDictionary = DreamSymbolDictionary.shared
     
-    // 梦境符号知识库
-    private var symbolKnowledgeBase: [String: DreamSymbol] = [:]
+    /// 模式识别引擎
+    private let patternRecognition = DreamPatternRecognition.shared
     
-    // 分析历史缓存
-    private var analysisCache: [UUID: DreamAnalysisResult] = [:]
+    /// 洞察生成器
+    private let insightGenerator = DreamInsightGenerator.shared
     
-    // 配置
-    var config: AnalysisConfig = .default
+    /// 模型上下文
+    private var modelContext: ModelContext?
     
-    init() {
-        loadSymbolKnowledgeBase()
+    /// 分析配置
+    public var configuration: AIAnalysisConfiguration = .default
+    
+    /// 当前用户 ID（用于个性化分析）
+    public var currentUserId: String?
+    
+    private init() {}
+    
+    // MARK: - 公共方法
+    
+    /// 设置模型上下文
+    public func setModelContext(_ context: ModelContext) {
+        self.modelContext = context
     }
     
-    // MARK: - 知识库加载
-    
-    private func loadSymbolKnowledgeBase() {
-        // 加载常见梦境符号
-        let commonSymbols: [(String, SymbolCategory, [String])] = [
-            // 自然元素
-            ("水", .nature, ["情绪", "潜意识", "净化", "流动"]),
-            ("火", .nature, ["激情", "转化", "毁灭", "重生"]),
-            ("风", .nature, ["变化", "自由", "消息", "灵动"]),
-            ("土", .nature, ["稳定", "实际", "成长", "根基"]),
-            ("雨", .nature, ["净化", "悲伤", "滋养", "更新"]),
-            ("雪", .nature, ["纯洁", "冷静", "停滞", "宁静"]),
-            
-            // 动物
-            ("蛇", .animal, ["转化", "智慧", "危险", "性"]),
-            ("鸟", .animal, ["自由", "精神", "消息", "超越"]),
-            ("鱼", .animal, ["财富", "潜意识", "繁衍", "直觉"]),
-            ("猫", .animal, ["独立", "神秘", "直觉", "女性"]),
-            ("狗", .animal, ["忠诚", "友谊", "保护", "本能"]),
-            ("马", .animal, ["力量", "自由", "激情", "旅行"]),
-            
-            // 人物
-            ("母亲", .person, ["养育", "保护", "源头", "关爱"]),
-            ("父亲", .person, ["权威", "保护", "指导", "规则"]),
-            ("孩子", .person, ["纯真", "潜力", "新生", "脆弱"]),
-            ("老人", .person, ["智慧", "经验", "指导", "传统"]),
-            ("陌生人", .person, ["未知", "投射", "新机遇", "恐惧"]),
-            
-            // 地点
-            ("家", .place, ["自我", "安全", "归属", "内心"]),
-            ("学校", .place, ["学习", "成长", "测试", "社交"]),
-            ("医院", .place, ["治疗", "脆弱", "关怀", "转变"]),
-            ("森林", .place, ["潜意识", "未知", "探索", "神秘"]),
-            ("海洋", .place, ["潜意识", "无限", "情绪", "深度"]),
-            ("山", .place, ["挑战", "成就", "稳定", "精神"]),
-            
-            // 动作
-            ("飞行", .action, ["自由", "逃避", "超越", "控制"]),
-            ("坠落", .action, ["失控", "恐惧", "失败", "放手"]),
-            ("奔跑", .action, ["逃避", "追求", "活力", "紧迫"]),
-            ("游泳", .action, ["情绪处理", "适应", "前进", "沉浸"]),
-            ("战斗", .action, ["冲突", "抗争", "力量", "防御"]),
-            
-            // 物体
-            ("门", .object, ["机会", "选择", "过渡", "未知"]),
-            ("窗户", .object, ["视角", "机会", "观察", "光明"]),
-            ("钥匙", .object, ["解答", "机会", "控制", "访问"]),
-            ("镜子", .object, ["自我反思", "真相", "双重", "虚荣"]),
-            ("书", .object, ["知识", "智慧", "学习", "秘密"]),
-            ("手机", .object, ["沟通", "联系", "信息", "依赖"]),
-            
-            // 身体
-            ("牙齿", .body, ["力量", "自信", "变化", "焦虑"]),
-            ("头发", .body, ["力量", "美丽", "身份", "成长"]),
-            ("眼睛", .body, ["洞察", "真相", "灵魂", "观察"]),
-            ("手", .body, ["行动", "创造", "给予", "接受"]),
-            ("脚", .body, ["基础", "前进", "稳定", "方向"]),
-        ]
+    /// 分析梦境
+    public func analyzeDream(
+        dream: DreamEntry,
+        configuration: AIAnalysisConfiguration? = nil
+    ) async throws -> DreamAnalysis {
+        let config = configuration ?? self.configuration
         
-        for (name, category, meanings) in commonSymbols {
-            let symbol = DreamSymbol(
-                name: name,
-                category: category,
-                meanings: meanings.map { meaning in
-                    SymbolMeaning(
-                        interpretation: "\(name)象征\(meaning)",
-                        context: "在梦境中出现",
-                        psychological: "反映内心对\(meaning)的关注",
-                        spiritual: "精神层面的\(meaning)启示",
-                        positive: ["自由", "智慧", "成长", "机会", "力量"].contains(meaning)
-                    )
-                },
-                culturalInterpretations: [
-                    CulturalInterpretation(
-                        culture: "中国",
-                        interpretation: getChineseInterpretation(for: name),
-                        significance: "传统文化视角"
-                    )
-                ]
+        // 1. 提取关键词和符号
+        let symbols = await extractSymbols(from: dream, maxSymbols: config.maxSymbols)
+        
+        // 2. 生成三层级解读
+        let surfaceLayer = await generateSurfaceLayer(dream: dream, symbols: symbols)
+        let psychologicalLayer = await generatePsychologicalLayer(dream: dream, symbols: symbols)
+        let spiritualLayer = await generateSpiritualLayer(dream: dream, symbols: symbols)
+        
+        // 3. 模式识别
+        var patterns: [DreamPattern] = []
+        if config.enablePatternRecognition, let context = modelContext {
+            patterns = await patternRecognition.identifyPatterns(
+                dream: dream,
+                in: context
             )
-            symbolKnowledgeBase[name] = symbol
-        }
-    }
-    
-    private func getChineseInterpretation(for symbol: String) -> String {
-        let chineseInterpretations: [String: String] = [
-            "水": "水主财，也代表智慧和情感流动",
-            "火": "火代表热情、活力，也象征冲突",
-            "蛇": "蛇象征智慧、转化，也代表潜在危险",
-            "鱼": "鱼象征财富、繁衍，年年有余",
-            "龙": "龙是祥瑞之兆，代表权力和好运",
-            "凤凰": "凤凰象征重生、高贵、吉祥",
-            "门": "门代表机会和选择，开门迎福",
-            "镜子": "镜子照见真相，也反映内心",
-            "牙齿": "牙齿掉落可能预示亲人健康或自身变化",
-        ]
-        return chineseInterpretations[symbol] ?? "传统解梦中有多种解读"
-    }
-    
-    // MARK: - 核心分析方法
-    
-    /// 执行深度梦境解析
-    func analyzeDream(
-        dreamId: UUID,
-        title: String,
-        content: String,
-        emotions: [String],
-        tags: [String],
-        clarity: Int,
-        isLucid: Bool,
-        depth: AnalysisDepth = .deep
-    ) async -> DreamAnalysisResult {
-        let startTime = Date()
-        isAnalyzing = true
-        currentProgress = 0.1
-        
-        // 1. 表层解析
-        updateProgress(0.2)
-        let surfaceAnalysis = performSurfaceAnalysis(
-            title: title,
-            content: content,
-            emotions: emotions,
-            tags: tags
-        )
-        
-        // 2. 深层解析
-        updateProgress(0.4)
-        let deepAnalysis = performDeepAnalysis(
-            content: content,
-            emotions: emotions,
-            surfaceAnalysis: surfaceAnalysis
-        )
-        
-        // 3. 原型层解析
-        updateProgress(0.6)
-        let archetypalAnalysis: String
-        let identifiedArchetypes: [JungianArchetype]
-        if depth == .archetypal || config.includeArchetypes {
-            (archetypalAnalysis, identifiedArchetypes) = performArchetypalAnalysis(content: content)
-        } else {
-            archetypalAnalysis = "未进行原型层解析"
-            identifiedArchetypes = []
         }
         
-        // 4. 梦境类型识别
-        updateProgress(0.7)
-        let dreamType = identifyDreamType(
-            content: content,
-            emotions: emotions,
-            isLucid: isLucid,
-            clarity: clarity
+        // 4. 趋势预测
+        var trendPrediction: TrendPrediction?
+        if config.enableTrendPrediction, let context = modelContext {
+            trendPrediction = await generateTrendPrediction(
+                dream: dream,
+                in: context
+            )
+        }
+        
+        // 5. 生成个性化洞察
+        var insights: [DreamInsight] = []
+        if config.enablePersonalizedInsights, let context = modelContext {
+            insights = await insightGenerator.generateInsights(
+                dream: dream,
+                symbols: symbols,
+                patterns: patterns,
+                in: context
+            )
+        }
+        
+        // 6. 生成行动建议
+        let suggestions = await generateSuggestions(
+            dream: dream,
+            symbols: symbols,
+            insights: insights
         )
         
-        // 5. 符号识别
-        updateProgress(0.8)
-        let keySymbols = identifyKeySymbols(content: content, tags: tags)
-        
-        // 6. 心理健康评估
-        updateProgress(0.85)
-        let mentalHealthMetrics = assessMentalHealth(
-            emotions: emotions,
-            dreamType: dreamType,
-            clarity: clarity
-        )
-        
-        // 7. 生成洞察
-        updateProgress(0.9)
-        let insights = generateInsights(
-            dreamType: dreamType,
-            symbols: keySymbols,
-            metrics: mentalHealthMetrics,
-            emotions: emotions
-        )
-        
-        // 8. 生成建议
-        updateProgress(0.93)
-        let suggestions = generateSuggestions(
-            dreamType: dreamType,
-            insights: insights,
-            metrics: mentalHealthMetrics
-        )
-        
-        // 9. 生成预警
-        updateProgress(0.96)
-        let warnings = generateWarnings(
-            dreamType: dreamType,
-            metrics: mentalHealthMetrics,
-            emotions: emotions
-        )
-        
-        // 10. 计算置信度
+        // 7. 计算置信度
         let confidence = calculateConfidence(
-            contentLength: content.count,
-            emotionCount: emotions.count,
-            symbolCount: keySymbols.count,
-            clarity: clarity
+            symbols: symbols,
+            patterns: patterns,
+            dream: dream
         )
         
-        updateProgress(1.0)
-        
-        let processingTime = Int(Date().timeIntervalSince(startTime) * 1000)
-        
-        let result = DreamAnalysisResult(
-            dreamId: dreamId,
-            title: title,
-            summary: generateSummary(surfaceAnalysis: surfaceAnalysis),
-            surfaceAnalysis: surfaceAnalysis,
-            deepAnalysis: deepAnalysis,
-            archetypalAnalysis: archetypalAnalysis,
-            dreamType: dreamType,
-            identifiedArchetypes: identifiedArchetypes,
-            keySymbols: keySymbols,
-            mentalHealthMetrics: mentalHealthMetrics,
+        // 8. 创建分析结果
+        let analysis = DreamAnalysis(
+            dreamId: dream.id,
+            surfaceLayer: surfaceLayer,
+            psychologicalLayer: psychologicalLayer,
+            spiritualLayer: spiritualLayer,
+            symbols: symbols,
+            patterns: patterns,
+            trendPrediction: trendPrediction,
             insights: insights,
             suggestions: suggestions,
-            warnings: warnings,
             confidence: confidence,
-            analysisDepth: depth,
-            processingTimeMs: processingTime
+            modelVersion: "1.0",
+            language: config.language
         )
         
-        // 缓存结果
-        analysisCache[dreamId] = result
-        lastAnalysisResult = result
-        isAnalyzing = false
-        
-        return result
-    }
-    
-    private func updateProgress(_ progress: Double) {
-        currentProgress = progress
-    }
-    
-    // MARK: - 表层解析
-    
-    private func performSurfaceAnalysis(
-        title: String,
-        content: String,
-        emotions: [String],
-        tags: [String]
-    ) -> String {
-        var analysis = "## 表层解析\n\n"
-        
-        // 梦境概要
-        analysis += "**梦境概要**: \(title)\n\n"
-        
-        // 情绪分析
-        if !emotions.isEmpty {
-            analysis += "**主要情绪**: \(emotions.joined(separator: "、"))\n"
-            let dominantEmotion = emotions.first ?? "中性"
-            analysis += "梦境整体情绪基调为**\(dominantEmotion)**，"
-            
-            if emotions.contains(where: ["焦虑", "恐惧", "紧张"].contains) {
-                analysis += "可能反映近期的压力或担忧。\n"
-            } else if emotions.contains(where: ["快乐", "兴奋", "平静"].contains) {
-                analysis += "显示积极的心理状态。\n"
-            } else {
-                analysis += "情绪状态较为复杂。\n"
-            }
+        // 9. 保存到数据库
+        if let context = modelContext {
+            context.insert(analysis)
+            try context.save()
         }
-        
-        // 标签分析
-        if !tags.isEmpty {
-            analysis += "\n**关键主题**: \(tags.joined(separator: "、"))\n"
-        }
-        
-        // 清晰度分析
-        analysis += "\n这个梦境的表层内容反映了您近期的生活经历和思绪。"
         
         return analysis
     }
     
-    // MARK: - 深层解析
-    
-    private func performDeepAnalysis(
-        content: String,
-        emotions: [String],
-        surfaceAnalysis: String
-    ) -> String {
-        var analysis = "## 深层解析\n\n"
-        
-        analysis += "从心理学角度来看，这个梦境可能反映了以下深层含义：\n\n"
-        
-        // 情绪深度分析
-        if emotions.contains("焦虑") || emotions.contains("恐惧") {
-            analysis += "### 压力与焦虑\n"
-            analysis += "梦境中的焦虑情绪可能指向现实生活中的压力源。"
-            analysis += "建议反思最近是否面临重要决定、工作压力或人际关系挑战。\n\n"
+    /// 获取梦境的分析结果
+    public func getAnalysis(for dreamId: UUID) async throws -> DreamAnalysis? {
+        guard let context = modelContext else {
+            throw AnalysisError.noModelContext
         }
         
-        if emotions.contains("快乐") || emotions.contains("兴奋") {
-            analysis += "### 积极情绪\n"
-            analysis += "梦境中的愉悦感表明您的内心状态较为平衡，"
-            analysis += "可能对近期发生的事情感到满意或期待。\n\n"
-        }
+        let descriptor = FetchDescriptor<DreamAnalysis>(
+            predicate: #Predicate { $0.dreamId == dreamId },
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
         
-        // 内容分析
-        let lowercaseContent = content.lowercased()
-        
-        if lowercaseContent.contains("追逐") || lowercaseContent.contains("逃跑") {
-            analysis += "### 逃避心理\n"
-            analysis += "梦境中的追逐场景通常象征逃避某些问题或责任。"
-            analysis += "思考一下是否有不愿面对的事情。\n\n"
-        }
-        
-        if lowercaseContent.contains("飞行") || lowercaseContent.contains("飞") {
-            analysis += "### 自由渴望\n"
-            analysis += "飞行梦境往往代表对自由的渴望或想要超越现状的愿望。"
-            analysis += "也可能表示您正在从新的角度看待问题。\n\n"
-        }
-        
-        if lowercaseContent.contains("掉落") || lowercaseContent.contains("坠落") {
-            analysis += "### 失控感\n"
-            analysis += "坠落梦境常与失控感或不安全感相关。"
-            analysis += "可能反映对某个情况的担忧或缺乏信心。\n\n"
-        }
-        
-        if lowercaseContent.contains("考试") || lowercaseContent.contains("测试") {
-            analysis += "### 表现焦虑\n"
-            analysis += "考试梦境通常与被评价的焦虑有关。"
-            analysis += "可能反映对工作能力或人际关系的担忧。\n\n"
-        }
-        
-        analysis += "### 潜意识信息\n"
-        analysis += "梦境是潜意识与我们对话的方式。"
-        analysis += "这个梦境可能在提醒您关注某些被忽视的需求或情感。\n"
-        
-        return analysis
+        let results = try context.fetch(descriptor)
+        return results.first
     }
     
-    // MARK: - 原型层解析
+    /// 获取所有分析结果
+    public func getAllAnalyses() async throws -> [DreamAnalysis] {
+        guard let context = modelContext else {
+            throw AnalysisError.noModelContext
+        }
+        
+        let descriptor = FetchDescriptor<DreamAnalysis>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        
+        return try context.fetch(descriptor)
+    }
     
-    private func performArchetypalAnalysis(content: String) -> (String, [JungianArchetype]) {
-        var analysis = "## 原型层解析\n\n"
-        var identifiedArchetypes: [JungianArchetype] = []
+    /// 删除分析结果
+    public func deleteAnalysis(_ analysis: DreamAnalysis) async throws {
+        guard let context = modelContext else {
+            throw AnalysisError.noModelContext
+        }
         
-        let lowercaseContent = content.lowercased()
+        context.delete(analysis)
+        try context.save()
+    }
+    
+    // MARK: - 符号提取
+    
+    /// 从梦境中提取符号
+    private func extractSymbols(
+        from dream: DreamEntry,
+        maxSymbols: Int
+    ) async -> [DreamSymbolAnalysis] {
+        var symbols: [DreamSymbolAnalysis] = []
         
-        // 检测原型
-        for archetype in JungianArchetype.allCases {
-            let symbols = archetype.dreamSymbols
-            let containsSymbol = symbols.contains { symbol in
-                lowercaseContent.contains(symbol.lowercased())
-            }
-            
-            if containsSymbol {
-                identifiedArchetypes.append(archetype)
-                analysis += "### \(archetype.displayName)\n"
-                analysis += "\(archetype.description)\n\n"
+        // 1. 文本分析提取关键词
+        let keywords = extractKeywords(from: dream.content)
+        
+        // 2. 情绪分析
+        let emotions = analyzeEmotions(from: dream.content)
+        
+        // 3. 匹配符号词典
+        for keyword in keywords {
+            if let symbolEntry = await symbolDictionary.getSymbol(keyword) {
+                let frequency = await countSymbolFrequency(symbolEntry.name)
+                
+                let symbolAnalysis = DreamSymbolAnalysis(
+                    symbolName: symbolEntry.name,
+                    category: symbolEntry.category,
+                    context: findContext(for: keyword, in: dream.content),
+                    surfaceMeaning: symbolEntry.surfaceMeaning,
+                    psychologicalMeaning: symbolEntry.psychologicalMeaning,
+                    spiritualMeaning: symbolEntry.spiritualMeaning,
+                    culturalInterpretations: symbolEntry.culturalInterpretations,
+                    relatedSymbols: symbolEntry.relatedSymbols,
+                    frequency: frequency,
+                    emotionalAssociations: emotions,
+                    confidence: 0.8
+                )
+                
+                symbols.append(symbolAnalysis)
             }
         }
         
-        if identifiedArchetypes.isEmpty {
-            analysis += "本次梦境中未检测到明显的荣格原型符号。\n"
-            analysis += "这并不罕见，原型通常在重要的梦境中出现。\n"
-        } else {
-            analysis += "### 原型整合建议\n"
-            analysis += "识别这些原型有助于理解梦境的深层含义。"
-            analysis += "建议思考这些原型在您当前生活中的体现。\n"
+        // 4. 按置信度和频率排序
+        symbols.sort {
+            ($0.confidence, $0.frequency) > ($1.confidence, $1.frequency)
         }
         
-        return (analysis, identifiedArchetypes)
+        return Array(symbols.prefix(maxSymbols))
     }
     
-    // MARK: - 梦境类型识别
-    
-    private func identifyDreamType(
-        content: String,
-        emotions: [String],
-        isLucid: Bool,
-        clarity: Int
-    ) -> DreamType {
-        let lowercaseContent = content.lowercased()
+    /// 提取关键词
+    private func extractKeywords(from text: String) -> [String] {
+        let tagger = NLTagger(tagSchemes: [.nameType])
+        tagger.string = text
         
-        // 清醒梦
-        if isLucid || lowercaseContent.contains("知道自己在做梦") || lowercaseContent.contains("控制梦境") {
-            return .lucid
-        }
+        var keywords: [String] = []
         
-        // 噩梦
-        if emotions.contains("恐惧") || emotions.contains("恐怖") || lowercaseContent.contains("噩梦") {
-            return .nightmare
-        }
-        
-        // 飞行梦
-        if lowercaseContent.contains("飞行") || lowercaseContent.contains("飞") {
-            return .flying
-        }
-        
-        // 坠落梦
-        if lowercaseContent.contains("掉落") || lowercaseContent.contains("坠落") {
-            return .falling
-        }
-        
-        // 被追逐梦
-        if lowercaseContent.contains("追逐") || lowercaseContent.contains("逃跑") || lowercaseContent.contains("追赶") {
-            return .chasing
-        }
-        
-        // 考试梦
-        if lowercaseContent.contains("考试") || lowercaseContent.contains("测试") || lowercaseContent.contains("考场") {
-            return .examination
-        }
-        
-        // 生动梦
-        if clarity >= 4 {
-            return .vivid
-        }
-        
-        // 默认普通梦
-        return .normal
-    }
-    
-    // MARK: - 符号识别
-    
-    private func identifyKeySymbols(content: String, tags: [String]) -> [DreamSymbol] {
-        var symbols: [DreamSymbol] = []
-        let lowercaseContent = content.lowercased()
-        
-        // 从知识库中匹配符号
-        for (symbolName, symbol) in symbolKnowledgeBase {
-            if lowercaseContent.contains(symbolName.lowercased()) || tags.contains(symbolName) {
-                var updatedSymbol = symbol
-                updatedSymbol.frequency = 1
-                symbols.append(updatedSymbol)
+        // 提取名词
+        tagger.enumerateTags(in: text.startIndex..<text.endIndex, unit: .word, scheme: .lexicalClass) { tag, range in
+            if let tag = tag {
+                if tag == .nouns || tag == .properNouns {
+                    let word = String(text[range])
+                    if word.count > 1 {
+                        keywords.append(word)
+                    }
+                }
             }
         }
         
-        // 限制返回数量
-        return Array(symbols.prefix(10))
+        // 添加预设的梦境符号关键词
+        let commonDreamSymbols = [
+            "飞行", "坠落", "追逐", "考试", "迟到", "迷路",
+            "水", "火", "山", "树", "蛇", "龙", "鸟",
+            "家", "学校", "医院", "森林", "海洋",
+            "母亲", "父亲", "朋友", "陌生人",
+            "钥匙", "门", "镜子", "书", "手机"
+        ]
+        
+        for symbol in commonDreamSymbols {
+            if text.contains(symbol) && !keywords.contains(symbol) {
+                keywords.append(symbol)
+            }
+        }
+        
+        return keywords
     }
     
-    // MARK: - 心理健康评估
+    /// 分析情绪
+    private func analyzeEmotions(from text: String) -> [String] {
+        let tagger = NLTagger(tagSchemes: [.sentimentScore])
+        tagger.string = text
+        
+        var emotions: [String] = []
+        
+        // 简单的情绪关键词匹配
+        let emotionKeywords: [String: String] = [
+            "快乐": "happy", "开心": "happy", "高兴": "happy", "兴奋": "excited",
+            "悲伤": "sad", "难过": "sad", "痛苦": "painful",
+            "恐惧": "fearful", "害怕": "fearful", "紧张": "anxious",
+            "愤怒": "angry", "生气": "angry", "恼火": "angry",
+            "惊讶": "surprised", "吃惊": "surprised",
+            "平静": "calm", "安宁": "calm", "放松": "relaxed"
+        ]
+        
+        for (keyword, emotion) in emotionKeywords {
+            if text.contains(keyword) {
+                emotions.append(emotion)
+            }
+        }
+        
+        return emotions.isEmpty ? ["neutral"] : emotions
+    }
     
-    private func assessMentalHealth(
-        emotions: [String],
-        dreamType: DreamType,
-        clarity: Int
-    ) -> MentalHealthMetrics {
-        var stressLevel = 5
-        var anxietyIndex = 5
-        var moodScore = 5
-        var sleepQualityScore = 5
-        var emotionalStability = 5
+    /// 查找符号在文本中的上下文
+    private func findContext(for symbol: String, in text: String) -> String {
+        if let range = text.range(of: symbol) {
+            let start = text.index(range.lowerBound, offsetBy: -20, limitedBy: text.startIndex) ?? text.startIndex
+            let end = text.index(range.upperBound, offsetBy: 20, limitedBy: text.endIndex) ?? text.endIndex
+            return String(text[start..<end]).trimmingCharacters(in: .whitespaces)
+        }
+        return ""
+    }
+    
+    /// 计算符号出现频率
+    private func countSymbolFrequency(_ symbolName: String) async -> Int {
+        guard let context = modelContext else { return 1 }
         
-        // 基于情绪调整
-        let negativeEmotions = ["焦虑", "恐惧", "紧张", "愤怒", "悲伤", "绝望"]
-        let positiveEmotions = ["快乐", "兴奋", "平静", "满足", "爱", "喜悦"]
+        do {
+            let descriptor = FetchDescriptor<DreamEntry>(
+                predicate: #Predicate { $0.content.contains(symbolName) }
+            )
+            let count = try context.fetch(descriptor).count
+            return count
+        } catch {
+            return 1
+        }
+    }
+    
+    // MARK: - 三层级解读生成
+    
+    /// 生成表面层解读
+    private func generateSurfaceLayer(
+        dream: DreamEntry,
+        symbols: [DreamSymbolAnalysis]
+    ) -> AnalysisLayerContent {
+        var keyPoints: [String] = []
         
-        let negativeCount = emotions.filter { negativeEmotions.contains($0) }.count
-        let positiveCount = emotions.filter { positiveEmotions.contains($0) }.count
+        // 总结梦境内容
+        let summary = summarizeDream(dream.content)
+        keyPoints.append("梦境概述：\(summary)")
         
-        stressLevel = max(1, min(10, 5 + negativeCount - positiveCount))
-        anxietyIndex = max(1, min(10, 5 + (emotions.contains("焦虑") || emotions.contains("恐惧") ? 2 : 0)))
-        moodScore = max(1, min(10, 5 + positiveCount - negativeCount))
-        
-        // 基于梦境类型调整
-        switch dreamType {
-        case .nightmare:
-            stressLevel = max(stressLevel, 7)
-            anxietyIndex = max(anxietyIndex, 6)
-        case .lucid:
-            emotionalStability = max(emotionalStability, 7)
-        case .vivid:
-            sleepQualityScore = max(sleepQualityScore, 6)
-        default:
-            break
+        // 识别的主要符号
+        if !symbols.isEmpty {
+            let symbolNames = symbols.prefix(5).map { $0.symbolName }.joined(separator: "、")
+            keyPoints.append("主要符号：\(symbolNames)")
         }
         
-        // 基于清晰度调整
-        if clarity >= 4 {
-            sleepQualityScore = max(sleepQualityScore, 6)
-        } else if clarity <= 2 {
-            sleepQualityScore = min(sleepQualityScore, 4)
-        }
+        // 情绪基调
+        let emotions = analyzeEmotions(from: dream.content)
+        keyPoints.append("情绪基调：\(emotions.joined(separator: ", "))")
         
-        let overallWellbeing = (moodScore + sleepQualityScore + emotionalStability) / 3
-        
-        return MentalHealthMetrics(
-            stressLevel: stressLevel,
-            anxietyIndex: anxietyIndex,
-            moodScore: moodScore,
-            sleepQualityScore: sleepQualityScore,
-            emotionalStability: emotionalStability,
-            overallWellbeing: overallWellbeing
+        return AnalysisLayerContent(
+            layerType: .surface,
+            title: "📖 表面解读",
+            interpretation: "这个梦境包含了\(symbols.count)个可识别的符号。\(generateSurfaceSummary(symbols))",
+            keyPoints: keyPoints,
+            references: [],
+            emotionalTone: emotions.first ?? "neutral"
         )
     }
     
-    // MARK: - 洞察生成
-    
-    private func generateInsights(
-        dreamType: DreamType,
-        symbols: [DreamSymbol],
-        metrics: MentalHealthMetrics,
-        emotions: [String]
-    ) -> [DreamInsight] {
-        var insights: [DreamInsight] = []
+    /// 生成心理层解读
+    private func generatePsychologicalLayer(
+        dream: DreamEntry,
+        symbols: [DreamSymbolAnalysis]
+    ) -> AnalysisLayerContent {
+        var keyPoints: [String] = []
+        var references: [String] = []
         
-        // 模式发现
-        if dreamType == .recurring {
-            insights.append(DreamInsight(
-                type: .pattern,
-                title: "重复梦境模式",
-                description: "您最近反复出现相似的梦境，这通常表示有未解决的心理议题需要关注。",
-                confidence: 0.85,
-                evidence: ["梦境类型重复", "相似主题出现"]
-            ))
-        }
-        
-        // 压力洞察
-        if metrics.stressLevel >= 7 {
-            insights.append(DreamInsight(
-                type: .warning,
-                title: "压力水平较高",
-                description: "您的梦境反映出较高的压力水平，建议采取放松措施。",
-                confidence: 0.75,
-                evidence: ["梦境情绪分析", "梦境类型特征"]
-            ))
-        }
-        
-        // 积极洞察
-        if metrics.moodScore >= 7 {
-            insights.append(DreamInsight(
-                type: .achievement,
-                title: "心理状态良好",
-                description: "您的梦境显示当前心理状态较为平衡和积极。",
-                confidence: 0.80,
-                evidence: ["积极情绪主导", "梦境内容健康"]
-            ))
-        }
-        
-        // 符号洞察
+        // 心理分析
         for symbol in symbols.prefix(3) {
-            if let meaning = symbol.meanings.first {
-                insights.append(DreamInsight(
-                    type: .opportunity,
-                    title: "符号启示：\(symbol.name)",
-                    description: meaning.interpretation,
-                    confidence: 0.70,
-                    evidence: ["梦境符号出现", "符号学分析"]
+            keyPoints.append("• **\(symbol.symbolName)**: \(symbol.psychologicalMeaning)")
+        }
+        
+        // 添加心理学参考
+        if !symbols.isEmpty {
+            references.append("荣格心理学：梦境是潜意识的表达")
+            references.append("弗洛伊德理论：梦是愿望的满足")
+        }
+        
+        let interpretation = """
+        从心理学角度来看，这个梦境反映了你当前的内心状态和潜意识活动。
+        
+        \(symbols.map { "• \($0.symbolName): \($0.psychologicalMeaning)" }.joined(separator: "\n\n"))
+        
+        这些符号共同揭示了你内心深处的\(generatePsychologicalTheme(symbols))。
+        """
+        
+        return AnalysisLayerContent(
+            layerType: .psychological,
+            title: "🧠 心理分析",
+            interpretation: interpretation,
+            keyPoints: keyPoints,
+            references: references,
+            emotionalTone: "analytical"
+        )
+    }
+    
+    /// 生成精神层解读
+    private func generateSpiritualLayer(
+        dream: DreamEntry,
+        symbols: [DreamSymbolAnalysis]
+    ) -> AnalysisLayerContent {
+        var keyPoints: [String] = []
+        
+        // 精神启示
+        for symbol in symbols.prefix(3) {
+            keyPoints.append("• \(symbol.symbolName): \(symbol.spiritualMeaning)")
+        }
+        
+        let interpretation = """
+        从精神层面来看，这个梦境传递了关于你灵魂旅程的重要信息。
+        
+        \(symbols.map { "• \($0.symbolName): \($0.spiritualMeaning)" }.joined(separator: "\n\n"))
+        
+        这个梦境邀请你\(generateSpiritualGuidance(symbols))。
+        """
+        
+        return AnalysisLayerContent(
+            layerType: .spiritual,
+            title: "✨ 精神启示",
+            interpretation: interpretation,
+            keyPoints: keyPoints,
+            references: ["精神传统中的梦境智慧"],
+            emotionalTone: "inspirational"
+        )
+    }
+    
+    // MARK: - 辅助方法
+    
+    /// 总结梦境
+    private func summarizeDream(_ content: String) -> String {
+        let words = content.split(separator: " ")
+        if words.count <= 50 {
+            return content
+        }
+        return String(words.prefix(50)) + "..."
+    }
+    
+    /// 生成表面总结
+    private func generateSurfaceSummary(_ symbols: [DreamSymbolAnalysis]) -> String {
+        guard !symbols.isEmpty else {
+            return "梦境内容较为抽象，难以识别具体符号。"
+        }
+        
+        let categories = Set(symbols.map { $0.category })
+        return "梦境涉及\(categories.count)个类别的符号，包括\(categories.map { $0.displayName }.joined(separator: "、"))。"
+    }
+    
+    /// 生成心理主题
+    private func generatePsychologicalTheme(_ symbols: [DreamSymbolAnalysis]) -> String {
+        // 简单实现，可根据符号组合生成更复杂的主题
+        if symbols.contains(where: { $0.category == .person }) {
+            return "人际关系和自我认同的探索"
+        } else if symbols.contains(where: { $0.category == .action }) {
+            return "行动力和生活方向的思考"
+        } else if symbols.contains(where: { $0.category == .place }) {
+            return "安全感和归属感的探索"
+        }
+        return "内在成长和自我的探索"
+    }
+    
+    /// 生成精神指引
+    private func generateSpiritualGuidance(_ symbols: [DreamSymbolAnalysis]) -> String {
+        if symbols.contains(where: { $0.symbolName == "光" || $0.symbolName == "太阳" }) {
+            return "关注内在的光明，信任你的精神指引"
+        } else if symbols.contains(where: { $0.symbolName == "黑暗" || $0.symbolName == "迷宫" }) {
+            return "在黑暗中保持信心，这是转化的必经之路"
+        } else if symbols.contains(where: { $0.symbolName == "飞行" }) {
+            return "拥抱你的自由，超越限制"
+        }
+        return "保持开放的心态，聆听内在的智慧"
+    }
+    
+    /// 生成趋势预测
+    private func generateTrendPrediction(
+        dream: DreamEntry,
+        in context: ModelContext
+    ) async -> TrendPrediction? {
+        // 简单实现：基于历史数据生成预测
+        let predictions: [PredictionItem] = [
+            PredictionItem(
+                content: "未来 7 天可能出现与\(analyzeEmotions(from: dream.content).first ?? "当前情绪")相关的梦境",
+                probability: 0.7,
+                timeFrame: "7 天内"
+            ),
+            PredictionItem(
+                content: "清醒梦的概率有所提升",
+                probability: 0.5,
+                timeFrame: "2 周内"
+            )
+        ]
+        
+        return TrendPrediction(
+            predictionType: .theme,
+            title: "📈 梦境趋势预测",
+            description: "基于你的梦境历史，以下是未来可能的趋势",
+            timeRange: "未来 7-14 天",
+            predictions: predictions,
+            confidence: 0.6,
+            influencingFactors: ["近期梦境模式", "情绪状态", "睡眠质量"],
+            recommendedActions: [
+                "继续保持梦境记录",
+                "睡前进行冥想练习",
+                "注意情绪变化"
+            ]
+        )
+    }
+    
+    /// 生成行动建议
+    private func generateSuggestions(
+        dream: DreamEntry,
+        symbols: [DreamSymbolAnalysis],
+        insights: [DreamInsight]
+    ) -> [ActionSuggestion] {
+        var suggestions: [ActionSuggestion] = []
+        
+        // 基于符号生成建议
+        for symbol in symbols.prefix(2) {
+            if symbol.category == .action && symbol.symbolName == "飞行" {
+                suggestions.append(ActionSuggestion(
+                    category: .meditation,
+                    title: "尝试飞行冥想",
+                    description: "既然梦中出现飞行符号，可以尝试相关的冥想练习",
+                    actionSteps: [
+                        "找一个安静的地方坐下或躺下",
+                        "闭上眼睛，深呼吸",
+                        "想象自己轻盈地飘浮在空中",
+                        "感受自由和轻松的感觉",
+                        "保持 5-10 分钟"
+                    ],
+                    expectedOutcome: "增强自由感和内在力量",
+                    difficulty: .easy,
+                    estimatedTime: "10 分钟",
+                    priority: 8
+                ))
+            }
+            
+            if symbol.category == .abstract && symbol.symbolName == "黑暗" {
+                suggestions.append(ActionSuggestion(
+                    category: .reflection,
+                    title: "阴影工作练习",
+                    description: "黑暗符号提示需要探索内在的阴影面",
+                    actionSteps: [
+                        "准备纸笔",
+                        "写下让你感到恐惧或不安的事情",
+                        "思考这些恐惧背后的原因",
+                        "问自己：这个恐惧想告诉我什么？",
+                        "写下新的理解和接纳"
+                    ],
+                    expectedOutcome: "更好地整合内在阴影，获得成长",
+                    difficulty: .medium,
+                    estimatedTime: "20 分钟",
+                    priority: 7
                 ))
             }
         }
         
-        return insights
-    }
-    
-    // MARK: - 建议生成
-    
-    private func generateSuggestions(
-        dreamType: DreamType,
-        insights: [DreamInsight],
-        metrics: MentalHealthMetrics
-    ) -> [DreamSuggestion] {
-        var suggestions: [DreamSuggestion] = []
-        
-        // 睡眠建议
-        if metrics.sleepQualityScore <= 5 {
-            suggestions.append(DreamSuggestion(
-                type: .sleep,
-                title: "改善睡眠质量",
-                description: "您的梦境反映出睡眠质量可能需要改善。",
-                actionItems: [
-                    "保持规律的睡眠时间",
-                    "睡前避免使用电子设备",
-                    "创造舒适的睡眠环境",
-                    "尝试睡前冥想或深呼吸"
-                ],
-                priority: .high
-            ))
-        }
-        
-        // 压力管理
-        if metrics.stressLevel >= 7 {
-            suggestions.append(DreamSuggestion(
-                type: .stress,
-                title: "压力管理技巧",
-                description: "学习有效的压力管理方法可以帮助改善梦境质量。",
-                actionItems: [
-                    "每天进行 10-15 分钟冥想",
-                    "规律运动，如散步或瑜伽",
-                    "与朋友或家人交流",
-                    "记录压力源并寻找解决方案"
-                ],
-                priority: .high
-            ))
-        }
-        
-        // 记录建议
-        suggestions.append(DreamSuggestion(
-            type: .journaling,
-            title: "持续记录梦境",
-            description: "持续的梦境记录有助于发现模式和获得更深入的洞察。",
-            actionItems: [
+        // 通用建议
+        suggestions.append(ActionSuggestion(
+            category: .recording,
+            title: "优化梦境记录",
+            description: "提高梦境记录质量可以获得更深入的解析",
+            actionSteps: [
                 "醒来后立即记录",
-                "记录情绪和感受",
-                "标注重要符号",
-                "定期回顾梦境日记"
+                "记录尽可能多的细节",
+                "注意梦境中的情绪",
+                "记录醒来时的感受"
             ],
-            priority: .medium
+            expectedOutcome: "更清晰的梦境记忆和更准确的解析",
+            difficulty: .easy,
+            estimatedTime: "5 分钟",
+            priority: 9
         ))
         
-        // 噩梦建议
-        if dreamType == .nightmare {
-            suggestions.append(DreamSuggestion(
-                type: .selfCare,
-                title: "噩梦应对策略",
-                description: "频繁的噩梦可能需要特别关注。",
-                actionItems: [
-                    "睡前进行放松练习",
-                    "避免恐怖或刺激内容",
-                    "尝试意象排练疗法",
-                    "如持续困扰，考虑专业咨询"
-                ],
-                priority: .high
-            ))
-        }
-        
-        return suggestions
+        return suggestions.sorted { $0.priority > $1.priority }
     }
     
-    // MARK: - 预警生成
-    
-    private func generateWarnings(
-        dreamType: DreamType,
-        metrics: MentalHealthMetrics,
-        emotions: [String]
-    ) -> [DreamWarning] {
-        var warnings: [DreamWarning] = []
-        
-        // 反复噩梦预警
-        if dreamType == .nightmare && metrics.anxietyIndex >= 7 {
-            warnings.append(DreamWarning(
-                type: .recurringNightmare,
-                title: "频繁噩梦警示",
-                description: "您的梦境显示频繁的噩梦模式，可能与高焦虑水平相关。",
-                severity: .moderate,
-                recommendedAction: "建议学习放松技巧，如持续出现请考虑咨询专业人士。"
-            ))
-        }
-        
-        // 高压力预警
-        if metrics.stressLevel >= 8 {
-            warnings.append(DreamWarning(
-                type: .highStress,
-                title: "高压力状态",
-                description: "梦境反映出您正处于高压力状态，需要关注心理健康。",
-                severity: .high,
-                recommendedAction: "建议立即采取减压措施，必要时寻求专业支持。"
-            ))
-        }
-        
-        // 专业帮助建议
-        if metrics.overallWellbeing <= 4 {
-            warnings.append(DreamWarning(
-                type: .professionalHelp,
-                title: "建议专业咨询",
-                description: "梦境分析显示您的整体心理状态需要关注。",
-                severity: .high,
-                recommendedAction: "建议咨询心理咨询师或精神健康专业人士。"
-            ))
-        }
-        
-        return warnings
-    }
-    
-    // MARK: - 置信度计算
-    
+    /// 计算置信度
     private func calculateConfidence(
-        contentLength: Int,
-        emotionCount: Int,
-        symbolCount: Int,
-        clarity: Int
+        symbols: [DreamSymbolAnalysis],
+        patterns: [DreamPattern],
+        dream: DreamEntry
     ) -> Double {
         var confidence = 0.5
         
-        // 内容长度贡献
-        if contentLength >= 200 { confidence += 0.2 }
-        else if contentLength >= 100 { confidence += 0.1 }
+        // 符号数量影响
+        if symbols.count >= 5 {
+            confidence += 0.2
+        } else if symbols.count >= 3 {
+            confidence += 0.1
+        }
         
-        // 情绪信息贡献
-        if emotionCount >= 3 { confidence += 0.15 }
-        else if emotionCount >= 1 { confidence += 0.08 }
+        // 符号频率影响
+        let highFrequencySymbols = symbols.filter { $0.frequency > 1 }.count
+        confidence += Double(highFrequencySymbols) * 0.05
         
-        // 符号识别贡献
-        if symbolCount >= 5 { confidence += 0.1 }
-        else if symbolCount >= 2 { confidence += 0.05 }
+        // 模式识别影响
+        if !patterns.isEmpty {
+            confidence += 0.1
+        }
         
-        // 清晰度贡献
-        confidence += Double(clarity) * 0.05
+        // 梦境长度影响
+        if dream.content.count > 200 {
+            confidence += 0.1
+        }
         
         return min(confidence, 0.95)
     }
+}
+
+// MARK: - 错误类型
+
+public enum AnalysisError: LocalizedError {
+    case noModelContext
+    case analysisNotFound
+    case extractionFailed
+    case saveFailed
     
-    // MARK: - 缓存管理
-    
-    func getCachedAnalysis(for dreamId: UUID) -> DreamAnalysisResult? {
-        return analysisCache[dreamId]
-    }
-    
-    func clearCache() {
-        analysisCache.removeAll()
-    }
-    
-    func getAnalysisHistory() -> [DreamAnalysisResult] {
-        return Array(analysisCache.values).sorted { $0.analysisDate > $1.analysisDate }
+    public var errorDescription: String? {
+        switch self {
+        case .noModelContext:
+            return "未设置模型上下文"
+        case .analysisNotFound:
+            return "未找到分析结果"
+        case .extractionFailed:
+            return "符号提取失败"
+        case .saveFailed:
+            return "保存失败"
+        }
     }
 }
