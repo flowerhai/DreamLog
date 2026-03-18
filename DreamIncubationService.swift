@@ -9,6 +9,7 @@
 import Foundation
 import SwiftData
 import UserNotifications
+import ActivityKit
 
 /// 梦境孵育服务
 @MainActor
@@ -29,6 +30,7 @@ class DreamIncubationService: ObservableObject {
     private let userDefaults = UserDefaults.standard
     private let statsKey = "dreamIncubationStats"
     private let reminderKey = "dreamIncubationReminder"
+    private let liveActivityService = DreamLiveActivityService.shared
     
     // MARK: - Initialization
     
@@ -115,6 +117,9 @@ class DreamIncubationService: ObservableObject {
         
         do {
             try modelContext?.save()
+            
+            // 启动实时活动
+            try? await liveActivityService.startIncubationActivity(incubation: session)
         } catch {
             print("Failed to activate session: \(error)")
         }
@@ -136,6 +141,9 @@ class DreamIncubationService: ObservableObject {
         do {
             try modelContext?.save()
             await loadSessions()
+            
+            // 结束实时活动
+            await liveActivityService.endIncubationActivity(incubationId: sessionId.uuidString, reason: .completed)
         } catch {
             print("Failed to complete session: \(error)")
         }

@@ -10,6 +10,7 @@ import Foundation
 import SwiftData
 import UserNotifications
 import Combine
+import ActivityKit
 
 @MainActor
 class DreamChallengeService: ObservableObject {
@@ -19,6 +20,7 @@ class DreamChallengeService: ObservableObject {
     @Published private let modelContext: ModelContext
     @Published private let userId: String
     @Published private var stats: ChallengeStats?
+    private let liveActivityService = DreamLiveActivityService.shared
     
     // MARK: - Singleton
     
@@ -215,6 +217,11 @@ class DreamChallengeService: ObservableObject {
         // 发送通知
         scheduleChallengeStartedNotification(challenge: challenge, template: template)
         
+        // 启动实时活动
+        Task {
+            try? await liveActivityService.startChallengeActivity(challenge: challenge)
+        }
+        
         return challenge
     }
     
@@ -237,6 +244,11 @@ class DreamChallengeService: ObservableObject {
         // 检查是否完成
         if progress >= challenge.targetProgress {
             completeChallenge(challengeId: challengeId)
+        } else {
+            // 更新实时活动
+            Task {
+                await liveActivityService.updateChallengeActivity(challengeId: challengeId.uuidString, challenge: challenge)
+            }
         }
         
         try modelContext.save()
@@ -276,6 +288,11 @@ class DreamChallengeService: ObservableObject {
         
         // 发送完成通知
         scheduleChallengeCompletedNotification(challenge: challenge)
+        
+        // 结束实时活动
+        Task {
+            await liveActivityService.endChallengeActivity(challengeId: challengeId.uuidString, reason: .completed)
+        }
     }
     
     /// 领取奖励
