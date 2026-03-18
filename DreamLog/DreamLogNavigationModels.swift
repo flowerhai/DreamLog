@@ -63,6 +63,7 @@ enum MainTab: Int, CaseIterable {
         case .insights:
             return [
                 NavigationViewItem(id: "insights", title: "数据洞察", icon: "chart.bar", destination: AnyView(InsightsView()), isFavorite: true),
+                NavigationViewItem(id: "scene-analysis", title: "场景分析", icon: "house.lodge", destination: AnyView(DreamSceneAnalysisView()), isFavorite: true),
                 NavigationViewItem(id: "ai-analysis", title: "AI 解析", icon: "brain.head.profile", destination: AnyView(DreamInsightsDashboardView()), isFavorite: true),
                 NavigationViewItem(id: "prediction", title: "梦境预测", icon: "crystal.ball", destination: AnyView(DreamPredictionView()), isFavorite: false),
                 NavigationViewItem(id: "pattern-prediction", title: "模式预测", icon: "chart.line.uptrend.xyaxis", destination: AnyView(DreamPatternPredictionView()), isFavorite: false),
