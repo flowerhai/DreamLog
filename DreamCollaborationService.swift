@@ -611,6 +611,69 @@ class DreamCollaborationService: ObservableObject {
             ]}
         ]
     }
+    
+    /// 生成分享邀请链接
+    func generateInviteLink(session: DreamCollaborationSession) -> String {
+        // 使用自定义 URL scheme 或 universal link
+        return "dreamlog://join?sessionId=\(session.id.uuidString)&code=\(session.inviteCode)"
+    }
+    
+    /// 更新参与者角色
+    func updateParticipantRole(
+        sessionId: UUID,
+        participantId: UUID,
+        newRole: CollaborationParticipantRole
+    ) async throws {
+        guard let context = modelContext else {
+            throw CollaborationError.noModelContext
+        }
+        
+        guard let session = await getSession(id: sessionId) else {
+            throw CollaborationError.sessionNotFound
+        }
+        
+        // 只有所有者可以更新角色
+        let currentUserId = getCurrentUserId()
+        guard session.participants.first(where: { $0.userId == currentUserId })?.role == .owner else {
+            throw CollaborationError.permissionDenied
+        }
+        
+        if let index = session.participants.firstIndex(where: { $0.id == participantId }) {
+            session.participants[index].role = newRole
+            session.updatedAt = Date()
+            try context.save()
+        }
+    }
+    
+    /// 移除参与者
+    func removeParticipant(sessionId: UUID, participantId: UUID) async throws {
+        guard let context = modelContext else {
+            throw CollaborationError.noModelContext
+        }
+        
+        guard let session = await getSession(id: sessionId) else {
+            throw CollaborationError.sessionNotFound
+        }
+        
+        // 只有所有者可以移除参与者
+        let currentUserId = getCurrentUserId()
+        guard session.participants.first(where: { $0.userId == currentUserId })?.role == .owner else {
+            throw CollaborationError.permissionDenied
+        }
+        
+        if let index = session.participants.firstIndex(where: { $0.id == participantId }) {
+            let participant = session.participants[index]
+            context.delete(participant)
+            session.participants.remove(at: index)
+            session.participantCount -= 1
+            session.updatedAt = Date()
+            try context.save()
+        }
+    }
+                "createdAt": $0.createdAt.ISO8601Format()
+            ]}
+        ]
+    }
 }
 
 // MARK: - Errors
