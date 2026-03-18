@@ -620,6 +620,8 @@ struct AddInterpretationView: View {
     @State private var content = ""
     @State private var type: InterpretationType = .symbolic
     @State private var isSubmitting = false
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         NavigationStack {
@@ -652,6 +654,11 @@ struct AddInterpretationView: View {
                     .disabled(content.isEmpty || isSubmitting)
                 }
             }
+            .alert("提交失败", isPresented: $showError) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
     
@@ -666,9 +673,14 @@ struct AddInterpretationView: View {
                 content: content,
                 type: type
             )
-            dismiss()
+            await MainActor.run {
+                dismiss()
+            }
         } catch {
-            // 处理错误
+            await MainActor.run {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
         }
     }
 }
@@ -682,6 +694,8 @@ struct InterpretationDetailView: View {
     let interpretation: DreamInterpretation
     
     @State private var commentText = ""
+    @State private var isSubmittingComment = false
+    @State private var showCommentError = false
     
     var body: some View {
         NavigationStack {
@@ -770,7 +784,24 @@ struct InterpretationDetailView: View {
     }
     
     private func addComment() async {
-        // 实现评论添加
+        guard !commentText.isEmpty && !isSubmittingComment else { return }
+        
+        isSubmittingComment = true
+        defer { isSubmittingComment = false }
+        
+        do {
+            try await collaborationService.addComment(
+                sessionId: interpretation.sessionId,
+                content: commentText
+            )
+            await MainActor.run {
+                commentText = ""
+            }
+        } catch {
+            await MainActor.run {
+                showCommentError = true
+            }
+        }
     }
 }
 
