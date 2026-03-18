@@ -1,7 +1,55 @@
 # DreamLog 下一 Session 开发计划
 
 **创建时间**: 2026-03-08 00:20 UTC  
-**上次更新**: 2026-03-18 10:04 UTC (Cron 任务 - dreamlog-feature)
+**上次更新**: 2026-03-18 12:10 UTC (Cron 任务 - dreamlog-dev)
+
+---
+
+## 🚀 Phase 65 计划 - 梦境冥想与放松增强 (待开始)
+
+**计划时间**: 2026-03-19  
+**优先级**: 中  
+**预计工作量**: 8-10 小时  
+**分支**: dev  
+**完成度**: 0% ⏳
+
+### Phase 65 概述
+
+Phase 65 将在现有冥想功能基础上，增强梦境与冥想的深度整合，提供个性化的冥想体验。
+
+### 核心功能
+
+- **🧘 梦境引导冥想** - 基于梦境内容生成个性化冥想脚本
+- **🎵 梦境音乐疗法** - 情绪匹配音乐 + 白噪音混合 + 双耳节拍
+- **🌬️ 梦境呼吸练习** - 4-7-8/盒子呼吸/清醒梦呼吸训练
+- **🧠 梦境放松扫描** - 渐进式肌肉放松（PMR）
+- **🧘 梦境正念练习** - 梦境觉察/现实检查正念
+- **📊 冥想统计与洞察** - 完整数据分析与成就系统
+- **🤖 智能冥想推荐** - 基于用户状态和历史的智能推荐
+
+### 新增文件 (预估)
+
+| 文件 | 行数 | 说明 |
+|------|------|------|
+| `DreamMeditationModels.swift` | ~500 | 冥想数据模型 |
+| `DreamMeditationService.swift` | ~800 | 冥想核心服务 |
+| `DreamMeditationView.swift` | ~1000 | 冥想 UI 界面 |
+| `DreamBreathingExerciseView.swift` | ~400 | 呼吸练习视图 |
+| `DreamRelaxationScanView.swift` | ~450 | 放松扫描视图 |
+| `DreamMindfulnessView.swift` | ~400 | 正念练习视图 |
+| `DreamMeditationMusicView.swift` | ~500 | 音乐疗法视图 |
+| `DreamMeditationStatsView.swift` | ~350 | 统计仪表板 |
+| `DreamMeditationRecommendations.swift` | ~400 | 智能推荐服务 |
+| `DreamMeditationTests.swift` | ~600 | 单元测试 |
+| **总计** | **~5,400** | |
+
+### 开发计划
+
+- [ ] **Session 1**: 数据模型与服务 (3-4 小时)
+- [ ] **Session 2**: UI 界面开发 (4-5 小时)
+- [ ] **Session 3**: 整合与优化 (2-3 小时)
+
+**详细计划**: 参见 `Docs/PHASE65_PLAN.md`
 
 ---
 
