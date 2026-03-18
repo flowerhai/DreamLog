@@ -31,7 +31,13 @@ class DreamCollaborationService: ObservableObject {
     
     private var modelContext: ModelContext?
     private var cancellables = Set<AnyCancellable>()
-    private let userId: String = "current_user" // FIXME: 从用户服务获取
+    private let userId: String = "current_user" // 从用户服务获取（当前为占位实现）
+    
+    /// 获取当前用户 ID（可注入真实用户服务）
+    func getCurrentUserId() -> String {
+        // TODO: 集成真实用户服务
+        return userId
+    }
     
     // MARK: - Initialization
     
@@ -56,11 +62,12 @@ class DreamCollaborationService: ObservableObject {
             throw CollaborationError.noModelContext
         }
         
+        let currentUserId = getCurrentUserId()
         let session = DreamCollaborationSession(
             dreamId: dreamId,
             title: title,
             description: description,
-            createdBy: userId,
+            createdBy: currentUserId,
             visibility: visibility,
             maxParticipants: maxParticipants
         )
@@ -68,7 +75,7 @@ class DreamCollaborationService: ObservableObject {
         // 添加创建者为参与者
         let owner = CollaborationParticipant(
             sessionId: session.id,
-            userId: userId,
+            userId: currentUserId,
             username: "我",
             role: .owner
         )
@@ -161,8 +168,10 @@ class DreamCollaborationService: ObservableObject {
             throw CollaborationError.sessionInvalid
         }
         
+        let currentUserId = getCurrentUserId()
+        
         // 检查是否已加入
-        let alreadyJoined = session.participants.contains { $0.userId == userId }
+        let alreadyJoined = session.participants.contains { $0.userId == currentUserId }
         guard !alreadyJoined else {
             throw CollaborationError.alreadyJoined
         }
@@ -170,7 +179,7 @@ class DreamCollaborationService: ObservableObject {
         // 添加参与者
         let participant = CollaborationParticipant(
             sessionId: sessionId,
-            userId: userId,
+            userId: currentUserId,
             username: "我"
         )
         session.participants.append(participant)
@@ -204,8 +213,10 @@ class DreamCollaborationService: ObservableObject {
             throw CollaborationError.sessionNotFound
         }
         
+        let currentUserId = getCurrentUserId()
+        
         // 移除参与者
-        if let index = session.participants.firstIndex(where: { $0.userId == userId }) {
+        if let index = session.participants.firstIndex(where: { $0.userId == currentUserId }) {
             let participant = session.participants[index]
             context.delete(participant)
             session.participants.remove(at: index)
@@ -230,10 +241,11 @@ class DreamCollaborationService: ObservableObject {
             throw CollaborationError.noModelContext
         }
         
+        let currentUserId = getCurrentUserId()
         let interpretation = DreamInterpretation(
             sessionId: sessionId,
             dreamId: dreamId,
-            authorId: userId,
+            authorId: currentUserId,
             authorName: "我",
             content: content,
             type: type
@@ -248,7 +260,7 @@ class DreamCollaborationService: ObservableObject {
             session.updatedAt = Date()
             
             // 通知其他参与者
-            for participant in session.participants where participant.userId != userId {
+            for participant in session.participants where participant.userId != currentUserId {
                 await createNotification(
                     userId: participant.userId,
                     sessionId: sessionId,
@@ -270,13 +282,15 @@ class DreamCollaborationService: ObservableObject {
             throw CollaborationError.noModelContext
         }
         
+        let currentUserId = getCurrentUserId()
+        
         // 检查是否已投票
-        let alreadyVoted = interpretation.votes.contains { $0.voterId == userId }
+        let alreadyVoted = interpretation.votes.contains { $0.voterId == currentUserId }
         guard !alreadyVoted else { return }
         
         let vote = InterpretationVote(
             interpretationId: interpretation.id,
-            voterId: userId
+            voterId: currentUserId
         )
         
         interpretation.votes.append(vote)
@@ -287,7 +301,7 @@ class DreamCollaborationService: ObservableObject {
         try context.save()
         
         // 通知作者
-        if interpretation.authorId != userId {
+        if interpretation.authorId != currentUserId {
             await createNotification(
                 userId: interpretation.authorId,
                 sessionId: interpretation.sessionId,
@@ -304,6 +318,8 @@ class DreamCollaborationService: ObservableObject {
             throw CollaborationError.noModelContext
         }
         
+        let currentUserId = getCurrentUserId()
+        
         // 取消之前的采纳
         if let session = await getSession(id: interpretation.sessionId) {
             for existing in session.interpretations {
@@ -317,7 +333,7 @@ class DreamCollaborationService: ObservableObject {
         try context.save()
         
         // 通知作者
-        if interpretation.authorId != userId {
+        if interpretation.authorId != currentUserId {
             await createNotification(
                 userId: interpretation.authorId,
                 sessionId: interpretation.sessionId,
@@ -340,9 +356,10 @@ class DreamCollaborationService: ObservableObject {
             throw CollaborationError.noModelContext
         }
         
+        let currentUserId = getCurrentUserId()
         let comment = CollaborationComment(
             sessionId: sessionId,
-            authorId: userId,
+            authorId: currentUserId,
             authorName: "我",
             content: content,
             parentId: parentId

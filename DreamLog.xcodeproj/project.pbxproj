@@ -230,6 +230,10 @@
 
 /* Begin PBXFileReference section */
 		2DB14914 /* CreateTimeCapsuleView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTimeCapsuleView.swift; sourceTree = "<group>"; };
+		7870C03F470745A4908D812A /* DreamCollaborationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA18EA523966494091DE3DF0; };
+		7C54BD5A1156499DB5F05787 /* DreamCollaborationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9DA950B3432544CB81C24B1A; };
+		F05FFB6B90394932A8FED087 /* DreamCollaborationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E444EB9A95AC44C1BF5B229F; };
+		384C121F1D3B4C939D87F36B /* DreamCollaborationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8AF18BC64FAF4B739518AEBC; };
 		5470F19C /* DreamAIAnalysisModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAIAnalysisModels.swift; sourceTree = "<group>"; };
 		171376B4 /* DreamAIAnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamAIAnalysisService.swift; sourceTree = "<group>"; };
 		4D77E66E /* DreamARSocialModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamARSocialModels.swift; sourceTree = "<group>"; };
@@ -449,6 +453,10 @@
 		B4834B10 /* TimeCapsuleDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeCapsuleDetailView.swift; sourceTree = "<group>"; };
 		B4066F0B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		48C64778 /* DreamLog.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DreamLog.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		CA18EA523966494091DE3DF0 /* DreamCollaborationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamCollaborationModels.swift; sourceTree = "<group>"; };
+		9DA950B3432544CB81C24B1A /* DreamCollaborationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamCollaborationService.swift; sourceTree = "<group>"; };
+		E444EB9A95AC44C1BF5B229F /* DreamCollaborationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamCollaborationView.swift; sourceTree = "<group>"; };
+		8AF18BC64FAF4B739518AEBC /* DreamCollaborationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DreamCollaborationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -691,6 +699,9 @@
 				34899772 /* DreamTimeCapsuleView.swift */,
 				B72E1A0C /* DreamWatchSyncService.swift */,
 				B4834B10 /* TimeCapsuleDetailView.swift */,
+				CA18EA523966494091DE3DF0 /* DreamCollaborationModels.swift */,
+				9DA950B3432544CB81C24B1A /* DreamCollaborationService.swift */,
+				E444EB9A95AC44C1BF5B229F /* DreamCollaborationView.swift */,
 				7BB16B0F /* Resources */,
 			);
 			path = DreamLog;
