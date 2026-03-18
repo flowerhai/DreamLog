@@ -27,11 +27,59 @@ struct DreamLogApp: App {
         // 注意：Dream 使用 UserDefaults 持久化，SwiftData 用于高级功能
         do {
             let schema = Schema([
+                // 核心模型
                 DreamTimeCapsule.self,
                 DreamPrediction.self,
                 DreamReflection.self,
                 SmartNotificationConfig.self,
-                PendingNotificationInsight.self
+                PendingNotificationInsight.self,
+                
+                // 推荐与洞察
+                DreamRecommendation.self,
+                DreamInsight.self,
+                DreamSuggestion.self,
+                
+                // 挑战系统
+                DreamChallenge.self,
+                ChallengeBadge.self,
+                
+                // 协作解读
+                DreamCollaborationSession.self,
+                CollaborationParticipant.self,
+                DreamInterpretation.self,
+                CollaborationComment.self,
+                
+                // 备份与导出
+                BackupSchedule.self,
+                DreamExportTemplate.self,
+                
+                // 社区与社交
+                SharedDream.self,
+                CommunityComment.self,
+                CommunityLike.self,
+                
+                // 灵感与创意
+                DailyInspiration.self,
+                ArtShareTemplate.self,
+                
+                // 冥想与音乐
+                DreamMeditationSession.self,
+                DreamPlaylist.self,
+                
+                // 位置与地图
+                DreamLocation.self,
+                
+                // 伴侣系统
+                CompanionSession.self,
+                
+                // 年度回顾
+                DreamYearInReview.self,
+                
+                // 社交互动
+                SocialActivity.self,
+                
+                // AI 分析
+                DreamAnalysis.self
             ])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,

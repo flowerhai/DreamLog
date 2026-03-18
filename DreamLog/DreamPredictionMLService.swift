@@ -322,15 +322,19 @@ final class DreamPredictionMLService {
 }
 
 // MARK: - 辅助扩展
+// 注意：Dream 模型已在 Dream.swift 中定义，此处不需要重复定义
+// 以下扩展仅用于提供 ML 预测服务所需的计算属性
 
 extension Dream {
-    /// 占位 Dream 模型（实际项目中已存在）
-    var date: Date { Date() }
-    var emotions: [String] { [] }
-    var tags: [String] { [] }
-    var content: String { "" }
-    var isLucid: Bool { false }
-    var clarity: Double { 3.0 }
+    /// 将 Emotion 数组转换为字符串数组（用于 ML 特征提取）
+    var emotionStrings: [String] {
+        emotions.map { $0.rawValue }
+    }
+    
+    /// 清晰度转换为 Double（用于 ML 计算）
+    var clarityDouble: Double {
+        Double(clarity)
+    }
 }
 
 // MARK: - 预览
