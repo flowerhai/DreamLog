@@ -20,6 +20,10 @@ struct AuthorProfileView: View {
     @State private var isLoading = false
     @State private var isFollowing = false
     @State private var showingStats = false
+    @State private var showingMessageAlert = false
+    @State private var showingShareSheet = false
+    @State private var showingReportAlert = false
+    @State private var shareText: String = ""
     
     var body: some View {
         ScrollView {
@@ -52,6 +56,18 @@ struct AuthorProfileView: View {
         .navigationBarTitleDisplayMode(.inline)
         .task {
             await loadData()
+        }
+        .alert("举报用户", isPresented: $showingReportAlert) {
+            Button("取消", role: .cancel) { }
+            Button("举报", role: .destructive) {
+                // TODO: Submit report to server
+                print("Report submitted for user: \(authorId)")
+            }
+        } message: {
+            Text("确定要举报此用户吗？我们将审核该账户。")
+        }
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: [shareText])
         }
     }
     
@@ -199,22 +215,27 @@ struct AuthorProfileView: View {
             
             // 发消息按钮
             Button(action: {
-                // TODO: Send message
+                showingMessageAlert = true
             }) {
                 Label("消息", systemImage: "message.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
+            .alert("消息功能", isPresented: $showingMessageAlert) {
+                Button("好的", role: .cancel) { }
+            } message: {
+                Text("消息功能即将推出，敬请期待！")
+            }
             
             // 更多选项
             Menu {
                 Button("分享主页", systemImage: "square.and.arrow.up") {
-                    // TODO: Share profile
+                    shareProfile()
                 }
                 
                 Button("举报用户", systemImage: "exclamationmark.triangle") {
-                    // TODO: Report user
+                    showingReportAlert = true
                 }
                 
                 if isFollowing {
@@ -307,10 +328,36 @@ struct AuthorProfileView: View {
     
     /// 切换关注状态
     private func toggleFollow() {
-        // TODO: Implement follow/unfollow logic
+        guard let author = author else { return }
+        
         withAnimation {
             isFollowing.toggle()
         }
+        
+        // 更新 SwiftData
+        Task {
+            do {
+                if isFollowing {
+                    author.followerCount += 1
+                } else {
+                    author.followerCount = max(0, author.followerCount - 1)
+                }
+                modelContext.save()
+            } catch {
+                print("Failed to update follow status: \(error)")
+                // 回滚
+                withAnimation {
+                    isFollowing.toggle()
+                }
+            }
+        }
+    }
+    
+    /// 分享主页
+    private func shareProfile() {
+        guard let author = author else { return }
+        shareText = "来看看 @\(author.displayName) 在 DreamLog 上的梦境分享！"
+        showingShareSheet = true
     }
 }
 

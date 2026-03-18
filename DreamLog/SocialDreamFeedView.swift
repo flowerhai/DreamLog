@@ -14,12 +14,16 @@ import SwiftData
 /// 社交梦境 Feed 流视图
 struct SocialDreamFeedView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.openWindow) private var openWindow
     @State private var socialDreams: [SocialDream] = []
     @State private var isLoading = false
     @State private var sortBy: SocialDreamSortOption = .popular
     @State private var showingFilters = false
     @State private var selectedMood: String?
     @State private var searchQuery = ""
+    @State private var selectedDream: SocialDream?
+    @State private var showingShareSheet = false
+    @State private var shareText: String = ""
     
     var body: some View {
         NavigationStack {
@@ -82,9 +86,7 @@ struct SocialDreamFeedView: View {
                 .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            Button(action: {
-                // TODO: Navigate to share dream
-            }) {
+            NavigationLink(destination: DreamPublishView(dreamId: nil)) {
                 Label("分享梦境", systemImage: "square.and.arrow.up")
                     .font(.headline)
             }
@@ -103,10 +105,10 @@ struct SocialDreamFeedView: View {
                 
                 // 梦境卡片列表
                 ForEach(filteredDreams, id: \.id) { dream in
-                    SocialDreamCard(dream: dream)
-                        .onTapGesture {
-                            // TODO: Navigate to dream detail
-                        }
+                    NavigationLink(destination: DreamDetailView(dream: dream.toDream())) {
+                        SocialDreamCard(dream: dream)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
@@ -228,6 +230,8 @@ struct SocialDreamFeedView: View {
 struct SocialDreamCard: View {
     let dream: SocialDream
     @Environment(\.modelContext) private var modelContext
+    @State private var showingShareSheet = false
+    @State private var shareText: String = ""
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -253,6 +257,9 @@ struct SocialDreamCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .sheet(isPresented: $showingShareSheet) {
+            ShareSheet(items: [shareText])
+        }
     }
     
     // MARK: - Subviews
@@ -363,13 +370,21 @@ struct SocialDreamCard: View {
             
             // 分享按钮
             Button(action: {
-                // TODO: Share dream
+                shareDream(dream)
             }) {
                 Image(systemName: "square.and.arrow.up")
                     .font(.caption)
                     .foregroundColor(.purple)
             }
         }
+    }
+    
+    // MARK: - Methods
+    
+    /// 分享梦境
+    private func shareDream(_ dream: SocialDream) {
+        shareText = "\(dream.title)\n\n\(dream.preview)\n\n来自 @\(dream.authorName) - DreamLog"
+        showingShareSheet = true
     }
 }
 
