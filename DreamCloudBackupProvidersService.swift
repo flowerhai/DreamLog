@@ -90,8 +90,8 @@ actor DreamCloudBackupProvidersService {
     
     /// Generate Google OAuth URL
     func generateGoogleOAuthURL() -> String {
-        var components = URLComponents(string: "https://accounts.google.com/o/oauth2/v2/auth")!
-        components.queryItems = [
+        var components = URLComponents(string: "https://accounts.google.com/o/oauth2/v2/auth")
+        components?.queryItems = [
             URLQueryItem(name: "client_id", value: googleClientId),
             URLQueryItem(name: "redirect_uri", value: googleRedirectUri),
             URLQueryItem(name: "response_type", value: "code"),
@@ -100,33 +100,33 @@ actor DreamCloudBackupProvidersService {
             URLQueryItem(name: "prompt", value: "consent"),
             URLQueryItem(name: "state", value: UUID().uuidString)
         ]
-        return components.url!.absoluteString
+        return components?.url?.absoluteString ?? ""
     }
     
     /// Generate Dropbox OAuth URL
     func generateDropboxOAuthURL() -> String {
-        var components = URLComponents(string: "https://www.dropbox.com/oauth2/authorize")!
-        components.queryItems = [
+        var components = URLComponents(string: "https://www.dropbox.com/oauth2/authorize")
+        components?.queryItems = [
             URLQueryItem(name: "client_id", value: dropboxAppKey),
             URLQueryItem(name: "redirect_uri", value: dropboxRedirectUri),
             URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "token_access_type", value: "offline"),
             URLQueryItem(name: "state", value: UUID().uuidString)
         ]
-        return components.url!.absoluteString
+        return components?.url?.absoluteString ?? ""
     }
     
     /// Generate OneDrive OAuth URL
     func generateOneDriveOAuthURL() -> String {
-        var components = URLComponents(string: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize")!
-        components.queryItems = [
+        var components = URLComponents(string: "https://login.microsoftonline.com/common/oauth2/v2.0/authorize")
+        components?.queryItems = [
             URLQueryItem(name: "client_id", value: onedriveClientId),
             URLQueryItem(name: "redirect_uri", value: onedriveRedirectUri),
             URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "scope", value: "Files.ReadWrite.AppFolder"),
             URLQueryItem(name: "state", value: UUID().uuidString)
         ]
-        return components.url!.absoluteString
+        return components?.url?.absoluteString ?? ""
     }
     
     /// Exchange authorization code for tokens (Google)

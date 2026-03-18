@@ -670,10 +670,6 @@ class DreamCollaborationService: ObservableObject {
             try context.save()
         }
     }
-                "createdAt": $0.createdAt.ISO8601Format()
-            ]}
-        ]
-    }
 }
 
 // MARK: - Errors

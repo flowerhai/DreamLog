@@ -132,9 +132,12 @@ actor DreamSceneAnalysisService {
     
     /// 获取统计摘要
     func getSummary(dateRange: ClosedRange<Date>? = nil) async -> SceneAnalysisSummary {
-        let filteredAnalyses = dateRange != nil
-            ? analyses.filter { dateRange!.contains($0.createdAt) }
-            : analyses
+        let filteredAnalyses: [DreamSceneAnalysis]
+        if let range = dateRange {
+            filteredAnalyses = analyses.filter { range.contains($0.createdAt) }
+        } else {
+            filteredAnalyses = analyses
+        }
         
         let totalDreams = await store.dreams.count
         let analyzedDreams = filteredAnalyses.count
