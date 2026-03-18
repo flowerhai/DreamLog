@@ -530,6 +530,50 @@ class DreamCollaborationService: ObservableObject {
             return []
         }
     }
+    
+    /// 根据梦境 ID 获取协作会话
+    func getSessionsByDreamId(_ dreamId: UUID) async -> [DreamCollaborationSession] {
+        guard let context = modelContext else { return [] }
+        
+        do {
+            let descriptor = FetchDescriptor<DreamCollaborationSession>(
+                predicate: #Predicate { $0.dreamId == dreamId },
+                sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+            )
+            return try context.fetch(descriptor)
+        } catch {
+            return []
+        }
+    }
+    
+    /// 导出会话数据（用于分享或备份）
+    func exportSession(_ session: DreamCollaborationSession) async -> [String: Any]? {
+        return [
+            "id": session.id.uuidString,
+            "dreamId": session.dreamId.uuidString,
+            "title": session.title,
+            "description": session.description,
+            "createdAt": session.createdAt.ISO8601Format(),
+            "status": session.status.rawValue,
+            "visibility": session.visibility.rawValue,
+            "participantCount": session.participantCount,
+            "interpretationCount": session.interpretationCount,
+            "participants": session.participants.map { [
+                "username": $0.username,
+                "role": $0.role.rawValue,
+                "joinedAt": $0.joinedAt.ISO8601Format()
+            ]},
+            "interpretations": session.interpretations.map { [
+                "id": $0.id.uuidString,
+                "authorName": $0.authorName,
+                "content": $0.content,
+                "type": $0.type.rawValue,
+                "voteCount": $0.voteCount,
+                "isAccepted": $0.isAccepted,
+                "createdAt": $0.createdAt.ISO8601Format()
+            ]}
+        ]
+    }
 }
 
 // MARK: - Errors
