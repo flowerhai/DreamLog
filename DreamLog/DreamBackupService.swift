@@ -410,8 +410,9 @@ class DreamBackupService {
             
             if result.success {
                 // Update schedule
-                schedule.lastBackupDate = Date()
-                schedule.nextBackupDate = calculateNextBackupDate(schedule.frequency, from: schedule.lastBackupDate!)
+                let now = Date()
+                schedule.lastBackupDate = now
+                schedule.nextBackupDate = calculateNextBackupDate(schedule.frequency, from: now)
                 try modelContext.save()
             }
             

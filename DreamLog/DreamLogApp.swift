@@ -10,7 +10,7 @@ import SwiftData
 
 @main
 struct DreamLogApp: App {
-    static var shared: DreamLogApp!
+    static var shared: DreamLogApp?
     
     let modelContainer: ModelContainer
     

@@ -184,8 +184,11 @@ class DreamMusicExportService: ObservableObject {
         buffer.frameLength = frameCount
         
         // 合成所有音频层
-        let audioData = buffer.floatChannelData![0]
-        let audioDataRight = buffer.floatChannelData![1]
+        guard let floatChannelData = buffer.floatChannelData else {
+            throw ExportError.bufferCreationFailed
+        }
+        let audioData = floatChannelData[0]
+        let audioDataRight = floatChannelData[1]
         
         for layer in music.audioLayers {
             await MainActor.run {

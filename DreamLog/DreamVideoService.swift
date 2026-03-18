@@ -313,9 +313,10 @@ class DreamVideoService: ObservableObject {
                 AVSampleRateKey: 44100,
                 AVEncoderBitRateKey: 128000
             ]
-            audioWriterInput = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
-            audioWriterInput?.expectsMediaDataInRealTime = false
-            videoWriter.add(audioWriterInput!)
+            let input = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+            input.expectsMediaDataInRealTime = false
+            audioWriterInput = input
+            videoWriter.add(input)
         }
         
         // 开始写入
