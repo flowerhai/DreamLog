@@ -562,6 +562,70 @@ class DreamNotificationService: ObservableObject {
         
         saveStatistics()
     }
+    
+    // MARK: - Live Activity Integration
+    
+    /// 开始挑战实时活动
+    @available(iOS 16.2, *)
+    func startChallengeLiveActivity(challenge: UserChallenge) async {
+        guard #available(iOS 16.2, *) else { return }
+        
+        do {
+            try await DreamLiveActivityService.shared.startChallengeActivity(challenge: challenge)
+        } catch {
+            print("启动挑战实时活动失败：\(error)")
+        }
+    }
+    
+    /// 更新挑战实时活动
+    @available(iOS 16.2, *)
+    func updateChallengeLiveActivity(challengeId: String, challenge: UserChallenge) async {
+        guard #available(iOS 16.2, *) else { return }
+        
+        await DreamLiveActivityService.shared.updateChallengeActivity(
+            challengeId: challengeId,
+            challenge: challenge
+        )
+    }
+    
+    /// 结束挑战实时活动
+    @available(iOS 16.2, *)
+    func endChallengeLiveActivity(challengeId: String) async {
+        guard #available(iOS 16.2, *) else { return }
+        
+        await DreamLiveActivityService.shared.endChallengeActivity(challengeId: challengeId)
+    }
+    
+    /// 开始孵育实时活动
+    @available(iOS 16.2, *)
+    func startIncubationLiveActivity(incubation: DreamIncubationSession) async {
+        guard #available(iOS 16.2, *) else { return }
+        
+        do {
+            try await DreamLiveActivityService.shared.startIncubationActivity(incubation: incubation)
+        } catch {
+            print("启动孵育实时活动失败：\(error)")
+        }
+    }
+    
+    /// 更新孵育实时活动
+    @available(iOS 16.2, *)
+    func updateIncubationLiveActivity(incubationId: String, incubation: DreamIncubationSession) async {
+        guard #available(iOS 16.2, *) else { return }
+        
+        await DreamLiveActivityService.shared.updateIncubationActivity(
+            incubationId: incubationId,
+            incubation: incubation
+        )
+    }
+    
+    /// 结束孵育实时活动
+    @available(iOS 16.2, *)
+    func endIncubationLiveActivity(incubationId: String) async {
+        guard #available(iOS 16.2, *) else { return }
+        
+        await DreamLiveActivityService.shared.endIncubationActivity(incubationId: incubationId)
+    }
 }
 
 // MARK: - UNUserNotificationCenterDelegate

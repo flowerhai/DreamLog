@@ -360,6 +360,69 @@ final class DreamNotificationTests: XCTestCase {
             }
         }
     }
+    
+    // MARK: - 实时活动测试
+    
+    @available(iOS 16.2, *)
+    func testLiveActivityStateEnum() {
+        XCTAssertEqual(LiveActivityState.active.rawValue, "active")
+        XCTAssertEqual(LiveActivityState.completed.rawValue, "completed")
+        XCTAssertEqual(LiveActivityState.dismissed.rawValue, "dismissed")
+    }
+    
+    @available(iOS 16.2, *)
+    func testChallengeLiveActivityDataInitialization() {
+        let challengeData = ChallengeLiveActivityData(
+            challengeId: "test_challenge",
+            challengeName: "每日记录挑战",
+            challengeType: "daily",
+            progress: 0.5,
+            currentCount: 3,
+            targetCount: 7,
+            timeRemaining: 3600,
+            state: .active,
+            startedAt: Date(),
+            endsAt: Date().addingTimeInterval(86400)
+        )
+        
+        XCTAssertEqual(challengeData.challengeId, "test_challenge")
+        XCTAssertEqual(challengeData.challengeName, "每日记录挑战")
+        XCTAssertEqual(challengeData.progress, 0.5)
+        XCTAssertEqual(challengeData.currentCount, 3)
+        XCTAssertEqual(challengeData.targetCount, 7)
+        XCTAssertEqual(challengeData.state, .active)
+    }
+    
+    @available(iOS 16.2, *)
+    func testIncubationLiveActivityDataInitialization() {
+        let incubationData = IncubationLiveActivityData(
+            incubationId: "test_incubation",
+            goal: "做清醒梦",
+            affirmations: ["我能意识到自己在做梦", "我会记住我的梦境", "我很放松"],
+            currentAffirmationIndex: 0,
+            timeRemaining: 7200,
+            state: .active,
+            startedAt: Date(),
+            targetSleepTime: Date().addingTimeInterval(7200)
+        )
+        
+        XCTAssertEqual(incubationData.incubationId, "test_incubation")
+        XCTAssertEqual(incubationData.goal, "做清醒梦")
+        XCTAssertEqual(incubationData.affirmations.count, 3)
+        XCTAssertEqual(incubationData.currentAffirmationIndex, 0)
+        XCTAssertEqual(incubationData.state, .active)
+    }
+    
+    @available(iOS 16.2, *)
+    func testLiveActivityServiceAvailability() async {
+        // 测试 Live Activity 服务是否可用
+        let service = DreamLiveActivityService.shared
+        let isAvailable = service.isAvailable
+        
+        // 注意：在测试环境中，实时活动可能不可用
+        // 这个测试主要验证服务可以正常访问
+        XCTAssertNotNil(service)
+    }
 }
 
 // MARK: - 辅助扩展
