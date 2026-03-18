@@ -32,8 +32,10 @@ actor DreamYearInReviewService {
     func generateYearInReview(for year: Int) async throws -> DreamYearInReview {
         // 获取该年份所有梦境
         let calendar = Calendar.current
-        let startDate = calendar.date(from: DateComponents(year: year, month: 1, day: 1))!
-        let endDate = calendar.date(from: DateComponents(year: year + 1, month: 1, day: 1))!
+        guard let startDate = calendar.date(from: DateComponents(year: year, month: 1, day: 1)),
+              let endDate = calendar.date(from: DateComponents(year: year + 1, month: 1, day: 1)) else {
+            throw YearInReviewError.invalidDateRange
+        }
         
         let descriptor = FetchDescriptor<Dream>(
             predicate: #Predicate<Dream> { dream in

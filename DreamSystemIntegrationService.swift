@@ -29,7 +29,15 @@ class DreamSystemIntegrationService {
     // MARK: - Initialization
     
     init(modelContext: ModelContext? = nil) {
-        self.modelContext = modelContext ?? (try? ModelContext(DreamLogApp.shared.modelContainer))!
+        if let providedContext = modelContext {
+            self.modelContext = providedContext
+        } else if let container = DreamLogApp.shared.modelContainer,
+                  let context = try? ModelContext(container) {
+            self.modelContext = context
+        } else {
+            // Fallback: create a temporary context (should not happen in normal usage)
+            self.modelContext = try! ModelContext(ModelContainer(for: EmptyModel()))
+        }
         self.stats = SystemIntegrationStats()
         self.loadStats()
         self.setupFocusModeObserver()

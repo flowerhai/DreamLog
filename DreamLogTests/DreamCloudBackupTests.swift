@@ -378,7 +378,7 @@ final class DreamCloudBackupTests: XCTestCase {
             "refresh_token": "1//test_refresh",
             "scope": "https://www.googleapis.com/auth/drive.file"
         }
-        """.data(using: .utf8)!
+        """.data(using: .utf8) ?? Data()
         
         let response = try JSONDecoder().decode(OAuthTokenResponse.self, from: json)
         
