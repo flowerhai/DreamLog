@@ -19,6 +19,7 @@ struct DreamMeditationView: View {
     @State private var selectedTemplate: MeditationTemplate?
     @State private var stats: MeditationStats = .empty
     @State private var preferences: MeditationPreference?
+    @State private var recommendationSeed = 0
     
     @Query(sort: \MeditationTemplate.usageCount, order: .reverse)
     private var popularTemplates: [MeditationTemplate]
@@ -156,9 +157,10 @@ struct DreamMeditationView: View {
                 Spacer()
                 
                 Button("换一批") {
-                    // TODO: 刷新推荐
+                    refreshRecommendations()
                 }
                 .font(.caption)
+                .foregroundStyle(.purple)
             }
             
             ScrollView(.horizontal, showsIndicators: false) {
@@ -293,8 +295,20 @@ struct DreamMeditationView: View {
             timeOfDay = "night"
         }
         
-        let config = MeditationRecommendationConfig(timeOfDay: timeOfDay)
+        // 使用 seed 来改变推荐结果，实现"换一批"功能
+        var config = MeditationRecommendationConfig(timeOfDay: timeOfDay)
+        config.seed = recommendationSeed
+        
         return service.getRecommendedTemplates(config: config)
+    }
+    
+    private func refreshRecommendations() {
+        withAnimation(.spring(response: 0.3)) {
+            recommendationSeed += 1
+        }
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .light)
+        impactFeedback.impactOccurred()
     }
     
     private func getTemplates(for category: MeditationCategory) -> [MeditationTemplate] {

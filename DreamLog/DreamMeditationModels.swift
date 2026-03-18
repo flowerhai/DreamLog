@@ -453,6 +453,7 @@ struct MeditationRecommendationConfig {
     var energyLevel: Int? // 能量水平 1-5
     var goal: String? // 目标：sleep/relax/focus/recall/lucid
     var availableTime: TimeInterval? // 可用时间
+    var seed: Int // 随机种子，用于"换一批"功能
     
     static var empty: MeditationRecommendationConfig {
         MeditationRecommendationConfig(
@@ -463,7 +464,8 @@ struct MeditationRecommendationConfig {
             stressLevel: nil,
             energyLevel: nil,
             goal: nil,
-            availableTime: nil
+            availableTime: nil,
+            seed: 0
         )
     }
 }

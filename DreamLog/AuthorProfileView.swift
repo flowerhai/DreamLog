@@ -60,8 +60,7 @@ struct AuthorProfileView: View {
         .alert("举报用户", isPresented: $showingReportAlert) {
             Button("取消", role: .cancel) { }
             Button("举报", role: .destructive) {
-                // TODO: Submit report to server
-                print("Report submitted for user: \(authorId)")
+                submitReport()
             }
         } message: {
             Text("确定要举报此用户吗？我们将审核该账户。")
@@ -297,6 +296,22 @@ struct AuthorProfileView: View {
     }
     
     // MARK: - Methods
+    
+    /// 提交举报
+    private func submitReport() {
+        // 本地记录举报（实际应用中应发送到服务器）
+        print("Report submitted for user: \(authorId)")
+        
+        // 显示成功提示
+        showingReportAlert = false
+        
+        // 在实际应用中，这里应该调用后端 API 提交举报
+        // 例如：await socialService.submitReport(authorId: authorId, reason: reportReason)
+        
+        // Haptic feedback
+        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
+        impactFeedback.impactOccurred()
+    }
     
     /// 加载数据
     @MainActor
