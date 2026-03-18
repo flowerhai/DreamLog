@@ -462,7 +462,7 @@ final class DreamPatternPredictionTests: XCTestCase {
                         "It contains enough text to simulate a real dream record. " +
                         "The dream was vivid and memorable.",
                 tags: ["test", "sample", "prediction"].shuffled().prefix(Int.random(in: 1...3)).map { String($0) },
-                emotions: [emotions.randomElement()!],
+                emotions: [emotions.randomElement() ?? .happy],
                 clarity: Int.random(in: 1...5),
                 intensity: Int.random(in: 1...5),
                 isLucid: Bool.random(),

@@ -246,10 +246,14 @@ struct DreamArtCardView: View {
     // MARK: - 分享
     
     private func shareCard() {
-        guard let imagePath = viewModel.generatedImagePath else { return }
+        guard let imagePath = viewModel.generatedImagePath,
+              let image = UIImage(contentsOfFile: imagePath) else {
+            print("⚠️ 无法加载分享图片：\(viewModel.generatedImagePath ?? "unknown")")
+            return
+        }
         
         let activityVC = UIActivityViewController(
-            activityItems: [UIImage(contentsOfFile: imagePath)!],
+            activityItems: [image],
             applicationActivities: nil
         )
         

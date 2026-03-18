@@ -446,8 +446,8 @@ final class DreamChallengeTests: XCTestCase {
             let challenge = DreamChallenge(
                 title: "挑战 \(i)",
                 description: "性能测试",
-                type: DreamChallengeType.allCases.randomElement()!,
-                difficulty: ChallengeDifficulty.allCases.randomElement()!,
+                type: DreamChallengeType.allCases.randomElement() ?? .dreamRecall,
+                difficulty: ChallengeDifficulty.allCases.randomElement() ?? .beginner,
                 startDate: Date(),
                 endDate: Date().addingTimeInterval(Double.random(in: 7...90) * 24 * 60 * 60),
                 tasks: [],

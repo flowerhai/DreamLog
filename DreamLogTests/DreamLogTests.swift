@@ -5965,6 +5965,6 @@ extension DreamShareCircleService {
     // 用于测试的公开方法
     func generateInviteCode() -> String {
         let characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return String((0..<8).map { _ in characters.randomElement()! })
+        return String((0..<8).map { _ in characters.randomElement() ?? "A" })
     }
 }
