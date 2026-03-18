@@ -314,7 +314,11 @@ extension DreamARShareService: MCNearbyServiceBrowserDelegate {
     
     func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String: String]?) {
         print("🔍 发现主持者：\(peerID.displayName)")
-        browser.invitePeer(peerID, to: session!, withContext: nil, timeout: 30)
+        guard let session = session else {
+            print("❌ Session 未初始化，无法邀请 peer")
+            return
+        }
+        browser.invitePeer(peerID, to: session, withContext: nil, timeout: 30)
     }
     
     func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {

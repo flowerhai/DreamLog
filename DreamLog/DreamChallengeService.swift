@@ -309,9 +309,10 @@ class DreamChallengeService: ObservableObject {
             
             let descriptor = FetchDescriptor<DreamChallenge>(
                 predicate: #Predicate<DreamChallenge> { challenge in
-                    challenge.startedAt != nil &&
-                    challenge.startedAt! >= startOfDay &&
-                    challenge.startedAt! < endOfDay
+                    if let startedAt = challenge.startedAt {
+                        return startedAt >= startOfDay && startedAt < endOfDay
+                    }
+                    return false
                 }
             )
             
