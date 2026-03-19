@@ -30,13 +30,17 @@ struct DreamWeatherView: View {
             let now = Date()
             switch self {
             case .last7Days:
-                return Calendar.current.date(byAdding: .day, value: -7, to: now)!...now
+                guard let startDate = Calendar.current.date(byAdding: .day, value: -7, to: now) else { return nil }
+                return startDate...now
             case .last30Days:
-                return Calendar.current.date(byAdding: .day, value: -30, to: now)!...now
+                guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: now) else { return nil }
+                return startDate...now
             case .last90Days:
-                return Calendar.current.date(byAdding: .day, value: -90, to: now)!...now
+                guard let startDate = Calendar.current.date(byAdding: .day, value: -90, to: now) else { return nil }
+                return startDate...now
             case .lastYear:
-                return Calendar.current.date(byAdding: .year, value: -1, to: now)!...now
+                guard let startDate = Calendar.current.date(byAdding: .year, value: -1, to: now) else { return nil }
+                return startDate...now
             case .all:
                 return nil
             }
@@ -325,7 +329,9 @@ struct DreamWeatherView: View {
                 } else {
                     // For "all", use a very wide range
                     let calendar = Calendar.current
-                    let past = calendar.date(byAdding: .year, value: -10, to: Date())!
+                    guard let past = calendar.date(byAdding: .year, value: -10, to: Date()) else {
+                        throw NSError(domain: "DreamWeather", code: 1, userInfo: [NSLocalizedDescriptionKey: "无法计算日期范围"])
+                    }
                     dateRange = past...Date()
                 }
                 

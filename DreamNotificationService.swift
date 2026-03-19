@@ -552,10 +552,7 @@ class DreamNotificationService: ObservableObject {
         statistics.totalOpened += 1
         statistics.openRate = Double(statistics.totalOpened) / Double(max(statistics.totalSent, 1))
         
-        if statistics.byType[type.rawValue] == nil {
-            statistics.byType[type.rawValue] = .init()
-        }
-        let typeStats = statistics.byType[type.rawValue]!
+        var typeStats = statistics.byType[type.rawValue] ?? .init()
         typeStats.opened += 1
         typeStats.openRate = Double(typeStats.opened) / Double(max(typeStats.sent, 1))
         statistics.byType[type.rawValue] = typeStats
