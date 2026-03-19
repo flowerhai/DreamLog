@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Combine
+import SwiftData
 
 // MARK: - 视图模型
 
@@ -22,16 +23,29 @@ class DreamVoiceCommandViewModel: ObservableObject {
     @Published var dreams: [Dream] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var isAnalyzing = false
+    @Published var analysisResult: String?
     
     // MARK: - Services
     
     private let voiceService: VoiceCommandService
+    private let modelContext: ModelContext
+    private let shareService: ShareService
+    private let aiService: AIService
     private var cancellables = Set<AnyCancellable>()
     
     // MARK: - Initialization
     
-    init(voiceService: VoiceCommandService = .shared) {
+    init(
+        voiceService: VoiceCommandService = .shared,
+        modelContext: ModelContext,
+        shareService: ShareService = .init(),
+        aiService: AIService = .init()
+    ) {
         self.voiceService = voiceService
+        self.modelContext = modelContext
+        self.shareService = shareService
+        self.aiService = aiService
         setupNotifications()
     }
     
@@ -136,12 +150,13 @@ class DreamVoiceCommandViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // TODO: 从 DreamService 加载梦境
-            // 这里是占位实现
-            try await Task.sleep(nanoseconds: 500_000_000)
-            dreams = []
+            let descriptor = FetchDescriptor<Dream>(
+                sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+            )
+            dreams = try modelContext.fetch(descriptor)
         } catch {
             errorMessage = "加载梦境失败：\(error.localizedDescription)"
+            print("❌ 加载梦境错误：\(error)")
         }
         
         isLoading = false
@@ -165,8 +180,18 @@ class DreamVoiceCommandViewModel: ObservableObject {
             return
         }
         
-        // TODO: 调用分享服务
-        showFeedback("准备分享：\(dream.title ?? "梦境")")
+        Task {
+            showFeedback("正在生成分享卡片...")
+            
+            // 使用默认风格生成分享卡片
+            let style = ShareCardStyle.starry
+            if let image = await shareService.generateShareImage(dream: dream, style: style) {
+                showFeedback("分享卡片已生成，准备分享")
+                // 可以通过 UIActivityViewController 分享
+            } else {
+                showFeedback("生成分享卡片失败")
+            }
+        }
     }
     
     func lockCurrentDream() {
@@ -175,8 +200,16 @@ class DreamVoiceCommandViewModel: ObservableObject {
             return
         }
         
-        // TODO: 调用隐私服务锁定梦境
-        showFeedback("已锁定梦境")
+        Task {
+            do {
+                // 使用生物识别锁定梦境
+                try await DreamPrivacyService(modelContext: modelContext).lockDream(dream, lockType: .biometric)
+                showFeedback("梦境已锁定 🔒")
+            } catch {
+                showFeedback("锁定失败：\(error.localizedDescription)")
+                print("❌ 锁定梦境错误：\(error)")
+            }
+        }
     }
     
     func analyzeCurrentDream() {
@@ -185,8 +218,26 @@ class DreamVoiceCommandViewModel: ObservableObject {
             return
         }
         
-        // TODO: 调用 AI 分析服务
-        showFeedback("正在分析梦境...")
+        Task {
+            isAnalyzing = true
+            showFeedback("AI 正在分析梦境...")
+            
+            do {
+                let analysis = await aiService.analyzeDream(
+                    content: dream.content ?? "",
+                    tags: dream.tags ?? [],
+                    emotions: dream.emotions ?? []
+                )
+                
+                analysisResult = analysis
+                isAnalyzing = false
+                showFeedback("梦境分析完成 ✨")
+            } catch {
+                isAnalyzing = false
+                showFeedback("分析失败：\(error.localizedDescription)")
+                print("❌ AI 分析错误：\(error)")
+            }
+        }
     }
     
     // MARK: - Recording
@@ -229,13 +280,22 @@ class DreamVoiceCommandViewModel: ObservableObject {
 
 // MARK: - Preview
 
+#if DEBUG
 extension DreamVoiceCommandViewModel {
     static var preview: DreamVoiceCommandViewModel {
-        let viewModel = DreamVoiceCommandViewModel()
-        viewModel.dreams = [
-            Dream(title: "飞行梦", content: "我在天空中自由飞翔", createdAt: Date()),
-            Dream(title: "追逐梦", content: "有人在追我", createdAt: Date().addingTimeInterval(-86400))
-        ]
-        return viewModel
+        do {
+            let container = try ModelContainer(for: Dream.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            let context = ModelContext(container)
+            
+            let viewModel = DreamVoiceCommandViewModel(modelContext: context)
+            viewModel.dreams = [
+                Dream(title: "飞行梦", content: "我在天空中自由飞翔", date: Date()),
+                Dream(title: "追逐梦", content: "有人在追我", date: Date().addingTimeInterval(-86400))
+            ]
+            return viewModel
+        } catch {
+            fatalError("Preview setup failed: \(error)")
+        }
     }
 }
+#endif
