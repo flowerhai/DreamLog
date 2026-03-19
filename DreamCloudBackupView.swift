@@ -76,10 +76,12 @@ struct DreamCloudBackupView: View {
                 AddCloudConfigView(selectedProvider: $selectedProvider)
             }
             .sheet(isPresented: $showingBackupOptions) {
-                BackupOptionsView(config: selectedConfig ?? configs.first(where: { $0.isConnected })!)
+                if let config = selectedConfig ?? configs.first(where: { $0.isConnected }) {
+                    BackupOptionsView(config: config)
+                }
             }
-            .sheet(isPresented: $showingRestoreSheet) {
-                RestoreBackupView(record: selectedRestoreRecord!)
+            .sheet(item: $selectedRestoreRecord) { record in
+                RestoreBackupView(record: record)
             }
             .overlay {
                 if isBackingUp {

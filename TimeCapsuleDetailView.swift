@@ -331,7 +331,11 @@ struct TimeCapsuleDetailView: View {
                 "已到达解锁时间，立即回顾这些梦境吧！" :
                 "将在 \(capsule.daysUntilUnlock) 天后解锁"
         case .unlocked:
-            return "已于 \(formatDate(capsule.unlockedAt!)) 解锁"
+            if let unlockedAt = capsule.unlockedAt {
+                return "已于 \(formatDate(unlockedAt)) 解锁"
+            } else {
+                return "已解锁"
+            }
         case .expired:
             return "已过期，但仍可查看"
         }

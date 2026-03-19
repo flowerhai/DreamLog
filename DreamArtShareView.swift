@@ -92,11 +92,12 @@ struct DreamArtShareView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             
             if let template = selectedTemplate,
-               template.gradientStart != nil, template.gradientEnd != nil {
+               let gradientStart = template.gradientStart,
+               let gradientEnd = template.gradientEnd {
                 LinearGradient(
                     colors: [
-                        Color(hex: template.gradientStart!) ?? .clear,
-                        Color(hex: template.gradientEnd!) ?? .clear
+                        Color(hex: gradientStart) ?? .clear,
+                        Color(hex: gradientEnd) ?? .clear
                     ],
                     startPoint: .top,
                     endPoint: .bottom

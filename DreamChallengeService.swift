@@ -336,16 +336,17 @@ class DreamChallengeService: ObservableObject {
         let descriptor = FetchDescriptor<ChallengeStats>(
             predicate: #Predicate<ChallengeStats> { $0.userId == userId }
         )
-        var stats = try modelContext.fetch(descriptor).first
         
-        if stats == nil {
-            stats = ChallengeStats(userId: userId)
-            modelContext.insert(stats!)
+        if var stats = try modelContext.fetch(descriptor).first {
+            self.stats = stats
+            return stats
+        } else {
+            let newStats = ChallengeStats(userId: userId)
+            modelContext.insert(newStats)
             try modelContext.save()
+            self.stats = newStats
+            return newStats
         }
-        
-        self.stats = stats
-        return stats!
     }
     
     /// 刷新统计

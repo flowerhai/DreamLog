@@ -100,10 +100,9 @@ class ReflectionExportService {
                 self.modelContext = ModelContext(container)
             } catch {
                 // Last resort: create in-memory context (should rarely fail)
-                // Using force unwrap here as this is a fallback for previews/tests
+                // Using fatalError as this is a fallback for previews/tests
                 // and failure would indicate a serious system issue
-                let container = try! ModelContainer(for: DreamReflection.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-                self.modelContext = ModelContext(container)
+                fatalError("Failed to create in-memory ModelContainer for ReflectionExportService: \(error)")
             }
         }
         self.fileManager = FileManager.default

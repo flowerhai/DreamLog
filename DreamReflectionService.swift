@@ -203,8 +203,11 @@ actor DreamReflectionService {
         let now = Date()
         
         let descriptor = FetchDescriptor<DreamReflection>(
-            predicate: #Predicate { $0.followUpDate != nil && $0.followUpDate! > now },
-            sortBy: [SortDescriptor(\.followUpDate, order: .forward)]
+            predicate: #Predicate<DreamReflection> {
+                guard let followUpDate = $0.followUpDate else { return false }
+                return followUpDate > now
+            },
+            sortBy: [SortDescriptor(\DreamReflection.followUpDate, order: .forward)]
         )
         
         return try modelContext.fetch(descriptor)

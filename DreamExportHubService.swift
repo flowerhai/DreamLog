@@ -320,9 +320,10 @@ actor DreamExportHubService {
             
             // 更新任务状态
             task.status = ExportStatus.completed.rawValue
-            task.lastExportTime = Date()
+            let exportTime = Date()
+            task.lastExportTime = exportTime
             task.exportCount += 1
-            task.nextExportTime = calculateNextExportTime(from: task.lastExportTime!, interval: task.repeatInterval)
+            task.nextExportTime = calculateNextExportTime(from: exportTime, interval: task.repeatInterval)
             
             try modelContext.save()
             
@@ -723,7 +724,7 @@ actor DreamExportHubService {
             exportsByPlatform[history.platform, default: 0] += 1
             exportsByFormat[history.format, default: 0] += 1
             
-            if lastExportDate == nil || history.createdAt > lastExportDate! {
+            if lastExportDate == nil || history.createdAt > lastExportDate {
                 lastExportDate = history.createdAt
             }
         }

@@ -116,8 +116,7 @@ class DreamReflectionShareService {
                 self.modelContext = ModelContext(container)
             } catch {
                 // Last resort fallback for previews/tests
-                let container = try! ModelContainer(for: SharedReflection.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-                self.modelContext = ModelContext(container)
+                fatalError("Failed to create in-memory ModelContainer for ReflectionShareService: \(error)")
             }
         }
         self.userDefaults = userDefaults
