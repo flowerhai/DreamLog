@@ -175,6 +175,7 @@ extension Dream {
         case .biometric: return "faceid"
         case .passcode: return "lock.fill"
         case .hidden: return "eye.slash"
+        case .autoLock: return "lock.shield"
         }
     }
     

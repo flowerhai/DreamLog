@@ -18,6 +18,7 @@ enum DreamLockType: String, Codable, CaseIterable {
     case biometric = "biometric" // 生物识别 (Face ID/Touch ID)
     case passcode = "passcode"   // 密码锁定
     case hidden = "hidden"       // 隐藏 (不显示在列表中)
+    case autoLock = "autoLock"   // 自动锁定 (基于关键词)
     
     var displayName: String {
         switch self {
@@ -25,6 +26,7 @@ enum DreamLockType: String, Codable, CaseIterable {
         case .biometric: return "生物识别"
         case .passcode: return "密码"
         case .hidden: return "隐藏"
+        case .autoLock: return "自动锁定"
         }
     }
     
@@ -34,6 +36,17 @@ enum DreamLockType: String, Codable, CaseIterable {
         case .biometric: return "faceid"
         case .passcode: return "lock.fill"
         case .hidden: return "eye.slash"
+        case .autoLock: return "lock.shield"
+        }
+    }
+    
+    var color: String {
+        switch self {
+        case .none: return "gray"
+        case .biometric: return "green"
+        case .passcode: return "orange"
+        case .hidden: return "purple"
+        case .autoLock: return "blue"
         }
     }
 }
