@@ -79,7 +79,10 @@ struct DreamLogApp: App {
                 SocialActivity.self,
                 
                 // AI 分析
-                DreamAnalysis.self
+                DreamAnalysis.self,
+                
+                // 隐私模式
+                DreamPrivacySettings.self
             ])
             let modelConfiguration = ModelConfiguration(
                 schema: schema,

@@ -16,7 +16,7 @@ class DreamChallengeService: ObservableObject {
     
     // MARK: - Singleton
     
-    static let shared = DreamChallengeService(modelContext: SharedModelContainer.main.context)
+    static let shared = DreamChallengeService()
     
     // MARK: - Properties
     
@@ -26,8 +26,14 @@ class DreamChallengeService: ObservableObject {
     
     // MARK: - Initialization
     
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    private init(modelContext: ModelContext? = nil) {
+        if let context = modelContext {
+            self.modelContext = context
+        } else if let container = SharedModelContainer.main {
+            self.modelContext = ModelContext(container)
+        } else {
+            fatalError("无法初始化模型上下文：SharedModelContainer.main 未设置")
+        }
         loadChallenges()
         loadBadges()
     }
