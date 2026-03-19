@@ -664,6 +664,7 @@ struct ShareDreamSheet: View {
     @State private var isSharing: Bool = false
     @State private var shareResult: BatchShareResult?
     @State private var showingResult = false
+    @State private var showingCardEditor = false
     
     var body: some View {
         NavigationStack {
@@ -705,6 +706,26 @@ struct ShareDreamSheet: View {
                     Text(ShareTemplate.allCases.first { $0 == selectedTemplate }?.description ?? "")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                    
+                    // 高级卡片编辑器入口
+                    Button(action: {
+                        showingCardEditor = true
+                    }) {
+                        HStack {
+                            Image(systemName: "wand.and.stars")
+                                .foregroundColor(.purple)
+                            VStack(alignment: .leading) {
+                                Text("高级卡片编辑器")
+                                    .font(.subheadline)
+                                Text("自定义布局、贴纸、滤镜等")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
                 
                 // 自定义消息
@@ -759,6 +780,9 @@ struct ShareDreamSheet: View {
                 if let result = shareResult {
                     Text("成功：\(result.successCount) / 失败：\(result.failCount)")
                 }
+            }
+            .sheet(isPresented: $showingCardEditor) {
+                DreamShareCardEditorView(dream: dream)
             }
         }
     }

@@ -285,6 +285,15 @@ struct ProfileNavigationView: View {
                         Label("梦境图谱", systemImage: "network")
                     }
                 }
+                
+                Section(header: Text("社交")) {
+                    NavigationLink(destination: DreamSocialFeedView()) {
+                        Label("梦境动态", systemImage: "text.bubble.fill")
+                    }
+                    NavigationLink(destination: DreamShareHubView()) {
+                        Label("分享中心", systemImage: "paperplane.fill")
+                    }
+                }
             }
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("⚙️ 我的")
