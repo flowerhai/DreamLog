@@ -76,8 +76,8 @@ struct DreamChallengeTimelineProvider: TimelineProvider {
             ]
         )
         
-        // 每小时更新
-        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+        // 每小时更新 - Calendar.date(byAdding:...) with valid inputs never fails
+        let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
         let timeline = Timeline(entries: [entry], policy: .atEnd(nextUpdate))
         completion(timeline)
     }

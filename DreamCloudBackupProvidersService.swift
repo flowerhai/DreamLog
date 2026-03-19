@@ -131,7 +131,10 @@ actor DreamCloudBackupProvidersService {
     
     /// Exchange authorization code for tokens (Google)
     func exchangeGoogleCode(for code: String) async throws -> OAuthTokenResponse {
-        let url = URL(string: "https://oauth2.googleapis.com/token")!
+        // Hardcoded URL - known to be valid
+        guard let url = URL(string: "https://oauth2.googleapis.com/token") else {
+            throw CloudBackupError.invalidConfiguration("Invalid Google token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -157,7 +160,10 @@ actor DreamCloudBackupProvidersService {
     
     /// Exchange authorization code for tokens (Dropbox)
     func exchangeDropboxCode(for code: String) async throws -> OAuthTokenResponse {
-        let url = URL(string: "https://api.dropboxapi.com/oauth2/token")!
+        // Hardcoded URL - known to be valid
+        guard let url = URL(string: "https://api.dropboxapi.com/oauth2/token") else {
+            throw CloudBackupError.invalidConfiguration("Invalid Dropbox token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -182,7 +188,10 @@ actor DreamCloudBackupProvidersService {
     
     /// Exchange authorization code for tokens (OneDrive)
     func exchangeOneDriveCode(for code: String) async throws -> OAuthTokenResponse {
-        let url = URL(string: "https://login.microsoftonline.com/common/oauth2/v2.0/token")!
+        // Hardcoded URL - known to be valid
+        guard let url = URL(string: "https://login.microsoftonline.com/common/oauth2/v2.0/token") else {
+            throw CloudBackupError.invalidConfiguration("Invalid OneDrive token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -506,7 +515,10 @@ actor DreamCloudBackupProvidersService {
     }
     
     private func refreshGoogleToken(refreshToken: String) async throws -> OAuthTokenResponse {
-        let url = URL(string: "https://oauth2.googleapis.com/token")!
+        // Hardcoded URL - known to be valid
+        guard let url = URL(string: "https://oauth2.googleapis.com/token") else {
+            throw CloudBackupError.invalidConfiguration("Invalid Google token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -529,7 +541,10 @@ actor DreamCloudBackupProvidersService {
     }
     
     private func refreshDropboxToken(refreshToken: String) async throws -> OAuthTokenResponse {
-        let url = URL(string: "https://api.dropboxapi.com/oauth2/token")!
+        // Hardcoded URL - known to be valid
+        guard let url = URL(string: "https://api.dropboxapi.com/oauth2/token") else {
+            throw CloudBackupError.invalidConfiguration("Invalid Dropbox token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
@@ -551,7 +566,10 @@ actor DreamCloudBackupProvidersService {
     }
     
     private func refreshOneDriveToken(refreshToken: String) async throws -> OAuthTokenResponse {
-        let url = URL(string: "https://login.microsoftonline.com/common/oauth2/v2.0/token")!
+        // Hardcoded URL - known to be valid
+        guard let url = URL(string: "https://login.microsoftonline.com/common/oauth2/v2.0/token") else {
+            throw CloudBackupError.invalidConfiguration("Invalid OneDrive token URL")
+        }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")

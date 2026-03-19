@@ -23,7 +23,8 @@ actor DreamWeatherService {
     func getWeatherData(for date: Date) async throws -> DreamWeatherData? {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        // Calendar.date(byAdding:...) with valid inputs never fails
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
         
         let descriptor = FetchDescriptor<DreamWeatherData>(
             predicate: #Predicate<DreamWeatherData> {
@@ -217,7 +218,8 @@ actor DreamWeatherService {
     private func getDreams(for date: Date) async throws -> [Dream] {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: date)
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        // Calendar.date(byAdding:...) with valid inputs never fails
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
         
         let descriptor = FetchDescriptor<Dream>(
             predicate: #Predicate<Dream> {

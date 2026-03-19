@@ -159,7 +159,8 @@ class DreamChallengeService: ObservableObject {
     func getTodayChallenges() throws -> [UserChallenge] {
         let calendar = Calendar.current
         let startOfDay = calendar.startOfDay(for: Date())
-        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+        // Calendar.date(byAdding:...) with valid inputs never fails
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay) ?? startOfDay
         
         let descriptor = FetchDescriptor<UserChallenge>(
             predicate: #Predicate<UserChallenge> { 
@@ -404,10 +405,11 @@ class DreamChallengeService: ObservableObject {
         let startOfDay = calendar.startOfDay(for: Date())
         stats.todayCompleted = completedChallenges.filter { $0.completedAt ?? Date.distantPast >= startOfDay }.count
         
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date()))!
+        // Calendar.date(from:...) with valid components never fails
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) ?? startOfDay
         stats.weekCompleted = completedChallenges.filter { $0.completedAt ?? Date.distantPast >= startOfWeek }.count
         
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: Date()))!
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: Date())) ?? startOfDay
         stats.monthCompleted = completedChallenges.filter { $0.completedAt ?? Date.distantPast >= startOfMonth }.count
         
         stats.updatedAt = Date()

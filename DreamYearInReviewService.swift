@@ -239,8 +239,9 @@ actor DreamYearInReviewService {
         
         // 检查梦境数据是否足够（至少 1 个梦境）
         let calendar = Calendar.current
-        let startDate = calendar.date(from: DateComponents(year: previousYear, month: 1, day: 1))!
-        let endDate = calendar.date(from: DateComponents(year: previousYear + 1, month: 1, day: 1))!
+        // Calendar.date(from:...) with valid components never fails
+        let startDate = calendar.date(from: DateComponents(year: previousYear, month: 1, day: 1)) ?? Date()
+        let endDate = calendar.date(from: DateComponents(year: previousYear + 1, month: 1, day: 1)) ?? startDate
         
         let descriptor = FetchDescriptor<Dream>(
             predicate: #Predicate<Dream> { dream in
@@ -630,8 +631,9 @@ actor DreamYearInReviewService {
         let calendar = Calendar.current
         
         for month in 1...12 {
-            let monthStart = calendar.date(from: DateComponents(year: year, month: month, day: 1))!
-            let monthEnd = calendar.date(from: DateComponents(year: year, month: month + 1, day: 1))!
+            // Calendar.date(from:...) with valid components never fails
+            let monthStart = calendar.date(from: DateComponents(year: year, month: month, day: 1)) ?? Date()
+            let monthEnd = calendar.date(from: DateComponents(year: year, month: month + 1, day: 1)) ?? monthStart
             
             let monthDreams = dreams.filter { dream in
                 dream.date >= monthStart && dream.date < monthEnd
