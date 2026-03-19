@@ -181,6 +181,11 @@ struct SettingsView: View {
                         Label("设置 Siri 快捷指令", systemImage: "mic.fill")
                     }
                     
+                    // Phase 71 - 语音命令入口
+                    NavigationLink(destination: DreamVoiceCommandView()) {
+                        Label("语音命令控制", systemImage: "waveform")
+                    }
+                    
                     VStack(alignment: .leading, spacing: 4) {
                         Text("快捷命令")
                             .font(.subheadline)
