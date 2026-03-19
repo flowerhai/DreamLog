@@ -116,10 +116,34 @@ struct DreamShareCardEditorView: View {
     }
     
     private func generateAndSave() {
-        // TODO: 实现卡片图片生成和保存逻辑
-        // 1. 渲染卡片视图为图片
-        // 2. 保存到相册或分享
-        showPreview = true
+        // 渲染卡片视图为图片
+        Task {
+            await MainActor.run {
+                let cardView = CardPreviewCanvas(
+                    template: selectedTemplate,
+                    layoutConfig: layoutConfig,
+                    stickers: stickers,
+                    dream: dream,
+                    customTitle: customTitle.isEmpty ? (dream.title ?? "梦境") : customTitle,
+                    customContent: customContent.isEmpty ? (dream.content ?? "") : customContent,
+                    filters: filters
+                )
+                .frame(width: 1080, height: 1080)
+                
+                // 使用 ImageRenderer 渲染
+                let renderer = ImageRenderer(content: cardView)
+                renderer.scale = 3.0  // 高分辨率
+                
+                if let uiImage = renderer.uiImage {
+                    // 保存到相册
+                    UIImageWriteToSavedPhotosAlbum(uiImage, nil, nil, nil)
+                    showFeedback("卡片已保存到相册 📸")
+                    showPreview = true
+                } else {
+                    showFeedback("生成卡片失败")
+                }
+            }
+        }
     }
 }
 
@@ -856,7 +880,104 @@ struct FlowLayout: Layout {
 extension View {
     func applyFilters(_ filters: [ImageFilter]) -> some View {
         self
-        // TODO: 实现实际的滤镜效果
+            .modifier(FilterEffectModifier(filters: filters))
+    }
+}
+
+/// 滤镜效果修饰符
+struct FilterEffectModifier: ViewModifier {
+    let filters: [ImageFilter]
+    
+    func body(content: Content) -> some View {
+        content
+            .applyFilterEffects(filters)
+    }
+}
+
+/// 应用多个滤镜效果
+extension View {
+    func applyFilterEffects(_ filters: [ImageFilter]) -> some View {
+        self
+            .modifier(VintageFilterModifier(enabled: filters.contains(.vintage)))
+            .modifier(BlackAndWhiteFilterModifier(enabled: filters.contains(.blackAndWhite)))
+            .modifier(WarmFilterModifier(enabled: filters.contains(.warm)))
+            .modifier(CoolFilterModifier(enabled: filters.contains(.cool)))
+            .modifier(VibrantFilterModifier(enabled: filters.contains(.vibrant)))
+            .modifier(FadedFilterModifier(enabled: filters.contains(.faded)))
+            .modifier(DramaticFilterModifier(enabled: filters.contains(.dramatic)))
+    }
+}
+
+// MARK: - 单个滤镜修饰符
+
+struct VintageFilterModifier: ViewModifier {
+    let enabled: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .hueRotation(enabled ? .degrees(20) : .zero)
+            .saturation(enabled ? 0.8 : 1.0)
+            .overlay(enabled ? Color(hex: "d4a574").opacity(0.15) : Color.clear)
+    }
+}
+
+struct BlackAndWhiteFilterModifier: ViewModifier {
+    let enabled: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .grayscale(enabled ? 1.0 : 0.0)
+    }
+}
+
+struct WarmFilterModifier: ViewModifier {
+    let enabled: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(enabled ? Color(hex: "ff9966").opacity(0.1) : Color.clear)
+            .hueRotation(enabled ? .degrees(-10) : .zero)
+    }
+}
+
+struct CoolFilterModifier: ViewModifier {
+    let enabled: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(enabled ? Color(hex: "6699ff").opacity(0.1) : Color.clear)
+            .hueRotation(enabled ? .degrees(10) : .zero)
+    }
+}
+
+struct VibrantFilterModifier: ViewModifier {
+    let enabled: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .saturation(enabled ? 1.5 : 1.0)
+            .contrast(enabled ? 1.1 : 1.0)
+    }
+}
+
+struct FadedFilterModifier: ViewModifier {
+    let enabled: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(enabled ? Color.white.opacity(0.2) : Color.clear)
+            .contrast(enabled ? 0.8 : 1.0)
+    }
+}
+
+struct DramaticFilterModifier: ViewModifier {
+    let enabled: Bool
+    
+    func body(content: Content) -> some View {
+        content
+            .contrast(enabled ? 1.3 : 1.0)
+            .saturation(enabled ? 0.7 : 1.0)
+            .overlay(enabled ? Color(hex: "330033").opacity(0.15) : Color.clear)
     }
 }
 
