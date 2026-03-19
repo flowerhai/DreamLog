@@ -53,33 +53,65 @@ struct DreamChallengeTimelineProvider: TimelineProvider {
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<DreamChallengeEntry>) -> Void) {
-        // TODO: 从 DreamChallengeService 获取真实数据
-        let entry = DreamChallengeEntry(
-            date: Date(),
-            challenges: [
+        // Phase 72: 从 DreamChallengeService 获取真实数据
+        let service = DreamChallengeService.shared
+        var challenges: [ChallengeWidgetData] = []
+        
+        do {
+            // 获取进行中的挑战
+            let activeChallenges = try service.getActiveChallenges()
+            
+            for challenge in activeChallenges.prefix(3) {
+                let progress = challenge.progress
+                let icon = getIconForCategory(challenge.template.category)
+                
+                challenges.append(ChallengeWidgetData(
+                    id: challenge.id?.uuidString ?? UUID().uuidString,
+                    name: challenge.template.name,
+                    progress: progress,
+                    target: challenge.template.targetCount,
+                    current: challenge.progressCount,
+                    icon: icon
+                ))
+            }
+        } catch {
+            print("Failed to load challenges for widget: \(error)")
+        }
+        
+        // 如果没有进行中的挑战，显示默认数据
+        if challenges.isEmpty {
+            challenges = [
                 ChallengeWidgetData(
                     id: "1",
                     name: "晨间记录者",
-                    progress: Double.random(in: 0.3...0.9),
+                    progress: 0.6,
                     target: 5,
-                    current: Int.random(in: 2...4),
+                    current: 3,
                     icon: "sunrise.fill"
-                ),
-                ChallengeWidgetData(
-                    id: "2",
-                    name: "清醒梦挑战",
-                    progress: Double.random(in: 0.1...0.5),
-                    target: 4,
-                    current: Int.random(in: 0...2),
-                    icon: "eye.fill"
                 )
             ]
+        }
+        
+        let entry = DreamChallengeEntry(
+            date: Date(),
+            challenges: challenges
         )
         
         // 每小时更新 - Calendar.date(byAdding:...) with valid inputs never fails
         let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
         let timeline = Timeline(entries: [entry], policy: .atEnd(nextUpdate))
         completion(timeline)
+    }
+    
+    private func getIconForCategory(_ category: ChallengeCategory) -> String {
+        switch category {
+        case .recording: return "text.badge.checkmark"
+        case .lucid: return "eye.fill"
+        case .reflection: return "sparkles"
+        case .creative: return "paintpalette"
+        case .wellness: return "heart.fill"
+        case .social: return "person.2.fill"
+        }
     }
 }
 

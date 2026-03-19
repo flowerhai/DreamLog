@@ -10,6 +10,43 @@ import Foundation
 import SwiftData
 import Combine
 
+// MARK: - 用户服务协议（Phase 72: 为多人协作功能奠定基础）
+
+/// 当前用户服务协议
+protocol CurrentUserService {
+    /// 获取当前用户 ID
+    func getCurrentUserId() -> String?
+    /// 获取当前用户名
+    func getCurrentUserName() -> String
+    /// 检查用户是否已登录
+    func isLoggedIn() -> Bool
+}
+
+/// 默认用户服务实现（本地模式）
+class DefaultCurrentUserService: CurrentUserService {
+    static let shared = DefaultCurrentUserService()
+    
+    private let userIdKey = "dreamlog_current_user_id"
+    private let userNameKey = "dreamlog_current_user_name"
+    
+    func getCurrentUserId() -> String? {
+        return UserDefaults.standard.string(forKey: userIdKey)
+    }
+    
+    func getCurrentUserName() -> String {
+        return UserDefaults.standard.string(forKey: userNameKey) ?? "我"
+    }
+    
+    func isLoggedIn() -> Bool {
+        return getCurrentUserId() != nil
+    }
+    
+    func setCurrentUser(id: String, name: String) {
+        UserDefaults.standard.set(id, forKey: userIdKey)
+        UserDefaults.standard.set(name, forKey: userNameKey)
+    }
+}
+
 // MARK: - 协作服务主类
 
 @MainActor
@@ -32,11 +69,21 @@ class DreamCollaborationService: ObservableObject {
     private var modelContext: ModelContext?
     private var cancellables = Set<AnyCancellable>()
     private let userId: String = "current_user" // 从用户服务获取（当前为占位实现）
+    private var currentUserService: CurrentUserService? // Phase 72: 用户服务接口
     
     /// 获取当前用户 ID（可注入真实用户服务）
     func getCurrentUserId() -> String {
-        // TODO: 集成真实用户服务
+        // Phase 72: 支持注入真实用户服务
+        if let userService = currentUserService, let userId = userService.getCurrentUserId() {
+            return userId
+        }
+        // 返回本地默认用户 ID
         return userId
+    }
+    
+    /// 设置用户服务（Phase 72: 为多人协作功能做准备）
+    func setCurrentUserService(_ service: CurrentUserService?) {
+        self.currentUserService = service
     }
     
     // MARK: - Initialization

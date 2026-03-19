@@ -3,11 +3,13 @@
 //  DreamLog
 //
 //  Phase 69 - 梦境通知中心与小组件增强
+//  Phase 72 - 集成真实 SwiftData 数据
 //  锁屏小组件实现
 //
 
 import WidgetKit
 import SwiftUI
+import SwiftData
 
 // MARK: - 锁屏统计小组件
 
@@ -35,13 +37,30 @@ struct DreamLockScreenStatsProvider: TimelineProvider {
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<DreamLockScreenStatsEntry>) -> Void) {
-        // TODO: 从 SwiftData 获取真实数据
+        // Phase 72: 从 SwiftData 获取真实数据
+        let store = DreamStore.shared
+        let allDreams = store.getAllDreams()
+        
+        let totalDreams = allDreams.count
+        
+        // 计算本周梦境数
+        let calendar = Calendar.current
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) ?? Date()
+        let thisWeek = allDreams.filter { $0.date >= startOfWeek }.count
+        
+        // 计算平均清晰度
+        let clarityValues = allDreams.map { Double($0.clarity) }
+        let clarity = clarityValues.isEmpty ? 0 : clarityValues.reduce(0, +) / Double(clarityValues.count)
+        
+        // 计算清醒梦数量
+        let lucidCount = allDreams.filter { $0.isLucid }.count
+        
         let entry = DreamLockScreenStatsEntry(
             date: Date(),
-            totalDreams: 42,
-            thisWeek: 5,
-            clarity: 3.8,
-            lucidCount: 8
+            totalDreams: totalDreams,
+            thisWeek: thisWeek,
+            clarity: clarity,
+            lucidCount: lucidCount
         )
         
         let timeline = Timeline(entries: [entry], policy: .atEnd)
@@ -131,13 +150,32 @@ struct DreamLockScreenLastNightProvider: TimelineProvider {
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<DreamLockScreenLastNightEntry>) -> Void) {
-        let entry = DreamLockScreenLastNightEntry(
-            date: Date(),
-            hasDream: true,
-            dreamTitle: "在天空中飞行",
-            clarity: 4,
-            emotions: ["平静", "兴奋"]
-        )
+        // Phase 72: 从 SwiftData 获取昨夜梦境
+        let store = DreamStore.shared
+        let allDreams = store.getAllDreams()
+        
+        // 获取最近的梦境（昨夜）
+        let sortedDreams = allDreams.sorted { $0.date > $1.date }
+        let lastNightDream = sortedDreams.first
+        
+        let entry: DreamLockScreenLastNightEntry
+        if let dream = lastNightDream {
+            entry = DreamLockScreenLastNightEntry(
+                date: Date(),
+                hasDream: true,
+                dreamTitle: dream.title.isEmpty ? "无标题梦境" : dream.title,
+                clarity: dream.clarity,
+                emotions: dream.emotions.map { $0.emoji }
+            )
+        } else {
+            entry = DreamLockScreenLastNightEntry(
+                date: Date(),
+                hasDream: false,
+                dreamTitle: "",
+                clarity: 0,
+                emotions: []
+            )
+        }
         
         let timeline = Timeline(entries: [entry], policy: .atEnd)
         completion(timeline)
@@ -241,12 +279,62 @@ struct DreamLockScreenStreakProvider: TimelineProvider {
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<DreamLockScreenStreakEntry>) -> Void) {
+        // Phase 72: 从 SwiftData 计算真实连续记录天数
+        let store = DreamStore.shared
+        let allDreams = store.getAllDreams()
+        
+        let calendar = Calendar.current
+        let today = calendar.startOfDay(for: Date())
+        
+        // 计算当前连续记录天数
+        var currentStreak = 0
+        var checkDate = today
+        let dreamDates = Set(allDreams.map { calendar.startOfDay(for: $0.date) })
+        
+        while dreamDates.contains(checkDate) {
+            currentStreak += 1
+            checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate
+        }
+        
+        // 如果今天还没有记录，但从昨天开始的连续记录
+        if currentStreak == 0 && dreamDates.contains(calendar.date(byAdding: .day, value: -1, to: today) ?? today) {
+            checkDate = calendar.date(byAdding: .day, value: -1, to: today) ?? today
+            while dreamDates.contains(checkDate) {
+                currentStreak += 1
+                checkDate = calendar.date(byAdding: .day, value: -1, to: checkDate) ?? checkDate
+            }
+        }
+        
+        // 计算最长连续记录
+        var longestStreak = 0
+        var tempStreak = 0
+        var sortedDates = Array(dreamDates).sorted()
+        
+        for i in 0..<sortedDates.count {
+            if i == 0 {
+                tempStreak = 1
+            } else {
+                let daysDiff = calendar.dateComponents([.day], from: sortedDates[i-1], to: sortedDates[i]).day ?? 0
+                if daysDiff == 1 {
+                    tempStreak += 1
+                } else {
+                    longestStreak = max(longestStreak, tempStreak)
+                    tempStreak = 1
+                }
+            }
+        }
+        longestStreak = max(longestStreak, tempStreak)
+        
+        // 计算进度（假设目标是 30 天）
+        let goal = 30
+        let progress = min(Double(currentStreak) / Double(goal), 1.0)
+        
         let entry = DreamLockScreenStreakEntry(
             date: Date(),
-            currentStreak: 7,
-            longestStreak: 21,
-            goal: 30,
-            progress: 0.23
+            currentStreak: currentStreak,
+            longestStreak: longestStreak,
+            goal: goal,
+            progress: progress
         )
         
         let timeline = Timeline(entries: [entry], policy: .atEnd)
@@ -349,21 +437,69 @@ struct DreamLockScreenMoodProvider: TimelineProvider {
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<DreamLockScreenMoodEntry>) -> Void) {
-        let entry = DreamLockScreenMoodEntry(
-            date: Date(),
-            dominantMood: "平静",
-            moodIcon: "😌",
-            moodPercentage: 0.45,
-            weeklyMoods: [
+        // Phase 72: 从 SwiftData 计算真实情绪分布
+        let store = DreamStore.shared
+        let allDreams = store.getAllDreams()
+        
+        let calendar = Calendar.current
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: Date())) ?? Date()
+        let thisWeekDreams = allDreams.filter { $0.date >= startOfWeek }
+        
+        // 统计情绪分布
+        var moodCounts: [String: Int] = [:]
+        for dream in thisWeekDreams {
+            for emotion in dream.emotions {
+                let emoji = emotion.emoji
+                moodCounts[emoji, default: 0] += 1
+            }
+        }
+        
+        let totalMoods = moodCounts.values.reduce(0, +)
+        
+        // 找出主导情绪
+        let dominantMoodEntry = moodCounts.max(by: { $0.value < $1.value })
+        let dominantMood = dominantMoodEntry?.key ?? "😌"
+        let dominantPercentage = totalMoods > 0 ? Double(dominantMoodEntry?.value ?? 0) / Double(totalMoods) : 0
+        
+        // 构建情绪列表
+        var weeklyMoods: [(icon: String, percentage: Double)] = moodCounts
+            .sorted { $0.value > $1.value }
+            .prefix(4)
+            .map { (icon: $0.key, percentage: Double($0.value) / Double(totalMoods)) }
+        
+        if weeklyMoods.isEmpty {
+            weeklyMoods = [
                 ("😌", 0.45),
                 ("😊", 0.25),
                 ("😨", 0.15),
                 ("😴", 0.15)
             ]
+        }
+        
+        let entry = DreamLockScreenMoodEntry(
+            date: Date(),
+            dominantMood: getMoodName(for: dominantMood),
+            moodIcon: dominantMood,
+            moodPercentage: dominantPercentage,
+            weeklyMoods: weeklyMoods
         )
         
         let timeline = Timeline(entries: [entry], policy: .atEnd)
         completion(timeline)
+    }
+    
+    private func getMoodName(for emoji: String) -> String {
+        switch emoji {
+        case "😌": return "平静"
+        case "😊": return "快乐"
+        case "😨": return "恐惧"
+        case "😴": return "困倦"
+        case "😠": return "愤怒"
+        case "😢": return "悲伤"
+        case "😲": return "惊讶"
+        case "🤔": return "困惑"
+        default: return "平静"
+        }
     }
 }
 
@@ -423,7 +559,7 @@ struct DreamLockScreenMoodWidget: Widget {
 // MARK: - 锁屏小组件集合
 
 @main
-struct DreamLockScreenWidgets: WidgetBundle {
+struct DreamLockScreenWidgetsBundle: WidgetBundle {
     var body: some Widget {
         DreamLockScreenStatsWidget()
         DreamLockScreenLastNightWidget()

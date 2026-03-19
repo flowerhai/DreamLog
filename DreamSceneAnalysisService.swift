@@ -151,11 +151,12 @@ actor DreamSceneAnalysisService {
         }
         
         let topScenes = sceneCounts.map { sceneType, count in
-            SceneDistribution(
+            let trend = calculateTrend(for: sceneType, in: allDreams)
+            return SceneDistribution(
                 sceneType: sceneType,
                 count: count,
                 percentage: Double(count) / Double(max(1, analyzedDreams)) * 100,
-                trend: .stable  // TODO: 实现趋势计算
+                trend: trend
             )
         }.sorted { $0.count > $1.count }
         
@@ -356,8 +357,63 @@ actor DreamSceneAnalysisService {
         return maxDiversity > 0 ? diversity / maxDiversity : 0
     }
     
+    // Phase 72: 实现趋势计算
+    private func calculateTrend(for sceneType: DreamSceneType, in dreams: [Dream]) -> TrendDirection {
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // 将梦境按时间分成两半
+        let sortedDreams = dreams.sorted { $0.date > $1.date }
+        guard sortedDreams.count >= 4 else { return .stable }
+        
+        let midPoint = sortedDreams.count / 2
+        let recentDreams = Array(sortedDreams.prefix(midPoint))
+        let olderDreams = Array(sortedDreams.suffix(from: midPoint))
+        
+        // 计算近期和早期的场景出现频率
+        let recentCount = recentDreams.filter { dream in
+            if let analysis = analyzeDream(dream).analysis,
+               analysis.detectedScenes.contains(sceneType) {
+                return true
+            }
+            return false
+        }.count
+        
+        let olderCount = olderDreams.filter { dream in
+            if let analysis = analyzeDream(dream).analysis,
+               analysis.detectedScenes.contains(sceneType) {
+                return true
+            }
+            return false
+        }.count
+        
+        // 计算趋势
+        let recentRate = Double(recentCount) / Double(max(1, recentDreams.count))
+        let olderRate = Double(olderCount) / Double(max(1, olderDreams.count))
+        
+        let diff = recentRate - olderRate
+        
+        if diff > 0.1 {
+            return .increasing
+        } else if diff < -0.1 {
+            return .decreasing
+        } else {
+            return .stable
+        }
+    }
+    
+    // Phase 72: 持久化实现
+    private let analysesSaveKey = "dream_scene_analyses_data"
+    private let configSaveKey = "dream_scene_analysis_config"
+    
     private func loadAnalyses() {
-        // TODO: 从持久化存储加载
+        // Phase 72: 从 UserDefaults 加载持久化数据
+        guard let data = UserDefaults.standard.data(forKey: analysesSaveKey),
+              let loadedAnalyses = try? JSONDecoder().decode([DreamSceneAnalysis].self, from: data) else {
+            return
+        }
+        analyses = loadedAnalyses
+        print("✅ 加载了 \(analyses.count) 条场景分析记录")
     }
     
     private func saveAnalysis(_ analysis: DreamSceneAnalysis) {
@@ -366,10 +422,21 @@ actor DreamSceneAnalysisService {
         } else {
             analyses.append(analysis)
         }
-        // TODO: 持久化保存
+        // Phase 72: 持久化保存到 UserDefaults
+        if let encoded = try? JSONEncoder().encode(analyses) {
+            UserDefaults.standard.set(encoded, forKey: analysesSaveKey)
+        }
     }
     
     private func saveConfig() {
-        // TODO: 持久化保存配置
+        // Phase 72: 持久化保存配置
+        let configData = SceneAnalysisConfig(
+            enabledSceneTypes: enabledSceneTypes,
+            confidenceThreshold: confidenceThreshold,
+            autoAnalyzeNewDreams: autoAnalyzeNewDreams
+        )
+        if let encoded = try? JSONEncoder().encode(configData) {
+            UserDefaults.standard.set(encoded, forKey: configSaveKey)
+        }
     }
 }

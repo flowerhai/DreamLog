@@ -361,9 +361,48 @@ public final class DreamNotificationService: @unchecked Sendable {
     
     /// 分析最佳提醒时间
     private func analyzeBestReminderTime() async -> (hour: Int, minute: Int) {
-        // TODO: 分析用户梦境记录历史，找出最佳时间
-        // 这里返回默认时间 22:30
-        return (22, 30)
+        // Phase 72: 分析用户梦境记录历史，找出最佳时间
+        let store = DreamStore.shared
+        let allDreams = store.getAllDreams()
+        
+        // 如果记录太少，返回默认时间
+        guard allDreams.count >= 5 else {
+            return (22, 30) // 默认 22:30
+        }
+        
+        // 统计每个小时的记录频率
+        var hourCounts: [Int: Int] = [:]
+        let calendar = Calendar.current
+        
+        for dream in allDreams {
+            let hour = calendar.component(.hour, from: dream.date)
+            hourCounts[hour, default: 0] += 1
+        }
+        
+        // 找出最活跃的时段
+        guard let bestHour = hourCounts.max(by: { $0.value < $1.value })?.key else {
+            return (22, 30)
+        }
+        
+        // 在最佳小时的基础上，分析分钟分布
+        var minuteCounts: [Int: Int] = [:]
+        let bestHourDreams = allDreams.filter { calendar.component(.hour, from: $0.date) == bestHour }
+        
+        for dream in bestHourDreams {
+            let minute = calendar.component(.minute, from: dream.date)
+            // 将分钟归整到最近的 15 分钟间隔
+            let roundedMinute = (minute / 15) * 15
+            minuteCounts[roundedMinute, default: 0] += 1
+        }
+        
+        let bestMinute = minuteCounts.max(by: { $0.value < $1.value })?.key ?? 30
+        
+        // 确保分钟是有效的
+        let validMinute = min(bestMinute, 59)
+        
+        print("智能调度分析：最佳时间 \(bestHour):\(String(format: "%02d", validMinute))，基于 \(allDreams.count) 条记录")
+        
+        return (bestHour, validMinute)
     }
     
     /// 调度晨间回忆提醒
