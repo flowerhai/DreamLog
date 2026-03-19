@@ -3,552 +3,578 @@
 //  DreamLog
 //
 //  Phase 69 - 梦境通知中心与小组件增强
-//  通知数据模型
+//  通知系统数据模型
 //
 
 import Foundation
-import UserNotifications
+import SwiftData
 
 // MARK: - 通知类型枚举
 
 /// 梦境通知类型
-enum DreamNotificationType: String, Codable, CaseIterable {
-    case sleepReminder      /// 睡前提醒
-    case morningRecall      /// 晨间回忆提醒
-    case patternInsight     /// 模式洞察
-    case challengeProgress  /// 挑战进度
-    case meditationSuggestion /// 冥想建议
-    case weeklyReport       /// 周报推送
-    case lucidPrompt        /// 清醒梦提示
-    case moodCheck          /// 情绪检查
+@Model
+public class DreamNotificationType: @unchecked Sendable {
+    public var identifier: String
+    public var name: String
+    public var nameKey: String
+    public var description: String
+    public var descriptionKey: String
+    public var icon: String
+    public var category: NotificationCategory
+    public var isDefaultEnabled: Bool
+    public var priority: NotificationPriority
     
-    /// 显示名称
-    var displayName: String {
-        switch self {
-        case .sleepReminder: return "睡前提醒"
-        case .morningRecall: return "晨间回忆"
-        case .patternInsight: return "模式洞察"
-        case .challengeProgress: return "挑战进度"
-        case .meditationSuggestion: return "冥想建议"
-        case .weeklyReport: return "周报推送"
-        case .lucidPrompt: return "清醒梦提示"
-        case .moodCheck: return "情绪检查"
+    public enum NotificationCategory: String, Codable, CaseIterable {
+        case reminder = "提醒"
+        case insight = "洞察"
+        case social = "社交"
+        case challenge = "挑战"
+        case health = "健康"
+    }
+    
+    public enum NotificationPriority: Int, Codable, CaseIterable {
+        case low = 0
+        case medium = 1
+        case high = 2
+        case critical = 3
+        
+        var userNotificationsPriority: UNNotificationPriority {
+            switch self {
+            case .low: return .low
+            case .medium: return .default
+            case .high: return .high
+            case .critical: return .timeSensitive
+            }
         }
     }
     
-    /// 默认图标
-    var icon: String {
-        switch self {
-        case .sleepReminder: return "moon.fill"
-        case .morningRecall: return "sunrise.fill"
-        case .patternInsight: return "lightbulb.fill"
-        case .challengeProgress: return "target"
-        case .meditationSuggestion: return "sparkles"
-        case .weeklyReport: return "chart.bar.fill"
-        case .lucidPrompt: return "eye.fill"
-        case .moodCheck: return "heart.fill"
-        }
+    public init(
+        identifier: String,
+        name: String,
+        nameKey: String,
+        description: String,
+        descriptionKey: String,
+        icon: String,
+        category: NotificationCategory,
+        isDefaultEnabled: Bool = true,
+        priority: NotificationPriority = .medium
+    ) {
+        self.identifier = identifier
+        self.name = name
+        self.nameKey = nameKey
+        self.description = description
+        self.descriptionKey = descriptionKey
+        self.icon = icon
+        self.category = category
+        self.isDefaultEnabled = isDefaultEnabled
+        self.priority = priority
     }
     
-    /// 默认颜色
-    var color: String {
-        switch self {
-        case .sleepReminder: return "#6B46C1"
-        case .morningRecall: return "#ED8936"
-        case .patternInsight: return "#ECC94B"
-        case .challengeProgress: return "#48BB78"
-        case .meditationSuggestion: return "#4299E1"
-        case .weeklyReport: return "#ED64A6"
-        case .lucidPrompt: return "#9F7AEA"
-        case .moodCheck: return "#F56565"
-        }
-    }
-}
-
-// MARK: - 通知配置模型
-
-/// 单个通知配置
-struct DreamNotificationConfig: Identifiable, Codable {
-    let id: String
-    var type: DreamNotificationType
-    var isEnabled: Bool
-    var scheduledTime: String? // HH:mm 格式
-    var customMessage: String?
-    var frequency: NotificationFrequency
-    
-    init(id: String = UUID().uuidString,
-         type: DreamNotificationType,
-         isEnabled: Bool = true,
-         scheduledTime: String? = nil,
-         customMessage: String? = nil,
-         frequency: NotificationFrequency = .daily) {
-        self.id = id
-        self.type = type
-        self.isEnabled = isEnabled
-        self.scheduledTime = scheduledTime
-        self.customMessage = customMessage
-        self.frequency = frequency
-    }
-}
-
-/// 通知频率
-enum NotificationFrequency: String, Codable, CaseIterable {
-    case once          /// 仅一次
-    case daily         /// 每天
-    case weekly        /// 每周
-    case weekdays      /// 工作日
-    case weekends      /// 周末
-    case custom        /// 自定义
-    
-    var displayName: String {
-        switch self {
-        case .once: return "仅一次"
-        case .daily: return "每天"
-        case .weekly: return "每周"
-        case .weekdays: return "工作日"
-        case .weekends: return "周末"
-        case .custom: return "自定义"
-        }
-    }
+    /// 预设通知类型
+    public static let allTypes: [DreamNotificationType] = [
+        // 提醒类
+        DreamNotificationType(
+            identifier: "sleep_reminder",
+            name: "睡前提醒",
+            nameKey: "notification.sleep_reminder.name",
+            description: "睡前提醒你记录梦境意图",
+            descriptionKey: "notification.sleep_reminder.desc",
+            icon: "🌙",
+            category: .reminder,
+            isDefaultEnabled: true,
+            priority: .low
+        ),
+        DreamNotificationType(
+            identifier: "morning_recall",
+            name: "晨间回忆",
+            nameKey: "notification.morning_recall.name",
+            description: "醒来后提醒你记录夜间梦境",
+            descriptionKey: "notification.morning_recall.desc",
+            icon: "☀️",
+            category: .reminder,
+            isDefaultEnabled: true,
+            priority: .medium
+        ),
+        DreamNotificationType(
+            identifier: "lucid_prompt",
+            name: "清醒梦提示",
+            nameKey: "notification.lucid_prompt.name",
+            description: "随机时间发送清醒梦现实检查提示",
+            descriptionKey: "notification.lucid_prompt.desc",
+            icon: "👁️",
+            category: .reminder,
+            isDefaultEnabled: false,
+            priority: .low
+        ),
+        
+        // 洞察类
+        DreamNotificationType(
+            identifier: "pattern_insight",
+            name: "模式洞察",
+            nameKey: "notification.pattern_insight.name",
+            description: "发现重复梦境模式时推送",
+            descriptionKey: "notification.pattern_insight.desc",
+            icon: "📊",
+            category: .insight,
+            isDefaultEnabled: true,
+            priority: .medium
+        ),
+        DreamNotificationType(
+            identifier: "weekly_report",
+            name: "周报推送",
+            nameKey: "notification.weekly_report.name",
+            description: "每周日发送梦境周报",
+            descriptionKey: "notification.weekly_report.desc",
+            icon: "📰",
+            category: .insight,
+            isDefaultEnabled: true,
+            priority: .low
+        ),
+        DreamNotificationType(
+            identifier: "mood_check",
+            name: "情绪检查",
+            nameKey: "notification.mood_check.name",
+            description: "定期询问当前情绪状态",
+            descriptionKey: "notification.mood_check.desc",
+            icon: "😊",
+            category: .insight,
+            isDefaultEnabled: false,
+            priority: .low
+        ),
+        
+        // 挑战类
+        DreamNotificationType(
+            identifier: "challenge_progress",
+            name: "挑战进度",
+            nameKey: "notification.challenge_progress.name",
+            description: "梦境挑战即将到期提醒",
+            descriptionKey: "notification.challenge_progress.desc",
+            icon: "🎯",
+            category: .challenge,
+            isDefaultEnabled: true,
+            priority: .medium
+        ),
+        DreamNotificationType(
+            identifier: "challenge_complete",
+            name: "挑战完成",
+            nameKey: "notification.challenge_complete.name",
+            description: "挑战完成时发送庆祝通知",
+            descriptionKey: "notification.challenge_complete.desc",
+            icon: "🏆",
+            category: .challenge,
+            isDefaultEnabled: true,
+            priority: .high
+        ),
+        DreamNotificationType(
+            identifier: "achievement_unlock",
+            name: "成就解锁",
+            nameKey: "notification.achievement_unlock.name",
+            description: "解锁新成就时通知",
+            descriptionKey: "notification.achievement_unlock.desc",
+            icon: "🏅",
+            category: .challenge,
+            isDefaultEnabled: true,
+            priority: .high
+        ),
+        
+        // 健康类
+        DreamNotificationType(
+            identifier: "meditation_suggestion",
+            name: "冥想建议",
+            nameKey: "notification.meditation_suggestion.name",
+            description: "基于压力和情绪状态推荐冥想",
+            descriptionKey: "notification.meditation_suggestion.desc",
+            icon: "🧘",
+            category: .health,
+            isDefaultEnabled: false,
+            priority: .low
+        ),
+        DreamNotificationType(
+            identifier: "sleep_quality",
+            name: "睡眠质量",
+            nameKey: "notification.sleep_quality.name",
+            description: "每周睡眠质量报告",
+            descriptionKey: "notification.sleep_quality.desc",
+            icon: "💤",
+            category: .health,
+            isDefaultEnabled: true,
+            priority: .low
+        ),
+        
+        // 社交类
+        DreamNotificationType(
+            identifier: "social_interaction",
+            name: "社交互动",
+            nameKey: "notification.social_interaction.name",
+            description: "收到点赞、评论或关注时通知",
+            descriptionKey: "notification.social_interaction.desc",
+            icon: "💬",
+            category: .social,
+            isDefaultEnabled: true,
+            priority: .medium
+        ),
+        DreamNotificationType(
+            identifier: "new_follower",
+            name: "新关注者",
+            nameKey: "notification.new_follower.name",
+            description: "有新粉丝关注时通知",
+            descriptionKey: "notification.new_follower.desc",
+            icon: "👥",
+            category: .social,
+            isDefaultEnabled: true,
+            priority: .medium
+        )
+    ]
 }
 
 // MARK: - 通知设置
 
-/// 全局通知设置
-struct DreamNotificationSettings: Codable {
-    var isNotificationsEnabled: Bool
-    var isSmartSchedulingEnabled: Bool
-    var quietHoursStart: String // HH:mm
-    var quietHoursEnd: String   // HH:mm
-    var configurations: [DreamNotificationConfig]
-    var lastWeeklyReportDate: Date?
+/// 用户通知设置
+@Model
+public class DreamNotificationSettings: @unchecked Sendable {
+    public var isNotificationsEnabled: Bool
+    public var enabledTypeIds: [String]
+    public var quietStartHour: Int
+    public var quietEndHour: Int
+    public var isQuietHoursEnabled: Bool
+    public var isCrossDayQuietHours: Bool
+    public var soundEnabled: Bool
+    public var vibrationEnabled: Bool
+    public var badgeEnabled: Bool
+    public var showOnLockScreen: Bool
+    public var showInHistory: Bool
+    public var smartSchedulingEnabled: Bool
+    public var lastModified: Date
     
-    static var `default`: DreamNotificationSettings {
-        DreamNotificationSettings(
-            isNotificationsEnabled: true,
-            isSmartSchedulingEnabled: true,
-            quietHoursStart: "22:00",
-            quietHoursEnd: "08:00",
-            configurations: DreamNotificationConfig.defaultConfigurations,
-            lastWeeklyReportDate: nil
-        )
+    public init(
+        isNotificationsEnabled: Bool = true,
+        enabledTypeIds: [String] = [],
+        quietStartHour: Int = 23,
+        quietEndHour: Int = 7,
+        isQuietHoursEnabled: Bool = true,
+        isCrossDayQuietHours: Bool = true,
+        soundEnabled: Bool = true,
+        vibrationEnabled: Bool = true,
+        badgeEnabled: Bool = true,
+        showOnLockScreen: Bool = true,
+        showInHistory: Bool = true,
+        smartSchedulingEnabled: Bool = true,
+        lastModified: Date = Date()
+    ) {
+        self.isNotificationsEnabled = isNotificationsEnabled
+        self.enabledTypeIds = enabledTypeIds.isEmpty ? 
+            DreamNotificationType.allTypes.filter { $0.isDefaultEnabled }.map { $0.identifier } : 
+            enabledTypeIds
+        self.quietStartHour = quietStartHour
+        self.quietEndHour = quietEndHour
+        self.isQuietHoursEnabled = isQuietHoursEnabled
+        self.isCrossDayQuietHours = isCrossDayQuietHours
+        self.soundEnabled = soundEnabled
+        self.vibrationEnabled = vibrationEnabled
+        self.badgeEnabled = badgeEnabled
+        self.showOnLockScreen = showOnLockScreen
+        self.showInHistory = showInHistory
+        self.smartSchedulingEnabled = smartSchedulingEnabled
+        self.lastModified = lastModified
+    }
+    
+    /// 检查通知类型是否启用
+    public func isTypeEnabled(_ typeId: String) -> Bool {
+        return isNotificationsEnabled && enabledTypeIds.contains(typeId)
+    }
+    
+    /// 启用或禁用通知类型
+    public func setTypeEnabled(_ typeId: String, enabled: Bool) {
+        if enabled {
+            if !enabledTypeIds.contains(typeId) {
+                enabledTypeIds.append(typeId)
+            }
+        } else {
+            enabledTypeIds.removeAll { $0 == typeId }
+        }
+        lastModified = Date()
+    }
+    
+    /// 检查当前是否在免打扰时段
+    public var isCurrentlyInQuietHours: Bool {
+        guard isQuietHoursEnabled else { return false }
+        
+        let calendar = Calendar.current
+        let currentHour = calendar.component(.hour, from: Date())
+        
+        if isCrossDayQuietHours {
+            // 跨天时段 (如 23:00 - 07:00)
+            if quietStartHour > quietEndHour {
+                return currentHour >= quietStartHour || currentHour < quietEndHour
+            }
+        }
+        
+        // 同一天时段
+        return currentHour >= quietStartHour && currentHour < quietEndHour
     }
 }
 
-extension DreamNotificationConfig {
-    /// 默认配置列表
-    static var defaultConfigurations: [DreamNotificationConfig] {
-        [
-            DreamNotificationConfig(
-                type: .sleepReminder,
-                isEnabled: true,
-                scheduledTime: "22:00",
-                frequency: .daily
-            ),
-            DreamNotificationConfig(
-                type: .morningRecall,
-                isEnabled: true,
-                scheduledTime: "07:30",
-                frequency: .daily
-            ),
-            DreamNotificationConfig(
-                type: .patternInsight,
-                isEnabled: true,
-                frequency: .weekly
-            ),
-            DreamNotificationConfig(
-                type: .challengeProgress,
-                isEnabled: true,
-                frequency: .daily
-            ),
-            DreamNotificationConfig(
-                type: .meditationSuggestion,
-                isEnabled: false,
-                frequency: .daily
-            ),
-            DreamNotificationConfig(
-                type: .weeklyReport,
-                isEnabled: true,
-                scheduledTime: "20:00",
-                frequency: .weekly
-            ),
-            DreamNotificationConfig(
-                type: .lucidPrompt,
-                isEnabled: false,
-                frequency: .daily
-            ),
-            DreamNotificationConfig(
-                type: .moodCheck,
-                isEnabled: false,
-                scheduledTime: "18:00",
-                frequency: .weekdays
-            )
-        ]
+// MARK: - 通知调度配置
+
+/// 通知调度配置
+public struct NotificationScheduleConfig: Codable, Sendable {
+    public var identifier: String
+    public var type: ScheduleType
+    public var time: TimeConfig?
+    public var recurrence: RecurrenceConfig?
+    public var smartAdjustment: SmartAdjustmentConfig?
+    public var metadata: [String: String]
+    
+    public enum ScheduleType: String, Codable {
+        case fixedTime = "固定时间"
+        case relativeTime = "相对时间"
+        case smartTime = "智能时间"
+        case eventTrigger = "事件触发"
+    }
+    
+    public struct TimeConfig: Codable, Sendable {
+        public var hour: Int
+        public var minute: Int
+        public var timeZone: String?
+        
+        public init(hour: Int, minute: Int = 0, timeZone: String? = nil) {
+            self.hour = hour
+            self.minute = minute
+            self.timeZone = timeZone
+        }
+    }
+    
+    public struct RecurrenceConfig: Codable, Sendable {
+        public var frequency: Frequency
+        public var interval: Int
+        public var daysOfWeek: Set<Int>?
+        public var endDate: Date?
+        
+        public enum Frequency: String, Codable {
+            case hourly = "每小时"
+            case daily = "每天"
+            case weekly = "每周"
+            case monthly = "每月"
+            case custom = "自定义"
+        }
+        
+        public init(
+            frequency: Frequency,
+            interval: Int = 1,
+            daysOfWeek: Set<Int>? = nil,
+            endDate: Date? = nil
+        ) {
+            self.frequency = frequency
+            self.interval = interval
+            self.daysOfWeek = daysOfWeek
+            self.endDate = endDate
+        }
+    }
+    
+    public struct SmartAdjustmentConfig: Codable, Sendable {
+        public var isEnabled: Bool
+        public var basedOn: [AdjustmentFactor]
+        public var minHour: Int
+        public var maxHour: Int
+        public var learnFromUserAction: Bool
+        
+        public enum AdjustmentFactor: String, Codable {
+            case userHistory = "用户历史"
+            case sleepData = "睡眠数据"
+            case calendar = "日程"
+            case location = "位置"
+            case activity = "活动状态"
+        }
+        
+        public init(
+            isEnabled: Bool = true,
+            basedOn: [AdjustmentFactor] = [.userHistory],
+            minHour: Int = 6,
+            maxHour: Int = 23,
+            learnFromUserAction: Bool = true
+        ) {
+            self.isEnabled = isEnabled
+            self.basedOn = basedOn
+            self.minHour = minHour
+            self.maxHour = maxHour
+            self.learnFromUserAction = learnFromUserAction
+        }
+    }
+    
+    public init(
+        identifier: String,
+        type: ScheduleType,
+        time: TimeConfig? = nil,
+        recurrence: RecurrenceConfig? = nil,
+        smartAdjustment: SmartAdjustmentConfig? = nil,
+        metadata: [String: String] = [:]
+    ) {
+        self.identifier = identifier
+        self.type = type
+        self.time = time
+        self.recurrence = recurrence
+        self.smartAdjustment = smartAdjustment
+        self.metadata = metadata
     }
 }
 
-// MARK: - 通知内容模型
+// MARK: - 通知历史
 
-/// 通知内容
-struct DreamNotificationContent: Codable {
-    let title: String
-    let body: String
-    let subtitle: String?
-    let sound: String
-    let badge: Int?
-    let categoryIdentifier: String
-    let userInfo: [String: AnyCodable]
+/// 通知历史记录
+@Model
+public class DreamNotificationHistory: @unchecked Sendable {
+    public var id: UUID
+    public var typeId: String
+    public var title: String
+    public var body: String
+    public var scheduledDate: Date
+    public var deliveredDate: Date?
+    public var readDate: Date?
+    public var isRead: Bool
+    public var actionTaken: String?
+    public var actionDate: Date?
+    public var metadata: [String: String]
+    public var isDeleted: Bool
     
-    init(title: String,
-         body: String,
-         subtitle: String? = nil,
-         sound: String = "default",
-         badge: Int? = nil,
-         categoryIdentifier: String = "DREAM_CATEGORY",
-         userInfo: [String: AnyCodable] = [:]) {
+    public init(
+        id: UUID = UUID(),
+        typeId: String,
+        title: String,
+        body: String,
+        scheduledDate: Date,
+        deliveredDate: Date? = nil,
+        readDate: Date? = nil,
+        isRead: Bool = false,
+        actionTaken: String? = nil,
+        actionDate: Date? = nil,
+        metadata: [String: String] = [:],
+        isDeleted: Bool = false
+    ) {
+        self.id = id
+        self.typeId = typeId
         self.title = title
         self.body = body
-        self.subtitle = subtitle
-        self.sound = sound
-        self.badge = badge
-        self.categoryIdentifier = categoryIdentifier
-        self.userInfo = userInfo
-    }
-}
-
-/// 支持 Any 类型的 Codable 包装器
-struct AnyCodable: Codable {
-    let value: Any
-    
-    init(_ value: Any) {
-        self.value = value
+        self.scheduledDate = scheduledDate
+        self.deliveredDate = deliveredDate
+        self.readDate = readDate
+        self.isRead = isRead
+        self.actionTaken = actionTaken
+        self.actionDate = actionDate
+        self.metadata = metadata
+        self.isDeleted = isDeleted
     }
     
-    init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        
-        if container.decodeNil() {
-            value = NSNull()
-        } else if let bool = try? container.decode(Bool.self) {
-            value = bool
-        } else if let int = try? container.decode(Int.self) {
-            value = int
-        } else if let double = try? container.decode(Double.self) {
-            value = double
-        } else if let string = try? container.decode(String.self) {
-            value = string
-        } else if let array = try? container.decode([AnyCodable].self) {
-            value = array.map { $0.value }
-        } else if let dictionary = try? container.decode([String: AnyCodable].self) {
-            value = dictionary.mapValues { $0.value }
-        } else {
-            throw DecodingError.dataCorruptedError(
-                in: container,
-                debugDescription: "Unable to decode value"
-            )
-        }
+    /// 标记为已读
+    public func markAsRead() {
+        isRead = true
+        readDate = Date()
     }
     
-    func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        
-        switch value {
-        case is NSNull:
-            try container.encodeNil()
-        case let bool as Bool:
-            try container.encode(bool)
-        case let int as Int:
-            try container.encode(int)
-        case let double as Double:
-            try container.encode(double)
-        case let string as String:
-            try container.encode(string)
-        case let array as [Any]:
-            try container.encode(array.map { AnyCodable($0) })
-        case let dictionary as [String: Any]:
-            try container.encode(dictionary.mapValues { AnyCodable($0) })
-        default:
-            throw EncodingError.invalidValue(
-                value,
-                EncodingError.Context(
-                    codingPath: container.codingPath,
-                    debugDescription: "Unable to encode value"
-                )
-            )
-        }
-    }
-}
-
-// MARK: - 智能调度数据
-
-/// 智能调度分析结果
-struct SmartScheduleAnalysis: Codable {
-    var bestSleepTime: String?      // 最佳入睡时间
-    var bestWakeTime: String?       // 最佳醒来时间
-    var averageDreamRecallTime: Int // 平均梦境回忆时间（分钟）
-    var recordFrequencyPattern: String // 记录频率模式
-    var sleepQualityScore: Double   // 睡眠质量评分
-    var recommendedReminders: [DreamNotificationType] // 推荐的通知类型
-    
-    init() {
-        self.bestSleepTime = nil
-        self.bestWakeTime = nil
-        self.averageDreamRecallTime = 15
-        self.recordFrequencyPattern = "irregular"
-        self.sleepQualityScore = 0.0
-        self.recommendedReminders = [.sleepReminder, .morningRecall]
-    }
-}
-
-/// 用户活动模式
-struct UserActivityPattern: Codable {
-    var typicalBedTime: String?     // 通常上床时间
-    var typicalWakeTime: String?    // 通常起床时间
-    var recordTimes: [String]       // 常见记录时间
-    var activeHours: Set<Int>       // 活跃小时
-    var timezone: String            // 时区
-    
-    init() {
-        self.typicalBedTime = nil
-        self.typicalWakeTime = nil
-        self.recordTimes = []
-        self.activeHours = Set()
-        self.timezone = TimeZone.current.identifier
+    /// 记录用户操作
+    public func recordAction(_ action: String) {
+        actionTaken = action
+        actionDate = Date()
     }
 }
 
 // MARK: - 通知统计
 
-/// 通知统计
-struct NotificationStatistics: Codable {
-    var totalSent: Int              // 总发送数
-    var totalOpened: Int            // 总打开数
-    var openRate: Double            // 打开率
-    var byType: [String: TypeStats] // 按类型统计
-    var lastSentDate: Date?         // 最后发送时间
-    var bestPerformingType: String? // 表现最好的类型
+/// 通知统计数据
+public struct NotificationStats: Codable, Sendable {
+    public var totalScheduled: Int
+    public var totalDelivered: Int
+    public var totalRead: Int
+    public var totalActions: Int
+    public var deliveryRate: Double
+    public var readRate: Double
+    public var actionRate: Double
+    public var byType: [String: TypeStats]
+    public var last7Days: [DailyStats]
     
-    init() {
-        self.totalSent = 0
-        self.totalOpened = 0
-        self.openRate = 0.0
-        self.byType = [:]
-        self.lastSentDate = nil
-        self.bestPerformingType = nil
-    }
-    
-    struct TypeStats: Codable {
-        var sent: Int
-        var opened: Int
-        var openRate: Double
+    public struct TypeStats: Codable, Sendable {
+        public var scheduled: Int
+        public var delivered: Int
+        public var read: Int
+        public var actions: Int
         
-        init() {
-            self.sent = 0
-            self.opened = 0
-            self.openRate = 0.0
+        public init(scheduled: Int = 0, delivered: Int = 0, read: Int = 0, actions: Int = 0) {
+            self.scheduled = scheduled
+            self.delivered = delivered
+            self.read = read
+            self.actions = actions
         }
     }
-}
-
-// MARK: - 小组件数据模型
-
-/// 小组件数据
-struct DreamWidgetData: Codable {
-    var dreamsCountToday: Int       // 今日梦境数
-    var dreamsCountWeek: Int        // 本周梦境数
-    var streakDays: Int             // 连续记录天数
-    var averageClarity: Double      // 平均清晰度
-    var currentChallenge: ChallengeWidgetData?
-    var dailyInsight: InsightWidgetData?
-    var lastUpdated: Date           // 最后更新时间
     
-    init() {
-        self.dreamsCountToday = 0
-        self.dreamsCountWeek = 0
-        self.streakDays = 0
-        self.averageClarity = 0.0
-        self.currentChallenge = nil
-        self.dailyInsight = nil
-        self.lastUpdated = Date()
+    public struct DailyStats: Codable, Sendable {
+        public var date: Date
+        public var scheduled: Int
+        public var delivered: Int
+        public var read: Int
+        
+        public init(date: Date, scheduled: Int = 0, delivered: Int = 0, read: Int = 0) {
+            self.date = date
+            self.scheduled = scheduled
+            self.delivered = delivered
+            self.read = read
+        }
+    }
+    
+    public init(
+        totalScheduled: Int = 0,
+        totalDelivered: Int = 0,
+        totalRead: Int = 0,
+        totalActions: Int = 0,
+        byType: [String: TypeStats] = [:],
+        last7Days: [DailyStats] = []
+    ) {
+        self.totalScheduled = totalScheduled
+        self.totalDelivered = totalDelivered
+        self.totalRead = totalRead
+        self.totalActions = totalActions
+        self.deliveryRate = totalScheduled > 0 ? Double(totalDelivered) / Double(totalScheduled) : 0
+        self.readRate = totalDelivered > 0 ? Double(totalRead) / Double(totalDelivered) : 0
+        self.actionRate = totalDelivered > 0 ? Double(totalActions) / Double(totalDelivered) : 0
+        self.byType = byType
+        self.last7Days = last7Days
     }
 }
 
-/// 挑战小组件数据
-struct ChallengeWidgetData: Codable {
-    var id: String
-    var name: String
-    var progress: Double
-    var target: Int
-    var current: Int
-    var timeRemaining: TimeInterval?
-    var icon: String
-    
-    init(id: String = "",
-         name: String = "",
-         progress: Double = 0.0,
-         target: Int = 0,
-         current: Int = 0,
-         timeRemaining: TimeInterval? = nil,
-         icon: String = "target") {
-        self.id = id
-        self.name = name
-        self.progress = progress
-        self.target = target
-        self.current = current
-        self.timeRemaining = timeRemaining
-        self.icon = icon
-    }
-}
+// MARK: - 通知动作
 
-/// 洞察小组件数据
-struct InsightWidgetData: Codable {
-    var title: String
-    var content: String
-    var type: String
-    var icon: String
-    
-    init(title: String = "",
-         content: String = "",
-         type: String = "insight",
-         icon: String = "lightbulb.fill") {
-        self.title = title
-        self.content = content
-        self.type = type
-        self.icon = icon
-    }
-}
-
-// MARK: - 实时活动数据
-
-/// 实时活动状态
-enum LiveActivityState: String, Codable {
-    case active      // 进行中
-    case completed   // 已完成
-    case dismissed   // 已关闭
-}
-
-/// 挑战实时活动数据
-struct ChallengeLiveActivityData: Codable {
-    var challengeId: String
-    var challengeName: String
-    var challengeType: String
-    var progress: Double
-    var currentCount: Int
-    var targetCount: Int
-    var timeRemaining: TimeInterval
-    var state: LiveActivityState
-    var startedAt: Date
-    var endsAt: Date?
-    
-    init(challengeId: String = "",
-         challengeName: String = "",
-         challengeType: String = "",
-         progress: Double = 0.0,
-         currentCount: Int = 0,
-         targetCount: Int = 0,
-         timeRemaining: TimeInterval = 0,
-         state: LiveActivityState = .active,
-         startedAt: Date = Date(),
-         endsAt: Date? = nil) {
-        self.challengeId = challengeId
-        self.challengeName = challengeName
-        self.challengeType = challengeType
-        self.progress = progress
-        self.currentCount = currentCount
-        self.targetCount = targetCount
-        self.timeRemaining = timeRemaining
-        self.state = state
-        self.startedAt = startedAt
-        self.endsAt = endsAt
-    }
-}
-
-/// 孵育实时活动数据
-struct IncubationLiveActivityData: Codable {
-    var incubationId: String
-    var goal: String
-    var affirmations: [String]
-    var currentAffirmationIndex: Int
-    var timeRemaining: TimeInterval
-    var state: LiveActivityState
-    var startedAt: Date
-    var targetSleepTime: Date?
-    
-    init(incubationId: String = "",
-         goal: String = "",
-         affirmations: [String] = [],
-         currentAffirmationIndex: Int = 0,
-         timeRemaining: TimeInterval = 0,
-         state: LiveActivityState = .active,
-         startedAt: Date = Date(),
-         targetSleepTime: Date? = nil) {
-        self.incubationId = incubationId
-        self.goal = goal
-        self.affirmations = affirmations
-        self.currentAffirmationIndex = currentAffirmationIndex
-        self.timeRemaining = timeRemaining
-        self.state = state
-        self.startedAt = startedAt
-        self.targetSleepTime = targetSleepTime
-    }
-}
-
-// MARK: - 通知操作
-
-/// 通知操作类型
-enum NotificationActionType: String, Codable {
-    case recordDream      // 记录梦境
-    case viewInsight      // 查看洞察
-    case startChallenge   // 开始挑战
-    case snooze           // 稍后提醒
-    case dismiss          // 关闭
-    
-    var identifier: String {
-        "DREAM_ACTION_\(rawValue.uppercased())"
-    }
+/// 通知交互动作
+public enum DreamNotificationAction: String, Codable, Sendable {
+    case recordDream = "record_dream"
+    case viewDetails = "view_details"
+    case snooze = "snooze"
+    case dismiss = "dismiss"
+    case startChallenge = "start_challenge"
+    case startMeditation = "start_meditation"
+    case viewReport = "view_report"
+    case realityCheck = "reality_check"
     
     var title: String {
         switch self {
-        case .recordDream: return "记录梦境"
-        case .viewInsight: return "查看详情"
-        case .startChallenge: return "开始挑战"
+        case .recordDream: return "立即记录"
+        case .viewDetails: return "查看详情"
         case .snooze: return "稍后提醒"
-        case .dismiss: return "关闭"
+        case .dismiss: return "忽略"
+        case .startChallenge: return "开始挑战"
+        case .startMeditation: return "开始冥想"
+        case .viewReport: return "查看报告"
+        case .realityCheck: return "现实检查"
         }
     }
-}
-
-// MARK: - 通知类别
-
-/// 通知类别配置
-struct DreamNotificationCategory: Codable {
-    let identifier: String
-    let actions: [NotificationActionType]
-    let intentIdentifiers: [String]
-    let hiddenPreviewsBodyPlaceholder: String?
-    let categorySummaryFormat: String?
-    let options: Options
     
-    struct Options: OptionSet, Codable {
-        let rawValue: Int
-        static let customDismissAction = Options(rawValue: 1 << 0)
-        static let allowInCarPlay = Options(rawValue: 1 << 1)
-        static let hiddenPreviewsShowTitle = Options(rawValue: 1 << 2)
-        static let hiddenPreviewsShowSubtitle = Options(rawValue: 1 << 3)
-        static let threadNotifiesSummary = Options(rawValue: 1 << 4)
-    }
-    
-    init(identifier: String,
-         actions: [NotificationActionType],
-         intentIdentifiers: [String] = [],
-         hiddenPreviewsBodyPlaceholder: String? = nil,
-         categorySummaryFormat: String? = nil,
-         options: Options = []) {
-        self.identifier = identifier
-        self.actions = actions
-        self.intentIdentifiers = intentIdentifiers
-        self.hiddenPreviewsBodyPlaceholder = hiddenPreviewsBodyPlaceholder
-        self.categorySummaryFormat = categorySummaryFormat
-        self.options = options
+    var icon: String {
+        switch self {
+        case .recordDream: return "🎤"
+        case .viewDetails: return "📱"
+        case .snooze: return "⏰"
+        case .dismiss: return "❌"
+        case .startChallenge: return "🎯"
+        case .startMeditation: return "🧘"
+        case .viewReport: return "📊"
+        case .realityCheck: return "👁️"
+        }
     }
 }

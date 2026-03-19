@@ -9,323 +9,481 @@
 import WidgetKit
 import SwiftUI
 
-// MARK: - 时间线提供者
+// MARK: - 每日洞察小组件
 
-struct DreamInsightTimelineProvider: TimelineProvider {
+struct DreamInsightEntry: TimelineEntry {
+    let date: Date
+    let insightType: InsightType
+    let title: String
+    let content: String
+    let icon: String
+}
+
+enum InsightType: String, CaseIterable {
+    case pattern = "模式发现"
+    case suggestion = "建议"
+    case symbol = "符号解读"
+    case statistic = "统计"
+    
+    var icon: String {
+        switch self {
+        case .pattern: return "🔍"
+        case .suggestion: return "💡"
+        case .symbol: return "🔮"
+        case .statistic: return "📊"
+        }
+    }
+}
+
+struct DreamInsightProvider: TimelineProvider {
     func placeholder(in context: Context) -> DreamInsightEntry {
         DreamInsightEntry(
             date: Date(),
-            insight: InsightWidgetData(
-                title: "梦境模式",
-                content: "你最近经常梦到水，这可能代表情绪和潜意识。",
-                type: "pattern",
-                icon: "water.waves"
-            )
+            insightType: .pattern,
+            title: "模式发现",
+            content: "你最近经常梦到水，这可能代表情绪波动",
+            icon: "🔍"
         )
     }
     
     func getSnapshot(in context: Context, completion: @escaping (DreamInsightEntry) -> Void) {
-        let entry = DreamInsightEntry(
-            date: Date(),
-            insight: InsightWidgetData(
-                title: "今日符号",
-                content: "✨ 蛇 - 象征转变和治愈。梦见蛇可能意味着你正在经历重要的个人成长。",
-                type: "symbol",
-                icon: "sparkles"
-            )
-        )
-        completion(entry)
+        completion(placeholder(in: context))
     }
     
     func getTimeline(in context: Context, completion: @escaping (Timeline<DreamInsightEntry>) -> Void) {
-        // 生成每日洞察
         let insights = [
-            InsightWidgetData(
-                title: "梦境模式",
-                content: "你最近经常梦到水，这可能代表情绪和潜意识。",
-                type: "pattern",
-                icon: "water.waves"
+            DreamInsightEntry(
+                date: Date(),
+                insightType: .pattern,
+                title: "模式发现",
+                content: "你最近经常梦到水，这可能代表情绪波动",
+                icon: "🔍"
             ),
-            InsightWidgetData(
-                title: "今日符号",
-                content: "✨ 蛇 - 象征转变和治愈。梦见蛇可能意味着你正在经历重要的个人成长。",
-                type: "symbol",
-                icon: "sparkles"
+            DreamInsightEntry(
+                date: Date(),
+                insightType: .suggestion,
+                title: "今日建议",
+                content: "尝试睡前冥想，提高梦境回忆质量",
+                icon: "💡"
             ),
-            InsightWidgetData(
-                title: "情绪洞察",
-                content: "本周你的梦境以积极情绪为主，说明内心状态良好。继续保持！",
-                type: "emotion",
-                icon: "heart.fill"
+            DreamInsightEntry(
+                date: Date(),
+                insightType: .symbol,
+                title: "符号解读",
+                content: "飞行梦通常象征自由和解脱",
+                icon: "🔮"
             ),
-            InsightWidgetData(
-                title: "清醒梦提示",
-                content: "今晚试试'现实检验'：问自己'我在做梦吗？'并检查周围细节。",
-                type: "lucid",
-                icon: "eye.fill"
-            ),
-            InsightWidgetData(
-                title: "创意启发",
-                content: "你的梦境充满了创意元素，试试把它们记录下来用于艺术创作。",
-                type: "creative",
-                icon: "paintbrush.fill"
+            DreamInsightEntry(
+                date: Date(),
+                insightType: .statistic,
+                title: "本周统计",
+                content: "记录了 5 个梦，平均清晰度 3.8",
+                icon: "📊"
             )
         ]
         
-        // 随机选择一个洞察
-        let selectedInsight = insights.randomElement() ?? insights[0]
-        
-        let entry = DreamInsightEntry(date: Date(), insight: selectedInsight)
-        
-        // 每天更新一次（在午夜）
-        let tomorrow = Calendar.current.startOfDay(for: Date().addingTimeInterval(24 * 60 * 60))
-        let timeline = Timeline(entries: [entry], policy: .atEnd(tomorrow))
+        let randomInsight = insights.randomElement() ?? insights[0]
+        let timeline = Timeline(entries: [randomInsight], policy: .atEnd)
         completion(timeline)
     }
 }
 
-// MARK: - 条目模型
-
-struct DreamInsightEntry: TimelineEntry {
-    let date: Date
-    let insight: InsightWidgetData
-}
-
-// MARK: - 小型洞察组件
-
-struct DreamInsightSmall: View {
-    var entry: DreamInsightTimelineProvider.Entry
+struct DreamInsightSmallView: View {
+    let entry: DreamInsightEntry
     
     var body: some View {
-        Link(destination: URL(string: "dreamlog://insights") ?? URL(fileURLWithPath: "/")) {
-            ZStack {
-                // 背景渐变
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.purple.opacity(0.8), Color.blue.opacity(0.6)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                
-                VStack(spacing: 8) {
-                    // 图标
-                    Image(systemName: entry.insight.icon)
-                        .font(.title)
-                        .foregroundColor(.white)
-                    
-                    // 标题
-                    Text(entry.insight.title)
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(2)
-                }
-                .padding(8)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(entry.icon)
+                    .font(.title2)
+                Text(entry.title)
+                    .font(.caption)
+                    .fontWeight(.semibold)
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            
+            Text(entry.content)
+                .font(.caption)
+                .lineLimit(3)
+                .foregroundColor(.primary)
+            
+            Spacer()
+            
+            HStack {
+                Text("点击刷新")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Spacer()
             }
         }
-    }
-}
-
-// MARK: - 中型洞察组件
-
-struct DreamInsightMedium: View {
-    var entry: DreamInsightTimelineProvider.Entry
-    
-    var body: some View {
-        Link(destination: URL(string: "dreamlog://insights") ?? URL(fileURLWithPath: "/")) {
-            ZStack {
-                // 背景渐变
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.purple.opacity(0.9), Color.blue.opacity(0.7)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                
-                VStack(alignment: .leading, spacing: 10) {
-                    // 头部
-                    HStack {
-                        Image(systemName: entry.insight.icon)
-                            .font(.title2)
-                            .foregroundColor(.white)
-                        
-                        Text(entry.insight.title)
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                    }
-                    
-                    Divider()
-                        .background(Color.white.opacity(0.3))
-                    
-                    // 内容
-                    Text(entry.insight.content)
-                        .font(.subheadline)
-                        .foregroundColor(.white.opacity(0.9))
-                        .lineLimit(5)
-                        .multilineTextAlignment(.leading)
-                    
-                    Spacer()
-                    
-                    // 提示
-                    HStack {
-                        Spacer()
-                        Text("点击查看详情")
-                            .font(.caption)
-                            .foregroundColor(.white.opacity(0.7))
-                    }
-                }
-                .padding(12)
-            }
-        }
-    }
-}
-
-// MARK: - 大型洞察组件
-
-struct DreamInsightLarge: View {
-    var entry: DreamInsightTimelineProvider.Entry
-    @State private var additionalInsights: [InsightWidgetData] = []
-    
-    var body: some View {
-        Link(destination: URL(string: "dreamlog://insights") ?? URL(fileURLWithPath: "/")) {
-            ZStack {
-                // 背景渐变
-                LinearGradient(
-                    gradient: Gradient(colors: [Color.purple.opacity(0.9), Color.blue.opacity(0.7)]),
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        // 主要洞察
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Image(systemName: entry.insight.icon)
-                                    .font(.title2)
-                                    .foregroundColor(.white)
-                                
-                                Text(entry.insight.title)
-                                    .font(.headline)
-                                    .foregroundColor(.white)
-                            }
-                            
-                            Text(entry.insight.content)
-                                .font(.body)
-                                .foregroundColor(.white.opacity(0.9))
-                                .multilineTextAlignment(.leading)
-                        }
-                        
-                        Divider()
-                            .background(Color.white.opacity(0.3))
-                        
-                        // 更多洞察
-                        Text("更多洞察")
-                            .font(.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.white.opacity(0.8))
-                        
-                        ForEach(getAdditionalInsights(), id: \.title) { insight in
-                            HStack(spacing: 10) {
-                                Image(systemName: insight.icon)
-                                    .font(.caption)
-                                    .foregroundColor(.white.opacity(0.8))
-                                    .frame(width: 24)
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(insight.title)
-                                        .font(.caption)
-                                        .fontWeight(.medium)
-                                        .foregroundColor(.white)
-                                    
-                                    Text(insight.content)
-                                        .font(.caption2)
-                                        .foregroundColor(.white.opacity(0.7))
-                                        .lineLimit(2)
-                                }
-                            }
-                        }
-                    }
-                    .padding(12)
-                }
-            }
-        }
-    }
-    
-    private func getAdditionalInsights() -> [InsightWidgetData] {
-        [
-            InsightWidgetData(
-                title: "本周趋势",
-                content: "清晰梦境增加 20%",
-                type: "trend",
-                icon: "chart.line.uptrend.xyaxis"
-            ),
-            InsightWidgetData(
-                title: "热门符号",
-                content: "水、飞行、追逐",
-                type: "symbol",
-                icon: "star.fill"
-            ),
-            InsightWidgetData(
-                title: "建议",
-                content: "尝试睡前冥想",
-                type: "suggestion",
-                icon: "lightbulb.fill"
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
-        ]
+        )
     }
 }
 
-// MARK: - 入口点
+struct DreamInsightMediumView: View {
+    let entry: DreamInsightEntry
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(entry.icon)
+                    .font(.title)
+                VStack(alignment: .leading) {
+                    Text(entry.title)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    Text(entry.insightType.rawValue)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                Spacer()
+            }
+            
+            Text(entry.content)
+                .font(.subheadline)
+                .lineLimit(4)
+                .padding(.vertical, 4)
+            
+            Divider()
+            
+            HStack(spacing: 12) {
+                ActionButton(icon: "arrow.clockwise", label: "刷新")
+                ActionButton(icon: "square.and.arrow.up", label: "分享")
+                ActionButton(icon: "bookmark", label: "收藏")
+                Spacer()
+            }
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.purple.opacity(0.2), Color.blue.opacity(0.1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+    }
+    
+    struct ActionButton: View {
+        let icon: String
+        let label: String
+        
+        var body: some View {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.caption)
+                Text(label)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+}
 
-@main
 struct DreamInsightWidget: Widget {
-    let kind: String = "DreamInsightWidget"
+    let kind: String = "DreamInsight"
     
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: DreamInsightTimelineProvider()) { entry in
+        StaticConfiguration(
+            kind: kind,
+            provider: DreamInsightProvider()
+        ) { entry in
             if #available(iOS 17.0, *) {
-                DreamInsightLarge(entry: entry)
+                DreamInsightSmallView(entry: entry)
                     .containerBackground(.fill.tertiary, for: .widget)
             } else {
-                DreamInsightLarge(entry: entry)
+                DreamInsightSmallView(entry: entry)
+                    .padding()
+                    .background()
             }
         }
         .configurationDisplayName("每日洞察")
-        .description("查看 AI 生成的梦境洞察和建议")
-        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+        .description("获取 AI 生成的梦境洞察")
+        .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
-// MARK: - 预览
+// MARK: - 梦境符号小组件
 
-struct DreamInsightWidget_Previews: PreviewProvider {
-    static var previews: some View {
-        DreamInsightSmall(
-            entry: DreamInsightEntry(
-                date: Date(),
-                insight: InsightWidgetData(
-                    title: "今日符号",
-                    content: "蛇 - 象征转变",
-                    type: "symbol",
-                    icon: "sparkles"
-                )
-            )
+struct DreamSymbolEntry: TimelineEntry {
+    let date: Date
+    let symbol: String
+    let symbolName: String
+    let meaning: String
+    let relatedDreams: Int
+}
+
+struct DreamSymbolProvider: TimelineProvider {
+    func placeholder(in context: Context) -> DreamSymbolEntry {
+        DreamSymbolEntry(
+            date: Date(),
+            symbol: "💧",
+            symbolName: "水",
+            meaning: "象征情绪、潜意识和生命力",
+            relatedDreams: 12
         )
-        .previewContext(WidgetPreviewContext(family: .systemSmall))
+    }
+    
+    func getSnapshot(in context: Context, completion: @escaping (DreamSymbolEntry) -> Void) {
+        completion(placeholder(in: context))
+    }
+    
+    func getTimeline(in context: Context, completion: @escaping (Timeline<DreamSymbolEntry>) -> Void) {
+        let symbols = [
+            DreamSymbolEntry(
+                date: Date(),
+                symbol: "💧",
+                symbolName: "水",
+                meaning: "象征情绪、潜意识和生命力",
+                relatedDreams: 12
+            ),
+            DreamSymbolEntry(
+                date: Date(),
+                symbol: "✈️",
+                symbolName: "飞行",
+                meaning: "代表自由、解脱和超越限制",
+                relatedDreams: 8
+            ),
+            DreamSymbolEntry(
+                date: Date(),
+                symbol: "🏃",
+                symbolName: "追逐",
+                meaning: "可能表示逃避问题或压力",
+                relatedDreams: 15
+            ),
+            DreamSymbolEntry(
+                date: Date(),
+                symbol: "🦷",
+                symbolName: "牙齿",
+                meaning: "象征变化、成长或焦虑",
+                relatedDreams: 5
+            )
+        ]
         
-        DreamInsightMedium(
-            entry: DreamInsightEntry(
-                date: Date(),
-                insight: InsightWidgetData(
-                    title: "梦境模式",
-                    content: "你最近经常梦到水，这可能代表情绪和潜意识。",
-                    type: "pattern",
-                    icon: "water.waves"
-                )
+        let randomSymbol = symbols.randomElement() ?? symbols[0]
+        let timeline = Timeline(entries: [randomSymbol], policy: .atEnd)
+        completion(timeline)
+    }
+}
+
+struct DreamSymbolView: View {
+    let entry: DreamSymbolEntry
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text(entry.symbol)
+                    .font(.system(size: 40))
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(entry.symbolName)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                    
+                    Text("\(entry.relatedDreams) 个相关梦境")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+            }
+            
+            Text(entry.meaning)
+                .font(.caption)
+                .lineLimit(3)
+                .padding(.vertical, 4)
+            
+            Spacer()
+            
+            HStack {
+                Text("查看更多符号")
+                    .font(.caption2)
+                    .foregroundColor(.purple)
+                Image(systemName: "chevron.right")
+                    .font(.caption2)
+                    .foregroundColor(.purple)
+                Spacer()
+            }
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.1)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
             )
         )
-        .previewContext(WidgetPreviewContext(family: .systemMedium))
+    }
+}
+
+struct DreamSymbolWidget: Widget {
+    let kind: String = "DreamSymbol"
+    
+    var body: some WidgetConfiguration {
+        StaticConfiguration(
+            kind: kind,
+            provider: DreamSymbolProvider()
+        ) { entry in
+            if #available(iOS 17.0, *) {
+                DreamSymbolView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            } else {
+                DreamSymbolView(entry: entry)
+                    .padding()
+                    .background()
+            }
+        }
+        .configurationDisplayName("梦境符号")
+        .description("随机梦境符号解读")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+// MARK: - 快速记录小组件增强版
+
+struct DreamQuickRecordEntry: TimelineEntry {
+    let date: Date
+    let lastRecordDate: Date?
+    let streakDays: Int
+}
+
+struct DreamQuickRecordProvider: TimelineProvider {
+    func placeholder(in context: Context) -> DreamQuickRecordEntry {
+        DreamQuickRecordEntry(
+            date: Date(),
+            lastRecordDate: Date().addingTimeInterval(-3600),
+            streakDays: 7
+        )
+    }
+    
+    func getSnapshot(in context: Context, completion: @escaping (DreamQuickRecordEntry) -> Void) {
+        completion(placeholder(in: context))
+    }
+    
+    func getTimeline(in context: Context, completion: @escaping (Timeline<DreamQuickRecordEntry>) -> Void) {
+        let entry = DreamQuickRecordEntry(
+            date: Date(),
+            lastRecordDate: Date().addingTimeInterval(-3600),
+            streakDays: 7
+        )
+        
+        let timeline = Timeline(entries: [entry], policy: .atEnd)
+        completion(timeline)
+    }
+}
+
+struct DreamQuickRecordView: View {
+    let entry: DreamQuickRecordEntry
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            HStack {
+                Image(systemName: "mic.fill")
+                    .font(.title2)
+                Text("快速记录")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+            }
+            
+            if let lastRecord = entry.lastRecordDate {
+                Text("上次记录：\(timeAgoString(from: lastRecord))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+            
+            HStack(spacing: 16) {
+                RecordButton(icon: "mic.fill", label: "语音", color: .purple)
+                RecordButton(icon: "keyboard", label: "文字", color: .blue)
+            }
+            
+            if entry.streakDays > 0 {
+                HStack {
+                    Image(systemName: "flame.fill")
+                        .foregroundColor(.orange)
+                        .font(.caption)
+                    Text("连续 \(entry.streakDays) 天")
+                        .font(.caption)
+                        .foregroundColor(.orange)
+                    Spacer()
+                }
+            }
+        }
+        .padding()
+        .background(
+            LinearGradient(
+                colors: [Color.purple.opacity(0.3), Color.blue.opacity(0.2)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+        )
+    }
+    
+    struct RecordButton: View {
+        let icon: String
+        let label: String
+        let color: Color
+        
+        var body: some View {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.title3)
+                    .foregroundColor(color)
+                Text(label)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 8)
+            .background(color.opacity(0.1))
+            .cornerRadius(8)
+        }
+    }
+    
+    private func timeAgoString(from date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.unitsStyle = .abbreviated
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+struct DreamQuickRecordWidget: Widget {
+    let kind: String = "DreamQuickRecord"
+    
+    var body: some WidgetConfiguration {
+        StaticConfiguration(
+            kind: kind,
+            provider: DreamQuickRecordProvider()
+        ) { entry in
+            if #available(iOS 17.0, *) {
+                DreamQuickRecordView(entry: entry)
+                    .containerBackground(.fill.tertiary, for: .widget)
+            } else {
+                DreamQuickRecordView(entry: entry)
+                    .padding()
+                    .background()
+            }
+        }
+        .configurationDisplayName("快速记录")
+        .description("一键记录梦境")
+        .supportedFamilies([.systemSmall, .systemMedium])
+    }
+}
+
+// MARK: - 小组件集合
+
+@main
+struct DreamHomeWidgets: WidgetBundle {
+    var body: some Widget {
+        DreamInsightWidget()
+        DreamSymbolWidget()
+        DreamQuickRecordWidget()
     }
 }
