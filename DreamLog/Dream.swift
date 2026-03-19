@@ -28,6 +28,11 @@ class Dream: Identifiable, ObservableObject {
     @Published var createdAt: Date
     @Published var updatedAt: Date
     
+    // MARK: - Privacy Mode Properties (Phase 70)
+    @Published var lockType: DreamLockType         // 隐私锁定类型
+    @Published var isHidden: Bool                   // 是否隐藏（不显示在列表中）
+    @Published var lockedAt: Date?                  // 锁定时间
+    
     init(
         id: UUID = UUID(),
         title: String = "",
@@ -45,7 +50,10 @@ class Dream: Identifiable, ObservableObject {
         isPublic: Bool = false,
         likeCount: Int = 0,
         createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        updatedAt: Date = Date(),
+        lockType: DreamLockType = .none,
+        isHidden: Bool = false,
+        lockedAt: Date? = nil
     ) {
         self.id = id
         self.title = title
@@ -64,6 +72,9 @@ class Dream: Identifiable, ObservableObject {
         self.likeCount = likeCount
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+        self.lockType = lockType
+        self.isHidden = isHidden
+        self.lockedAt = lockedAt
     }
 }
 
@@ -143,6 +154,49 @@ extension Dream {
     /// 格式化的日期字符串
     var formattedDate: String {
         date.formatted(.dateTime.year().month().day().hour().minute())
+    }
+    
+    // MARK: - Privacy Mode Helpers
+    
+    /// 检查梦境是否已锁定
+    var isLocked: Bool {
+        lockType != .none
+    }
+    
+    /// 检查梦境是否需要认证才能查看
+    var requiresAuthentication: Bool {
+        isLocked && !isHidden
+    }
+    
+    /// 获取锁定图标
+    var lockIcon: String {
+        switch lockType {
+        case .none: return ""
+        case .biometric: return "faceid"
+        case .passcode: return "lock.fill"
+        case .hidden: return "eye.slash"
+        }
+    }
+    
+    /// 锁定梦境
+    mutating func lock(type: DreamLockType) {
+        lockType = type
+        lockedAt = Date()
+        updatedAt = Date()
+    }
+    
+    /// 解锁梦境
+    mutating func unlock() {
+        lockType = .none
+        lockedAt = nil
+        isHidden = false
+        updatedAt = Date()
+    }
+    
+    /// 切换隐藏状态
+    mutating func toggleHidden() {
+        isHidden.toggle()
+        updatedAt = Date()
     }
 }
 

@@ -188,22 +188,40 @@ actor DreamPrivacyService {
     
     /// 锁定梦境
     func lockDream(_ dream: Dream, lockType: DreamLockType) async throws {
-        // 注意：这里需要 Dream 模型有 lockType 属性
-        // 如果 Dream 模型没有这个属性，需要扩展 Dream 模型
-        print("锁定梦境：\(dream.title ?? "Untitled"), 类型：\(lockType)")
-        // 实际实现需要修改 Dream 模型
+        dream.lockType = lockType
+        dream.lockedAt = Date()
+        dream.updatedAt = Date()
+        try modelContext.save()
+        print("已锁定梦境：\(dream.title ?? "Untitled"), 类型：\(lockType)")
     }
     
     /// 解锁梦境
     func unlockDream(_ dream: Dream) async throws {
-        print("解锁梦境：\(dream.title ?? "Untitled")")
-        // 实际实现需要修改 Dream 模型
+        dream.lockType = .none
+        dream.lockedAt = nil
+        dream.isHidden = false
+        dream.updatedAt = Date()
+        try modelContext.save()
+        print("已解锁梦境：\(dream.title ?? "Untitled")")
     }
     
     /// 检查梦境是否已锁定
     func isDreamLocked(_ dream: Dream) async -> Bool {
-        // 检查 Dream 模型的 lockType 属性
-        return false // 占位实现
+        return dream.lockType != .none
+    }
+    
+    /// 隐藏梦境
+    func hideDream(_ dream: Dream) async throws {
+        dream.isHidden = true
+        dream.updatedAt = Date()
+        try modelContext.save()
+    }
+    
+    /// 取消隐藏梦境
+    func unhideDream(_ dream: Dream) async throws {
+        dream.isHidden = false
+        dream.updatedAt = Date()
+        try modelContext.save()
     }
     
     /// 自动锁定检查
@@ -228,35 +246,29 @@ actor DreamPrivacyService {
         var tagCounts: [String: Int] = [:]
         
         let calendar = Calendar.current
-        let now = Date()
         
         for dream in dreams {
-            // 这里需要检查 Dream 的 lockType
-            // 占位实现
-            // if let lockType = dream.lockType, lockType != .none {
-            //     totalLocked += 1
-            //     lockedByType[lockType, default: 0] += 1
-            //     
-            //     if let createdAt = dream.createdAt {
-            //         if calendar.isDateInThisWeek(createdAt) {
-            //             lockedThisWeek += 1
-            //         }
-            //         if calendar.isDateInThisMonth(createdAt) {
-            //             lockedThisMonth += 1
-            //         }
-            //     }
-            //     
-            //     for tag in dream.tags ?? [] {
-            //         tagCounts[tag, default: 0] += 1
-            //     }
-            // }
+            if dream.lockType != .none {
+                totalLocked += 1
+                lockedByType[dream.lockType, default: 0] += 1
+                
+                if let createdAt = dream.createdAt {
+                    if calendar.isDateInThisWeek(createdAt) {
+                        lockedThisWeek += 1
+                    }
+                    if calendar.isDateInThisMonth(createdAt) {
+                        lockedThisMonth += 1
+                    }
+                }
+                
+                for tag in dream.tags {
+                    tagCounts[tag, default: 0] += 1
+                }
+            }
         }
         
         // 找出最多锁定的标签
         let mostLockedTag = tagCounts.max(by: { $0.value < $1.value })?.key
-        
-        // 获取认证统计
-        let settings = try getPrivacySettings()
         
         return DreamPrivacyStats(
             totalLockedDreams: totalLocked,
@@ -264,8 +276,8 @@ actor DreamPrivacyService {
             lockedThisWeek: lockedThisWeek,
             lockedThisMonth: lockedThisMonth,
             mostLockedTag: mostLockedTag,
-            authSuccessCount: 0, // 需要单独追踪
-            authFailCount: settings.failedAuthAttempts
+            authSuccessCount: 0,
+            authFailCount: 0
         )
     }
     
@@ -279,11 +291,9 @@ actor DreamPrivacyService {
         case .unlock:
             try await unlockDream(dream)
         case .hide:
-            print("隐藏梦境：\(dream.title ?? "Untitled")")
-            // 实现隐藏逻辑
+            try await hideDream(dream)
         case .unhide:
-            print("取消隐藏梦境：\(dream.title ?? "Untitled")")
-            // 实现取消隐藏逻辑
+            try await unhideDream(dream)
         }
     }
     
@@ -333,24 +343,5 @@ actor DreamPrivacyService {
         settings.isLocked = true
         settings.updatedAt = Date()
         try modelContext.save()
-    }
-}
-
-// MARK: - Dream Extension
-
-/// Dream 模型扩展 - 隐私相关属性
-extension Dream {
-    /// 获取梦境的锁定类型（如果模型支持）
-    var lockType: DreamLockType? {
-        // 需要从 Dream 模型添加这个属性
-        // 这是占位实现
-        return nil
-    }
-    
-    /// 检查梦境是否应该自动锁定
-    func shouldAutoLock(settings: DreamPrivacySettings) -> Bool {
-        let content = self.content ?? ""
-        let title = self.title ?? ""
-        return settings.shouldAutoLock(content: content, title: title)
     }
 }
