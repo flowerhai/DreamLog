@@ -8,6 +8,8 @@
 
 import Foundation
 import Speech
+import AVFoundation
+import UIKit
 
 // MARK: - 语音命令枚举
 
