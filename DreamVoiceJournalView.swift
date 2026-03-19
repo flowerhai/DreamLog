@@ -26,7 +26,15 @@ struct DreamVoiceJournalView: View {
                 let container = try? ModelContainer(for: VoiceJournalEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
                 return container.map { ModelContext($0) }
             }
-        }() ?? ModelContext(try! ModelContainer(for: VoiceJournalEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true)))
+        }() ?? {
+            // Fallback: create in-memory context with proper error handling
+            do {
+                let container = try ModelContainer(for: VoiceJournalEntry.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                return ModelContext(container)
+            } catch {
+                fatalError("Failed to create ModelContext for VoiceJournalView: \(error)")
+            }
+        }()
         _viewModel = StateObject(wrappedValue: VoiceJournalViewModel(modelContext: context))
     }
     

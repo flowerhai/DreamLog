@@ -9,6 +9,7 @@ import Foundation
 import UIKit
 
 /// 梦境记录模型
+@MainActor
 class Dream: Identifiable, ObservableObject {
     @Published var id: UUID
     @Published var title: String

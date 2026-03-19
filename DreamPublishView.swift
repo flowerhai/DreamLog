@@ -696,5 +696,12 @@ struct EmptyStateView: View {
 
 #Preview {
     DreamPublishView()
-        .environmentObject(DreamPublishService(modelContext: ModelContext(try! ModelContainer(for: Dream.self))))
+        .environmentObject(DreamPublishService(modelContext: {
+            do {
+                let container = try ModelContainer(for: Dream.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                return ModelContext(container)
+            } catch {
+                fatalError("Preview setup failed: \(error)")
+            }
+        }()))
 }

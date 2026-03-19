@@ -481,7 +481,7 @@ struct AIPreviewSection: View {
                                 .foregroundColor(.accentColor)
                         }
                         
-                        ForEach(Array(similarDreams.prefix(2)), id: \.dream.id) { item in
+                        ForEach(Array(similarDreams.prefix(2).enumerated()), id: \.offset) { index, item in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(item.dream.title)

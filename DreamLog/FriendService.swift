@@ -9,6 +9,7 @@ import Foundation
 import Combine
 
 /// 好友模型
+@MainActor
 class Friend: Identifiable, ObservableObject {
     @Published var id: UUID
     @Published var userId: String
@@ -50,6 +51,7 @@ class Friend: Identifiable, ObservableObject {
 }
 
 /// 好友请求模型
+@MainActor
 class FriendRequest: Identifiable, ObservableObject {
     @Published var id: UUID
     @Published var fromUserId: String

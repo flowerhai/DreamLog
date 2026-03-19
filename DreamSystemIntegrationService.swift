@@ -35,8 +35,15 @@ class DreamSystemIntegrationService {
                   let context = try? ModelContext(container) {
             self.modelContext = context
         } else {
-            // Fallback: create a temporary context (should not happen in normal usage)
-            self.modelContext = try! ModelContext(ModelContainer(for: EmptyModel()))
+            // Fallback: create a temporary in-memory context (should not happen in normal usage)
+            // Using Dream as the model since it's the core model of the app
+            do {
+                let container = try ModelContainer(for: Dream.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                self.modelContext = ModelContext(container)
+            } catch {
+                // Last resort fallback - this should never happen in practice
+                fatalError("Failed to create fallback ModelContext: \(error)")
+            }
         }
         self.stats = SystemIntegrationStats()
         self.loadStats()

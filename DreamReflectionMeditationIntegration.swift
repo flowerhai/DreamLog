@@ -72,8 +72,14 @@ class ReflectionMeditationIntegration {
             self.modelContext = context
         } else {
             // Fallback to in-memory context for previews/tests
-            let container = try? ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
-            self.modelContext = ModelContext(container ?? try! ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true)))
+            do {
+                let container = try ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                self.modelContext = ModelContext(container)
+            } catch {
+                // Last resort fallback for previews/tests
+                let container = try! ModelContainer(for: MeditationSession.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+                self.modelContext = ModelContext(container)
+            }
         }
         self.meditationService = meditationService
     }

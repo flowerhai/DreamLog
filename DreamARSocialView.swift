@@ -635,7 +635,13 @@ struct ARViewContainer: UIViewRepresentable {
 
 #Preview {
     DreamARSocialView(
-        modelContainer: try! ModelContainer(for: ARSession.self, ARParticipant.self, ARElement.self, ARMessage.self),
+        modelContainer: {
+            do {
+                return try ModelContainer(for: ARSession.self, ARParticipant.self, ARElement.self, ARMessage.self, configurations: ModelConfiguration(isStoredInMemoryOnly: true))
+            } catch {
+                fatalError("Preview setup failed: \(error)")
+            }
+        }(),
         userID: UUID(),
         displayName: "Test User"
     )
