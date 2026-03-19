@@ -202,7 +202,9 @@ struct DreamSmartNotificationSettingsView: View {
             .alert("需要通知权限", isPresented: $showingPermissionAlert) {
                 Button("取消", role: .cancel) {}
                 Button("去设置") {
-                    UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!)
+                    if let settingsURL = URL(string: UIApplication.openSettingsURLString) {
+                        UIApplication.shared.open(settingsURL)
+                    }
                 }
             } message: {
                 Text("请在系统设置中允许 DreamLog 发送通知，以便接收梦境提醒和洞察推送。")

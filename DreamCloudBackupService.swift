@@ -160,7 +160,10 @@ actor DreamCloudBackupService {
     
     /// 交换 OAuth 令牌
     private func exchangeToken(code: String, config: OAuthConfig, provider: CloudProvider) async throws -> OAuthTokenResponse {
-        var request = URLRequest(url: URL(string: config.tokenUrl)!)
+        guard let url = URL(string: config.tokenUrl) else {
+            throw CloudBackupError.invalidConfiguration("Invalid token URL for \(provider)")
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
@@ -184,7 +187,10 @@ actor DreamCloudBackupService {
             throw CloudBackupError.noRefreshToken
         }
         
-        var request = URLRequest(url: URL(string: oauthConfig.tokenUrl)!)
+        guard let url = URL(string: oauthConfig.tokenUrl) else {
+            throw CloudBackupError.invalidConfiguration("Invalid token URL for \(provider)")
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         
@@ -395,7 +401,10 @@ actor DreamCloudBackupService {
     
     /// 上传到 Google Drive
     private func uploadToGoogleDrive(accessToken: String, data: Data, fileName: String, path: String) async throws -> UploadResult {
-        var request = URLRequest(url: URL(string: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")!)
+        guard let uploadURL = URL(string: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart") else {
+            throw CloudBackupError.uploadFailed("Invalid Google Drive upload URL")
+        }
+        var request = URLRequest(url: uploadURL)
         request.httpMethod = "POST"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         
@@ -434,7 +443,10 @@ actor DreamCloudBackupService {
     
     /// 上传到 Dropbox
     private func uploadToDropbox(accessToken: String, data: Data, fileName: String, path: String) async throws -> UploadResult {
-        var request = URLRequest(url: URL(string: "https://content.dropboxapi.com/2/files/upload")!)
+        guard let uploadURL = URL(string: "https://content.dropboxapi.com/2/files/upload") else {
+            throw CloudBackupError.uploadFailed("Invalid Dropbox upload URL")
+        }
+        var request = URLRequest(url: uploadURL)
         request.httpMethod = "POST"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
@@ -464,7 +476,10 @@ actor DreamCloudBackupService {
     /// 上传到 OneDrive
     private func uploadToOneDrive(accessToken: String, data: Data, fileName: String, path: String) async throws -> UploadResult {
         let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? path
-        var request = URLRequest(url: URL(string: "https://graph.microsoft.com/v1.0/me/drive/special/appfolder:\(encodedPath):/content")!)
+        guard let uploadURL = URL(string: "https://graph.microsoft.com/v1.0/me/drive/special/appfolder:\(encodedPath):/content") else {
+            throw CloudBackupError.uploadFailed("Invalid OneDrive upload URL")
+        }
+        var request = URLRequest(url: uploadURL)
         request.httpMethod = "PUT"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
@@ -577,7 +592,10 @@ actor DreamCloudBackupService {
     }
     
     private func downloadFromGoogleDrive(accessToken: String, fileId: String) async throws -> Data {
-        var request = URLRequest(url: URL(string: "https://www.googleapis.com/drive/v3/files/\(fileId)?alt=media")!)
+        guard let downloadURL = URL(string: "https://www.googleapis.com/drive/v3/files/\(fileId)?alt=media") else {
+            throw CloudBackupError.downloadFailed("Invalid Google Drive download URL")
+        }
+        var request = URLRequest(url: downloadURL)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -590,7 +608,10 @@ actor DreamCloudBackupService {
     }
     
     private func downloadFromDropbox(accessToken: String, fileId: String) async throws -> Data {
-        var request = URLRequest(url: URL(string: "https://content.dropboxapi.com/2/files/download")!)
+        guard let downloadURL = URL(string: "https://content.dropboxapi.com/2/files/download") else {
+            throw CloudBackupError.downloadFailed("Invalid Dropbox download URL")
+        }
+        var request = URLRequest(url: downloadURL)
         request.httpMethod = "POST"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         
@@ -609,7 +630,10 @@ actor DreamCloudBackupService {
     }
     
     private func downloadFromOneDrive(accessToken: String, fileId: String) async throws -> Data {
-        var request = URLRequest(url: URL(string: "https://graph.microsoft.com/v1.0/me/drive/items/\(fileId)/content")!)
+        guard let downloadURL = URL(string: "https://graph.microsoft.com/v1.0/me/drive/items/\(fileId)/content") else {
+            throw CloudBackupError.downloadFailed("Invalid OneDrive download URL")
+        }
+        var request = URLRequest(url: downloadURL)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -684,13 +708,19 @@ actor DreamCloudBackupService {
     private func deleteFromCloud(provider: CloudProvider, accessToken: String, fileId: String) async throws {
         switch provider {
         case .googleDrive:
-            var request = URLRequest(url: URL(string: "https://www.googleapis.com/drive/v3/files/\(fileId)")!)
+            guard let deleteURL = URL(string: "https://www.googleapis.com/drive/v3/files/\(fileId)") else {
+                throw CloudBackupError.deleteFailed("Invalid Google Drive delete URL")
+            }
+            var request = URLRequest(url: deleteURL)
             request.httpMethod = "DELETE"
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
             _ = try await URLSession.shared.data(for: request)
             
         case .dropbox:
-            var request = URLRequest(url: URL(string: "https://api.dropboxapi.com/2/files/delete_v2")!)
+            guard let deleteURL = URL(string: "https://api.dropboxapi.com/2/files/delete_v2") else {
+                throw CloudBackupError.deleteFailed("Invalid Dropbox delete URL")
+            }
+            var request = URLRequest(url: deleteURL)
             request.httpMethod = "POST"
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
             let deleteArg: [String: Any] = ["path": fileId]
@@ -699,7 +729,10 @@ actor DreamCloudBackupService {
             _ = try await URLSession.shared.data(for: request)
             
         case .onedrive:
-            var request = URLRequest(url: URL(string: "https://graph.microsoft.com/v1.0/me/drive/items/\(fileId)")!)
+            guard let deleteURL = URL(string: "https://graph.microsoft.com/v1.0/me/drive/items/\(fileId)") else {
+                throw CloudBackupError.deleteFailed("Invalid OneDrive delete URL")
+            }
+            var request = URLRequest(url: deleteURL)
             request.httpMethod = "DELETE"
             request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
             _ = try await URLSession.shared.data(for: request)

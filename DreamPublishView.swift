@@ -166,8 +166,8 @@ struct TaskRowView: View {
                     .foregroundColor(.red)
             }
             
-            if let url = task.publishedURL {
-                Link("查看发布", destination: URL(string: url)!)
+            if let url = task.publishedURL, let destinationURL = URL(string: url) {
+                Link("查看发布", destination: destinationURL)
                     .font(.caption)
             }
         }

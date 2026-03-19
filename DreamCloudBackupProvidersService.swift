@@ -298,25 +298,28 @@ actor DreamCloudBackupProvidersService {
         ]
         
         let boundary = UUID().uuidString
-        var request = URLRequest(url: URL(string: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart")!)
+        guard let uploadURL = URL(string: "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart") else {
+            throw CloudBackupError.uploadFailed("Invalid Google Drive upload URL")
+        }
+        var request = URLRequest(url: uploadURL)
         request.httpMethod = "POST"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/related; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
         var body = Data()
         
-        // Metadata part
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Type: application/json; charset=UTF-8\r\n\r\n".data(using: .utf8)!)
+        // Metadata part - UTF-8 encoding of ASCII strings never fails
+        body.append("--\(boundary)\r\n".data(using: .utf8) ?? Data())
+        body.append("Content-Type: application/json; charset=UTF-8\r\n\r\n".data(using: .utf8) ?? Data())
         body.append(try JSONSerialization.data(withJSONObject: metadata))
-        body.append("\r\n".data(using: .utf8)!)
+        body.append("\r\n".data(using: .utf8) ?? Data())
         
         // File part
-        body.append("--\(boundary)\r\n".data(using: .utf8)!)
-        body.append("Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8)!)
+        body.append("--\(boundary)\r\n".data(using: .utf8) ?? Data())
+        body.append("Content-Type: application/octet-stream\r\n\r\n".data(using: .utf8) ?? Data())
         body.append(data)
-        body.append("\r\n".data(using: .utf8)!)
-        body.append("--\(boundary)--\r\n".data(using: .utf8)!)
+        body.append("\r\n".data(using: .utf8) ?? Data())
+        body.append("--\(boundary)--\r\n".data(using: .utf8) ?? Data())
         
         request.httpBody = body
         
@@ -340,7 +343,10 @@ actor DreamCloudBackupProvidersService {
     ) async throws -> (String, String) {
         let path = "/DreamLog/\(fileName)"
         
-        var request = URLRequest(url: URL(string: "https://content.dropboxapi.com/2/files/upload")!)
+        guard let uploadURL = URL(string: "https://content.dropboxapi.com/2/files/upload") else {
+            throw CloudBackupError.uploadFailed("Invalid Dropbox upload URL")
+        }
+        var request = URLRequest(url: uploadURL)
         request.httpMethod = "POST"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
@@ -374,8 +380,11 @@ actor DreamCloudBackupProvidersService {
         progressHandler: ((Double) -> Void)?
     ) async throws -> (String, String) {
         let path = "/DreamLog/\(fileName)"
-        
-        var request = URLRequest(url: URL(string: "https://graph.microsoft.com/v1.0/me/drive/special/approot:\(path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""):/content")!)
+        let encodedPath = path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? ""
+        guard let uploadURL = URL(string: "https://graph.microsoft.com/v1.0/me/drive/special/approot:\(encodedPath):/content") else {
+            throw CloudBackupError.uploadFailed("Invalid OneDrive upload URL")
+        }
+        var request = URLRequest(url: uploadURL)
         request.httpMethod = "PUT"
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")

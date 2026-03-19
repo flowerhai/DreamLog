@@ -341,7 +341,10 @@ public final class DreamNotificationService: @unchecked Sendable {
             smartAdjustment: .init(isEnabled: true)
         )
         
-        let type = DreamNotificationType.allTypes.first { $0.identifier == "sleep_reminder" }!
+        guard let type = DreamNotificationType.allTypes.first(where: { $0.identifier == "sleep_reminder" }) else {
+            print("Failed to find sleep_reminder notification type")
+            return
+        }
         
         do {
             try await scheduleNotification(
@@ -365,7 +368,10 @@ public final class DreamNotificationService: @unchecked Sendable {
     
     /// 调度晨间回忆提醒
     public func scheduleMorningRecall() async {
-        let type = DreamNotificationType.allTypes.first { $0.identifier == "morning_recall" }!
+        guard let type = DreamNotificationType.allTypes.first(where: { $0.identifier == "morning_recall" }) else {
+            print("Failed to find morning_recall notification type")
+            return
+        }
         
         let config = NotificationScheduleConfig(
             identifier: "morning_recall",

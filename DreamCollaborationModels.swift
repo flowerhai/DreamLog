@@ -95,7 +95,8 @@ final class DreamCollaborationSession {
     /// 生成 6 位邀请码
     private func generateInviteCode() -> String {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return String((0..<6).map { _ in chars.randomElement()! })
+        // chars is non-empty, randomElement() will never return nil
+        return String((0..<6).compactMap { _ in chars.randomElement() })
     }
     
     /// 检查会话是否有效
