@@ -160,7 +160,7 @@ final class CloudBackupRecord {
     var uploadDate: Date
     var expiryDate: Date?
     var downloadUrl: String?
-    var status: BackupStatus
+    var status: CloudBackupStatus
     var errorMessage: String?
     var createdAt: Date
     
@@ -215,8 +215,8 @@ enum BackupType: String, Codable, CaseIterable {
 
 // MARK: - Backup Status
 
-/// 备份状态
-enum BackupStatus: String, Codable {
+/// 云备份状态
+enum CloudBackupStatus: String, Codable {
     case pending = "pending"
     case uploading = "uploading"
     case completed = "completed"

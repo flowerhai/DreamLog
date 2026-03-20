@@ -741,7 +741,7 @@ struct PhotoDetailView: View {
 
 // MARK: - ARView Container
 
-struct ARViewContainer: UIViewRepresentable {
+struct ARPhotoEditorViewContainer: UIViewRepresentable {
     let arView: ARView
     
     func makeUIView(context: Context) -> ARView {

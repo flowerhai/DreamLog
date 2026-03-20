@@ -581,7 +581,7 @@ struct EmptyStateView: View {
 
 // MARK: - AR 视图容器
 
-struct ARViewContainer: UIViewRepresentable {
+struct ARVisualizationViewContainer: UIViewRepresentable {
     let scene: ARDreamScene?
     let service: DreamARVisualizationService
     

@@ -609,7 +609,7 @@ struct ARSocialSpaceView: View {
 
 // MARK: - AR View Container
 
-struct ARViewContainer: UIViewRepresentable {
+struct ARSocialViewContainer: UIViewRepresentable {
     @ObservedObject var service: DreamARSocialService
     
     func makeUIView(context: Context) -> ARSCNView {

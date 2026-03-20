@@ -207,7 +207,7 @@ extension View {
 // MARK: - 无障碍测试辅助
 
 /// 无障碍测试辅助工具
-struct AccessibilityAudit {
+struct AccessibilityAuditTool {
     /// 审计视图的无障碍支持
     static func auditView(_ viewName: String) -> [String] {
         var issues: [String] = []
