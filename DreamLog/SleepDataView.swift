@@ -23,7 +23,7 @@ struct SleepDataView: View {
                         showingAuthRequest = true
                     })
                 } else if healthKitService.isLoading {
-                    LoadingView()
+                    SleepDataLoadingView()
                 } else if healthKitService.sleepRecords.isEmpty {
                     EmptySleepDataView(onSync: {
                         Task {
@@ -188,7 +188,7 @@ struct AuthRequestView: View {
 
 // MARK: - 加载视图
 
-struct LoadingView: View {
+struct SleepDataLoadingView: View {
     var body: some View {
         VStack(spacing: 20) {
             ProgressView()

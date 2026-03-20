@@ -572,7 +572,7 @@ struct BackupHistoryRow: View {
                 
                 Spacer()
                 
-                BadgeView(text: history.backupType.rawValue)
+                BackupBadgeView(text: history.backupType.rawValue)
             }
             
             HStack {
@@ -599,7 +599,7 @@ struct BackupHistoryRow: View {
     }
 }
 
-struct BadgeView: View {
+struct BackupBadgeView: View {
     let text: String
     
     var body: some View {
