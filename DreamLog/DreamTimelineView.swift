@@ -434,32 +434,6 @@ struct DreamDensityHeatmap: View {
     }
 }
 
-// MARK: - 空状态视图
-
-struct EmptyStateView: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 40))
-                .foregroundColor(.white.opacity(0.3))
-            
-            Text(title)
-                .font(.headline)
-                .foregroundColor(.white.opacity(0.6))
-            
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundColor(.white.opacity(0.4))
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-    }
-}
-
 // MARK: - 过滤表
 
 struct TimelineFilterSheet: View {

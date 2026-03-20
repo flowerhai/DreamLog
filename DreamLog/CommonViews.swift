@@ -17,8 +17,17 @@ struct EmptyStateView: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            Text(icon)
-                .font(.system(size: 64))
+            // 支持 emoji 和 SF Symbols
+            if icon.contains(".") {
+                // SF Symbol
+                Image(systemName: icon)
+                    .font(.system(size: 60))
+                    .foregroundColor(.white.opacity(0.3))
+            } else {
+                // Emoji
+                Text(icon)
+                    .font(.system(size: 64))
+            }
             
             Text(title)
                 .font(.title2)

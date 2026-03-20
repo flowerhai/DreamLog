@@ -800,15 +800,15 @@ struct WrapLayout: View {
     
     var body: some View {
         let items = content()
-        return FlowLayout(spacing: spacing, items: items)
+        return HorizontalFlowLayoutSimple(spacing: spacing, items: items)
     }
 }
 
-struct FlowLayout: View {
+struct HorizontalFlowLayoutSimple: View {
     let spacing: CGFloat
-    let items: [View]
+    let items: [any View]
     
-    init(spacing: CGFloat, items: [View]) {
+    init(spacing: CGFloat, items: [any View]) {
         self.spacing = spacing
         self.items = items
     }

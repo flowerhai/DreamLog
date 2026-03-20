@@ -220,7 +220,11 @@ struct PromptListView: View {
                 }
                 
                 if prompts.isEmpty {
-                    EmptyStateView()
+                    EmptyStateView(
+                        icon: "💡",
+                        title: "还没有创意提示",
+                        subtitle: "从你的梦境中生成第一个创意提示吧！"
+                    )
                 }
             }
             .padding()
@@ -317,27 +321,6 @@ struct PromptCard: View {
     }
 }
 
-// MARK: - 空状态
-
-struct EmptyStateView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "lightbulb")
-                .font(.system(size: 60))
-                .foregroundColor(.purple.opacity(0.5))
-            
-            Text("还没有创意提示")
-                .font(.headline)
-                .foregroundColor(.secondary)
-            
-            Text("从你的梦境中生成第一个创意提示吧！")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .padding(.vertical, 60)
-    }
-}
-
 // MARK: - 提示详情
 
 struct PromptDetailView: View {
@@ -392,15 +375,13 @@ struct PromptDetailView: View {
                         .font(.headline)
                         .foregroundColor(.secondary)
                     
-                    FlowLayout(spacing: 8) {
-                        ForEach(prompt.tags, id: \.self) { tag in
-                            Text("#\(tag)")
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 6)
-                                .background(Color.purple.opacity(0.1))
-                                .foregroundColor(.purple)
-                                .cornerRadius(16)
-                        }
+                    HorizontalFlowLayout(data: prompt.tags, spacing: 8) { tag in
+                        Text("#\(tag)")
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(Color.purple.opacity(0.1))
+                            .foregroundColor(.purple)
+                            .cornerRadius(16)
                     }
                 }
                 .padding()
@@ -617,7 +598,7 @@ struct GeneratorForm: View {
 
 // MARK: - 辅助视图
 
-struct FlowLayout<Data, Content>: View where Data: RandomAccessCollection, Data.Element: Hashable, Content: View {
+struct HorizontalFlowLayout<Data, Content>: View where Data: RandomAccessCollection, Data.Element: Hashable, Content: View {
     let data: Data
     let spacing: CGFloat
     let content: (Data.Element) -> Content

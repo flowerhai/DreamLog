@@ -111,7 +111,11 @@ struct AdvancedSearchView: View {
                         }
                         
                         if filteredDreams.isEmpty {
-                            EmptyStateView()
+                            EmptyStateView(
+                                icon: "🔍",
+                                title: "没有找到匹配的梦境",
+                                subtitle: "尝试调整搜索条件或过滤器"
+                            )
                         }
                     }
                     .padding()
@@ -273,26 +277,6 @@ struct FilterOptionsView: View {
         intensityRange = 1...5
         includeLucidOnly = false
         sortBy = .date
-    }
-}
-
-// MARK: - 空状态视图
-struct EmptyStateView: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
-            Text("没有找到匹配的梦境")
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            Text("尝试调整搜索条件或过滤器")
-                .font(.body)
-                .foregroundColor(.secondary)
-        }
-        .padding(40)
     }
 }
 
