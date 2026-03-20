@@ -468,7 +468,7 @@ struct ExportButtons: View {
             Button(action: {}) {
                 HStack {
                     Image(systemName: "envelope.fill")
-                    Text "通过邮件发送")
+                    Text("通过邮件发送")
                 }
                 .frame(maxWidth: .infinity)
                 .padding()

@@ -425,55 +425,6 @@ struct SearchResultRow: View {
     }
 }
 
-// MARK: - 流式布局
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
-        return result.size
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
-        
-        for (index, subview) in subviews.enumerated() {
-            let position = result.positions[index]
-            subview.place(at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y), proposal: .unspecified)
-        }
-    }
-    
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-        
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var rowHeight: CGFloat = 0
-            
-            positions = subviews.map { subview in
-                let size = subview.sizeThatFits(.unspecified)
-                
-                if x > 0 && x + size.width > maxWidth {
-                    x = 0
-                    y += rowHeight + spacing
-                    rowHeight = 0
-                }
-                
-                let position = CGPoint(x: x, y: y)
-                x += size.width + spacing
-                rowHeight = max(rowHeight, size.height)
-                
-                return position
-            }
-            
-            size = CGSize(width: maxWidth, height: y + rowHeight)
-        }
-    }
-}
-
 // MARK: - 芯片组件
 
 struct Chip: View {
