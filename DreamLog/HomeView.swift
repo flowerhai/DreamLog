@@ -50,6 +50,14 @@ struct HomeView: View {
                     .padding(.horizontal)
                     .padding(.bottom, 8)
                 
+                // 晨间反思卡片 ✨ NEW (Phase 79)
+                if #available(iOS 17.0, *) {
+                    MorningReflectionCard()
+                        .environmentObject(dreamStore)
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                }
+                
                 // 模式预测卡片 ✨ NEW (Phase 55)
                 PatternPredictionCard()
                     .environmentObject(dreamStore)
@@ -757,6 +765,137 @@ struct VoiceJournalCard: View {
             return "\(minutes)分钟"
         } else {
             return "\(Int(seconds))秒"
+        }
+    }
+}
+
+// MARK: - 🌅 晨间反思卡片 (Phase 79)
+
+@available(iOS 17.0, *)
+struct MorningReflectionCard: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @Environment(\.modelContext) private var modelContext
+    @State private var showingReflection = false
+    @State private var todayCount: Int = 0
+    @State private var streakDays: Int = 0
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "sunrise.fill")
+                            .font(.title2)
+                            .foregroundColor(.yellow)
+                            .accessibilityHidden(true)
+                        
+                        Text("晨间反思")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    
+                    Text(streakDays > 0
+                         ? "已连续反思 \(streakDays) 天，今天已完成 \(todayCount) 次"
+                         : "每天花几分钟，从梦境中获得洞察")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                
+                Spacer()
+                
+                Button(action: { showingReflection = true }) {
+                    HStack(spacing: 4) {
+                        Text(todayCount > 0 ? "查看反思" : "开始反思")
+                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundColor(.yellow)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.yellow.opacity(0.2))
+                    .cornerRadius(8)
+                }
+                .accessibilityLabel(todayCount > 0 ? "查看晨间反思" : "开始晨间反思")
+            }
+            
+            // 快速操作提示
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Image(systemName: "brain.head.profile")
+                        .font(.caption)
+                        .foregroundColor(.yellow.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("洞察")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("获得梦境洞察")
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.caption)
+                        .foregroundColor(.yellow.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("追踪")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("追踪反思进度")
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "bell.fill")
+                        .font(.caption)
+                        .foregroundColor(.yellow.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("提醒")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("晨间提醒功能")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.2))
+            .cornerRadius(8)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "F1C40F").opacity(0.3), Color(hex: "F39C12").opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "F1C40F").opacity(0.3), lineWidth: 1)
+                )
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("晨间反思卡片")
+        .accessibilityHint(streakDays > 0 ? "双击查看今日反思" : "双击开始晨间反思")
+        .task {
+            await loadStats()
+        }
+        .sheet(isPresented: $showingReflection) {
+            DreamMorningReflectionView()
+        }
+    }
+    
+    @MainActor
+    private func loadStats() async {
+        do {
+            let service = DreamMorningReflectionService(modelContext: modelContext)
+            let stats = try service.getStatistics()
+            todayCount = stats.completedToday
+            streakDays = stats.streakDays
+        } catch {
+            print("加载晨间反思统计失败：\(error)")
         }
     }
 }

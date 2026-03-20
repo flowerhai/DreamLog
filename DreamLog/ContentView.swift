@@ -234,7 +234,14 @@ struct GrowthNavigationView: View {
                     }
                 }
                 
-                Section(header: Text("语音日记")) {
+                Section(header: Text("反思与日记")) {
+                    if #available(iOS 17.0, *) {
+                        NavigationLink(destination: DreamMorningReflectionView()) {
+                            Label("晨间反思", systemImage: "sunrise.fill")
+                                .accessibilityLabel("晨间反思 - 从梦境中获得洞察")
+                        }
+                    }
+                    
                     NavigationLink(destination: DreamVoiceJournalView()) {
                         Label("语音日记", systemImage: "mic.fill")
                             .accessibilityLabel("语音日记 - 录音记录梦境")
