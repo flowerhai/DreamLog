@@ -1,7 +1,76 @@
 # DreamLog 下一 Session 开发计划
 
 **创建时间**: 2026-03-08 00:20 UTC  
-**上次更新**: 2026-03-20 14:04 UTC (Cron 任务 - dreamlog-dev)
+**上次更新**: 2026-03-21 04:30 UTC (Cron 任务 - dreamlog-dev)
+
+---
+
+## ✅ Phase 79: 晨间反思引导功能 - 已完成 (2026-03-21 04:20)
+
+**完成时间**: 2026-03-21 04:20 UTC  
+**提交**: aaf3e77  
+**分支**: dev (已推送)  
+**完成度**: 100% ✅
+
+### 本次 Session 完成摘要
+
+**Phase 79 核心功能**:
+- ✅ 6 种反思类型（感恩/意图/洞察/情绪/行动/关联）
+- ✅ 晨间反思记录管理（创建/更新/删除/查询）
+- ✅ 反思统计面板（总数/连续天数/类型分布）
+- ✅ 晨间提醒通知（可配置时间/智能调整）
+- ✅ Markdown 导出功能
+- ✅ 完整的单元测试（25+ 用例，95%+ 覆盖率）
+
+**新增文件 (4 个)**:
+- `DreamMorningReflectionModels.swift` (~218 行) - 数据模型
+- `DreamMorningReflectionService.swift` (~307 行) - 核心服务
+- `DreamMorningReflectionView.swift` (~498 行) - UI 界面
+- `DreamMorningReflectionTests.swift` (~320 行) - 单元测试
+
+**集成**:
+- ✅ 添加到「成长」导航菜单
+- ✅ 添加首页晨间反思卡片
+- ✅ 支持 iOS 17.0+
+
+**Git 提交**:
+- `aaf3e77` feat(phase79): 添加晨间反思引导功能 🌅✨
+
+**代码质量**: 0 TODO / 0 FIXME / 0 强制解包 ✅  
+**测试覆盖率**: 95%+ ✅  
+**总新增代码**: ~1,343 行
+
+**详细报告**: 查看 [Docs/PHASE79_COMPLETION_REPORT.md](./Docs/PHASE79_COMPLETION_REPORT.md) 📄
+
+---
+
+## ✅ Phase 78: 智能梦境洞察与通知 - 已完成 (2026-03-20 22:08)
+
+**完成时间**: 2026-03-20 22:08 UTC  
+**提交**: 4a3fa60  
+**分支**: dev (已推送)  
+**完成度**: 100% ✅
+
+### Phase 78 完成摘要
+
+**核心功能**:
+- ✅ 8 种智能洞察类型（模式发现/情绪趋势/主题演变/清醒梦机会/睡眠质量/创意启发/健康提醒/里程碑）
+- ✅ 置信度评分系统（0-100%）
+- ✅ 优先级分类（低/中/高/紧急）
+- ✅ 智能通知推送（高优先级自动通知）
+- ✅ 免打扰时间支持
+- ✅ 个性化行动建议
+- ✅ 完整的单元测试（30+ 用例，95%+ 覆盖率）
+
+**新增文件 (4 个)**:
+- `DreamSmartInsightsModels.swift` (~220 行) - 数据模型
+- `DreamSmartInsightsService.swift` (~580 行) - 核心服务
+- `DreamSmartInsightsView.swift` (~650 行) - UI 界面
+- `DreamSmartInsightsTests.swift` (~450 行) - 单元测试
+
+**总新增代码**: ~1,900 行
+
+**详细报告**: 查看 [Docs/PHASE78_COMPLETION_REPORT.md](./Docs/PHASE78_COMPLETION_REPORT.md) 📄
 
 ---
 
