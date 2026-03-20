@@ -438,7 +438,7 @@ struct SceneSelectorView: View {
                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         .scaleEffect(1.5)
                 } else if scenes.isEmpty {
-                    EmptyStateView(onCreate: onCreateNew)
+                    AREmptyStateView(onCreate: onCreateNew)
                 } else {
                     ScrollView {
                         LazyVStack(spacing: 15) {
@@ -548,7 +548,7 @@ struct SceneCard: View {
 
 // MARK: - 空状态视图
 
-struct EmptyStateView: View {
+struct AREmptyStateView: View {
     let onCreate: () -> Void
     
     var body: some View {

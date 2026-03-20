@@ -627,14 +627,14 @@ struct ComparisonStatsView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     if let stats = statistics {
-                        StatCard(
+                        ComparisonStatCard(
                             title: "总对比次数",
                             value: "\(stats.totalComparisons)",
                             icon: "doc.text.fill",
                             color: .purple
                         )
                         
-                        StatCard(
+                        ComparisonStatCard(
                             title: "平均相似度",
                             value: String(format: "%.0f%%", stats.averageSimilarity * 100),
                             icon: "chart.bar.fill",
@@ -642,7 +642,7 @@ struct ComparisonStatsView: View {
                         )
                         
                         if let mostCommon = stats.mostCommonSimilarity {
-                            StatCard(
+                            ComparisonStatCard(
                                 title: "最常见相似性",
                                 value: mostCommon.rawValue,
                                 icon: mostCommon.icon,
@@ -665,7 +665,7 @@ struct ComparisonStatsView: View {
 
 // MARK: - Stat Card
 
-struct StatCard: View {
+struct ComparisonStatCard: View {
     let title: String
     let value: String
     let icon: String
@@ -694,56 +694,6 @@ struct StatCard: View {
         .padding()
         .background(Color.gray.opacity(0.1))
         .cornerRadius(16)
-    }
-}
-
-// MARK: - Flow Layout (Simple Implementation)
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult(in: proposal.width ?? 0, subviews: subviews, spacing: spacing)
-        return result.size
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
-        
-        for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x,
-                                       y: bounds.minY + result.positions[index].y),
-                         proposal: .unspecified)
-        }
-    }
-    
-    struct FlowResult {
-        var size: CGSize = .zero
-        var positions: [CGPoint] = []
-        
-        init(in maxWidth: CGFloat, subviews: Subviews, spacing: CGFloat) {
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var rowHeight: CGFloat = 0
-            
-            positions.reserveCapacity(subviews.count)
-            
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-                
-                if x + size.width > maxWidth && x > 0 {
-                    x = 0
-                    y += rowHeight + spacing
-                    rowHeight = 0
-                }
-                
-                positions.append(CGPoint(x: x, y: y))
-                rowHeight = max(rowHeight, size.height)
-                x += size.width + spacing
-            }
-            
-            self.size = CGSize(width: maxWidth, height: y + rowHeight)
-        }
     }
 }
 

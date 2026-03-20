@@ -94,7 +94,7 @@ struct TasksTabView: View {
     var body: some View {
         Group {
             if filteredTasks.isEmpty {
-                EmptyStateView()
+                PublishEmptyStateView()
             } else {
                 List {
                     ForEach(filteredTasks) { task in
@@ -665,7 +665,7 @@ struct EngagementCard: View {
 
 // MARK: - 空状态视图
 
-struct EmptyStateView: View {
+struct PublishEmptyStateView: View {
     let title: String
     let message: String
     let icon: String

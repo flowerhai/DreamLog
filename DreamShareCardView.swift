@@ -22,7 +22,7 @@ struct DreamShareCardView: View {
         NavigationView {
             Group {
                 if cards.isEmpty {
-                    EmptyStateView()
+                    ShareCardEmptyStateView()
                 } else {
                     CardsGridView
                 }
@@ -88,7 +88,7 @@ struct DreamShareCardView: View {
 
 // MARK: - 空状态视图
 
-struct EmptyStateView: View {
+struct ShareCardEmptyStateView: View {
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: "photo.on.rectangle.angled")

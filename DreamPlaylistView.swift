@@ -28,7 +28,7 @@ struct DreamPlaylistView: View {
         NavigationStack {
             Group {
                 if playlists.isEmpty {
-                    EmptyStateView()
+                    PlaylistEmptyStateView()
                 } else {
                     PlaylistListView
                 }
@@ -107,7 +107,7 @@ struct DreamPlaylistView: View {
 
 // MARK: - Empty State View
 
-struct EmptyStateView: View {
+struct PlaylistEmptyStateView: View {
     var body: some View {
         VStack(spacing: 20) {
             Spacer()
