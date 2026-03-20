@@ -27,6 +27,10 @@ struct DreamSmartInsightsView: View {
         _viewModel = StateObject(wrappedValue: InsightsViewModel())
     }
     
+    init(modelContext: ModelContext) {
+        _viewModel = StateObject(wrappedValue: InsightsViewModel(modelContext: modelContext))
+    }
+    
     var body: some View {
         NavigationStack {
             Group {
@@ -101,10 +105,8 @@ struct DreamSmartInsightsView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
-            Button("立即记录") {
-                // TODO: Navigate to record view
-            }
-            .buttonStyle(.borderedProminent)
+            NavigationLink("立即记录", destination: QuickAddView())
+                .buttonStyle(.borderedProminent)
         }
         .padding(.top, 100)
     }
@@ -633,7 +635,12 @@ struct InsightSettingsView: View {
             notifyOnHighPriority: notifyOnHighPriority
         )
         
-        // TODO: Save to modelContext
+        do {
+            let service = DreamSmartInsightsService(modelContext: modelContext)
+            try service.updateSettings(enabled: enabled, config: config)
+        } catch {
+            print("Failed to save insight settings: \(error)")
+        }
     }
 }
 
@@ -648,9 +655,13 @@ class InsightsViewModel: ObservableObject {
     
     private let service: DreamSmartInsightsService
     
-    init() {
-        // TODO: Initialize service with modelContext
-        self.service = DreamSmartInsightsService(modelContext: ModelContext(try! ModelContainer(for: DreamSmartInsight.self)))
+    init(modelContext: ModelContext) {
+        self.service = DreamSmartInsightsService(modelContext: modelContext)
+    }
+    
+    convenience init() {
+        let modelContext = try! ModelContext(ModelContainer(for: DreamSmartInsight.self))
+        self.init(modelContext: modelContext)
     }
     
     func loadInsights(filter: DreamSmartInsightsView.InsightFilter) async {
