@@ -319,21 +319,21 @@ struct WatchStatsView: View {
         ScrollView {
             VStack(spacing: 16) {
                 // 总梦境数
-                StatCard(
+                WatchContentStatCard(
                     icon: "book.fill",
                     value: "\(totalDreams)",
                     label: "总梦境"
                 )
                 
                 // 本周记录
-                StatCard(
+                WatchContentStatCard(
                     icon: "calendar",
                     value: "\(thisWeek)",
                     label: "本周"
                 )
                 
                 // 清醒梦
-                StatCard(
+                WatchContentStatCard(
                     icon: "sparkles",
                     value: "\(lucidCount)",
                     label: "清醒梦"
@@ -348,7 +348,7 @@ struct WatchStatsView: View {
     }
 }
 
-struct StatCard: View {
+struct WatchContentStatCard: View {
     let icon: String
     let value: String
     let label: String

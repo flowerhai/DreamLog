@@ -214,9 +214,9 @@ struct LocationStatsCard: View {
             }
             
             HStack(spacing: 16) {
-                StatItem(icon: "map", value: "\(stats.totalLocations)", label: "位置")
-                StatItem(icon: "building.2", value: "\(stats.uniqueCities)", label: "城市")
-                StatItem(icon: "globe", value: "\(stats.countries.count)", label: "国家")
+                MapStatItem(icon: "map", value: "\(stats.totalLocations)", label: "位置")
+                MapStatItem(icon: "building.2", value: "\(stats.uniqueCities)", label: "城市")
+                MapStatItem(icon: "globe", value: "\(stats.countries.count)", label: "国家")
             }
         }
         .padding()
@@ -226,7 +226,7 @@ struct LocationStatsCard: View {
     }
 }
 
-struct StatItem: View {
+struct MapStatItem: View {
     let icon: String
     let value: String
     let label: String

@@ -428,7 +428,7 @@ struct DreamDictionaryView: View {
             Section("类别") {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        FilterChip(
+                        DictionaryFilterChip(
                             title: "全部",
                             icon: "🔍",
                             isSelected: dictionary.selectedCategory == nil
@@ -437,7 +437,7 @@ struct DreamDictionaryView: View {
                         }
                         
                         ForEach(DreamSymbolCategory.allCases, id: \.self) { category in
-                            FilterChip(
+                            DictionaryFilterChip(
                                 title: category.rawValue,
                                 icon: category.icon,
                                 isSelected: dictionary.selectedCategory == category
@@ -531,7 +531,7 @@ struct DreamDictionaryView: View {
 
 // MARK: - 辅助视图
 
-struct FilterChip: View {
+struct DictionaryFilterChip: View {
     let title: String
     let icon: String
     let isSelected: Bool

@@ -231,9 +231,9 @@ struct PlaybackStatsCard: View {
                 Spacer()
                 
                 HStack(spacing: 16) {
-                    StatItem(icon: "list.bullet", value: "\(stats.totalPlaylists)", label: "播放列表")
-                    StatItem(icon: "music.note", value: "\(stats.totalMusic)", label: "音乐")
-                    StatItem(icon: "play.circle", value: "\(stats.totalPlays)", label: "播放")
+                    MusicPlaylistStatItem(icon: "list.bullet", value: "\(stats.totalPlaylists)", label: "播放列表")
+                    MusicPlaylistStatItem(icon: "music.note", value: "\(stats.totalMusic)", label: "音乐")
+                    MusicPlaylistStatItem(icon: "play.circle", value: "\(stats.totalPlays)", label: "播放")
                 }
             }
         }
@@ -255,7 +255,7 @@ struct PlaybackStatsCard: View {
     }
 }
 
-struct StatItem: View {
+struct MusicPlaylistStatItem: View {
     let icon: String
     let value: String
     let label: String

@@ -243,9 +243,9 @@ struct SummaryCard: View {
                 .font(.headline)
             
             HStack {
-                StatItem(label: "梦境数", value: "\(summary.totalDreams)")
-                StatItem(label: "平均清晰度", value: "\(Int(summary.averageClarity * 100))%")
-                StatItem(label: "清醒梦", value: "\(summary.lucidDreamCount)")
+                ReportStatItem(label: "梦境数", value: "\(summary.totalDreams)")
+                ReportStatItem(label: "平均清晰度", value: "\(Int(summary.averageClarity * 100))%")
+                ReportStatItem(label: "清醒梦", value: "\(summary.lucidDreamCount)")
             }
             
             Text("主导情绪：\(summary.dominantEmotion)")
@@ -274,7 +274,7 @@ struct SummaryCard: View {
 
 // MARK: - 统计项
 
-struct StatItem: View {
+struct ReportStatItem: View {
     let label: String
     let value: String
     
@@ -349,7 +349,7 @@ struct InsightsSection: View {
                 .font(.headline)
             
             ForEach(insights) { insight in
-                InsightCard(insight: insight)
+                ReportInsightCard(insight: insight)
             }
         }
         .padding()
@@ -363,7 +363,7 @@ struct InsightsSection: View {
 
 // MARK: - 洞察卡片
 
-struct InsightCard: View {
+struct ReportInsightCard: View {
     let insight: DreamReport.ReportInsight
     
     var body: some View {

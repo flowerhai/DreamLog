@@ -175,7 +175,7 @@ struct DreamShareHubView: View {
         VStack(spacing: 16) {
             HStack(spacing: 16) {
                 // 总分享数
-                StatCard(
+                ShareHubStatCard(
                     title: "总分享",
                     value: "\(viewModel.stats.totalShares)",
                     icon: "paperplane.fill",
@@ -184,7 +184,7 @@ struct DreamShareHubView: View {
                 .accessibilityAddTraits(.isHeader)
                 
                 // 本周分享
-                StatCard(
+                ShareHubStatCard(
                     title: "本周",
                     value: "\(viewModel.stats.thisWeekShares)",
                     icon: "calendar",
@@ -192,7 +192,7 @@ struct DreamShareHubView: View {
                 )
                 
                 // 平台数
-                StatCard(
+                ShareHubStatCard(
                     title: "平台",
                     value: "\(viewModel.stats.totalPlatforms)",
                     icon: "app.badge",
@@ -383,7 +383,7 @@ struct DreamShareHubView: View {
 
 // MARK: - 统计卡片组件
 
-struct StatCard: View {
+struct ShareHubStatCard: View {
     let title: String
     let value: String
     let icon: String

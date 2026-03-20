@@ -134,7 +134,7 @@ struct GlobalSearchView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(SearchFilter.allCases, id: \.self) { filter in
-                    FilterChip(
+                    GlobalSearchFilterChip(
                         title: filter.rawValue,
                         icon: filter.icon,
                         isSelected: selectedFilter == filter
@@ -326,7 +326,7 @@ struct GlobalSearchView: View {
 
 // MARK: - 筛选器芯片
 
-struct FilterChip: View {
+struct GlobalSearchFilterChip: View {
     let title: String
     let icon: String
     let isSelected: Bool

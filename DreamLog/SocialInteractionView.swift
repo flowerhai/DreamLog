@@ -550,15 +550,15 @@ struct StatsOverviewCard: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 20) {
-                StatItem(icon: "heart", value: "\(stats?.totalLikesReceived ?? 0)", label: "收到的赞")
-                StatItem(icon: "message", value: "\(stats?.totalComments ?? 0)", label: "评论数")
-                StatItem(icon: "bookmark", value: "\(stats?.totalBookmarks ?? 0)", label: "收藏数")
+                SocialInteractStatItem(icon: "heart", value: "\(stats?.totalLikesReceived ?? 0)", label: "收到的赞")
+                SocialInteractStatItem(icon: "message", value: "\(stats?.totalComments ?? 0)", label: "评论数")
+                SocialInteractStatItem(icon: "bookmark", value: "\(stats?.totalBookmarks ?? 0)", label: "收藏数")
             }
             
             HStack(spacing: 20) {
-                StatItem(icon: "person.2", value: "\(stats?.followersCount ?? 0)", label: "粉丝")
-                StatItem(icon: "person.badge.plus", value: "\(stats?.followingCount ?? 0)", label: "关注")
-                StatItem(icon: "star", value: "\(stats?.socialLevel ?? 1)", label: "等级")
+                SocialInteractStatItem(icon: "person.2", value: "\(stats?.followersCount ?? 0)", label: "粉丝")
+                SocialInteractStatItem(icon: "person.badge.plus", value: "\(stats?.followingCount ?? 0)", label: "关注")
+                SocialInteractStatItem(icon: "star", value: "\(stats?.socialLevel ?? 1)", label: "等级")
             }
         }
         .padding()
@@ -573,7 +573,7 @@ struct StatsOverviewCard: View {
     }
 }
 
-struct StatItem: View {
+struct SocialInteractStatItem: View {
     let icon: String
     let value: String
     let label: String

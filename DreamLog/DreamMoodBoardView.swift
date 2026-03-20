@@ -482,28 +482,28 @@ struct MoodBoardStatsView: View {
     
     private var statsOverviewCards: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            StatCard(
+            MoodBoardStatCard(
                 title: "总情绪板",
                 value: "\(stats.totalBoards)",
                 icon: "square.stack.3d.up.fill",
                 color: .purple
             )
             
-            StatCard(
+            MoodBoardStatCard(
                 title: "公开",
                 value: "\(stats.publicBoards)",
                 icon: "globe",
                 color: .blue
             )
             
-            StatCard(
+            MoodBoardStatCard(
                 title: "分享次数",
                 value: "\(stats.totalShares)",
                 icon: "square.and.arrow.up",
                 color: .green
             )
             
-            StatCard(
+            MoodBoardStatCard(
                 title: "浏览次数",
                 value: "\(stats.totalViews)",
                 icon: "eye.fill",
@@ -582,7 +582,7 @@ struct MoodBoardStatsView: View {
 
 // MARK: - 统计卡片组件
 
-struct StatCard: View {
+struct MoodBoardStatCard: View {
     let title: String
     let value: String
     let icon: String
@@ -654,9 +654,9 @@ struct MoodBoardDetailView: View {
                     Divider()
                     
                     HStack {
-                        StatItem(label: "梦境", value: "\(board.dreamIds.count)")
-                        StatItem(label: "分享", value: "\(board.shareCount)")
-                        StatItem(label: "浏览", value: "\(board.viewCount)")
+                        MoodBoardStatItem(label: "梦境", value: "\(board.dreamIds.count)")
+                        MoodBoardStatItem(label: "分享", value: "\(board.shareCount)")
+                        MoodBoardStatItem(label: "浏览", value: "\(board.viewCount)")
                     }
                 }
                 .padding()
@@ -681,7 +681,7 @@ struct MoodBoardDetailView: View {
     }
 }
 
-struct StatItem: View {
+struct MoodBoardStatItem: View {
     let label: String
     let value: String
     

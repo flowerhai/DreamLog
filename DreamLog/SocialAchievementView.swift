@@ -42,7 +42,7 @@ struct SocialAchievementView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(AchievementFilter.allCases, id: \.self) { filter in
-                        FilterChip(
+                        SocialAchieveFilterChip(
                             title: filter.displayName,
                             isSelected: selectedFilter == filter,
                             action: { selectedFilter = filter }
@@ -301,7 +301,7 @@ struct RewardItem: View {
 
 // MARK: - 筛选芯片
 
-struct FilterChip: View {
+struct SocialAchieveFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void

@@ -49,21 +49,21 @@ struct HomeScreenshotView: View {
             
             // 统计网格
             HStack(spacing: 12) {
-                StatCard(
+                ScreenshotStatCard(
                     value: "128",
                     title: "总梦境",
                     icon: "moon.fill",
                     color: .purple
                 )
                 
-                StatCard(
+                ScreenshotStatCard(
                     value: "23",
                     title: "清醒梦",
                     icon: "star.fill",
                     color: .yellow
                 )
                 
-                StatCard(
+                ScreenshotStatCard(
                     value: "8.5",
                     title: "平均清晰",
                     icon: "eye.fill",
@@ -369,8 +369,8 @@ struct ShareHubScreenshotView: View {
     private var statsSection: some View {
         VStack(spacing: 16) {
             HStack(spacing: 12) {
-                StatCard(value: "47", title: "本周分享", icon: "paperplane.fill", color: .blue)
-                StatCard(value: "12", title: "本月分享", icon: "calendar", color: .purple)
+                ScreenshotStatCard(value: "47", title: "本周分享", icon: "paperplane.fill", color: .blue)
+                ScreenshotStatCard(value: "12", title: "本月分享", icon: "calendar", color: .purple)
             }
             
             HStack {
@@ -471,7 +471,7 @@ struct StreakCard: View {
     }
 }
 
-struct StatCard: View {
+struct ScreenshotStatCard: View {
     let value: String
     let title: String
     let icon: String
@@ -735,8 +735,8 @@ struct InsightsDashboardScreenshotView: View {
     
     private var headerStats: some View {
         HStack(spacing: 16) {
-            StatCard(value: "128", title: "总梦境", icon: "moon.fill", color: .purple)
-            StatCard(value: "23", title: "清醒梦", icon: "star.fill", color: .yellow)
+            ScreenshotStatCard(value: "128", title: "总梦境", icon: "moon.fill", color: .purple)
+            ScreenshotStatCard(value: "23", title: "清醒梦", icon: "star.fill", color: .yellow)
         }
     }
     
@@ -997,11 +997,11 @@ struct DreamCommunityScreenshotView: View {
     private var filterSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                FilterChip(text: "🔥 热门", active: true)
-                FilterChip(text: "🕐 最新", active: false)
-                FilterChip(text: "⭐ Top", active: false)
-                FilterChip(text: "👁️ 清醒梦", active: false)
-                FilterChip(text: "👥 关注", active: false)
+                ScreenshotFilterChip(text: "🔥 热门", active: true)
+                ScreenshotFilterChip(text: "🕐 最新", active: false)
+                ScreenshotFilterChip(text: "⭐ Top", active: false)
+                ScreenshotFilterChip(text: "👁️ 清醒梦", active: false)
+                ScreenshotFilterChip(text: "👥 关注", active: false)
             }
             .padding()
         }
@@ -1268,7 +1268,7 @@ struct TimeCapsuleCard: View {
     }
 }
 
-struct FilterChip: View {
+struct ScreenshotFilterChip: View {
     let text: String
     let active: Bool
     

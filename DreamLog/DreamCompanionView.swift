@@ -833,13 +833,13 @@ struct CompanionStatsView: View {
     private func overviewCards(_ stats: CompanionStats) -> some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                StatCard(title: "总会话", value: "\(stats.totalSessions)", icon: "message.fill", color: .blue)
-                StatCard(title: "总消息", value: "\(stats.totalMessages)", icon: "text.bubble.fill", color: .green)
+                CompanionStatCard(title: "总会话", value: "\(stats.totalSessions)", icon: "message.fill", color: .blue)
+                CompanionStatCard(title: "总消息", value: "\(stats.totalMessages)", icon: "text.bubble.fill", color: .green)
             }
             
             HStack(spacing: 12) {
-                StatCard(title: "平均长度", value: String(format: "%.1f", stats.averageSessionLength), icon: "ruler", color: .orange)
-                StatCard(title: "洞察生成", value: "\(stats.insightsGenerated)", icon: "lightbulb.fill", color: .yellow)
+                CompanionStatCard(title: "平均长度", value: String(format: "%.1f", stats.averageSessionLength), icon: "ruler", color: .orange)
+                CompanionStatCard(title: "洞察生成", value: "\(stats.insightsGenerated)", icon: "lightbulb.fill", color: .yellow)
             }
         }
     }
@@ -943,7 +943,7 @@ struct CompanionStatsView: View {
 
 // MARK: - Stat Card
 
-struct StatCard: View {
+struct CompanionStatCard: View {
     let title: String
     let value: String
     let icon: String

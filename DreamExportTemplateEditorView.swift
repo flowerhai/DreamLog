@@ -105,7 +105,7 @@ struct DreamExportTemplateEditorView: View {
         Section {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    FilterChip(
+                    ExportTemplateFilterChip(
                         title: "全部",
                         icon: "📋",
                         isSelected: selectedCategory == nil
@@ -116,7 +116,7 @@ struct DreamExportTemplateEditorView: View {
                     }
                     
                     ForEach(TemplateCategory.allCases) { category in
-                        FilterChip(
+                        ExportTemplateFilterChip(
                             title: category.displayName,
                             icon: category.icon,
                             isSelected: selectedCategory == category
@@ -361,7 +361,7 @@ struct TemplateRow: View {
 
 // MARK: - 分类筛选芯片
 
-struct FilterChip: View {
+struct ExportTemplateFilterChip: View {
     let title: String
     let icon: String
     let isSelected: Bool
@@ -735,9 +735,9 @@ struct StatsCard: View {
                 .font(.headline)
             
             HStack(spacing: 20) {
-                StatItem(label: "使用次数", value: "\(template.usageCount)", icon: "arrow.up.right")
-                StatItem(label: "创建时间", value: formatDate(template.createdAt), icon: "calendar")
-                StatItem(label: "更新时间", value: formatDate(template.updatedAt), icon: "clock")
+                ExportTemplateStatItem(label: "使用次数", value: "\(template.usageCount)", icon: "arrow.up.right")
+                ExportTemplateStatItem(label: "创建时间", value: formatDate(template.createdAt), icon: "calendar")
+                ExportTemplateStatItem(label: "更新时间", value: formatDate(template.updatedAt), icon: "clock")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -753,7 +753,7 @@ struct StatsCard: View {
     }
 }
 
-struct StatItem: View {
+struct ExportTemplateStatItem: View {
     let label: String
     let value: String
     let icon: String

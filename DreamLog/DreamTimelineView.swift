@@ -95,14 +95,14 @@ struct DreamTimelineView: View {
             if let stats = stats {
                 VStack(spacing: 12) {
                     HStack(spacing: 16) {
-                        StatCard(
+                        TimelineStatCard(
                             icon: "moon.fill",
                             value: "\(stats.totalDreams)",
                             label: "梦境总数",
                             color: .purple
                         )
                         
-                        StatCard(
+                        TimelineStatCard(
                             icon: "star.fill",
                             value: "\(stats.totalLucidDreams)",
                             label: "清醒梦",
@@ -111,14 +111,14 @@ struct DreamTimelineView: View {
                     }
                     
                     HStack(spacing: 16) {
-                        StatCard(
+                        TimelineStatCard(
                             icon: "eye.fill",
                             value: String(format: "%.1f", stats.avgClarity),
                             label: "平均清晰度",
                             color: .blue
                         )
                         
-                        StatCard(
+                        TimelineStatCard(
                             icon: "bolt.fill",
                             value: String(format: "%.1f", stats.avgIntensity),
                             label: "平均强度",
@@ -248,7 +248,7 @@ struct DreamTimelineView: View {
 
 // MARK: - 统计卡片组件
 
-struct StatCard: View {
+struct TimelineStatCard: View {
     let icon: String
     let value: String
     let label: String

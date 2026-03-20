@@ -109,7 +109,7 @@ struct DreamRecommendationsView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(RecommendationFilter.allCases, id: \.self) { filter in
-                    FilterChip(
+                    RecommendationsFilterChip(
                         title: filter.displayName,
                         isSelected: selectedFilter == filter,
                         action: { selectedFilter = filter }
@@ -305,7 +305,7 @@ struct ConfidenceIndicator: View {
 
 // MARK: - 筛选芯片
 
-struct FilterChip: View {
+struct RecommendationsFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void

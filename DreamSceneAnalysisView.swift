@@ -86,7 +86,7 @@ struct DreamSceneAnalysisView: View {
     private var overviewCards: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                StatCard(
+                SceneAnalysisStatCard(
                     title: "已分析梦境",
                     value: "\(viewModel.summary.analyzedDreams)",
                     subtitle: "共 \(viewModel.summary.totalDreams) 个",
@@ -94,7 +94,7 @@ struct DreamSceneAnalysisView: View {
                     color: .purple
                 )
                 
-                StatCard(
+                SceneAnalysisStatCard(
                     title: "场景多样性",
                     value: String(format: "%.2f", viewModel.summary.sceneDiversity),
                     subtitle: diversityDescription(viewModel.summary.sceneDiversity),
@@ -104,7 +104,7 @@ struct DreamSceneAnalysisView: View {
             }
             
             HStack(spacing: 12) {
-                StatCard(
+                SceneAnalysisStatCard(
                     title: "最常见场景",
                     value: viewModel.summary.favoriteScene?.displayName ?? "-",
                     subtitle: topScenePercentage,
@@ -112,7 +112,7 @@ struct DreamSceneAnalysisView: View {
                     color: viewModel.summary.favoriteScene?.color ?? .gray
                 )
                 
-                StatCard(
+                SceneAnalysisStatCard(
                     title: "平均置信度",
                     value: String(format: "%.0f%%", viewModel.summary.averageConfidence * 100),
                     subtitle: "分析准确度",
@@ -245,7 +245,7 @@ struct DreamSceneAnalysisView: View {
                     .padding()
             } else {
                 ForEach(viewModel.insights) { insight in
-                    InsightCard(insight: insight)
+                    SceneAnalysisInsightCard(insight: insight)
                 }
             }
         }
@@ -302,7 +302,7 @@ struct DreamSceneAnalysisView: View {
 
 // MARK: - Supporting Views
 
-struct StatCard: View {
+struct SceneAnalysisStatCard: View {
     let title: String
     let value: String
     let subtitle: String
@@ -389,7 +389,7 @@ struct SceneTypeCard: View {
     }
 }
 
-struct InsightCard: View {
+struct SceneAnalysisInsightCard: View {
     let insight: SceneInsight
     
     var body: some View {

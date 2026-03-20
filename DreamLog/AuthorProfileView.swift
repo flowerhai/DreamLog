@@ -166,28 +166,28 @@ struct AuthorProfileView: View {
     /// 统计卡片
     private func statsCards(author: SocialAuthor) -> some View {
         HStack(spacing: 12) {
-            StatCard(
+            AuthorProfileStatCard(
                 value: "\(author.dreamCount)",
                 label: "梦境",
                 icon: "moon.fill",
                 color: .purple
             )
             
-            StatCard(
+            AuthorProfileStatCard(
                 value: "\(author.followerCount)",
                 label: "粉丝",
                 icon: "person.2.fill",
                 color: .blue
             )
             
-            StatCard(
+            AuthorProfileStatCard(
                 value: "\(author.followingCount)",
                 label: "关注",
                 icon: "person.badge.plus",
                 color: .green
             )
             
-            StatCard(
+            AuthorProfileStatCard(
                 value: "\(author.influenceScore, specifier: "%.0f")",
                 label: "影响力",
                 icon: "star.fill",
@@ -379,7 +379,7 @@ struct AuthorProfileView: View {
 // MARK: - StatCard
 
 /// 统计卡片组件
-struct StatCard: View {
+struct AuthorProfileStatCard: View {
     let value: String
     let label: String
     let icon: String

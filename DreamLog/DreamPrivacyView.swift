@@ -443,7 +443,7 @@ struct PrivacyStatsView: View {
     var body: some View {
         VStack(spacing: 16) {
             // 总锁定数
-            StatCard(
+            PrivacyStatCard(
                 title: "已锁定梦境",
                 value: "\(stats.totalLockedDreams)",
                 icon: "lock.fill",
@@ -452,7 +452,7 @@ struct PrivacyStatsView: View {
             
             HStack(spacing: 16) {
                 // 本周锁定
-                StatCard(
+                PrivacyStatCard(
                     title: "本周",
                     value: "+\(stats.lockedThisWeek)",
                     icon: "calendar",
@@ -460,7 +460,7 @@ struct PrivacyStatsView: View {
                 )
                 
                 // 本月锁定
-                StatCard(
+                PrivacyStatCard(
                     title: "本月",
                     value: "+\(stats.lockedThisMonth)",
                     icon: "calendar.badge.clock",
@@ -494,7 +494,7 @@ struct PrivacyStatsView: View {
 
 // MARK: - Stat Card Component
 
-struct StatCard: View {
+struct PrivacyStatCard: View {
     let title: String
     let value: String
     let icon: String

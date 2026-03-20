@@ -163,14 +163,14 @@ struct DreamWeatherView: View {
     private func overviewCards(_ stats: DreamWeatherStatistics) -> some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                StatCard(
+                WeatherStatCard(
                     title: "有天气数据的梦境",
                     value: "\(stats.totalDreamsWithWeather)",
                     icon: "cloud.sun",
                     color: .blue
                 )
                 
-                StatCard(
+                WeatherStatCard(
                     title: "平均温度",
                     value: stats.averageTemperature.map { String(format: "%.1f°C", $0) } ?? "N/A",
                     icon: "thermometer.medium",
@@ -179,14 +179,14 @@ struct DreamWeatherView: View {
             }
             
             HStack(spacing: 12) {
-                StatCard(
+                WeatherStatCard(
                     title: "平均湿度",
                     value: stats.averageHumidity.map { String(format: "%.0f%%", $0) } ?? "N/A",
                     icon: "drop",
                     color: .cyan
                 )
                 
-                StatCard(
+                WeatherStatCard(
                     title: "平均气压",
                     value: stats.averagePressure.map { String(format: "%.0f hPa", $0) } ?? "N/A",
                     icon: "gauge.medium",
@@ -354,7 +354,7 @@ struct DreamWeatherView: View {
 
 // MARK: - Subviews
 
-struct StatCard: View {
+struct WeatherStatCard: View {
     let title: String
     let value: String
     let icon: String

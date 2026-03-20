@@ -537,7 +537,7 @@ struct FilterPickerView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 16) {
                     ForEach(ImageFilter.allCases) { filter in
-                        FilterChip(
+                        ShareCardEditFilterChip(
                             filter: filter,
                             isSelected: selectedFilters.contains(filter)
                         ) {
@@ -564,7 +564,7 @@ struct FilterPickerView: View {
     }
 }
 
-struct FilterChip: View {
+struct ShareCardEditFilterChip: View {
     let filter: ImageFilter
     let isSelected: Bool
     let action: () -> Void

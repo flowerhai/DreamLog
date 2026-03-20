@@ -822,9 +822,9 @@ struct CircleStatsCard: View {
     
     var body: some View {
         HStack(spacing: 20) {
-            StatItem(icon: "person.3.fill", value: "\(circle.memberCount)", label: "成员")
-            StatItem(icon: "doc.text.fill", value: "\(circle.totalSharedDreams)", label: "梦境")
-            StatItem(icon: "star.fill", value: "\(circle.members.reduce(0) { $0 + $1.commentCount })", label: "评论")
+            ShareCircleStatItem(icon: "person.3.fill", value: "\(circle.memberCount)", label: "成员")
+            ShareCircleStatItem(icon: "doc.text.fill", value: "\(circle.totalSharedDreams)", label: "梦境")
+            ShareCircleStatItem(icon: "star.fill", value: "\(circle.members.reduce(0) { $0 + $1.commentCount })", label: "评论")
         }
         .padding()
         .background(Color(.secondarySystemBackground))
@@ -833,7 +833,7 @@ struct CircleStatsCard: View {
     }
 }
 
-struct StatItem: View {
+struct ShareCircleStatItem: View {
     let icon: String
     let value: String
     let label: String

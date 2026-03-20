@@ -259,21 +259,21 @@ struct StatsOverviewSection: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            StatCard(
+            InsightsViewStatCard(
                 title: "总梦境",
                 value: "\(stats.totalDreams)",
                 icon: "🌙",
                 color: Color(hex: "6B4E9A")
             )
             
-            StatCard(
+            InsightsViewStatCard(
                 title: "清醒梦",
                 value: "\(stats.lucidDreams)",
                 icon: "✨",
                 color: Color(hex: "FFD700")
             )
             
-            StatCard(
+            InsightsViewStatCard(
                 title: "平均清晰",
                 value: String(format: "%.1f", stats.averageClarity),
                 icon: "⭐",
@@ -284,7 +284,7 @@ struct StatsOverviewSection: View {
 }
 
 // MARK: - 统计卡片
-struct StatCard: View {
+struct InsightsViewStatCard: View {
     let title: String
     let value: String
     let icon: String

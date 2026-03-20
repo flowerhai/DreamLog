@@ -282,19 +282,19 @@ struct SleepStatsCard: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 20) {
-                StatItem(
+                SleepDataStatItem(
                     icon: "bed.double",
                     value: String(format: "%.1f", averageHours),
                     label: "平均时长 (小时)"
                 )
                 
-                StatItem(
+                SleepDataStatItem(
                     icon: "moon.stars",
                     value: "\(records.count)",
                     label: "记录天数"
                 )
                 
-                StatItem(
+                SleepDataStatItem(
                     icon: "heart",
                     value: qualityDistribution.excellent.description,
                     label: "优质睡眠"
@@ -348,7 +348,7 @@ struct SleepStatsCard: View {
     }
 }
 
-struct StatItem: View {
+struct SleepDataStatItem: View {
     let icon: String
     let value: String
     let label: String
@@ -509,13 +509,13 @@ struct SleepHeaderCard: View {
             }
             
             HStack(spacing: 30) {
-                DetailStatItem(
+                DetailSleepDataStatItem(
                     icon: "clock",
                     value: record.durationFormatted,
                     label: "总时长"
                 )
                 
-                DetailStatItem(
+                DetailSleepDataStatItem(
                     icon: "bed.double",
                     value: "\(record.startTimeFormatted) - \(record.endTimeFormatted)",
                     label: "睡眠时间"

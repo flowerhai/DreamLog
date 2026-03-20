@@ -119,21 +119,21 @@ struct StatsOverviewCard: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack(spacing: 20) {
-                StatItem(
+                IncubationStatItem(
                     value: "\(stats.totalSessions)",
                     label: "总会话",
                     icon: "list.bullet",
                     color: .blue
                 )
                 
-                StatItem(
+                IncubationStatItem(
                     value: "\(stats.completedSessions)",
                     label: "已完成",
                     icon: "checkmark.circle.fill",
                     color: .green
                 )
                 
-                StatItem(
+                IncubationStatItem(
                     value: String(format: "%.1f", stats.averageSuccessRating),
                     label: "平均评分",
                     icon: "star.fill",
@@ -142,21 +142,21 @@ struct StatsOverviewCard: View {
             }
             
             HStack(spacing: 20) {
-                StatItem(
+                IncubationStatItem(
                     value: String(format: "%.0f%%", stats.successRate * 100),
                     label: "成功率",
                     icon: "arrow.up.right.circle.fill",
                     color: .purple
                 )
                 
-                StatItem(
+                IncubationStatItem(
                     value: "\(stats.streakDays)天",
                     label: "连续记录",
                     icon: "flame.fill",
                     color: .orange
                 )
                 
-                StatItem(
+                IncubationStatItem(
                     value: "\(stats.pendingSessions)",
                     label: "待完成",
                     icon: "clock.fill",
@@ -174,7 +174,7 @@ struct StatsOverviewCard: View {
 }
 
 /// 统计项
-struct StatItem: View {
+struct IncubationStatItem: View {
     let value: String
     let label: String
     let icon: String

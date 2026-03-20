@@ -1060,14 +1060,14 @@ struct TrainingStatsView: View {
             VStack(spacing: 20) {
                 // 概览统计
                 HStack(spacing: 16) {
-                    StatCard(title: "总练习次数", value: "\(service.techniques.reduce(0) { $0 + $1.totalPracticeDays })", icon: "repeat", color: .purple)
-                    StatCard(title: "总成功次数", value: "\(service.techniques.reduce(0) { $0 + $1.successCount })", icon: "checkmark.star", color: .green)
+                    LucidStatCard(title: "总练习次数", value: "\(service.techniques.reduce(0) { $0 + $1.totalPracticeDays })", icon: "repeat", color: .purple)
+                    LucidStatCard(title: "总成功次数", value: "\(service.techniques.reduce(0) { $0 + $1.successCount })", icon: "checkmark.star", color: .green)
                 }
                 
                 HStack(spacing: 16) {
                     let stats = service.getRealityCheckStats()
-                    StatCard(title: "现实检查", value: "\(stats.total)", icon: "hand.raised", color: .blue)
-                    StatCard(title: "异常发现", value: "\(stats.anomalous)", icon: "exclamationmark.triangle", color: .orange)
+                    LucidStatCard(title: "现实检查", value: "\(stats.total)", icon: "hand.raised", color: .blue)
+                    LucidStatCard(title: "异常发现", value: "\(stats.anomalous)", icon: "exclamationmark.triangle", color: .orange)
                 }
                 
                 // 技巧进度
@@ -1137,7 +1137,7 @@ struct TrainingStatsView: View {
     }
 }
 
-struct StatCard: View {
+struct LucidStatCard: View {
     let title: String
     let value: String
     let icon: String

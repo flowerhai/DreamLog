@@ -88,7 +88,7 @@ struct SoundLibraryView: View {
                 // 分类筛选
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
-                        FilterChip(
+                        MeditationFilterChip(
                             title: "全部",
                             icon: "􀆮",
                             isSelected: selectedCategory == nil
@@ -97,7 +97,7 @@ struct SoundLibraryView: View {
                         }
                         
                         ForEach(SoundCategory.allCases, id: \.self) { category in
-                            FilterChip(
+                            MeditationFilterChip(
                                 title: category.rawValue,
                                 icon: category.icon,
                                 isSelected: selectedCategory == category
@@ -122,7 +122,7 @@ struct SoundLibraryView: View {
     }
 }
 
-struct FilterChip: View {
+struct MeditationFilterChip: View {
     let title: String
     let icon: String
     let isSelected: Bool

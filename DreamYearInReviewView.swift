@@ -236,28 +236,28 @@ struct DreamYearInReviewView: View {
     
     private func statsGrid(_ review: DreamYearInReview) -> some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            StatCard(
+            YearInReviewStatCard(
                 icon: "moon.fill",
                 value: "\(review.totalDreams)",
                 label: "总梦境数",
                 color: .purple
             )
             
-            StatCard(
+            YearInReviewStatCard(
                 icon: "eye.fill",
                 value: "\(review.lucidDreams)",
                 label: "清醒梦",
                 color: .blue
             )
             
-            StatCard(
+            YearInReviewStatCard(
                 icon: "star.fill",
                 value: String(format: "%.1f", review.averageClarity),
                 label: "平均清晰度",
                 color: .orange
             )
             
-            StatCard(
+            YearInReviewStatCard(
                 icon: "flame.fill",
                 value: "\(review.longestStreak)",
                 label: "最长连续",
@@ -340,7 +340,7 @@ struct DreamYearInReviewView: View {
                 .font(.headline)
             
             ForEach(review.aiInsights, id: \.id) { insight in
-                InsightCard(insight: insight)
+                YearInReviewInsightCard(insight: insight)
             }
         }
         .padding()
@@ -427,7 +427,7 @@ struct DreamYearInReviewView: View {
 
 // MARK: - 统计卡片组件
 
-struct StatCard: View {
+struct YearInReviewStatCard: View {
     let icon: String
     let value: String
     let label: String
@@ -479,7 +479,7 @@ struct TagChip: View {
 
 // MARK: - 洞察卡片组件
 
-struct InsightCard: View {
+struct YearInReviewInsightCard: View {
     let insight: YearInReviewInsight
     
     var body: some View {

@@ -97,21 +97,21 @@ struct DreamCloudBackupView: View {
         Section {
             VStack(spacing: 12) {
                 HStack(spacing: 16) {
-                    StatCard(
+                    CloudBackupStatCard(
                         title: "已连接",
                         value: "\(statistics.connectedConfigs)",
                         icon: "checkmark.circle.fill",
                         color: .green
                     )
                     
-                    StatCard(
+                    CloudBackupStatCard(
                         title: "总备份",
                         value: "\(statistics.totalBackups)",
                         icon: "arrow.up.circle.fill",
                         color: .blue
                     )
                     
-                    StatCard(
+                    CloudBackupStatCard(
                         title: "存储使用",
                         value: statistics.totalSizeFormatted,
                         icon: "externaldrive.fill",
@@ -251,7 +251,7 @@ struct DreamCloudBackupView: View {
 
 // MARK: - Subviews
 
-struct StatCard: View {
+struct CloudBackupStatCard: View {
     let title: String
     let value: String
     let icon: String

@@ -390,9 +390,9 @@ struct PlaylistDetailView: View {
                     }
                     
                     HStack(spacing: 20) {
-                        StatItem(icon: "music.note", value: "\(playlist.itemCount)", label: "梦境")
-                        StatItem(icon: "clock", value: playlist.formattedDuration, label: "时长")
-                        StatItem(icon: "play.circle", value: "\(playlist.playCount)", label: "播放")
+                        PlaylistStatItem(icon: "music.note", value: "\(playlist.itemCount)", label: "梦境")
+                        PlaylistStatItem(icon: "clock", value: playlist.formattedDuration, label: "时长")
+                        PlaylistStatItem(icon: "play.circle", value: "\(playlist.playCount)", label: "播放")
                     }
                     .font(.caption)
                 }
@@ -468,7 +468,7 @@ struct PlaylistDetailView: View {
 
 // MARK: - Supporting Views
 
-struct StatItem: View {
+struct PlaylistStatItem: View {
     let icon: String
     let value: String
     let label: String

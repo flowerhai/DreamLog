@@ -320,21 +320,21 @@ struct AdvancedDashboardView: View {
             GridItem(.flexible()),
             GridItem(.flexible())
         ], spacing: 12) {
-            StatCard(
+            AdvancedDashStatCard(
                 title: "总梦境数",
                 value: "\(stats.totalDreams)",
                 icon: "book.fill",
                 color: .blue
             )
             
-            StatCard(
+            AdvancedDashStatCard(
                 title: "记录天数",
                 value: "\(stats.totalDays)",
                 icon: "calendar",
                 color: .green
             )
             
-            StatCard(
+            AdvancedDashStatCard(
                 title: "清醒梦",
                 value: "\(stats.lucidDreamCount)",
                 subtitle: "\(String(format: "%.1f", stats.lucidDreamPercentage))%",
@@ -342,7 +342,7 @@ struct AdvancedDashboardView: View {
                 color: .purple
             )
             
-            StatCard(
+            AdvancedDashStatCard(
                 title: "平均清晰度",
                 value: String(format: "%.1f", stats.averageClarity),
                 subtitle: "/ 5.0",
@@ -653,11 +653,11 @@ struct AdvancedDashboardView: View {
             
             if let report = correlationService.correlationReport {
                 ForEach(report.insights, id: \.id) { insight in
-                    InsightCard(insight: insight)
+                    AdvancedDashInsightCard(insight: insight)
                 }
             } else if let report = trendService.trendReport {
                 ForEach(report.predictions.prefix(3), id: \.id) { prediction in
-                    InsightCard(
+                    AdvancedDashInsightCard(
                         title: prediction.type.rawValue,
                         description: prediction.description,
                         confidence: prediction.confidence,
@@ -1154,7 +1154,7 @@ struct AdvancedDashboardView: View {
 
 // MARK: - 子组件
 
-struct StatCard: View {
+struct AdvancedDashStatCard: View {
     let title: String
     let value: String
     var subtitle: String?
@@ -1558,7 +1558,7 @@ struct TrendRow: View {
     }
 }
 
-struct InsightCard: View {
+struct AdvancedDashInsightCard: View {
     let title: String
     let description: String
     let confidence: Double

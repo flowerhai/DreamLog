@@ -148,28 +148,28 @@ struct DreamTimeCapsuleView: View {
     private var statsSection: some View {
         Section {
             HStack(spacing: 12) {
-                StatCard(
+                TimeCapsuleStatCard(
                     value: "\(service.stats.totalCapsules)",
                     label: "总数",
                     icon: "hourglass",
                     color: .orange
                 )
                 
-                StatCard(
+                TimeCapsuleStatCard(
                     value: "\(service.stats.lockedCapsules)",
                     label: "锁定中",
                     icon: "lock",
                     color: .blue
                 )
                 
-                StatCard(
+                TimeCapsuleStatCard(
                     value: "\(service.stats.unlockedCapsules)",
                     label: "已解锁",
                     icon: "lock.open",
                     color: .green
                 )
                 
-                StatCard(
+                TimeCapsuleStatCard(
                     value: "\(service.stats.capsulesReadyToUnlock)",
                     label: "可解锁",
                     icon: "bell.badge",
@@ -186,14 +186,14 @@ struct DreamTimeCapsuleView: View {
         Section("筛选") {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    FilterChip(
+                    TimeCapsuleFilterChip(
                         title: "全部",
                         isSelected: filterType == nil,
                         onTap: { filterType = nil }
                     )
                     
                     ForEach(TimeCapsuleType.allCases, id: \.self) { type in
-                        FilterChip(
+                        TimeCapsuleFilterChip(
                             title: type.icon + " " + type.displayName.replacingOccurrences(of: " ", with: ""),
                             isSelected: filterType == type,
                             onTap: { filterType = filterType == type ? nil : type }
@@ -205,14 +205,14 @@ struct DreamTimeCapsuleView: View {
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    FilterChip(
+                    TimeCapsuleFilterChip(
                         title: "全部状态",
                         isSelected: filterStatus == nil,
                         onTap: { filterStatus = nil }
                     )
                     
                     ForEach(TimeCapsuleStatus.allCases, id: \.self) { status in
-                        FilterChip(
+                        TimeCapsuleFilterChip(
                             title: status.displayName.replacingOccurrences(of: " ", with: ""),
                             isSelected: filterStatus == status,
                             onTap: { filterStatus = filterStatus == status ? nil : status }
@@ -260,7 +260,7 @@ struct DreamTimeCapsuleView: View {
 
 // MARK: - 子组件
 
-struct StatCard: View {
+struct TimeCapsuleStatCard: View {
     let value: String
     let label: String
     let icon: String
@@ -287,7 +287,7 @@ struct StatCard: View {
     }
 }
 
-struct FilterChip: View {
+struct TimeCapsuleFilterChip: View {
     let title: String
     let isSelected: Bool
     let onTap: () -> Void

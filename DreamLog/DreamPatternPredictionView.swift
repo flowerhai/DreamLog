@@ -194,28 +194,28 @@ struct DreamPatternPredictionView: View {
                 .padding(.horizontal)
             
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                StatCard(
+                PatternPredStatCard(
                     title: "总梦境数",
                     value: "\(statistics.totalDreams)",
                     icon: "📝",
                     color: .blue
                 )
                 
-                StatCard(
+                PatternPredStatCard(
                     title: "平均清晰度",
                     value: String(format: "%.1f", statistics.averageClarity),
                     icon: "✨",
                     color: .purple
                 )
                 
-                StatCard(
+                PatternPredStatCard(
                     title: "清醒梦比例",
                     value: String(format: "%.1f%%", statistics.lucidDreamPercentage),
                     icon: "🌟",
                     color: .orange
                 )
                 
-                StatCard(
+                PatternPredStatCard(
                     title: "连续记录",
                     value: "\(statistics.recordingStreak) 天",
                     icon: "🔥",
@@ -248,7 +248,7 @@ struct DreamPatternPredictionView: View {
                 .padding(.horizontal)
             
             ForEach(insights) { insight in
-                InsightCard(insight: insight)
+                PatternPredInsightCard(insight: insight)
             }
             
             if insights.isEmpty {
@@ -370,7 +370,7 @@ struct DreamPatternPredictionView: View {
 
 // MARK: - Stat Card Component
 
-struct StatCard: View {
+struct PatternPredStatCard: View {
     let title: String
     let value: String
     let icon: String
@@ -499,7 +499,7 @@ struct PredictionCard: View {
 
 // MARK: - Insight Card Component
 
-struct InsightCard: View {
+struct PatternPredInsightCard: View {
     let insight: PredictionInsight
     
     var body: some View {

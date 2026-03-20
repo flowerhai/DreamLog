@@ -145,9 +145,9 @@ struct DreamUserProfileView: View {
             // 影响力评分
             if let stats = currentUser?.stats {
                 HStack(spacing: 20) {
-                    StatItem(icon: "🏆", value: "\(stats.influenceScore)", label: "影响力")
-                    StatItem(icon: "💡", value: "\(stats.interpretationsAdded)", label: "解读")
-                    StatItem(icon: "👥", value: "\(stats.followersCount)", label: "粉丝")
+                    UserProfileStatItem(icon: "🏆", value: "\(stats.influenceScore)", label: "影响力")
+                    UserProfileStatItem(icon: "💡", value: "\(stats.interpretationsAdded)", label: "解读")
+                    UserProfileStatItem(icon: "👥", value: "\(stats.followersCount)", label: "粉丝")
                 }
             }
         }
@@ -161,28 +161,28 @@ struct DreamUserProfileView: View {
     
     private var statsCards: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            StatCard(
+            UserProfileStatCard(
                 icon: "📝",
                 title: "创建会话",
                 value: "\(currentUser?.stats.sessionsCreated ?? 0)",
                 color: .blue
             )
             
-            StatCard(
+            UserProfileStatCard(
                 icon: "💬",
                 title: "发布评论",
                 value: "\(currentUser?.stats.commentsPosted ?? 0)",
                 color: .green
             )
             
-            StatCard(
+            UserProfileStatCard(
                 icon: "❤️",
                 title: "获得点赞",
                 value: "\(currentUser?.stats.likesReceived ?? 0)",
                 color: .red
             )
             
-            StatCard(
+            UserProfileStatCard(
                 icon: "🔥",
                 title: "连续活跃",
                 value: "\(currentUser?.stats.currentStreak ?? 0) 天",
@@ -273,7 +273,7 @@ struct DreamUserProfileView: View {
                 .font(.headline)
             
             HStack(spacing: 20) {
-                SocialStatItem(
+                SocialUserProfileStatItem(
                     icon: "👥",
                     title: "关注",
                     count: currentUser?.stats.followingCount ?? 0
@@ -282,7 +282,7 @@ struct DreamUserProfileView: View {
                 Divider()
                     .frame(height: 40)
                 
-                SocialStatItem(
+                SocialUserProfileStatItem(
                     icon: "🌟",
                     title: "粉丝",
                     count: currentUser?.stats.followersCount ?? 0
@@ -321,7 +321,7 @@ struct DreamUserProfileView: View {
 
 // MARK: - Supporting Views
 
-struct StatCard: View {
+struct UserProfileStatCard: View {
     let icon: String
     let title: String
     let value: String
@@ -345,7 +345,7 @@ struct StatCard: View {
     }
 }
 
-struct StatItem: View {
+struct UserProfileStatItem: View {
     let icon: String
     let value: String
     let label: String

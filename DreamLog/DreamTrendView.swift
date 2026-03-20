@@ -144,7 +144,7 @@ struct DreamTrendView: View {
             
             HStack(spacing: 20) {
                 // 平均清晰度
-                StatItem(
+                TrendStatItem(
                     icon: "eye.fill",
                     label: "平均清晰度",
                     value: String(format: "%.1f", report.averageClarity),
@@ -153,7 +153,7 @@ struct DreamTrendView: View {
                 )
                 
                 // 清醒梦频率
-                StatItem(
+                TrendStatItem(
                     icon: "brain.head.profile",
                     label: "清醒梦",
                     value: String(format: "%.0f%%", report.lucidDreamFrequency),
@@ -162,7 +162,7 @@ struct DreamTrendView: View {
                 )
                 
                 // 情绪稳定性
-                StatItem(
+                TrendStatItem(
                     icon: "heart.fill",
                     label: "情绪稳定",
                     value: String(format: "%.0f%%", report.emotionStability * 100),
@@ -416,7 +416,7 @@ struct DreamTrendView: View {
 
 // MARK: - 子组件
 
-struct StatItem: View {
+struct TrendStatItem: View {
     let icon: String
     let label: String
     let value: String

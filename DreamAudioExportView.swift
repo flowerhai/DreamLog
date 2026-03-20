@@ -424,19 +424,19 @@ struct OverviewStatsCard: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             HStack(spacing: 16) {
-                StatItem(
+                AudioExportStatItem(
                     icon: "music.note.list",
                     value: "\(stats.totalExports)",
                     label: "总导出"
                 )
                 
-                StatItem(
+                AudioExportStatItem(
                     icon: "clock",
                     value: formatDuration(stats.totalDuration),
                     label: "总时长"
                 )
                 
-                StatItem(
+                AudioExportStatItem(
                     icon: "externaldrive",
                     value: formatFileSize(stats.totalFileSize),
                     label: "总大小"
@@ -467,7 +467,7 @@ struct OverviewStatsCard: View {
     }
 }
 
-struct StatItem: View {
+struct AudioExportStatItem: View {
     let icon: String
     let value: String
     let label: String

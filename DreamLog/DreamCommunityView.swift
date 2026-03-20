@@ -49,7 +49,7 @@ struct DreamCommunityView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
                 ForEach(CommunityFilter.allCases, id: \.self) { filter in
-                    FilterChip(
+                    DreamCommunityFilterChip(
                         title: filter.displayName,
                         icon: filter.icon,
                         isSelected: selectedFilter == filter,
@@ -166,7 +166,7 @@ struct DreamCommunityView: View {
 
 // MARK: - 筛选芯片
 
-struct FilterChip: View {
+struct DreamCommunityFilterChip: View {
     let title: String
     let icon: String
     let isSelected: Bool

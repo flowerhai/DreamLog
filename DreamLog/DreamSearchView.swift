@@ -162,7 +162,7 @@ struct FilterBar: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(DreamSearchView.FilterType.allCases, id: \.self) { filter in
-                        FilterChip(
+                        SearchFilterChip(
                             title: filter.rawValue,
                             isSelected: selectedFilter == filter
                         ) {
@@ -227,7 +227,7 @@ struct FilterBar: View {
 }
 
 // MARK: - 过滤器芯片
-struct FilterChip: View {
+struct SearchFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void

@@ -332,9 +332,9 @@ struct StatsSummarySection: View {
                 .foregroundColor(.white)
             
             HStack(spacing: 12) {
-                StatItem(icon: "🌙", value: "\(stats.totalDreams)", label: "总梦境")
-                StatItem(icon: "✨", value: "\(stats.lucidDreams)", label: "清醒梦")
-                StatItem(icon: "⭐", value: String(format: "%.1f", stats.averageClarity), label: "平均清晰")
+                GoalsStatItem(icon: "🌙", value: "\(stats.totalDreams)", label: "总梦境")
+                GoalsStatItem(icon: "✨", value: "\(stats.lucidDreams)", label: "清醒梦")
+                GoalsStatItem(icon: "⭐", value: String(format: "%.1f", stats.averageClarity), label: "平均清晰")
             }
         }
         .padding(20)
@@ -345,7 +345,7 @@ struct StatsSummarySection: View {
     }
 }
 
-struct StatItem: View {
+struct GoalsStatItem: View {
     let icon: String
     let value: String
     let label: String

@@ -181,7 +181,7 @@ public struct DreamExportGalleryView: View {
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    FilterChip(
+                    ExportGalleryFilterChip(
                         title: "全部",
                         icon: "square.grid.2x2",
                         isSelected: filter.type == nil
@@ -191,7 +191,7 @@ public struct DreamExportGalleryView: View {
                     }
                     
                     ForEach(DreamExportType.allCases, id: \.self) { type in
-                        FilterChip(
+                        ExportGalleryFilterChip(
                             title: type.displayName,
                             icon: type.icon,
                             isSelected: filter.type == type
@@ -355,7 +355,7 @@ struct StatBox: View {
 
 // MARK: - 筛选芯片组件
 
-struct FilterChip: View {
+struct ExportGalleryFilterChip: View {
     let title: String
     let icon: String
     let isSelected: Bool
@@ -599,9 +599,9 @@ struct ExportDetailView: View {
                 .font(.headline)
             
             HStack(spacing: 16) {
-                StatItem(icon: "square.and.arrow.up", value: "\(export.shareCount)", label: "分享")
-                StatItem(icon: "eye", value: "\(export.viewCount)", label: "浏览")
-                StatItem(icon: "calendar", value: export.formattedExportDate, label: "日期")
+                ExportGalleryStatItem(icon: "square.and.arrow.up", value: "\(export.shareCount)", label: "分享")
+                ExportGalleryStatItem(icon: "eye", value: "\(export.viewCount)", label: "浏览")
+                ExportGalleryStatItem(icon: "calendar", value: export.formattedExportDate, label: "日期")
             }
         }
         .padding()
@@ -661,7 +661,7 @@ struct InfoRow: View {
     }
 }
 
-struct StatItem: View {
+struct ExportGalleryStatItem: View {
     let icon: String
     let value: String
     let label: String

@@ -152,7 +152,7 @@ struct FriendsView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(FriendDreamFilter.allCases, id: \.self) { filter in
-                        FilterChip(
+                        FriendsFilterChip(
                             title: filter.icon + " " + filter.rawValue,
                             isSelected: false
                         ) {
@@ -533,7 +533,7 @@ struct FriendDreamRowView: View {
 }
 
 // MARK: - 筛选芯片
-struct FilterChip: View {
+struct FriendsFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void

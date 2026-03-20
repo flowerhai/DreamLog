@@ -78,28 +78,28 @@ struct InspirationStatsCard: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 16) {
-                StatItem(
+                InspirationStatItem(
                     value: "\(stats.totalPrompts)",
                     label: "总提示",
                     icon: "lightbulb",
                     color: .purple
                 )
                 
-                StatItem(
+                InspirationStatItem(
                     value: "\(stats.completedPrompts)",
                     label: "已完成",
                     icon: "checkmark.circle",
                     color: .green
                 )
                 
-                StatItem(
+                InspirationStatItem(
                     value: "\(stats.streakDays)",
                     label: "连续天数",
                     icon: "flame",
                     color: .orange
                 )
                 
-                StatItem(
+                InspirationStatItem(
                     value: "\(stats.activeChallenges)",
                     label: "进行中挑战",
                     icon: "trophy",
@@ -123,7 +123,7 @@ struct InspirationStatsCard: View {
     }
 }
 
-struct StatItem: View {
+struct InspirationStatItem: View {
     let value: String
     let label: String
     let icon: String
@@ -155,7 +155,7 @@ struct FilterBar: View {
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChip(
+                InspirationFilterChip(
                     title: "全部",
                     icon: "grid",
                     isSelected: selectedType == nil,
@@ -165,7 +165,7 @@ struct FilterBar: View {
                 }
                 
                 ForEach(InspirationType.allCases) { type in
-                    FilterChip(
+                    InspirationFilterChip(
                         title: type.rawValue,
                         icon: type.icon,
                         isSelected: selectedType == type,
@@ -181,7 +181,7 @@ struct FilterBar: View {
     }
 }
 
-struct FilterChip: View {
+struct InspirationFilterChip: View {
     let title: String
     let icon: String
     let isSelected: Bool

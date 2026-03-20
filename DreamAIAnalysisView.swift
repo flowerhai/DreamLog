@@ -218,7 +218,7 @@ struct DreamAIAnalysisView: View {
         ) {
             VStack(spacing: 12) {
                 ForEach(analysis.insights) { insight in
-                    InsightCard(insight: insight)
+                    AIAnalysisInsightCard(insight: insight)
                 }
             }
         }
@@ -369,7 +369,7 @@ struct PatternCard: View {
 
 // MARK: - 洞察卡片
 
-struct InsightCard: View {
+struct AIAnalysisInsightCard: View {
     let insight: DreamInsight
     
     var body: some View {

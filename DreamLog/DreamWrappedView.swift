@@ -398,21 +398,21 @@ struct OverviewCard: View {
                 .foregroundColor(.white.opacity(0.9))
             
             HStack(spacing: 30) {
-                StatCard(
+                WrappedStatCard(
                     value: "\(data.totalDreams)",
                     label: "总梦境数",
                     icon: "moon.fill",
                     color: Color(hex: "7B61FF")
                 )
                 
-                StatCard(
+                WrappedStatCard(
                     value: "\(data.lucidDreamCount)",
                     label: "清醒梦",
                     icon: "eye.fill",
                     color: Color(hex: "9D50DD")
                 )
                 
-                StatCard(
+                WrappedStatCard(
                     value: String(format: "%.1f", data.averageClarity),
                     label: "平均清晰度",
                     icon: "star.fill",
@@ -423,21 +423,21 @@ struct OverviewCard: View {
             Divider().background(Color.white.opacity(0.2))
             
             HStack(spacing: 30) {
-                StatCard(
+                WrappedStatCard(
                     value: "\(data.dreamStreak)",
                     label: "连续记录",
                     icon: "flame.fill",
                     color: Color(hex: "FF6B35")
                 )
                 
-                StatCard(
+                WrappedStatCard(
                     value: "\(data.longestStreak)",
                     label: "最长连续",
                     icon: "trophy.fill",
                     color: Color(hex: "FFA500")
                 )
                 
-                StatCard(
+                WrappedStatCard(
                     value: String(format: "%.1f", data.averageIntensity),
                     label: "平均强度",
                     icon: "bolt.fill",
@@ -466,7 +466,7 @@ struct OverviewCard: View {
 
 // MARK: - 统计卡片
 
-struct StatCard: View {
+struct WrappedStatCard: View {
     let value: String
     let label: String
     let icon: String
@@ -988,8 +988,8 @@ struct YearComparisonCard: View {
         VStack(spacing: 20) {
             // 今年数据
             HStack(spacing: 20) {
-                YearStatCard(title: "今年", value: "\(comparison.thisYear.totalDreams)", subtitle: "个梦境", color: .white)
-                YearStatCard(title: "去年", value: "\(comparison.lastYear.totalDreams)", subtitle: "个梦境", color: .white.opacity(0.7))
+                YearWrappedStatCard(title: "今年", value: "\(comparison.thisYear.totalDreams)", subtitle: "个梦境", color: .white)
+                YearWrappedStatCard(title: "去年", value: "\(comparison.lastYear.totalDreams)", subtitle: "个梦境", color: .white.opacity(0.7))
             }
             
             Divider().background(Color.white.opacity(0.2))

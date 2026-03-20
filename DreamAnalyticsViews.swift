@@ -123,28 +123,28 @@ struct StatsCards: View {
             GridItem(.flexible()),
             GridItem(.flexible())
         ], spacing: 12) {
-            StatCard(
+            AnalyticsStatCard(
                 title: "总梦境数",
                 value: "\(overview.totalDreams)",
                 icon: "moon.fill",
                 color: .purple
             )
             
-            StatCard(
+            AnalyticsStatCard(
                 title: "平均清晰度",
                 value: "\(Int(overview.averageClarity * 100))%",
                 icon: "eye.fill",
                 color: .blue
             )
             
-            StatCard(
+            AnalyticsStatCard(
                 title: "清醒梦",
                 value: "\(overview.lucidDreamCount)",
                 icon: "brain.head.profile",
                 color: .green
             )
             
-            StatCard(
+            AnalyticsStatCard(
                 title: "主导情绪",
                 value: overview.dominantEmotion,
                 icon: "face.smiling",
@@ -156,7 +156,7 @@ struct StatsCards: View {
 
 // MARK: - 统计卡片组件
 
-struct StatCard: View {
+struct AnalyticsStatCard: View {
     let title: String
     let value: String
     let icon: String

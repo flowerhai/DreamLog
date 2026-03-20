@@ -166,9 +166,9 @@ struct DreamWeeklyReportView: View {
             }
             
             HStack(spacing: 12) {
-                StatCard(icon: "eye.fill", value: "\(report.lucidDreams)", label: "清醒梦")
-                StatCard(icon: "star.fill", value: String(format: "%.1f", report.averageClarity), label: "清晰度")
-                StatCard(icon: "flame.fill", value: "\(report.recordingStreak)", label: "连续天数")
+                WeeklyReportStatCard(icon: "eye.fill", value: "\(report.lucidDreams)", label: "清醒梦")
+                WeeklyReportStatCard(icon: "star.fill", value: String(format: "%.1f", report.averageClarity), label: "清晰度")
+                WeeklyReportStatCard(icon: "flame.fill", value: "\(report.recordingStreak)", label: "连续天数")
             }
         }
         .padding()
@@ -192,28 +192,28 @@ struct DreamWeeklyReportView: View {
                 .font(.headline)
             
             HStack(spacing: 16) {
-                StatCard(
+                WeeklyReportStatCard(
                     icon: "moon.fill",
                     value: "\(report.totalDreams)",
                     label: "总梦境",
                     iconColor: .purple
                 )
                 
-                StatCard(
+                WeeklyReportStatCard(
                     icon: "eye.fill",
                     value: "\(report.lucidDreams)",
                     label: "清醒梦",
                     iconColor: .blue
                 )
                 
-                StatCard(
+                WeeklyReportStatCard(
                     icon: "heart.fill",
                     value: String(format: "%.1f", report.averageIntensity),
                     label: "平均强度",
                     iconColor: .red
                 )
                 
-                StatCard(
+                WeeklyReportStatCard(
                     icon: "star.fill",
                     value: String(format: "%.1f", report.averageClarity),
                     label: "清晰度",
@@ -293,7 +293,7 @@ struct DreamWeeklyReportView: View {
                     .padding(.vertical, 8)
             } else {
                 ForEach(report.insights) { insight in
-                    InsightCard(insight: insight)
+                    WeeklyReportInsightCard(insight: insight)
                 }
             }
         }
@@ -409,7 +409,7 @@ struct DreamWeeklyReportView: View {
 
 // MARK: - 统计卡片
 
-struct StatCard: View {
+struct WeeklyReportStatCard: View {
     let icon: String
     let value: String
     let label: String
@@ -517,7 +517,7 @@ struct HighlightCard: View {
 
 // MARK: - 洞察卡片
 
-struct InsightCard: View {
+struct WeeklyReportInsightCard: View {
     let insight: ReportInsight
     
     var body: some View {

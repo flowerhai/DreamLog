@@ -602,21 +602,21 @@ struct OverviewStatsRow: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            StatCard(
+            CalendarStatCard(
                 title: "关联梦境",
                 value: "\(stats.totalLinkedDreams)",
                 icon: "moon.stars",
                 color: "purple"
             )
             
-            StatCard(
+            CalendarStatCard(
                 title: "日历事件",
                 value: "\(stats.totalEvents)",
                 icon: "calendar",
                 color: "blue"
             )
             
-            StatCard(
+            CalendarStatCard(
                 title: "平均强度",
                 value: "\(Int(stats.averageCorrelationStrength * 100))%",
                 icon: "chart.line",
@@ -825,7 +825,7 @@ struct FilterChipRow: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 // 全部选项
-                FilterChip(
+                CalendarFilterChip(
                     title: "全部",
                     isSelected: selectedItem == nil
                 ) {
@@ -833,7 +833,7 @@ struct FilterChipRow: View {
                 }
                 
                 ForEach(items, id: \.self) { item in
-                    FilterChip(
+                    CalendarFilterChip(
                         title: item,
                         isSelected: selectedItem == item
                     ) {
@@ -845,7 +845,7 @@ struct FilterChipRow: View {
     }
 }
 
-struct FilterChip: View {
+struct CalendarFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
@@ -863,7 +863,7 @@ struct FilterChip: View {
     }
 }
 
-struct StatCard: View {
+struct CalendarStatCard: View {
     let title: String
     let value: String
     let icon: String

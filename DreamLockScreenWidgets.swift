@@ -82,14 +82,14 @@ struct DreamLockScreenStatsView: View {
             }
             
             HStack(spacing: 12) {
-                StatItem(icon: "📊", value: "\(entry.thisWeek)", label: "本周")
-                StatItem(icon: "✨", value: "\(entry.lucidCount)", label: "清醒梦")
-                StatItem(icon: "💫", value: String(format: "%.1f", entry.clarity), label: "清晰度")
+                LockScreenStatItem(icon: "📊", value: "\(entry.thisWeek)", label: "本周")
+                LockScreenStatItem(icon: "✨", value: "\(entry.lucidCount)", label: "清醒梦")
+                LockScreenStatItem(icon: "💫", value: String(format: "%.1f", entry.clarity), label: "清晰度")
             }
         }
     }
     
-    struct StatItem: View {
+    struct LockScreenStatItem: View {
         let icon: String
         let value: String
         let label: String

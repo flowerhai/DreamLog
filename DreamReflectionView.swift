@@ -100,21 +100,21 @@ struct DreamReflectionView: View {
         VStack(spacing: 16) {
             // 总览卡片
             HStack(spacing: 12) {
-                StatCard(
+                ReflectionStatCard(
                     title: "总反思",
                     value: "\(stats.totalReflections)",
                     icon: "📝",
                     color: .blue
                 )
                 
-                StatCard(
+                ReflectionStatCard(
                     title: "本周",
                     value: "\(stats.reflectionsThisWeek)",
                     icon: "📅",
                     color: .green
                 )
                 
-                StatCard(
+                ReflectionStatCard(
                     title: "连续天数",
                     value: "\(stats.reflectionStreak)",
                     icon: "🔥",
@@ -353,7 +353,7 @@ struct ReflectionCard: View {
 
 // MARK: - Stat Card
 
-struct StatCard: View {
+struct ReflectionStatCard: View {
     let title: String
     let value: String
     let icon: String

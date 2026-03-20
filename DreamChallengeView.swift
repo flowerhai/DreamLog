@@ -120,19 +120,19 @@ struct StatsOverviewCard: View {
     var body: some View {
         VStack(spacing: 15) {
             HStack(spacing: 20) {
-                StatItem(
+                ChallengeStatItem(
                     icon: "🏆",
                     value: "\(stats?.totalChallengesCompleted ?? 0)",
                     label: "已完成"
                 )
                 
-                StatItem(
+                ChallengeStatItem(
                     icon: "⭐",
                     value: "\(stats?.totalPointsEarned ?? 0)",
                     label: "总积分"
                 )
                 
-                StatItem(
+                ChallengeStatItem(
                     icon: "🔥",
                     value: "\(stats?.currentStreak ?? 0)",
                     label: "连续天数"
@@ -140,19 +140,19 @@ struct StatsOverviewCard: View {
             }
             
             HStack(spacing: 20) {
-                StatItem(
+                ChallengeStatItem(
                     icon: "🎖️",
                     value: "\(stats?.totalBadgesEarned ?? 0)",
                     label: "徽章"
                 )
                 
-                StatItem(
+                ChallengeStatItem(
                     icon: "📅",
                     value: "\(stats?.todayCompleted ?? 0)",
                     label: "今日"
                 )
                 
-                StatItem(
+                ChallengeStatItem(
                     icon: "📆",
                     value: "\(stats?.weekCompleted ?? 0)",
                     label: "本周"
@@ -173,7 +173,7 @@ struct StatsOverviewCard: View {
     }
 }
 
-struct StatItem: View {
+struct ChallengeStatItem: View {
     let icon: String
     let value: String
     let label: String

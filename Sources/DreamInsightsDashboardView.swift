@@ -89,21 +89,21 @@ struct DreamInsightsDashboardView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             HStack(spacing: 12) {
-                StatCard(
+                InsightsStatCard(
                     title: "总洞察",
                     value: "\(insights.count)",
                     icon: "lightbulb.fill",
                     color: .yellow
                 )
                 
-                StatCard(
+                InsightsStatCard(
                     title: "重要洞察",
                     value: "\(importantInsights.count)",
                     icon: "star.fill",
                     color: .orange
                 )
                 
-                StatCard(
+                InsightsStatCard(
                     title: "模式识别",
                     value: "\(insights.filter { $0.type == .pattern }.count)",
                     icon: "repeat",
@@ -143,7 +143,7 @@ struct DreamInsightsDashboardView: View {
                 .foregroundColor(.orange)
             
             ForEach(importantInsights.prefix(3), id: \.id) { insight in
-                InsightCard(insight: insight, isImportant: true)
+                InsightsDashInsightCard(insight: insight, isImportant: true)
             }
         }
         .padding()
@@ -165,7 +165,7 @@ struct DreamInsightsDashboardView: View {
                     .padding()
             } else {
                 ForEach(filteredInsights, id: \.id) { insight in
-                    InsightCard(insight: insight, isImportant: insight.isImportant)
+                    InsightsDashInsightCard(insight: insight, isImportant: insight.isImportant)
                 }
             }
         }
@@ -210,7 +210,7 @@ struct DreamInsightsDashboardView: View {
 
 // MARK: - 洞察卡片
 
-struct InsightCard: View {
+struct InsightsDashInsightCard: View {
     let insight: DreamInsight
     let isImportant: Bool
     
@@ -333,7 +333,7 @@ struct InsightCard: View {
 
 // MARK: - 统计卡片
 
-struct StatCard: View {
+struct InsightsStatCard: View {
     let title: String
     let value: String
     let icon: String

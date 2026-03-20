@@ -255,7 +255,7 @@ struct AllTagsTabView: View {
             // 分类筛选
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    FilterChip(
+                    TagManagerFilterChip(
                         title: "全部分类",
                         isSelected: selectedCategory == nil,
                         color: selectedCategory == nil ? "6C63FF" : "E0E0E0"
@@ -264,7 +264,7 @@ struct AllTagsTabView: View {
                     }
                     
                     ForEach(TagCategory.allCases) { category in
-                        FilterChip(
+                        TagManagerFilterChip(
                             title: category.icon + " " + category.rawValue,
                             isSelected: selectedCategory == category,
                             color: selectedCategory == category ? category.color : "E0E0E0"
@@ -376,14 +376,14 @@ struct StatisticsCards: View {
     var body: some View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
-                StatCard(
+                TagManagerStatCard(
                     title: "总标签数",
                     value: "\(stats.totalTags)",
                     icon: "🏷️",
                     color: "6C63FF"
                 )
                 
-                StatCard(
+                TagManagerStatCard(
                     title: "总使用次数",
                     value: "\(stats.totalUsage)",
                     icon: "📊",
@@ -393,7 +393,7 @@ struct StatisticsCards: View {
             .padding(.horizontal)
             
             HStack(spacing: 12) {
-                StatCard(
+                TagManagerStatCard(
                     title: "已分类",
                     value: "\(stats.categorizedTags)",
                     subtitle: "\(String(format: "%.1f", stats.categorizedPercentage))%",
@@ -401,7 +401,7 @@ struct StatisticsCards: View {
                     color: "7FB069"
                 )
                 
-                StatCard(
+                TagManagerStatCard(
                     title: "未分类",
                     value: "\(stats.uncategorizedTags)",
                     icon: "📂",
@@ -413,7 +413,7 @@ struct StatisticsCards: View {
     }
 }
 
-struct StatCard: View {
+struct TagManagerStatCard: View {
     let title: String
     let value: String
     var subtitle: String?
@@ -549,7 +549,7 @@ struct RecentTagRow: View {
     }
 }
 
-struct FilterChip: View {
+struct TagManagerFilterChip: View {
     let title: String
     let isSelected: Bool
     let color: String

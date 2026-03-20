@@ -477,9 +477,9 @@ struct SocialProfileView: View {
     
     private var statsSection: some View {
         HStack(spacing: 40) {
-            StatItem(value: "128", label: "分享")
-            StatItem(value: "256", label: "点赞")
-            StatItem(value: "42", label: "关注")
+            SocialFeedStatItem(value: "128", label: "分享")
+            SocialFeedStatItem(value: "256", label: "点赞")
+            SocialFeedStatItem(value: "42", label: "关注")
         }
         .padding()
         .background(Color(.systemGray6))
@@ -498,7 +498,7 @@ struct SocialProfileView: View {
     }
 }
 
-struct StatItem: View {
+struct SocialFeedStatItem: View {
     let value: String
     let label: String
     

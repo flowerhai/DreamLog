@@ -174,28 +174,28 @@ struct DreamShareAnalyticsView: View {
     
     private var statsCards: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-            StatCard(
+            ShareAnalyticsStatCard(
                 title: "总分享",
                 value: "\(viewModel.statistics?.totalShares ?? 0)",
                 icon: "square.and.arrow.up.fill",
                 color: .blue
             )
             
-            StatCard(
+            ShareAnalyticsStatCard(
                 title: "独特梦境",
                 value: "\(viewModel.statistics?.uniqueDreamsShared ?? 0)",
                 icon: "dream.fill",
                 color: .purple
             )
             
-            StatCard(
+            ShareAnalyticsStatCard(
                 title: "连续天数",
                 value: "\(viewModel.statistics?.streakDays ?? 0)",
                 icon: "flame.fill",
                 color: .orange
             )
             
-            StatCard(
+            ShareAnalyticsStatCard(
                 title: "最长连续",
                 value: "\(viewModel.statistics?.longestStreak ?? 0)",
                 icon: "fire.fill",
@@ -526,7 +526,7 @@ class ShareAnalyticsViewModel: ObservableObject {
 
 // MARK: - Supporting Views
 
-struct StatCard: View {
+struct ShareAnalyticsStatCard: View {
     let title: String
     let value: String
     let icon: String

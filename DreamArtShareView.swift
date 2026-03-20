@@ -463,7 +463,7 @@ struct TemplatePickerView: View {
                 // 分类筛选
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        FilterChip(
+                        ArtShareFilterChip(
                             title: "全部",
                             isSelected: selectedCategory == nil
                         ) {
@@ -471,7 +471,7 @@ struct TemplatePickerView: View {
                         }
                         
                         ForEach(TemplateCategory.allCases) { category in
-                            FilterChip(
+                            ArtShareFilterChip(
                                 title: "\(category.icon) \(category.displayName)",
                                 isSelected: selectedCategory == category
                             ) {
@@ -659,7 +659,7 @@ struct ShareHistoryRow: View {
 
 // MARK: - Filter Chip
 
-struct FilterChip: View {
+struct ArtShareFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void

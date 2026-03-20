@@ -134,7 +134,7 @@ struct DreamARTemplateGalleryView: View {
             // 类别筛选
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    FilterChip(
+                    ARTemplateFilterChip(
                         title: "全部",
                         icon: "square.grid.2x2",
                         color: .purple,
@@ -144,7 +144,7 @@ struct DreamARTemplateGalleryView: View {
                     }
                     
                     ForEach(categories, id: \.self) { category in
-                        FilterChip(
+                        ARTemplateFilterChip(
                             title: category.displayName,
                             icon: category.icon,
                             color: category.color,
@@ -161,7 +161,7 @@ struct DreamARTemplateGalleryView: View {
             // 难度筛选
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
-                    FilterChip(
+                    ARTemplateFilterChip(
                         title: "全部难度",
                         icon: "star",
                         color: .orange,
@@ -171,7 +171,7 @@ struct DreamARTemplateGalleryView: View {
                     }
                     
                     ForEach(difficulties, id: \.self) { difficulty in
-                        FilterChip(
+                        ARTemplateFilterChip(
                             title: difficulty.displayName,
                             icon: difficulty.icon,
                             color: difficulty.color,
@@ -275,7 +275,7 @@ struct DreamARTemplateGalleryView: View {
 
 // MARK: - Filter Chip
 
-struct FilterChip: View {
+struct ARTemplateFilterChip: View {
     let title: String
     let icon: String
     let color: Color

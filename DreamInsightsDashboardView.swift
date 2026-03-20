@@ -221,7 +221,7 @@ struct DreamInsightsDashboardView: View {
                 .font(.headline)
             
             ForEach(insights) { insight in
-                InsightCard(insight: insight)
+                InsightsDash2InsightCard(insight: insight)
             }
         }
         .padding()
@@ -396,7 +396,7 @@ struct MetricCard: View {
     }
 }
 
-struct InsightCard: View {
+struct InsightsDash2InsightCard: View {
     let insight: DreamInsight
     
     var body: some View {

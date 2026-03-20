@@ -544,9 +544,9 @@ struct OverviewCard: View {
                 .font(.headline)
             
             HStack(spacing: 20) {
-                StatItem(title: "已发布", value: "\(stats.totalPublished)", icon: "checkmark.circle")
-                StatItem(title: "总浏览", value: formatNumber(stats.totalViews), icon: "eye")
-                StatItem(title: "总点赞", value: formatNumber(stats.totalLikes), icon: "heart")
+                PublishStatItem(title: "已发布", value: "\(stats.totalPublished)", icon: "checkmark.circle")
+                PublishStatItem(title: "总浏览", value: formatNumber(stats.totalViews), icon: "eye")
+                PublishStatItem(title: "总点赞", value: formatNumber(stats.totalLikes), icon: "heart")
             }
             
             if let popular = stats.mostPopularPlatform {
@@ -569,7 +569,7 @@ struct OverviewCard: View {
     }
 }
 
-struct StatItem: View {
+struct PublishStatItem: View {
     let title: String
     let value: String
     let icon: String
