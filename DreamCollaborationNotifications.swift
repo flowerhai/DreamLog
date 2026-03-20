@@ -220,8 +220,8 @@ actor DreamCollaborationNotificationService {
         content.badge = 1
         
         // 添加用户头像（如果有）
-        if let avatarUrl = notification.fromUserId {
-            // TODO: 下载并附加用户头像
+        if let avatarUrl = notification.fromUserId, !avatarUrl.isEmpty {
+            await attachAvatarToNotification(content: content, avatarUrl: avatarUrl)
         }
         
         let request = UNNotificationRequest(
@@ -234,6 +234,40 @@ actor DreamCollaborationNotificationService {
             try await UNUserNotificationCenter.current().add(request)
         } catch {
             print("Failed to schedule notification: \(error)")
+        }
+    }
+    
+    /// 下载并附加用户头像到通知
+    private func attachAvatarToNotification(content: UNMutableNotificationContent, avatarUrl: String) async {
+        guard let url = URL(string: avatarUrl) else { return }
+        
+        do {
+            // 下载头像图片
+            let (data, _) = try await URLSession.shared.data(from: url)
+            
+            // 保存为临时文件
+            let tempDir = FileManager.default.temporaryDirectory
+            let fileURL = tempDir.appendingPathComponent("avatar_\(UUID().uuidString).jpg")
+            try data.write(to: fileURL)
+            
+            // 创建通知附件
+            let attachment = try UNNotificationAttachment(
+                identifier: "avatar",
+                url: fileURL,
+                options: [
+                    UNNotificationAttachmentOptionsTypeHintKey: "public.jpeg",
+                    UNNotificationAttachmentOptionsThumbnailHiddenKey: false
+                ]
+            )
+            
+            content.attachments = [attachment]
+            
+            // 清理临时文件（在通知发送后）
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                try? FileManager.default.removeItem(at: fileURL)
+            }
+        } catch {
+            print("Failed to attach avatar: \(error)")
         }
     }
     
