@@ -638,7 +638,7 @@ struct ConfigCard: View {
     }
 }
 
-struct DreamCard: View {
+struct ScreenshotDreamCard: View {
     let dream: Dream
     
     var body: some View {

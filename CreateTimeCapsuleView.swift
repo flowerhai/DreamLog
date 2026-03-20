@@ -187,7 +187,7 @@ struct CreateTimeCapsuleView: View {
                 Text(errorMessage ?? "")
             }
             .sheet(isPresented: $showingDreamPicker) {
-                DreamPickerView(selectedDreamIds: $config.selectedDreamIds)
+                DreamTimeCapsulePickerView(selectedDreamIds: $config.selectedDreamIds)
             }
             .sheet(isPresented: $showingDatePicker) {
                 DatePickerView(selectedDate: $config.unlockDate)
@@ -270,7 +270,7 @@ struct QuickDateButton: View {
     }
 }
 
-struct DreamPickerView: View {
+struct DreamTimeCapsulePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedDreamIds: [String]
     @Query private var dreams: [Dream]

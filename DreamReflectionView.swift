@@ -644,7 +644,7 @@ struct CreateReflectionView: View {
                 }
             }
             .sheet(isPresented: $showingDreamPicker) {
-                DreamPickerView(selectedDream: $selectedDream)
+                DreamReflectionPickerView(selectedDream: $selectedDream)
             }
         }
     }
@@ -691,7 +691,7 @@ struct CreateReflectionView: View {
 
 // MARK: - Dream Picker View
 
-struct DreamPickerView: View {
+struct DreamReflectionPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedDream: Dream?

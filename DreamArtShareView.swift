@@ -64,7 +64,7 @@ struct DreamArtShareView: View {
                 TemplatePickerView(selectedTemplate: $selectedTemplate)
             }
             .sheet(isPresented: $isShowingDreamPicker) {
-                DreamPickerView(selectedDream: $selectedDream)
+                DreamArtSharePickerView(selectedDream: $selectedDream)
             }
             .sheet(isPresented: $showingShareSheet) {
                 if let url = generatedImageURL {
@@ -521,7 +521,7 @@ struct TemplatePickerView: View {
 
 // MARK: - Dream Picker View
 
-struct DreamPickerView: View {
+struct DreamArtSharePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \Dream.date, order: .reverse) private var dreams: [Dream]
     @Binding var selectedDream: Dream?

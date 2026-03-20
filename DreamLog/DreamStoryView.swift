@@ -378,7 +378,7 @@ struct CreateStoryView: View {
                 }
             }
             .sheet(isPresented: $showingDreamPicker) {
-                DreamPickerView(selectedDreamIds: $config.selectedDreams)
+                DreamStoryPickerView(selectedDreamIds: $config.selectedDreams)
             }
         }
     }
@@ -400,7 +400,7 @@ struct CreateStoryView: View {
 
 // MARK: - 梦境选择器
 
-struct DreamPickerView: View {
+struct DreamStoryPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedDreamIds: [UUID]

@@ -165,7 +165,7 @@ struct CardPreviewCanvas: View {
             
             // 梦境图片 (如果有)
             if let imageData = dream.images?.first {
-                DreamImageView(imageData: imageData, filters: filters)
+                FilteredImageView(imageData: imageData, filters: filters)
                     .opacity(0.3)
             }
             
@@ -773,7 +773,7 @@ struct OptionButton: View {
 
 // MARK: - 辅助视图
 
-struct DreamImageView: View {
+struct FilteredImageView: View {
     let imageData: Data
     let filters: [ImageFilter]
     

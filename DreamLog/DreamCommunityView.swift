@@ -39,7 +39,7 @@ struct DreamCommunityView: View {
             ShareDreamView()
         }
         .sheet(item: $selectedDream) { dream in
-            DreamDetailView(dream: dream)
+            SharedDreamDetailView(dream: dream)
         }
     }
     
@@ -120,7 +120,7 @@ struct DreamCommunityView: View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 ForEach(filteredDreams, id: \.id) { dream in
-                    DreamCard(dream: dream) {
+                    SharedDreamCard(dream: dream) {
                         selectedDream = dream
                     }
                 }
@@ -195,7 +195,7 @@ struct FilterChip: View {
 
 // MARK: - 梦境卡片
 
-struct DreamCard: View {
+struct SharedDreamCard: View {
     let dream: SharedDream
     let onTap: () -> Void
     
@@ -399,7 +399,7 @@ struct ShareDreamView: View {
                                 .lineLimit(2)
                         }
                     }
-                    NavigationLink(destination: DreamPickerView(selectedDream: $selectedDream)) {
+                    NavigationLink(destination: DreamCommunityPickerView(selectedDream: $selectedDream)) {
                         HStack {
                             Image(systemName: selectedDream != nil ? "checkmark.circle.fill" : "plus.circle")
                                 .foregroundColor(selectedDream != nil ? .green : .purple)
@@ -486,7 +486,7 @@ struct ShareDreamView: View {
 
 // MARK: - 梦境详情界面
 
-struct DreamDetailView: View {
+struct SharedDreamDetailView: View {
     let dream: SharedDream
     @Environment(\.dismiss) private var dismiss
     @State private var commentText = ""
@@ -679,7 +679,7 @@ struct CommentRow: View {
 
 // MARK: - 梦境选择器
 
-struct DreamPickerView: View {
+struct DreamCommunityPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var dreamStore: DreamStore
     @Binding var selectedDream: Dream?

@@ -309,7 +309,7 @@ struct QuickStartCard: View {
         .cornerRadius(16)
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
         .sheet(isPresented: $showingDreamPicker) {
-            DreamPickerView(dreamStore: dreamStore) { dream in
+            DreamCompanionPickerView(dreamStore: dreamStore) { dream in
                 Task {
                     _ = await companionService.createSession(dreamId: dream.id, topic: "梦境解析")
                 }
@@ -426,7 +426,7 @@ struct NewSessionView: View {
                 }
             }
             .sheet(isPresented: $showingDreamPicker) {
-                DreamPickerView(dreamStore: dreamStore) { dream in
+                DreamCompanionPickerView(dreamStore: dreamStore) { dream in
                     selectedDream = dream
                 }
                 .environmentObject(dreamStore)
@@ -471,7 +471,7 @@ struct TemplateRow: View {
 
 // MARK: - Dream Picker View
 
-struct DreamPickerView: View {
+struct DreamCompanionPickerView: View {
     @EnvironmentObject var dreamStore: DreamStore
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
