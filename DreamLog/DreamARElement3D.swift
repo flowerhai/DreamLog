@@ -613,7 +613,7 @@ struct ARParticipant: Codable, Identifiable {
     var username: String
     var avatarURL: URL?
     var joinedAt: Date
-    var role: ParticipantRole
+    var role: ARParticipantRole
     var position: SIMD3<Float>?
     var isOnline: Bool
     
@@ -623,7 +623,7 @@ struct ARParticipant: Codable, Identifiable {
         username: String,
         avatarURL: URL? = nil,
         joinedAt: Date = Date(),
-        role: ParticipantRole = .viewer,
+        role: ARParticipantRole = .viewer,
         position: SIMD3<Float>? = nil,
         isOnline: Bool = true
     ) {
@@ -638,7 +638,7 @@ struct ARParticipant: Codable, Identifiable {
     }
 }
 
-enum ParticipantRole: String, Codable {
+enum ARParticipantRole: String, Codable {
     case host = "主机"
     case editor = "编辑者"
     case viewer = "观看者"
