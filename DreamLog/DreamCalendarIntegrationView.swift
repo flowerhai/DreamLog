@@ -24,7 +24,17 @@ struct DreamCalendarIntegrationView: View {
     @State private var syncError: String?
     
     init() {
-        _service = StateObject(wrappedValue: DreamCalendarIntegrationService(modelContext: ModelContext(try! ModelContainer(for: Dream.self))))
+        // Initialize service with a model context
+        // In production, the view should receive modelContext from environment
+        do {
+            let container = try ModelContainer(for: Dream.self)
+            _service = StateObject(wrappedValue: DreamCalendarIntegrationService(modelContext: ModelContext(container)))
+        } catch {
+            // Fallback for previews with in-memory storage
+            let config = ModelConfiguration(isStoredInMemoryOnly: true)
+            let container = try! ModelContainer(for: Dream.self, configurations: [config])
+            _service = StateObject(wrappedValue: DreamCalendarIntegrationService(modelContext: ModelContext(container)))
+        }
     }
     
     var body: some View {
