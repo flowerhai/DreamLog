@@ -366,9 +366,9 @@ class MeditationSession {
 
 /// 冥想服务
 @MainActor
-class MeditationService {
+class ReflectionMeditationService {
     
-    static let shared = MeditationService()
+    static let shared = ReflectionMeditationService()
     
     private var currentSession: UUID?
     private var isPlaying: Bool = false

@@ -94,7 +94,7 @@ final class ArtShareTemplate {
     var name: String
     var description: String
     var type: ArtShareCardType
-    var category: TemplateCategory
+    var category: ArtShareTemplateCategory
     var isPreset: Bool
     var isFavorite: Bool
     var createdAt: Date
@@ -130,7 +130,7 @@ final class ArtShareTemplate {
         name: String,
         description: String,
         type: ArtShareCardType,
-        category: TemplateCategory,
+        category: ArtShareTemplateCategory,
         isPreset: Bool = false,
         backgroundColor: String = "#1a1a2e",
         gradientStart: String? = nil,
@@ -187,7 +187,7 @@ final class ArtShareTemplate {
 
 // MARK: - 模板分类
 
-enum TemplateCategory: String, Codable, CaseIterable, Identifiable {
+enum ArtShareTemplateCategory: String, Codable, CaseIterable, Identifiable {
     case minimalist = "minimalist"
     case artistic = "artistic"
     case dreamy = "dreamy"
@@ -336,7 +336,7 @@ final class ArtShareHistory {
     var templateId: UUID
     var templateName: String
     var cardType: ArtShareCardType
-    var platform: SharePlatform
+    var platform: ArtSharePlatform
     var imageUrl: String
     var fileSize: Int64
     var createdAt: Date
@@ -348,7 +348,7 @@ final class ArtShareHistory {
         templateId: UUID,
         templateName: String,
         cardType: ArtShareCardType,
-        platform: SharePlatform,
+        platform: ArtSharePlatform,
         imageUrl: String,
         fileSize: Int64
     ) {
@@ -368,7 +368,7 @@ final class ArtShareHistory {
 
 // MARK: - 分享平台
 
-enum SharePlatform: String, Codable, CaseIterable, Identifiable {
+enum ArtSharePlatform: String, Codable, CaseIterable, Identifiable {
     case wechat = "wechat"
     case wechatMoment = "wechatMoment"
     case weibo = "weibo"

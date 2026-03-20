@@ -312,7 +312,7 @@ struct ArtCardTemplate: Identifiable, Codable {
     var createdAt: Date
     var updatedAt: Date
     var usageCount: Int
-    var category: TemplateCategory
+    var category: ArtCardTemplateCategory
     
     init(
         id: UUID = UUID(),
@@ -328,7 +328,7 @@ struct ArtCardTemplate: Identifiable, Codable {
         createdAt: Date = Date(),
         updatedAt: Date = Date(),
         usageCount: Int = 0,
-        category: TemplateCategory = .general
+        category: ArtCardTemplateCategory = .general
     ) {
         self.id = id
         self.name = name
@@ -349,7 +349,7 @@ struct ArtCardTemplate: Identifiable, Codable {
 
 // MARK: - 模板分类
 
-enum TemplateCategory: String, CaseIterable, Identifiable, Codable {
+enum ArtCardTemplateCategory: String, CaseIterable, Identifiable, Codable {
     case general = "general"          // 通用
     case social = "social"            // 社交
     case artistic = "artistic"        // 艺术

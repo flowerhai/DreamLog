@@ -693,7 +693,7 @@ struct QuickShareButtons: View {
 }
 
 struct ShareButton: View {
-    let platform: SharePlatform
+    let platform: ShareCardEditorPlatform
     let image: UIImage
     
     var body: some View {
@@ -714,7 +714,7 @@ struct ShareButton: View {
     }
 }
 
-enum SharePlatform {
+enum ShareCardEditorPlatform {
     case wechat, moments, weibo, copy
     
     var displayName: String {

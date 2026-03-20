@@ -168,7 +168,7 @@ struct ReflectionStats {
 // MARK: - 洞察卡片
 
 /// 洞察卡片 - 用于展示重要洞察
-struct InsightCard: Identifiable, Codable {
+struct ReflectionInsightCard: Identifiable, Codable {
     let id: String
     let reflectionId: UUID
     let dreamTitle: String

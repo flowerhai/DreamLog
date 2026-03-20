@@ -706,7 +706,7 @@ class DreamMusicService: ObservableObject {
     }
     
     /// 分享音乐到社交平台
-    func shareMusicToSocial(_ music: DreamMusic, platform: SharePlatform) async -> Bool {
+    func shareMusicToSocial(_ music: DreamMusic, platform: MusicSharePlatform) async -> Bool {
         guard let shareItem = await shareMusic(music) else {
             return false
         }
@@ -906,7 +906,7 @@ class DreamMusicService: ObservableObject {
 // MARK: - 分享相关模型
 
 /// 分享平台
-enum SharePlatform: String {
+enum MusicSharePlatform: String {
     case wechat = "微信"
     case weibo = "微博"
     case qq = "QQ"

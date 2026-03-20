@@ -366,7 +366,7 @@ struct DreamARTemplate: Codable, Identifiable {
         return name
     }
     var description: String
-    var category: TemplateCategory
+    var category: ARTemplateCategory
     var thumbnailURL: URL?
     var previewImageURL: URL?
     
@@ -407,7 +407,7 @@ struct DreamARTemplate: Codable, Identifiable {
         id: UUID = UUID(),
         name: String,
         description: String,
-        category: TemplateCategory,
+        category: ARTemplateCategory,
         thumbnailURL: URL? = nil,
         previewImageURL: URL? = nil,
         elements: [DreamARElement3D] = [],
@@ -444,7 +444,7 @@ struct DreamARTemplate: Codable, Identifiable {
 
 // MARK: - 模板类别
 
-enum TemplateCategory: String, Codable, CaseIterable, Identifiable {
+enum ARTemplateCategory: String, Codable, CaseIterable, Identifiable {
     case starrySky = "星空梦境"
     case oceanWorld = "海洋世界"
     case forestSecret = "森林秘境"

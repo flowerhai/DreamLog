@@ -361,13 +361,13 @@ struct DreamCard: View {
         .accessibilityLabel("梦境：\(dream.title)")
         .accessibilityHint("双击查看详情")
         .sheet(isPresented: $showingShareSheet) {
-            ShareSheet(dream: dream)
+            DreamShareSheet(dream: dream)
         }
     }
 }
 
 // MARK: - 分享弹窗
-struct ShareSheet: View {
+struct DreamShareSheet: View {
     let dream: Dream
     @Environment(\.dismiss) var dismiss
     @StateObject private var shareService = ShareService()

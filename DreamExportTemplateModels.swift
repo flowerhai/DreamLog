@@ -22,7 +22,7 @@ final class DreamExportTemplate {
     var format: ExportFormat
     var isPreset: Bool
     var isFavorite: Bool
-    var category: TemplateCategory
+    var category: ExportTemplateCategory
     var variables: [String]
     var createdAt: Date
     var updatedAt: Date
@@ -40,7 +40,7 @@ final class DreamExportTemplate {
         format: ExportFormat = .markdown,
         isPreset: Bool = false,
         isFavorite: Bool = false,
-        category: TemplateCategory = .general,
+        category: ExportTemplateCategory = .general,
         variables: [String] = [],
         createdBy: UserAccount? = nil
     ) {
@@ -64,7 +64,7 @@ final class DreamExportTemplate {
 // MARK: - 模板分类
 
 /// 模板分类
-enum TemplateCategory: String, Codable, CaseIterable, Identifiable {
+enum ExportTemplateCategory: String, Codable, CaseIterable, Identifiable {
     case general = "general"
     case social = "social"
     case note = "note"

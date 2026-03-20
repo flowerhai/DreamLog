@@ -11,7 +11,7 @@ import UIKit
 import CoreImage.CIFilterBuiltins
 
 // MARK: - 分享平台
-enum SharePlatform: String, CaseIterable, Identifiable {
+enum EnhancedSharePlatform: String, CaseIterable, Identifiable {
     case wechat = "微信"
     case wechatMoments = "朋友圈"
     case weibo = "微博"
@@ -77,7 +77,7 @@ struct ShareHistory: Identifiable, Codable {
     let timestamp: Date
     let shareStyle: String
     
-    init(dream: Dream, platform: SharePlatform, style: ShareCardStyle) {
+    init(dream: Dream, platform: EnhancedSharePlatform, style: ShareCardStyle) {
         self.id = UUID()
         self.dreamId = dream.id
         self.dreamTitle = dream.title
@@ -182,7 +182,7 @@ class EnhancedShareService: ObservableObject {
     }
     
     // MARK: - 分享到平台
-    func shareToPlatform(_ platform: SharePlatform, dream: Dream, style: ShareCardStyle) async {
+    func shareToPlatform(_ platform: EnhancedSharePlatform, dream: Dream, style: ShareCardStyle) async {
         guard let image = await generateShareImage(dream: dream, style: style) else {
             return
         }
@@ -331,7 +331,7 @@ struct SharePlatformPicker: View {
         NavigationView {
             List {
                 Section("社交媒体") {
-                    ForEach([SharePlatform.wechat, .wechatMoments, .weibo, .xiaohongshu, .qq, .telegram]) { platform in
+                    ForEach([EnhancedSharePlatform.wechat, .wechatMoments, .weibo, .xiaohongshu, .qq, .telegram]) { platform in
                         Button(action: { share(platform) }) {
                             HStack {
                                 Image(systemName: platform.icon)
@@ -351,28 +351,28 @@ struct SharePlatformPicker: View {
                 Section("其他选项") {
                     Button(action: { share(.copyLink) }) {
                         HStack {
-                            Image(systemName: SharePlatform.copyLink.icon)
-                                .foregroundColor(SharePlatform.copyLink.color)
+                            Image(systemName: EnhancedSharePlatform.copyLink.icon)
+                                .foregroundColor(EnhancedSharePlatform.copyLink.color)
                                 .frame(width: 30)
-                            Text(SharePlatform.copyLink.rawValue)
+                            Text(EnhancedSharePlatform.copyLink.rawValue)
                         }
                     }
                     
                     Button(action: { share(.saveImage) }) {
                         HStack {
-                            Image(systemName: SharePlatform.saveImage.icon)
-                                .foregroundColor(SharePlatform.saveImage.color)
+                            Image(systemName: EnhancedSharePlatform.saveImage.icon)
+                                .foregroundColor(EnhancedSharePlatform.saveImage.color)
                                 .frame(width: 30)
-                            Text(SharePlatform.saveImage.rawValue)
+                            Text(EnhancedSharePlatform.saveImage.rawValue)
                         }
                     }
                     
                     Button(action: { share(.qrCode) }) {
                         HStack {
-                            Image(systemName: SharePlatform.qrCode.icon)
-                                .foregroundColor(SharePlatform.qrCode.color)
+                            Image(systemName: EnhancedSharePlatform.qrCode.icon)
+                                .foregroundColor(EnhancedSharePlatform.qrCode.color)
                                 .frame(width: 30)
-                            Text(SharePlatform.qrCode.rawValue)
+                            Text(EnhancedSharePlatform.qrCode.rawValue)
                         }
                     }
                 }
@@ -401,7 +401,7 @@ struct SharePlatformPicker: View {
         }
     }
     
-    private func share(_ platform: SharePlatform) {
+    private func share(_ platform: EnhancedSharePlatform) {
         Task {
             await shareService.shareToPlatform(platform, dream: dream, style: style)
             if platform == .qrCode {

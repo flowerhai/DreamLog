@@ -272,7 +272,7 @@ actor DreamReflectionService {
     }
     
     /// 获取洞察卡片
-    func getInsightCards(limit: Int = 10, minRating: Int = 4) throws -> [InsightCard] {
+    func getInsightCards(limit: Int = 10, minRating: Int = 4) throws -> [ReflectionInsightCard] {
         let descriptor = FetchDescriptor<DreamReflection>(
             predicate: #Predicate { $0.rating >= minRating && $0.type == ReflectionType.insight.rawValue },
             sortBy: [SortDescriptor(\.createdAt, order: .reverse)],
@@ -283,7 +283,7 @@ actor DreamReflectionService {
         
         return try reflections.compactMap { reflection in
             guard let dream = reflection.dream else { return nil }
-            return InsightCard(
+            return ReflectionInsightCard(
                 id: reflection.id.uuidString,
                 reflectionId: reflection.id,
                 dreamTitle: dream.title,

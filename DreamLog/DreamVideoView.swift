@@ -526,19 +526,6 @@ struct VideoPlayerView: View {
     }
 }
 
-// MARK: - 分享表单
-
-struct ShareSheet: UIViewControllerRepresentable {
-    let activityItems: [Any]
-    
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        let controller = UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-        return controller
-    }
-    
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
-}
-
 // MARK: - 模板市场视图
 
 struct TemplateMarketView: View {

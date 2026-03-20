@@ -361,7 +361,7 @@ enum ShareCardTemplateLibrary {
     }
     
     /// 按分类获取模板
-    static func templates(in category: TemplateCategory) -> [ShareCardTemplate] {
+    static func templates(in category: ShareCardTemplateCategory) -> [ShareCardTemplate] {
         allTemplates.filter { $0.category == category }
     }
     
@@ -378,7 +378,7 @@ struct ShareCardTemplate: Identifiable, Codable {
     let id: String
     let name: String
     let description: String
-    let category: TemplateCategory
+    let category: ShareCardTemplateCategory
     let gradientColors: [String]      // 渐变颜色 (十六进制)
     let textColor: String             // 文字颜色
     let accentColor: String           // 强调色
@@ -404,7 +404,7 @@ struct ShareCardTemplate: Identifiable, Codable {
 // MARK: - 模板分类枚举
 
 /// 模板分类
-enum TemplateCategory: String, Codable, CaseIterable, Identifiable {
+enum ShareCardTemplateCategory: String, Codable, CaseIterable, Identifiable {
     case nature = "nature"        // 自然主题
     case emotion = "emotion"      // 情绪主题
     case art = "art"              // 艺术主题
