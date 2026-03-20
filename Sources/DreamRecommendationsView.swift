@@ -46,7 +46,11 @@ struct DreamRecommendationsView: View {
         NavigationStack {
             Group {
                 if filteredRecommendations.isEmpty {
-                    EmptyStateView()
+                    EmptyStateView(
+                        icon: "sparkles",
+                        title: "暂无推荐",
+                        subtitle: "继续记录梦境，获取更多个性化推荐"
+                    )
                 } else {
                     recommendationsList
                 }
@@ -320,33 +324,6 @@ struct FilterChip: View {
         .accessibilityLabel("\(title) 筛选")
         .accessibilityHint(isSelected ? "已选中\(title)筛选" : "双击选择\(title)筛选")
         .accessibilityState(isSelected ? .isSelected : .notSelected)
-    }
-}
-
-// MARK: - 空状态视图
-
-struct EmptyStateView: View {
-    var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "sparkles")
-                .font(.system(size: 60))
-                .foregroundColor(.gray.opacity(0.5))
-                .accessibilityHidden(true)
-            
-            Text("暂无推荐")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("继续记录梦境，获取更多个性化推荐")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("暂无推荐")
-        .accessibilityHint("继续记录梦境，获取更多个性化推荐")
     }
 }
 

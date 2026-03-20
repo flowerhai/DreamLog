@@ -1106,17 +1106,6 @@ struct TimeBar: View {
     }
 }
 
-struct FlowLayout: View {
-    let spacing: CGFloat
-    @ViewBuilder let content: () -> some View
-    
-    var body: some View {
-        Group {
-            content()
-        }
-    }
-}
-
 struct TagBadge: View {
     let text: String
     let count: Int

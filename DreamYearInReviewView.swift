@@ -563,59 +563,6 @@ struct ShareCardPreview: View {
     }
 }
 
-// MARK: - 流式布局
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let result = FlowResult.calculate(in: proposal.width ?? .infinity, subviews: subviews, spacing: spacing)
-        return result.size
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let result = FlowResult.calculate(in: bounds.width, subviews: subviews, spacing: spacing)
-        
-        for (index, subview) in subviews.enumerated() {
-            if index < result.subviewFrames.count {
-                subview.place(at: CGPoint(x: bounds.minX + result.subviewFrames[index].minX,
-                                          y: bounds.minY + result.subviewFrames[index].minY),
-                              proposal: .unspecified)
-            }
-        }
-    }
-    
-    struct FlowResult {
-        var size: CGSize = .zero
-        var subviewFrames: [CGRect] = []
-        
-        static func calculate(in width: CGFloat, subviews: Subviews, spacing: CGFloat) -> FlowResult {
-            var result = FlowResult()
-            var x: CGFloat = 0
-            var y: CGFloat = 0
-            var lineHeight: CGFloat = 0
-            
-            for subview in subviews {
-                let size = subview.sizeThatFits(.unspecified)
-                
-                if x + size.width > width && x > 0 {
-                    x = 0
-                    y += lineHeight + spacing
-                    lineHeight = 0
-                }
-                
-                result.subviewFrames.append(CGRect(x: x, y: y, width: size.width, height: size.height))
-                
-                x += size.width + spacing
-                lineHeight = max(lineHeight, size.height)
-            }
-            
-            result.size = CGSize(width: width, height: y + lineHeight)
-            return result
-        }
-    }
-}
-
 // MARK: - 预览
 
 #Preview {
