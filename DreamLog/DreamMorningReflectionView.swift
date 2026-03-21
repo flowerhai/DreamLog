@@ -509,10 +509,10 @@ class MorningReflectionViewModel: ObservableObject {
         // Create in-memory model context for previews/standalone use
         // In production, the view should receive modelContext from environment
         let container: ModelContainer
-        if let inMemoryContainer = try? ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)]) {
-            container = inMemoryContainer
-        } else {
-            container = try! ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)])
+        do {
+            container = try ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)])
+        } catch {
+            fatalError("Failed to create preview model container: \(error)")
         }
         let modelContext = ModelContext(container)
         self.service = DreamMorningReflectionService(modelContext: modelContext)

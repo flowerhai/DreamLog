@@ -66,6 +66,14 @@ struct HomeView: View {
                         .padding(.bottom, 8)
                 }
                 
+                // 学习中心卡片 ✨ NEW (Phase 82)
+                if #available(iOS 17.0, *) {
+                    DreamLearningCard()
+                        .environmentObject(dreamStore)
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                }
+                
                 // 模式预测卡片 ✨ NEW (Phase 55)
                 PatternPredictionCard()
                     .environmentObject(dreamStore)
@@ -1039,6 +1047,139 @@ struct WritingPromptsCard: View {
         } catch {
             print("加载写作提示统计失败：\(error)")
         }
+    }
+}
+
+// MARK: - Dream Learning Card
+
+/// 学习中心卡片 ✨ NEW (Phase 82)
+@available(iOS 17.0, *)
+struct DreamLearningCard: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @Environment(\.modelContext) private var modelContext
+    @StateObject private var service = DreamLearningViewModel()
+    @State private var showingLearning = false
+    @State private var userLevel: Int = 1
+    @State private var totalXP: Int = 0
+    @State private var currentStreak: Int = 0
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "graduationcap.fill")
+                            .font(.title2)
+                            .foregroundColor(.amber)
+                            .accessibilityHidden(true)
+                        
+                        Text("学习中心")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    
+                    Text(userLevel > 1
+                         ? "Level \(userLevel) · 已掌握 \(totalXP) XP"
+                         : "开始学习，探索梦境的奥秘")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                
+                Spacer()
+                
+                Button(action: { showingLearning = true }) {
+                    HStack(spacing: 4) {
+                        Text(currentStreak > 0 ? "继续学习" : "开始学习")
+                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundColor(.amber)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.amber.opacity(0.2))
+                    .cornerRadius(8)
+                }
+                .accessibilityLabel(currentStreak > 0 ? "继续学习课程" : "开始学习课程")
+            }
+            
+            // 快速操作提示
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Image(systemName: "book.fill")
+                        .font(.caption)
+                        .foregroundColor(.amber.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("课程")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("浏览所有课程")
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "trophy.fill")
+                        .font(.caption)
+                        .foregroundColor(.amber.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("成就")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("查看获得的徽章")
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.caption)
+                        .foregroundColor(.amber.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("进度")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("追踪学习进度")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.2))
+            .cornerRadius(8)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "D48806"), Color(hex: "FADB14")],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "FADB14").opacity(0.3), lineWidth: 1)
+                )
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("学习中心卡片")
+        .accessibilityHint(currentStreak > 0 ? "双击继续学习课程" : "双击开始学习课程")
+        .onAppear {
+            service.initialize(modelContext: modelContext)
+            Task {
+                await loadStats()
+            }
+        }
+        .sheet(isPresented: $showingLearning) {
+            DreamLearningView()
+        }
+    }
+    
+    @MainActor
+    private func loadStats() async {
+        let profile = await service.getUserProfile()
+        userLevel = profile.level
+        totalXP = profile.totalXP
+        currentStreak = profile.currentStreak
     }
 }
 

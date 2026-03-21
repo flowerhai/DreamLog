@@ -247,6 +247,15 @@ struct GrowthNavigationView: View {
                             .accessibilityLabel("语音日记 - 录音记录梦境")
                     }
                 }
+                
+                Section(header: Text("学习")) {
+                    if #available(iOS 17.0, *) {
+                        NavigationLink(destination: DreamLearningView()) {
+                            Label("学习中心", systemImage: "graduationcap.fill")
+                                .accessibilityLabel("学习中心 - 探索梦境知识")
+                        }
+                    }
+                }
             }
             .listStyle(InsetGroupedListStyle())
             .navigationTitle("🧘 成长")

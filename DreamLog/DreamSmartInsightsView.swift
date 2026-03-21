@@ -612,8 +612,12 @@ class InsightsViewModel: ObservableObject {
     convenience init() {
         // Create in-memory model context for previews/standalone use
         // In production, prefer the init(modelContext:) initializer
-        let container = (try? ModelContainer(for: DreamSmartInsight.self, configurations: [.init(isStoredInMemoryOnly: true)]))
-            ?? (try! ModelContainer(for: DreamSmartInsight.self, configurations: [.init(isStoredInMemoryOnly: true)]))
+        let container: ModelContainer
+        do {
+            container = try ModelContainer(for: DreamSmartInsight.self, configurations: [.init(isStoredInMemoryOnly: true)])
+        } catch {
+            fatalError("Failed to create preview model container: \(error)")
+        }
         let modelContext = ModelContext(container)
         self.init(modelContext: modelContext)
     }
