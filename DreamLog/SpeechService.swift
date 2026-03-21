@@ -193,7 +193,7 @@ struct LongPressButtonStyle: ButtonStyle {
     }
 }
 
-extension Button {
+extension View {
     /// 使用 ButtonStyle 实现的长按录音 (更可靠)
     func longPressButtonAction(
         onPress: @escaping () -> Void,

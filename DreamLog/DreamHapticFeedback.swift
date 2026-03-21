@@ -126,7 +126,8 @@ enum DreamHapticType {
 }
 
 /// 触觉反馈服务
-class DreamHapticFeedbackService {
+@MainActor
+class DreamHapticFeedbackService: ObservableObject {
     static let shared = DreamHapticFeedbackService()
     
     // 反馈生成器
