@@ -234,6 +234,30 @@ public actor DreamMorningReflectionService {
         await notificationCenter.removePendingNotificationRequests(withIdentifiers: ["morning-reflection"])
     }
     
+    // MARK: - 配置管理
+    
+    private let configKey = "MorningReflectionConfig"
+    
+    /// 保存配置
+    public func saveConfig(_ config: MorningReflectionConfig) throws {
+        let data = try JSONEncoder().encode(config)
+        UserDefaults.standard.set(data, forKey: configKey)
+    }
+    
+    /// 加载配置
+    public func loadConfig() -> MorningReflectionConfig {
+        guard let data = UserDefaults.standard.data(forKey: configKey),
+              let config = try? JSONDecoder().decode(MorningReflectionConfig.self, from: data) else {
+            return .default
+        }
+        return config
+    }
+    
+    /// 标记反思为完成
+    public func markReflectionCompleted(id: UUID) throws {
+        try updateReflection(id: id, isCompleted: true)
+    }
+    
     // MARK: - 导出
     
     /// 导出反思为 Markdown

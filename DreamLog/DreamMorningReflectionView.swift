@@ -8,6 +8,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 @available(iOS 17.0, *)
 struct DreamMorningReflectionView: View {
@@ -193,6 +194,31 @@ struct ReflectionCard: View {
     let onDelete: () -> Void
     @State private var showingDeleteConfirm = false
     
+    private func shareReflection(_ reflection: DreamMorningReflection) {
+        var shareText = "🌅 晨间反思\n\n"
+        shareText += "\(reflection.type.icon) \(reflection.type.title)\n"
+        shareText += "\(reflection.date.formatted(date: .abbreviated, time: .shortened))\n\n"
+        shareText += reflection.content
+        
+        if let mood = reflection.mood {
+            shareText += "\n\n情绪：\(mood)"
+        }
+        
+        if !reflection.tags.isEmpty {
+            shareText += "\n\n标签：\(reflection.tags.joined(separator: ", "))"
+        }
+        
+        let activityVC = UIActivityViewController(
+            activityItems: [shareText],
+            applicationActivities: nil
+        )
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let rootVC = windowScene.windows.first?.rootViewController {
+            rootVC.present(activityVC, animated: true)
+        }
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // 头部
@@ -218,11 +244,17 @@ struct ReflectionCard: View {
                 
                 Menu {
                     Button("完成") {
-                        // TODO: Mark as completed
+                        Task {
+                            do {
+                                try await viewModel.markReflectionCompleted(id: reflection.id)
+                            } catch {
+                                print("Failed to mark reflection completed: \(error)")
+                            }
+                        }
                     }
                     
                     Button("分享") {
-                        // TODO: Share reflection
+                        shareReflection(reflection)
                     }
                     
                     Divider()
@@ -436,8 +468,28 @@ struct ReflectionSettingsView: View {
     }
     
     private func saveSettings() {
-        // TODO: Save settings
-        print("Saving settings: enabled=\(enabled), time=\(reminderTime), goal=\(dailyGoal)")
+        let config = MorningReflectionConfig(
+            enabled: enabled,
+            reminderTime: reminderTime,
+            enabledTypes: MorningReflectionType.allCases,
+            showOnWake: enabled,
+            dailyGoal: dailyGoal
+        )
+        
+        // Save using service (in a real app, this would use dependency injection)
+        do {
+            let service = DreamMorningReflectionService(modelContext: ModelContext(try! ModelContainer(for: DreamMorningReflection.self)))
+            Task {
+                try await service.saveConfig(config)
+                if enabled {
+                    try await service.scheduleMorningReminder(time: reminderTime)
+                } else {
+                    await service.cancelMorningReminder()
+                }
+            }
+        } catch {
+            print("Failed to save settings: \(error)")
+        }
     }
 }
 
@@ -491,6 +543,14 @@ class MorningReflectionViewModel: ObservableObject {
             reflections.removeAll { $0.id == id }
         } catch {
             print("Failed to delete reflection: \(error)")
+        }
+    }
+    
+    func markReflectionCompleted(id: UUID) async throws {
+        try service.markReflectionCompleted(id: id)
+        // Update local state
+        if let index = reflections.firstIndex(where: { $0.id == id }) {
+            reflections[index].isCompleted = true
         }
     }
 }
