@@ -185,9 +185,10 @@ actor DreamPatternPredictionService {
     private func analyzeTrend(dreams: [Dream], days: Int) -> TrendDirection {
         let calendar = Calendar.current
         let cutoffDate = calendar.date(byAdding: .day, value: -days, to: Date()) ?? Date()
+        let olderCutoffDate = calendar.date(byAdding: .day, value: -days * 2, to: Date()) ?? Date()
         
         let recentDreams = dreams.filter { $0.createdAt >= cutoffDate }
-        let olderDreams = dreams.filter { $0.createdAt < cutoffDate && $0.createdAt >= calendar.date(byAdding: .day, value: -days * 2, to: Date())! }
+        let olderDreams = dreams.filter { $0.createdAt < cutoffDate && $0.createdAt >= olderCutoffDate }
         
         guard !olderDreams.isEmpty else { return .stable }
         
