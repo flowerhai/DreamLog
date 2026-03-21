@@ -26,15 +26,18 @@ struct DreamCalendarIntegrationView: View {
     init() {
         // Initialize service with a model context
         // In production, the view should receive modelContext from environment
+        let container: ModelContainer
         do {
-            let container = try ModelContainer(for: Dream.self)
-            _service = StateObject(wrappedValue: DreamCalendarIntegrationService(modelContext: ModelContext(container)))
+            container = try ModelContainer(for: Dream.self)
         } catch {
             // Fallback for previews with in-memory storage
-            let config = ModelConfiguration(isStoredInMemoryOnly: true)
-            let container = try! ModelContainer(for: Dream.self, configurations: [config])
-            _service = StateObject(wrappedValue: DreamCalendarIntegrationService(modelContext: ModelContext(container)))
+            // In-memory configuration should never fail in practice
+            guard let inMemoryContainer = try? ModelContainer(for: Dream.self, configurations: [.init(isStoredInMemoryOnly: true)]) else {
+                fatalError("Failed to create in-memory model container: \(error)")
+            }
+            container = inMemoryContainer
         }
+        _service = StateObject(wrappedValue: DreamCalendarIntegrationService(modelContext: ModelContext(container)))
     }
     
     var body: some View {
@@ -369,10 +372,10 @@ struct CorrelationCard: View {
 
 struct DreamSummaryCard: View {
     let dreamId: UUID
-    @Query(filter: #Predicate<Dream> { $0.id == UUID() }) var dreams: [Dream]
+    @Query var allDreams: [Dream]
     
     var dream: Dream? {
-        dreams.first { $0.id == dreamId }
+        allDreams.first { $0.id == dreamId }
     }
     
     var body: some View {
@@ -388,7 +391,7 @@ struct DreamSummaryCard: View {
             Text(dream?.title ?? "未知梦境")
                 .font(.headline)
             
-            Text(dream?.content.prefix(100) ?? "" + "...")
+            Text((dream?.content ?? "").prefix(100) + "...")
                 .font(.caption)
                 .foregroundColor(.secondary)
                 .lineLimit(2)
@@ -403,10 +406,10 @@ struct DreamSummaryCard: View {
 
 struct EventSummaryCard: View {
     let eventId: String
-    @Query(filter: #Predicate<CalendarEvent> { $0.eventId == "" }) var events: [CalendarEvent]
+    @Query var allEvents: [CalendarEvent]
     
     var event: CalendarEvent? {
-        events.first { $0.eventId == eventId }
+        allEvents.first { $0.eventId == eventId }
     }
     
     var body: some View {

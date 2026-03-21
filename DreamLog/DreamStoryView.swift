@@ -478,7 +478,7 @@ struct DreamStoryPickerView: View {
 
 struct DreamPreviewRow: View {
     let dreamId: UUID
-    @Query(filter: #Predicate<Dream> { $0.id == UUID(uuidString: "") ?? $0.id }) var dream: Dream?
+    @Query(filter: #Predicate<Dream> { $0.id == UUID() }) var dream: Dream?
     
     init(dreamId: UUID) {
         self.dreamId = dreamId

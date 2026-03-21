@@ -701,15 +701,18 @@ struct MoodBoardStatItem: View {
 struct DreamListItem: View {
     let dreamId: UUID
     
-    @Query(filter: #Predicate<Dream> { $0.id == UUID(uuidString: "") ?? $0.id })
-    private var dreams: [Dream]
+    @Query var allDreams: [Dream]
+    
+    var dream: Dream? {
+        allDreams.first { $0.id == dreamId }
+    }
     
     var body: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("梦境 \(dreamId.uuidString.prefix(8))")
+                Text("梦境 \(dream?.title ?? dreamId.uuidString.prefix(8))")
                     .font(.subheadline)
-                Text("点击查看详情")
+                Text((dream?.content.prefix(50) ?? "") + "...")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }

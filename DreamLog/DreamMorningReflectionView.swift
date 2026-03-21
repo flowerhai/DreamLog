@@ -453,7 +453,11 @@ class MorningReflectionViewModel: ObservableObject {
     private let service: DreamMorningReflectionService
     
     init() {
-        let modelContext = try! ModelContext(ModelContainer(for: DreamMorningReflection.self))
+        // Create in-memory model context for previews/standalone use
+        // In production, the view should receive modelContext from environment
+        let container = (try? ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)]))
+            ?? (try! ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)]))
+        let modelContext = ModelContext(container)
         self.service = DreamMorningReflectionService(modelContext: modelContext)
     }
     
