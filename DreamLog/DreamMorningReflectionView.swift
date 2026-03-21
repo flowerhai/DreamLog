@@ -478,7 +478,8 @@ struct ReflectionSettingsView: View {
         
         // Save using service (in a real app, this would use dependency injection)
         do {
-            let service = DreamMorningReflectionService(modelContext: ModelContext(try! ModelContainer(for: DreamMorningReflection.self)))
+            let container = try ModelContainer(for: DreamMorningReflection.self)
+            let service = DreamMorningReflectionService(modelContext: ModelContext(container))
             Task {
                 try await service.saveConfig(config)
                 if enabled {
@@ -507,8 +508,12 @@ class MorningReflectionViewModel: ObservableObject {
     init() {
         // Create in-memory model context for previews/standalone use
         // In production, the view should receive modelContext from environment
-        let container = (try? ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)]))
-            ?? (try! ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)]))
+        let container: ModelContainer
+        if let inMemoryContainer = try? ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)]) {
+            container = inMemoryContainer
+        } else {
+            container = try! ModelContainer(for: DreamMorningReflection.self, configurations: [.init(isStoredInMemoryOnly: true)])
+        }
         let modelContext = ModelContext(container)
         self.service = DreamMorningReflectionService(modelContext: modelContext)
     }

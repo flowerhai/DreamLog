@@ -594,22 +594,22 @@ struct DateRange {
     static func thisWeek() -> DateRange {
         let calendar = Calendar.current
         let now = Date()
-        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now))!
-        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek)!
+        let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: now)) ?? now
+        let endOfWeek = calendar.date(byAdding: .day, value: 6, to: startOfWeek) ?? now
         return DateRange(start: startOfWeek, end: endOfWeek)
     }
     
     static func thisMonth() -> DateRange {
         let calendar = Calendar.current
         let now = Date()
-        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now))!
-        let endOfMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth)!
+        let startOfMonth = calendar.date(from: calendar.dateComponents([.year, .month], from: now)) ?? now
+        let endOfMonth = calendar.date(byAdding: .month, value: 1, to: startOfMonth) ?? now
         return DateRange(start: startOfMonth, end: endOfMonth)
     }
     
     static func last30Days() -> DateRange {
         let end = Date()
-        let start = Calendar.current.date(byAdding: .day, value: -30, to: end)!
+        let start = Calendar.current.date(byAdding: .day, value: -30, to: end) ?? end
         return DateRange(start: start, end: end)
     }
 }

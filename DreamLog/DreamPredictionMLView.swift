@@ -684,19 +684,19 @@ struct PredictionAccuracyDetailView: View {
                 .font(.headline)
             
             HStack(spacing: 20) {
-                StatItemView(
+                PredictionStatItemView(
                     title: "平均准确度",
                     value: String(format: "%.1f%%", stats.averageAccuracy * 100),
                     icon: "🎯"
                 )
                 
-                StatItemView(
+                PredictionStatItemView(
                     title: "已验证预测",
                     value: "\(stats.validatedPredictions)",
                     icon: "✅"
                 )
                 
-                StatItemView(
+                PredictionStatItemView(
                     title: "总预测数",
                     value: "\(stats.totalPredictions)",
                     icon: "📊"
@@ -899,7 +899,7 @@ struct DreamFrequencyPredictionView: View {
 
 // MARK: - 辅助视图
 
-struct StatItemView: View {
+struct PredictionStatItemView: View {
     let title: String
     let value: String
     let icon: String

@@ -113,9 +113,10 @@ public actor DreamSmartInsightsService {
     
     /// 生成模式发现洞察
     private func generatePatternInsight(config: InsightGenerationConfig) async throws -> DreamSmartInsight? {
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         let fetchDescriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
-                dream.date >= Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+                dream.date >= thirtyDaysAgo
             }
         )
         
@@ -134,7 +135,7 @@ public actor DreamSmartInsightsService {
         let recurringTags = tagFrequency.filter { $0.value >= 3 }
         guard !recurringTags.isEmpty else { return nil }
         
-        let topTag = recurringTags.max(by: { $0.value < $1.value })!
+        guard let topTag = recurringTags.max(by: { $0.value < $1.value }) else { return nil }
         let confidence = min(Double(topTag.value) / Double(dreams.count) * 2, 0.95)
         
         return DreamSmartInsight(
@@ -151,9 +152,10 @@ public actor DreamSmartInsightsService {
     
     /// 生成情绪趋势洞察
     private func generateEmotionTrendInsight(config: InsightGenerationConfig) async throws -> DreamSmartInsight? {
+        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
         let fetchDescriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
-                dream.date >= Calendar.current.date(byAdding: .day, value: -14, to: Date())!
+                dream.date >= fourteenDaysAgo
             },
             sortBy: [SortDescriptor(\.date)]
         )
@@ -196,9 +198,10 @@ public actor DreamSmartInsightsService {
     
     /// 生成主题演变洞察
     private func generateThemeEvolutionInsight(config: InsightGenerationConfig) async throws -> DreamSmartInsight? {
+        let sixtyDaysAgo = Calendar.current.date(byAdding: .day, value: -60, to: Date()) ?? Date()
         let fetchDescriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
-                dream.date >= Calendar.current.date(byAdding: .day, value: -60, to: Date())!
+                dream.date >= sixtyDaysAgo
             },
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
@@ -208,7 +211,7 @@ public actor DreamSmartInsightsService {
         
         // 比较前后 30 天的主题变化
         let now = Date()
-        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: now)!
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now
         
         let recentDreams = dreams.filter { $0.date >= thirtyDaysAgo }
         let olderDreams = dreams.filter { $0.date < thirtyDaysAgo }
@@ -243,9 +246,10 @@ public actor DreamSmartInsightsService {
     
     /// 生成清醒梦机会洞察
     private func generateLucidOpportunityInsight(config: InsightGenerationConfig) async throws -> DreamSmartInsight? {
+        let thirtyDaysAgo = Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date()
         let fetchDescriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
-                dream.date >= Calendar.current.date(byAdding: .day, value: -30, to: Date())!
+                dream.date >= thirtyDaysAgo
             }
         )
         
@@ -282,9 +286,10 @@ public actor DreamSmartInsightsService {
     /// 生成睡眠质量洞察
     private func generateSleepQualityInsight(config: InsightGenerationConfig) async throws -> DreamSmartInsight? {
         // 检查是否有健康数据
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let fetchDescriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
-                dream.date >= Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+                dream.date >= sevenDaysAgo
             }
         )
         
@@ -311,9 +316,10 @@ public actor DreamSmartInsightsService {
     
     /// 生成创意启发洞察
     private func generateCreativeInsight(config: InsightGenerationConfig) async throws -> DreamSmartInsight? {
+        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
         let fetchDescriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
-                dream.date >= Calendar.current.date(byAdding: .day, value: -14, to: Date())!
+                dream.date >= fourteenDaysAgo
                 && dream.clarity >= 4
             }
         )
@@ -357,11 +363,12 @@ public actor DreamSmartInsightsService {
         }
         
         // 避免重复通知
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let existingMilestoneInsights = try modelContext.fetch(
             FetchDescriptor<DreamSmartInsight>(
                 predicate: #Predicate { insight in
                     insight.type.name == "里程碑" &&
-                    insight.createdAt >= Calendar.current.date(byAdding: .day, value: -7, to: Date())!
+                    insight.createdAt >= sevenDaysAgo
                 }
             )
         )
