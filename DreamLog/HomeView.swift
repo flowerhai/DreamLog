@@ -58,6 +58,14 @@ struct HomeView: View {
                         .padding(.bottom, 8)
                 }
                 
+                // 写作提示卡片 ✨ NEW (Phase 80)
+                if #available(iOS 17.0, *) {
+                    WritingPromptsCard()
+                        .environmentObject(dreamStore)
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                }
+                
                 // 模式预测卡片 ✨ NEW (Phase 55)
                 PatternPredictionCard()
                     .environmentObject(dreamStore)
@@ -896,6 +904,140 @@ struct MorningReflectionCard: View {
             streakDays = stats.streakDays
         } catch {
             print("加载晨间反思统计失败：\(error)")
+        }
+    }
+}
+
+// MARK: - Writing Prompts Card
+
+/// 写作提示卡片 ✨ NEW (Phase 80)
+@available(iOS 17.0, *)
+struct WritingPromptsCard: View {
+    @EnvironmentObject var dreamStore: DreamStore
+    @Environment(\.modelContext) private var modelContext
+    @State private var showingPrompts = false
+    @State private var todayCount: Int = 0
+    @State private var streakDays: Int = 0
+    @State private var weeklyProgress: Int = 0
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "pencil.and.outline")
+                            .font(.title2)
+                            .foregroundColor(.purple)
+                            .accessibilityHidden(true)
+                        
+                        Text("写作提示")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                    }
+                    
+                    Text(streakDays > 0
+                         ? "已连续写作 \(streakDays) 天，本周完成 \(weeklyProgress) 次"
+                         : "通过写作探索梦境的深层含义")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityElement(children: .combine)
+                
+                Spacer()
+                
+                Button(action: { showingPrompts = true }) {
+                    HStack(spacing: 4) {
+                        Text(todayCount > 0 ? "继续写作" : "开始写作")
+                            .font(.caption)
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .accessibilityHidden(true)
+                    }
+                    .foregroundColor(.purple)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color.purple.opacity(0.2))
+                    .cornerRadius(8)
+                }
+                .accessibilityLabel(todayCount > 0 ? "继续写作练习" : "开始写作练习")
+            }
+            
+            // 快速操作提示
+            HStack(spacing: 16) {
+                HStack(spacing: 6) {
+                    Image(systemName: "lightbulb.fill")
+                        .font(.caption)
+                        .foregroundColor(.purple.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("灵感")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("获取写作灵感")
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "chart.bar.fill")
+                        .font(.caption)
+                        .foregroundColor(.purple.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("统计")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("追踪写作进度")
+                
+                HStack(spacing: 6) {
+                    Image(systemName: "star.fill")
+                        .font(.caption)
+                        .foregroundColor(.purple.opacity(0.8))
+                        .accessibilityHidden(true)
+                    Text("成就")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+                .accessibilityLabel("解锁写作成就")
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color.black.opacity(0.2))
+            .cornerRadius(8)
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(
+                    LinearGradient(
+                        colors: [Color(hex: "9B59B6").opacity(0.3), Color(hex: "8E44AD").opacity(0.1)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color(hex: "9B59B6").opacity(0.3), lineWidth: 1)
+                )
+        )
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("写作提示卡片")
+        .accessibilityHint(streakDays > 0 ? "双击继续写作练习" : "双击开始写作练习")
+        .task {
+            await loadStats()
+        }
+        .sheet(isPresented: $showingPrompts) {
+            DreamWritingPromptsView()
+        }
+    }
+    
+    @MainActor
+    private func loadStats() async {
+        do {
+            let service = DreamWritingPromptsService(modelContainer: ModelContainer.shared)
+            let stats = try service.getStatistics()
+            todayCount = stats.completedPrompts // 简化处理
+            streakDays = stats.streakDays
+            weeklyProgress = stats.weeklyProgress
+        } catch {
+            print("加载写作提示统计失败：\(error)")
         }
     }
 }
