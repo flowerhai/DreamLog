@@ -55,7 +55,7 @@ struct DreamComparisonView: View {
                 }
             }
             .sheet(isPresented: $showingDreamPicker) {
-                DreamPickerView(
+                ComparisonDreamPickerView(
                     selectedDreams: $selectedDreams,
                     maxSelection: comparisonType == .twoDreams ? 2 : 5,
                     minSelection: 2
@@ -530,7 +530,7 @@ struct DifferenceCard: View {
 
 // MARK: - Dream Picker View
 
-struct DreamPickerView: View {
+struct ComparisonDreamPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Binding var selectedDreams: [Dream]

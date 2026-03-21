@@ -407,15 +407,15 @@ struct GraphStatisticsView: View {
         NavigationView {
             List {
                 Section(header: Text("图谱概览")) {
-                    StatRow(title: "梦境节点", value: "\(statistics?.totalNodes ?? 0)", icon: "circle.fill")
-                    StatRow(title: "关联边", value: "\(statistics?.totalEdges ?? 0)", icon: "line.3.horizontal")
-                    StatRow(title: "平均连接", value: String(format: "%.1f", statistics?.averageConnections ?? 0), icon: "arrow.triangle.2.circlepath")
+                    GraphStatRow(title: "梦境节点", value: "\(statistics?.totalNodes ?? 0)", icon: "circle.fill")
+                    GraphStatRow(title: "关联边", value: "\(statistics?.totalEdges ?? 0)", icon: "line.3.horizontal")
+                    GraphStatRow(title: "平均连接", value: String(format: "%.1f", statistics?.averageConnections ?? 0), icon: "arrow.triangle.2.circlepath")
                 }
                 
                 Section(header: Text("图谱特性")) {
-                    StatRow(title: "图谱密度", value: String(format: "%.2f", (statistics?.density ?? 0) * 100) + "%", icon: "chart.bar.fill")
-                    StatRow(title: "最大聚类", value: "\(statistics?.largestCluster ?? 0) 个梦境", icon: "group")
-                    StatRow(title: "孤立节点", value: "\(statistics?.isolatedNodes ?? 0)", icon: "circle")
+                    GraphStatRow(title: "图谱密度", value: String(format: "%.2f", (statistics?.density ?? 0) * 100) + "%", icon: "chart.bar.fill")
+                    GraphStatRow(title: "最大聚类", value: "\(statistics?.largestCluster ?? 0) 个梦境", icon: "group")
+                    GraphStatRow(title: "孤立节点", value: "\(statistics?.isolatedNodes ?? 0)", icon: "circle")
                 }
                 
                 Section(header: Text("说明")) {
@@ -434,7 +434,7 @@ struct GraphStatisticsView: View {
     }
 }
 
-struct StatRow: View {
+struct GraphStatRow: View {
     let title: String
     let value: String
     let icon: String

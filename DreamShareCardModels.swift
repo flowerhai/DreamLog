@@ -340,7 +340,7 @@ struct SharePlatformConfig: Codable {
     var supportsVideo: Bool
     var supportsQRCode: Bool
     
-    enum SharePlatform: String, CaseIterable, Codable {
+    enum ShareCardPlatform: String, CaseIterable, Codable {
         case wechat = "wechat"          // 微信朋友圈
         case wechatMoment = "wechatMoment" // 微信公众号
         case xiaohongshu = "xiaohongshu" // 小红书

@@ -364,8 +364,8 @@ struct ImportPreviewSheet: View {
                 
                 // 数据统计
                 Section {
-                    StatRow(label: "梦境数量", value: "\(preview.itemCount)")
-                    StatRow(label: "文件格式", value: preview.sourceType.displayName)
+                    ImportStatRow(label: "梦境数量", value: "\(preview.itemCount)")
+                    ImportStatRow(label: "文件格式", value: preview.sourceType.displayName)
                 } header: {
                     Text("数据统计")
                 }
@@ -428,7 +428,7 @@ struct ImportPreviewSheet: View {
 
 // MARK: - 统计行
 
-struct StatRow: View {
+struct ImportStatRow: View {
     let label: String
     let value: String
     

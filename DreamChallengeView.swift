@@ -626,7 +626,7 @@ struct StatsDetailView: View {
     }
 }
 
-struct StatRow: View {
+struct ChallengeStatRow: View {
     let label: String
     let value: String
     

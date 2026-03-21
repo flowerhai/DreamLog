@@ -243,7 +243,7 @@ struct DreamPredictionMLView: View {
     private var typeFilter: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                FilterChipView(
+                PredictionMLFilterChipView(
                     title: "全部",
                     icon: "🔮",
                     isSelected: selectedType == nil
@@ -252,7 +252,7 @@ struct DreamPredictionMLView: View {
                 }
                 
                 ForEach(MLPredictionType.allCases, id: \.self) { type in
-                    FilterChipView(
+                    PredictionMLFilterChipView(
                         title: type.displayName,
                         icon: type.icon,
                         isSelected: selectedType == type
@@ -919,7 +919,7 @@ struct StatItemView: View {
     }
 }
 
-struct FilterChipView: View {
+struct PredictionMLFilterChipView: View {
     let title: String
     let icon: String
     let isSelected: Bool

@@ -144,7 +144,7 @@ final class DreamShareCardService {
     func shareCard(
         _ card: DreamShareCard,
         dream: Dream,
-        to platform: SharePlatformConfig.SharePlatform,
+        to platform: SharePlatformConfig.ShareCardPlatform,
         completion: @escaping (Bool) -> Void
     ) async {
         do {

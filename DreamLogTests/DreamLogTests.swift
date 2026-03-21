@@ -4175,7 +4175,7 @@ final class DreamLogTests: XCTestCase {
     
     func testInsightCardModel() throws {
         // 测试洞察卡片模型
-        let insight = InsightCard(
+        let insight = AssistantInsightCardData(
             title: "梦境统计",
             description: "本周共记录 5 个梦境",
             icon: "chart.bar",

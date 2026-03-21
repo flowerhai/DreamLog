@@ -587,7 +587,7 @@ struct SuggestionCard: View {
                     .foregroundColor(.green)
             }
             
-            WrapLayout(spacing: 8) {
+            TagManagerWrapLayout(spacing: 8) {
                 ForEach(suggestion.suggestedTags, id: \.self) { tag in
                     Text("+" + tag)
                         .font(.subheadline)
@@ -649,7 +649,7 @@ struct CleanupSuggestionCard: View {
                     .foregroundColor(.gray)
             }
             
-            WrapLayout(spacing: 8) {
+            TagManagerWrapLayout(spacing: 8) {
                 ForEach(suggestion.tags, id: \.id) { tag in
                     Text(tag.name + " (×\(tag.count))")
                         .font(.subheadline)
@@ -789,7 +789,7 @@ struct RenameTagSheet: View {
 
 // MARK: - Helper Views
 
-struct WrapLayout: View {
+struct TagManagerWrapLayout: View {
     let spacing: CGFloat
     let content: () -> [View]
     

@@ -98,7 +98,7 @@ enum QuickActionType: Hashable {
 // MARK: - 洞察卡片
 
 /// 洞察卡片数据
-struct InsightCard: Identifiable, Hashable {
+struct AssistantInsightCardData: Identifiable, Hashable {
     let id: UUID
     let title: String
     let description: String

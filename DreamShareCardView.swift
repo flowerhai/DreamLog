@@ -537,9 +537,9 @@ struct ShareStatsView: View {
         NavigationView {
             Form {
                 Section("总览") {
-                    StatRow(title: "总卡片数", value: "\(stats.totalCards)", icon: "photo")
-                    StatRow(title: "总分享次数", value: "\(stats.totalShares)", icon: "square.and.arrow.up")
-                    StatRow(title: "收藏卡片", value: "\(stats.favoriteCards)", icon: "heart")
+                    ShareCardStatRow(title: "总卡片数", value: "\(stats.totalCards)", icon: "photo")
+                    ShareCardStatRow(title: "总分享次数", value: "\(stats.totalShares)", icon: "square.and.arrow.up")
+                    ShareCardStatRow(title: "收藏卡片", value: "\(stats.favoriteCards)", icon: "heart")
                 }
                 
                 if let mostUsed = stats.mostUsedTheme {
@@ -587,7 +587,7 @@ struct ShareStatsView: View {
     }
 }
 
-struct StatRow: View {
+struct ShareCardStatRow: View {
     let title: String
     let value: String
     let icon: String

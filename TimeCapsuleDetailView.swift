@@ -222,7 +222,7 @@ struct TimeCapsuleDetailView: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(0..<min(5, capsule.dreamCount), id: \.self) { index in
-                        DreamPreviewCard(index: index)
+                        TimeCapsuleDreamPreviewCard(index: index)
                     }
                     
                     if capsule.dreamCount > 5 {
@@ -389,7 +389,7 @@ struct InfoRow: View {
     }
 }
 
-struct DreamPreviewCard: View {
+struct TimeCapsuleDreamPreviewCard: View {
     let index: Int
     
     var body: some View {

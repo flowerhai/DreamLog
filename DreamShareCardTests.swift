@@ -209,7 +209,7 @@ final class DreamShareCardTests: XCTestCase {
     // MARK: - 分享平台测试
     
     func testSharePlatformCases() {
-        let platforms = SharePlatformConfig.SharePlatform.allCases
+        let platforms = SharePlatformConfig.ShareCardPlatform.allCases
         XCTAssertEqual(platforms.count, 9)
         
         for platform in platforms {
@@ -220,11 +220,11 @@ final class DreamShareCardTests: XCTestCase {
     
     func testSharePlatformRecommendedSizes() {
         // 验证推荐尺寸
-        let wechatSize = SharePlatformConfig.SharePlatform.wechat.recommendedSize
+        let wechatSize = SharePlatformConfig.ShareCardPlatform.wechat.recommendedSize
         XCTAssertEqual(wechatSize.width, 1080)
         XCTAssertEqual(wechatSize.height, 1350)
         
-        let instagramSize = SharePlatformConfig.SharePlatform.instagram.recommendedSize
+        let instagramSize = SharePlatformConfig.ShareCardPlatform.instagram.recommendedSize
         XCTAssertEqual(instagramSize.width, 1080)
         XCTAssertEqual(instagramSize.height, 1080)
     }
