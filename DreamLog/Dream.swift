@@ -181,14 +181,14 @@ extension Dream {
     }
     
     /// 锁定梦境
-    mutating func lock(type: DreamLockType) {
+    func lock(type: DreamLockType) {
         lockType = type
         lockedAt = Date()
         updatedAt = Date()
     }
     
     /// 解锁梦境
-    mutating func unlock() {
+    func unlock() {
         lockType = .none
         lockedAt = nil
         isHidden = false
@@ -196,7 +196,7 @@ extension Dream {
     }
     
     /// 切换隐藏状态
-    mutating func toggleHidden() {
+    func toggleHidden() {
         isHidden.toggle()
         updatedAt = Date()
     }

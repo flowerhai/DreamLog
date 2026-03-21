@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import SwiftData
 
 struct HomeView: View {
     @EnvironmentObject var dreamStore: DreamStore
@@ -1039,7 +1040,11 @@ struct WritingPromptsCard: View {
     @MainActor
     private func loadStats() async {
         do {
-            let service = DreamWritingPromptsService(modelContainer: ModelContainer.shared)
+            guard let modelContainer = SharedModelContainer.main else {
+                print("SharedModelContainer 未初始化")
+                return
+            }
+            let service = DreamWritingPromptsService(modelContainer: modelContainer)
             let stats = try service.getStatistics()
             todayCount = stats.completedPrompts // 简化处理
             streakDays = stats.streakDays
