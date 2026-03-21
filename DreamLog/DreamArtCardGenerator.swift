@@ -214,7 +214,8 @@ class DreamArtCardGenerator {
     }
     
     private func applyBlur(context: UIGraphicsImageRendererContext, radius: CGFloat, size: CGSize) {
-        guard let ciImage = CIImage(cgImage: context.cgContext.makeImage()!) else { return }
+        guard let cgImage = context.cgContext.makeImage(),
+              let ciImage = CIImage(cgImage: cgImage) else { return }
         
         let filter = CIFilter(name: "CIGaussianBlur")
         filter?.setValue(ciImage, forKey: kCIInputImageKey)

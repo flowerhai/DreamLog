@@ -565,15 +565,16 @@ public actor DreamSmartInsightsService {
         var settings = try getSettings()
         
         if settings == nil {
-            settings = DreamSmartNotificationSettings()
-            modelContext.insert(settings!)
+            let newSettings = DreamSmartNotificationSettings()
+            modelContext.insert(newSettings)
+            settings = newSettings
         }
         
         if let enabled = enabled {
-            settings!.enabled = enabled
+            settings?.enabled = enabled
         }
         if let config = config {
-            settings!.config = config
+            settings?.config = config
         }
         
         try modelContext.save()
