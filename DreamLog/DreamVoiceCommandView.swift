@@ -1,141 +1,192 @@
 //
 //  DreamVoiceCommandView.swift
-//  DreamLog
+//  DreamLog - 梦境语音命令 UI 界面
+//  Phase 84: 梦境语音命令系统
 //
-//  Phase 71 - 语音命令 UI 界面
-//  提供语音交互界面和命令历史查看
+//  Created by DreamLog Team on 2026/3/21.
 //
 
 import SwiftUI
+import SwiftData
 
-// MARK: - 主视图
+// MARK: - 主界面
 
 struct DreamVoiceCommandView: View {
-    @StateObject private var service = VoiceCommandService.shared
+    @StateObject private var service: DreamVoiceCommandService
+    @Environment(\.modelContext) private var modelContext
+    @State private var showingSettings = false
     @State private var showingHelp = false
-    @State private var searchText = ""
+    
+    init(modelContext: ModelContext? = nil) {
+        _service = StateObject(wrappedValue: DreamVoiceCommandService(modelContext: modelContext))
+    }
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // 语音状态卡片
-                VoiceStatusCard(service: service)
-                    .padding()
+        NavigationStack {
+            VStack(spacing: 20) {
+                // 头部统计
+                statsHeader
                 
-                // 命令历史
-                if !service.results.isEmpty {
-                    Text("历史记录")
-                        .font(.headline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                        .padding(.top)
-                    
-                    List(filteredResults) { result in
-                        VoiceCommandRow(result: result)
-                    }
-                    .listStyle(.inset)
-                } else {
-                    VoiceEmptyState()
-                }
+                // 主按钮区域
+                mainButtonSection
+                
+                // 最近命令
+                recentCommandsSection
+                
+                // 快速命令列表
+                quickCommandsList
             }
+            .padding()
             .navigationTitle("语音命令")
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button(action: { showingSettings = true }) {
+                        Image(systemName: "gearshape.fill")
+                    }
+                }
+                
+                ToolbarItem(placement: .topBarLeading) {
                     Button(action: { showingHelp = true }) {
-                        Image(systemName: "questionmark.circle")
+                        Image(systemName: "questionmark.circle.fill")
                     }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if !service.results.isEmpty {
-                        Button(action: { service.clearHistory() }) {
-                            Image(systemName: "trash")
-                        }
-                    }
-                }
-                
-                ToolbarItem(placement: .bottomBar) {
-                    VoiceControlBar(service: service)
                 }
             }
-            .searchable(text: $searchText, prompt: "搜索命令历史")
+            .sheet(isPresented: $showingSettings) {
+                VoiceCommandSettingsView(service: service)
+            }
             .sheet(isPresented: $showingHelp) {
                 VoiceCommandHelpView()
             }
             .onAppear {
-                service.checkAuthorization()
+                service.loadHistory()
             }
         }
     }
     
-    private var filteredResults: [VoiceCommandResult] {
-        if searchText.isEmpty {
-            return service.results
-        }
-        return service.results.filter {
-            $0.transcribedText.localizedCaseInsensitiveContains(searchText) ||
-            ($0.command?.description.localizedCaseInsensitiveContains(searchText) ?? false)
-        }
-    }
-}
-
-// MARK: - 语音状态卡片
-
-struct VoiceStatusCard: View {
-    @ObservedObject var service: VoiceCommandService
+    // MARK: - Subviews
     
-    var body: some View {
+    private var statsHeader: some View {
+        let stats = service.getStats()
+        
+        return VStack(spacing: 12) {
+            HStack(spacing: 16) {
+                StatCard(
+                    title: "总命令",
+                    value: "\(stats.totalCommands)",
+                    icon: "🎤",
+                    color: .blue
+                )
+                
+                StatCard(
+                    title: "成功率",
+                    value: String(format: "%.0f%%", stats.successRate * 100),
+                    icon: "✅",
+                    color: .green
+                )
+                
+                StatCard(
+                    title: "今日",
+                    value: "\(stats.todayCommands)",
+                    icon: "📅",
+                    color: .orange
+                )
+            }
+            
+            if let mostUsed = stats.mostUsedCommand {
+                Text("最常用：\(mostUsed.icon) \(mostUsed.displayName)")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
+        )
+    }
+    
+    private var mainButtonSection: some View {
         VStack(spacing: 16) {
-            // 状态指示器
-            HStack {
-                Spacer()
-                
-                ZStack {
-                    // 外圈脉冲动画
+            // 语音按钮
+            Button(action: {
+                Task {
                     if service.isListening {
-                        Circle()
-                            .stroke(Color.red.opacity(0.3), lineWidth: 4)
-                            .frame(width: 80, height: 80)
-                            .scaleEffect(service.isProcessing ? 1.2 : 1.0)
-                            .animation(.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: service.isProcessing)
+                        service.stopListening()
+                    } else {
+                        try? await service.startListening()
                     }
-                    
-                    // 内圈
-                    Circle()
-                        .fill(statusColor)
-                        .frame(width: 60, height: 60)
-                        .overlay(
-                            Image(systemName: statusIcon)
-                                .font(.system(size: 28))
-                                .foregroundColor(.white)
-                        )
                 }
-                
-                Spacer()
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(
+                            LinearGradient(
+                                colors: service.isListening ? [.red, .orange] : [.blue, .purple],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 120, height: 120)
+                        .shadow(color: service.isListening ? .red.opacity(0.3) : .blue.opacity(0.3), radius: 20)
+                    
+                    VStack(spacing: 8) {
+                        Image(systemName: service.isListening ? "waveform.circle.fill" : "mic.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(.white)
+                        
+                        Text(service.isListening ? "正在听..." : "按住说话")
+                            .font(.caption)
+                            .foregroundColor(.white.opacity(0.9))
+                    }
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            // 状态指示
+            if service.isProcessing {
+                HStack {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                    Text("处理中...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
             }
             
-            // 状态文本
-            Text(statusText)
-                .font(.title2)
-                .fontWeight(.semibold)
-                .foregroundColor(.primary)
-            
-            Text(statusDescription)
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-            
-            // 授权状态
-            if service.authorizationStatus != .authorized {
-                Button(action: { service.requestAuthorization() }) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle")
-                        Text("需要语音识别权限")
-                    }
-                    .foregroundColor(.white)
+            // 识别文本
+            if !service.recognizedText.isEmpty {
+                Text("\"\(service.recognizedText)\"")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
                     .padding()
-                    .background(Color.orange)
-                    .cornerRadius(10)
+                    .frame(maxWidth: .infinity)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+            }
+            
+            // 结果消息
+            if let result = service.lastResult {
+                ResultCard(result: result)
+            }
+        }
+    }
+    
+    private var recentCommandsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("最近命令")
+                .font(.headline)
+            
+            if service.commandHistory.isEmpty {
+                Text("暂无历史记录")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.vertical, 20)
+            } else {
+                ForEach(service.commandHistory.prefix(5)) { history in
+                    HistoryRow(history: history)
                 }
             }
         }
@@ -143,291 +194,337 @@ struct VoiceStatusCard: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.1), radius: 10, x: 0, y: 5)
+                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
         )
     }
     
-    private var statusColor: Color {
-        if service.authorizationStatus != .authorized {
-            return .orange
-        } else if service.isListening {
-            return .red
-        } else {
-            return .green
+    private var quickCommandsList: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("快速命令")
+                .font(.headline)
+            
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                ForEach(VoiceCommandType.allCases, id: \.self) { command in
+                    QuickCommandButton(
+                        command: command,
+                        action: {
+                            service.executeCommand(command, recognizedText: command.displayName)
+                        }
+                    )
+                }
+            }
         }
-    }
-    
-    private var statusIcon: String {
-        if service.authorizationStatus != .authorized {
-            return "exclamationmark.triangle"
-        } else if service.isListening {
-            return service.isProcessing ? "waveform" : "mic.fill"
-        } else {
-            return "mic.slash.fill"
-        }
-    }
-    
-    private var statusText: String {
-        if service.authorizationStatus != .authorized {
-            return "需要授权"
-        } else if service.isListening {
-            return service.isProcessing ? "正在聆听..." : "聆听中"
-        } else {
-            return "点击开始"
-        }
-    }
-    
-    private var statusDescription: String {
-        if service.authorizationStatus != .authorized {
-            return "请点击授权以使用语音命令"
-        } else if service.isListening {
-            return "说出你的命令，例如\"记录梦境\""
-        } else {
-            return "点击下方按钮开始语音控制"
-        }
+        .padding()
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.05), radius: 10, x: 0, y: 5)
+        )
     }
 }
 
-// MARK: - 命令历史行
+// MARK: - 子组件
 
-struct VoiceCommandRow: View {
+struct StatCard: View {
+    let title: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            Text(icon)
+                .font(.title2)
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+            Text(title)
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(color.opacity(0.1))
+        .cornerRadius(12)
+    }
+}
+
+struct ResultCard: View {
     let result: VoiceCommandResult
     
     var body: some View {
-        HStack(spacing: 12) {
-            // 图标
-            Image(systemName: result.command?.icon ?? "questionmark.circle")
-                .font(.title2)
-                .foregroundColor(result.isSuccess ? .green : .orange)
-                .frame(width: 40)
-            
-            VStack(alignment: .leading, spacing: 4) {
-                // 识别文本
-                Text(result.transcribedText)
-                    .font(.body)
-                    .fontWeight(.medium)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: result.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                    .foregroundColor(result.success ? .green : .red)
                 
-                // 命令描述
-                if let command = result.command {
-                    Text(command.description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
+                Text(result.commandType.displayName)
+                    .font(.headline)
                 
-                // 置信度和时间
-                HStack {
-                    Text(String(format: "%.0f%%", result.confidence * 100))
-                        .font(.caption2)
-                        .foregroundColor(confidenceColor)
-                    
-                    Text("•")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                    
-                    Text(result.timestamp, style: .relative)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+                Spacer()
+                
+                Text(String(format: "%.0f%%", result.confidence * 100))
+                    .font(.caption)
+                    .foregroundColor(.secondary)
             }
             
-            Spacer()
-            
-            // 成功标记
-            if result.isSuccess {
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundColor(.green)
-            }
-        }
-        .padding(.vertical, 8)
-    }
-    
-    private var confidenceColor: Color {
-        if result.confidence > 0.8 {
-            return .green
-        } else if result.confidence > 0.6 {
-            return .orange
-        } else {
-            return .red
-        }
-    }
-}
-
-// MARK: - 空状态
-
-struct VoiceEmptyState: View {
-    var body: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "mic.slash.circle")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary.opacity(0.5))
-            
-            Text("暂无语音命令历史")
-                .font(.headline)
+            Text(result.message)
+                .font(.subheadline)
                 .foregroundColor(.secondary)
             
-            Text("点击下方按钮开始使用语音控制")
-                .font(.subheadline)
-                .foregroundColor(.secondary.opacity(0.7))
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .padding()
-    }
-}
-
-// MARK: - 控制栏
-
-struct VoiceControlBar: View {
-    @ObservedObject var service: VoiceCommandService
-    
-    var body: some View {
-        HStack(spacing: 20) {
-            Spacer()
-            
-            Button(action: toggleListening) {
-                Image(systemName: service.isListening ? "mic.slash.fill" : "mic.fill")
-                    .font(.system(size: 24))
-                    .foregroundColor(.white)
-                    .frame(width: 56, height: 56)
-                    .background(service.isListening ? Color.red : Color.green)
-                    .clipShape(Circle())
-                    .shadow(color: .black.opacity(0.2), radius: 8, x: 0, y: 4)
-            }
-            .disabled(service.authorizationStatus != .authorized)
-            
-            Spacer()
+            Text(result.recognizedText)
+                .font(.caption)
+                .foregroundColor(.tertiary)
         }
         .padding()
-        .background(Color(.systemBackground))
-    }
-    
-    private func toggleListening() {
-        Task {
-            if service.isListening {
-                service.stopListening()
-            } else {
-                do {
-                    try await service.startListening()
-                } catch {
-                    print("启动语音识别失败：\(error)")
-                }
-            }
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(result.success ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
+        )
     }
 }
 
-// MARK: - 帮助视图
-
-struct VoiceCommandHelpView: View {
-    @Environment(\.dismiss) var dismiss
-    let service = VoiceCommandService.shared
+struct HistoryRow: View {
+    let history: VoiceCommandHistory
     
     var body: some View {
-        NavigationView {
-            List {
-                Section(header: Text("记录相关")) {
-                    ForEach(commandsWithKeywords(["记录梦境", "快速记录", "开始录音", "停止录音"]), id: \.command) { item in
-                        CommandHelpRow(command: item.command, keywords: item.keywords)
-                    }
-                }
-                
-                Section(header: Text("查询相关")) {
-                    ForEach(commandsWithKeywords(["查看统计", "今天有什么梦", "最近的梦境", "搜索梦境"]), id: \.command) { item in
-                        CommandHelpRow(command: item.command, keywords: item.keywords)
-                    }
-                }
-                
-                Section(header: Text("导航相关")) {
-                    ForEach(commandsWithKeywords(["打开画廊", "打开洞察", "打开日历", "打开设置"]), id: \.command) { item in
-                        CommandHelpRow(command: item.command, keywords: item.keywords)
-                    }
-                }
-                
-                Section(header: Text("功能相关")) {
-                    ForEach(commandsWithKeywords(["分享梦境", "锁定梦境", "分析梦境", "设置提醒"]), id: \.command) { item in
-                        CommandHelpRow(command: item.command, keywords: item.keywords)
-                    }
-                }
-                
-                Section(header: Text("提示")) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Image(systemName: "lightbulb.fill")
-                                .foregroundColor(.yellow)
-                            Text("说话清晰，语速适中")
-                        }
-                        
-                        HStack {
-                            Image(systemName: "volume.fill")
-                                .foregroundColor(.blue)
-                            Text("确保环境安静，减少背景噪音")
-                        }
-                        
-                        HStack {
-                            Image(systemName: "wifi")
-                                .foregroundColor(.green)
-                            Text("部分功能需要网络连接")
-                        }
-                    }
-                    .font(.subheadline)
-                    .padding(.vertical, 8)
-                }
-            }
-            .navigationTitle("语音命令帮助")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") { dismiss() }
-                }
-            }
-        }
-    }
-    
-    private func commandsWithKeywords(_ keywords: [String]) -> [(command: VoiceCommand, keywords: [String])] {
-        VoiceCommand.allCases.compactMap { command in
-            if keywords.contains(where: { command.keywords.contains($0) }) {
-                return (command, command.keywords)
-            }
-            return nil
-        }
-    }
-}
-
-struct CommandHelpRow: View {
-    let command: VoiceCommand
-    let keywords: [String]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Image(systemName: command.icon)
-                    .foregroundColor(.green)
-                    .frame(width: 30)
-                
-                Text(command.description)
-                    .font(.body)
-                    .fontWeight(.medium)
-            }
-            
-            LazyVFlow(alignment: .leading, spacing: 4) {
-                ForEach(keywords.prefix(4), id: \.self) { keyword in
-                    Text(keyword)
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Image(systemName: history.success ? "checkmark.circle.fill" : "xmark.circle.fill")
+                        .foregroundColor(history.success ? .green : .red)
                         .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.green.opacity(0.1))
-                        .cornerRadius(4)
+                    
+                    Text(history.commandType)
+                        .font(.subheadline)
+                        .fontWeight(.medium)
                 }
+                
+                Text(history.recognizedText)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+            
+            Spacer()
+            
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(history.timestamp, style: .relative)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                
+                Text(String(format: "%.2fs", history.responseTime))
+                    .font(.caption2)
+                    .foregroundColor(.tertiary)
             }
         }
         .padding(.vertical, 4)
     }
 }
 
+struct QuickCommandButton: View {
+    let command: VoiceCommandType
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Text(command.icon)
+                    .font(.title2)
+                Text(command.displayName)
+                    .font(.caption)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - 设置界面
+
+struct VoiceCommandSettingsView: View {
+    @ObservedObject var service: DreamVoiceCommandService
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("基本设置") {
+                    Toggle("启用语音命令", isOn: $service.config.isEnabled)
+                    
+                    TextField("唤醒词", text: $service.config.wakeWord)
+                    
+                    Picker("语言", selection: $service.config.language) {
+                        Text("简体中文").tag("zh-CN")
+                        Text("English").tag("en-US")
+                    }
+                }
+                
+                Section("反馈设置") {
+                    Toggle("触觉反馈", isOn: $service.config.hapticFeedback)
+                    Toggle("语音反馈", isOn: $service.config.voiceFeedback)
+                    Toggle("显示确认", isOn: $service.config.showConfirmation)
+                    Toggle("自动执行", isOn: $service.config.autoExecute)
+                }
+                
+                Section("历史记录") {
+                    Stepper("保留天数：\(service.config.maxHistoryDays) 天", value: $service.config.maxHistoryDays, in: 7...90)
+                    
+                    Stepper("最低置信度：\(Int(service.config.minConfidence * 100))%",
+                           value: Binding(
+                                get: { Int(service.config.minConfidence * 100) },
+                                set: { service.config.minConfidence = Double($0) / 100.0 }
+                            ),
+                            in: 50...95)
+                }
+                
+                Section("统计数据") {
+                    let stats = service.getStats()
+                    
+                    HStack {
+                        Text("总命令数")
+                        Spacer()
+                        Text("\(stats.totalCommands)")
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Text("成功率")
+                        Spacer()
+                        Text(String(format: "%.1f%%", stats.successRate * 100))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack {
+                        Text("平均响应时间")
+                        Spacer()
+                        Text(String(format: "%.2f 秒", stats.averageResponseTime))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                Section {
+                    Button("清除历史记录", role: .destructive) {
+                        clearHistory()
+                    }
+                }
+            }
+            .navigationTitle("语音命令设置")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") {
+                        service.saveConfig()
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func clearHistory() {
+        guard let modelContext = service.modelContext else { return }
+        
+        do {
+            let descriptor = FetchDescriptor<VoiceCommandHistory>()
+            let records = try modelContext.fetch(descriptor)
+            for record in records {
+                modelContext.delete(record)
+            }
+            service.commandHistory.removeAll()
+        } catch {
+            print("Failed to clear history: \(error)")
+        }
+    }
+}
+
+// MARK: - 帮助界面
+
+struct VoiceCommandHelpView: View {
+    @Environment(\.dismiss) private var dismiss
+    
+    let commandGroups: [(category: String, commands: [VoiceCommandType])] = [
+        ("记录类", [.recordDream, .quickNote]),
+        ("查询类", [.searchDream, .showStats, .showRecent, .showCalendar]),
+        ("分析类", [.showInsights, .showTrends, .showPatterns]),
+        ("功能类", [.startMeditation, .playMusic, .showGallery, .exportData]),
+        ("设置类", [.openSettings, .setReminder]),
+        ("帮助类", [.help, .whatCanIDo])
+    ]
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(commandGroups, id: \.category) { group in
+                    Section(group.category) {
+                        ForEach(group.commands, id: \.self) { command in
+                            HStack {
+                                Text(command.icon)
+                                    .font(.title2)
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(command.displayName)
+                                        .font(.headline)
+                                    
+                                    Text("示例：\(examplePhrase(for: command))")
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                            .padding(.vertical, 4)
+                        }
+                    }
+                }
+                
+                Section("使用提示") {
+                    Text("• 点击麦克风按钮开始说话")
+                    Text("• 清晰地说出命令短语")
+                    Text("• 可以在设置中自定义唤醒词")
+                    Text("• 支持中文和英文识别")
+                }
+            }
+            .navigationTitle("语音命令帮助")
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("完成") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func examplePhrase(for command: VoiceCommandType) -> String {
+        switch command {
+        case .recordDream: return "记录梦境"
+        case .quickNote: return "快速备注"
+        case .searchDream: return "搜索飞行梦"
+        case .showStats: return "查看统计"
+        case .showRecent: return "最近的梦"
+        case .showCalendar: return "梦境日历"
+        case .showInsights: return "智能洞察"
+        case .showTrends: return "梦境趋势"
+        case .showPatterns: return "梦境模式"
+        case .startMeditation: return "开始冥想"
+        case .playMusic: return "播放音乐"
+        case .showGallery: return "梦境画廊"
+        case .exportData: return "导出数据"
+        case .openSettings: return "打开设置"
+        case .setReminder: return "设置提醒"
+        case .help: return "帮助"
+        case .whatCanIDo: return "我能做什么"
+        }
+    }
+}
+
 // MARK: - Preview
 
-struct DreamVoiceCommandView_Previews: PreviewProvider {
-    static var previews: some View {
-        DreamVoiceCommandView()
-    }
+#Preview {
+    DreamVoiceCommandView()
+        .modelContainer(for: VoiceCommandHistory.self, inMemory: true)
 }
