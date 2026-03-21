@@ -279,6 +279,10 @@ struct ProfileNavigationView: View {
                     NavigationLink(destination: DreamAssistantView()) {
                         Label("AI 助手", systemImage: "message.fill")
                     }
+                    NavigationLink(destination: DreamVoiceCommandView()) {
+                        Label("语音命令", systemImage: "mic.circle.fill")
+                            .accessibilityLabel("语音命令 - 语音控制应用")
+                    }
                 }
                 
                 Section(header: Text("数据管理")) {
