@@ -550,12 +550,18 @@ final class DreamSmartSuggestionsService {
         // 分析模式 (简化版)
         let patterns = analyzeDreamPatterns(recentDreams)
         
+        // 获取睡眠质量数据
+        let sleepQuality = await getSleepQuality()
+        
+        // 计算压力水平 (基于情绪数据)
+        let stressLevel = calculateStressLevel(from: recentDreams)
+        
         // 创建上下文
         let context = SuggestionContext(
             recentDreams: recentDreams,
             dreamPatterns: patterns,
-            sleepQuality: 0.7, // TODO: 从健康数据获取
-            stressLevel: 0.4,  // TODO: 从情绪数据获取
+            sleepQuality: sleepQuality,
+            stressLevel: stressLevel,
             dreamRecallRate: Double(recentDreams.count) / 30.0,
             config: config
         )
@@ -567,6 +573,60 @@ final class DreamSmartSuggestionsService {
         if !suggestions.isEmpty {
             saveSuggestions(suggestions)
         }
+    }
+    
+    /// 获取睡眠质量数据
+    private func getSleepQuality() async -> Double {
+        // 尝试从健康数据获取睡眠质量
+        let calendar = Calendar.current
+        let endDate = Date()
+        let startDate = calendar.date(byAdding: .day, value: -7, to: endDate) ?? endDate
+        
+        let sleepPredicate = #Predicate<SleepSession> { session in
+            session.startDate >= startDate && session.startDate <= endDate
+        }
+        
+        let sleepDescriptor = FetchDescriptor<SleepSession>(predicate: sleepPredicate)
+        let sleepSessions = (try? modelContext.fetch(sleepDescriptor)) ?? []
+        
+        guard !sleepSessions.isEmpty else {
+            // 如果没有睡眠数据，使用默认值
+            return 0.7
+        }
+        
+        // 计算平均睡眠质量
+        let qualityScores = sleepSessions.map { session -> Double in
+            switch session.quality {
+            case .excellent: return 1.0
+            case .good: return 0.8
+            case .fair: return 0.6
+            case .poor: return 0.4
+            case .veryPoor: return 0.2
+            }
+        }
+        
+        return qualityScores.reduce(0, +) / Double(qualityScores.count)
+    }
+    
+    /// 从情绪数据计算压力水平
+    private func calculateStressLevel(from dreams: [Dream]) -> Double {
+        guard !dreams.isEmpty else {
+            return 0.4 // 默认值
+        }
+        
+        // 高压力情绪
+        let highStressEmotions: Set<DreamEmotion> = [.焦虑，.恐惧，.悲伤，.困惑]
+        
+        // 计算高压力情绪的比例
+        let stressEmotions = dreams.filter { dream in
+            if let emotion = dream.emotion {
+                return highStressEmotions.contains(emotion)
+            }
+            return false
+        }
+        
+        // 压力水平 = 高压力情绪的比例
+        return Double(stressEmotions.count) / Double(dreams.count)
     }
     
     private func analyzeDreamPatterns(_ dreams: [Dream]) -> [String] {
