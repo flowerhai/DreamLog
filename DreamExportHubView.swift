@@ -125,21 +125,21 @@ struct DreamExportHubView: View {
         Section {
             VStack(spacing: 12) {
                 HStack(spacing: 20) {
-                    StatItemView(
+                    ExportHubStatItemView(
                         icon: "square.and.arrow.up",
                         value: "\(stats.totalExports)",
                         label: "总导出"
                     )
                     .accessibilityLabel("总导出次数：\(stats.totalExports)")
                     
-                    StatItemView(
+                    ExportHubStatItemView(
                         icon: "doc.text",
                         value: "\(stats.totalDreamsExported)",
                         label: "导出梦境"
                     )
                     .accessibilityLabel("已导出梦境数量：\(stats.totalDreamsExported)")
                     
-                    StatItemView(
+                    ExportHubStatItemView(
                         icon: "disk",
                         value: formatFileSize(stats.totalDataSize),
                         label: "总大小"
@@ -350,7 +350,7 @@ struct DreamExportHubView: View {
 
 // MARK: - 统计项视图
 
-struct StatItemView: View {
+struct ExportHubStatItemView: View {
     let icon: String
     let value: String
     let label: String

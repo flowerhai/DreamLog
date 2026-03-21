@@ -205,8 +205,9 @@ actor DreamPlaylistService {
     
     /// 自动生成"本周精选"播放列表
     func generateWeeklyHighlights() async throws -> DreamPlaylist? {
+        let sevenDaysAgo = Calendar.current.date(byAdding: .day, value: -7, to: Date()) ?? Date()
         let descriptor = FetchDescriptor<Dream>(
-            predicate: #Predicate { $0.date >= Calendar.current.date(byAdding: .day, value: -7, to: Date())! },
+            predicate: #Predicate { $0.date >= sevenDaysAgo },
             sortBy: [SortDescriptor(\.clarity, order: .reverse)]
         )
         

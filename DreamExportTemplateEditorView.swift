@@ -888,12 +888,12 @@ struct ShareTemplateView: View {
                     
                     // 统计信息
                     HStack(spacing: 30) {
-                        StatItemView(
+                        TemplateEditorStatItemView(
                             icon: "square.and.arrow.up",
                             value: "\(template.usageCount)",
                             label: "使用次数"
                         )
-                        StatItemView(
+                        TemplateEditorStatItemView(
                             icon: "variable",
                             value: "\(template.variables.count)",
                             label: "变量数"
@@ -985,7 +985,7 @@ struct ShareTemplateView: View {
 
 // MARK: - 统计项组件
 
-struct StatItemView: View {
+struct TemplateEditorStatItemView: View {
     let icon: String
     let value: String
     let label: String

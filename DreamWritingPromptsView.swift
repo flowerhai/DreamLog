@@ -458,7 +458,7 @@ struct PromptDetailView: View {
                     
                     // 标签
                     if !prompt.tags.isEmpty {
-                        FlowLayout(spacing: 8) {
+                        WritingPromptsFlowLayout(spacing: 8) {
                             ForEach(prompt.tags, id: \.self) { tag in
                                 Text("#\(tag)")
                                     .font(.caption)
@@ -874,7 +874,7 @@ struct FilterChip: View {
 
 // MARK: - Flow Layout
 
-struct FlowLayout: Layout {
+struct WritingPromptsFlowLayout: Layout {
     var spacing: CGFloat = 8
     
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

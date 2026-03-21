@@ -242,7 +242,7 @@ struct DreamLearningView: View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 if service.inProgressCourses.isEmpty {
-                    EmptyStateView(
+                    LearningEmptyStateView(
                         icon: "📚",
                         title: "还没有开始学习",
                         subtitle: "浏览课程并开始你的学习之旅吧！"
@@ -684,7 +684,7 @@ struct BadgeCard: View {
     }
 }
 
-struct EmptyStateView: View {
+struct LearningEmptyStateView: View {
     let icon: String
     let title: String
     let subtitle: String

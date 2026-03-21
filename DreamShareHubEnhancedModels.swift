@@ -147,8 +147,8 @@ enum SharePlatform: String, CaseIterable, Codable, Identifiable {
             }
         }()
         
-        guard let scheme = scheme else { return false }
-        return UIApplication.shared.canOpenURL(URL(string: scheme)!)
+        guard let scheme = scheme, let url = URL(string: scheme) else { return false }
+        return UIApplication.shared.canOpenURL(url)
     }
     
     /// 分享 URL 格式
@@ -220,13 +220,13 @@ final class DreamShareLink {
     }
     
     /// Universal Link URL
-    var universalLink: URL {
-        URL(string: "https://dreamlog.app/d/\(shortCode)")!
+    var universalLink: URL? {
+        URL(string: "https://dreamlog.app/d/\(shortCode)")
     }
     
     /// 备用下载链接
-    var fallbackLink: URL {
-        URL(string: "https://apps.apple.com/app/dreamlog")!
+    var fallbackLink: URL? {
+        URL(string: "https://apps.apple.com/app/dreamlog")
     }
     
     /// 是否已过期

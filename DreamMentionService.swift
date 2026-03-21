@@ -182,9 +182,9 @@ extension DreamMentionService {
         // 从后向前处理，避免索引偏移
         for match in matches.reversed() {
             guard let usernameRange = Range(match.range(at: 1), in: text) else { continue }
+            guard let fullRange = Range(match.range, in: text) else { continue }
             
             let username = String(text[usernameRange])
-            let fullRange = Range(match.range, in: text)!
             
             // 创建链接属性
             var mentionAttr = AttributedString("@\(username)")
