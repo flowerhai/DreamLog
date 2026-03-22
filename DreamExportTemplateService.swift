@@ -23,6 +23,14 @@ actor DreamExportTemplateService {
         return instance
     }
     
+    /// 获取共享实例，如果未初始化则抛出错误
+    static func requireShared() throws -> DreamExportTemplateService {
+        guard let instance = shared else {
+            throw TemplateError.serviceNotInitialized
+        }
+        return instance
+    }
+    
     // MARK: - 模板管理
     
     /// 创建模板
@@ -501,6 +509,7 @@ enum TemplateError: LocalizedError {
     case invalidFormat
     case invalidCategory
     case notFound
+    case serviceNotInitialized
     
     var errorDescription: String? {
         switch self {
@@ -512,6 +521,7 @@ enum TemplateError: LocalizedError {
         case .invalidFormat: return "无效的格式类型"
         case .invalidCategory: return "无效的分类类型"
         case .notFound: return "模板不存在"
+        case .serviceNotInitialized: return "服务未初始化，请确保在应用启动时调用了 initialize()"
         }
     }
 }

@@ -23,6 +23,14 @@ actor DreamExportHubService {
         return instance
     }
     
+    /// 获取共享实例，如果未初始化则抛出错误
+    static func requireShared() throws -> DreamExportHubService {
+        guard let instance = shared else {
+            throw ExportHubError.serviceNotInitialized
+        }
+        return instance
+    }
+    
     // MARK: - 导出任务管理
     
     /// 创建导出任务
@@ -426,11 +434,15 @@ actor DreamExportHubService {
         for dream in dreams {
             // 如果指定了模板，使用模板渲染
             if let templateName = options.template {
-                let template = try? await DreamExportTemplateService.shared!.findTemplate(byName: templateName)
-                if let template = template {
-                    content += await DreamExportTemplateService.shared!.renderTemplate(template, dream: dream)
-                    content += "\n\n---\n\n"
-                    continue
+                do {
+                    let service = try DreamExportTemplateService.requireShared()
+                    if let template = try? await service.findTemplate(byName: templateName) {
+                        content += await service.renderTemplate(template, dream: dream)
+                        content += "\n\n---\n\n"
+                        continue
+                    }
+                } catch {
+                    print("模板服务未初始化：\(error)")
                 }
             }
             
@@ -1039,5 +1051,24 @@ class ZIPArchive {
     
     func close() throws {
         // 清理资源
+    }
+}
+
+// MARK: - 导出中心错误
+
+enum ExportHubError: LocalizedError {
+    case serviceNotInitialized
+    case exportFailed(String)
+    case invalidConfiguration
+    
+    var errorDescription: String? {
+        switch self {
+        case .serviceNotInitialized:
+            return "导出中心服务未初始化，请确保在应用启动时调用了 initialize()"
+        case .exportFailed(let reason):
+            return "导出失败：\(reason)"
+        case .invalidConfiguration:
+            return "导出配置无效"
+        }
     }
 }

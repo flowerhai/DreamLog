@@ -233,8 +233,13 @@ struct DreamExportHubView: View {
                         
                         Button(action: {
                             Task {
-                                try? await DreamExportHubService.shared!.toggleExportTask(task, enabled: !task.isEnabled)
-                                await loadExportTasks()
+                                do {
+                                    let service = try DreamExportHubService.requireShared()
+                                    try? await service.toggleExportTask(task, enabled: !task.isEnabled)
+                                    await loadExportTasks()
+                                } catch {
+                                    print("操作失败：\(error)")
+                                }
                             }
                         }) {
                             Label(task.isEnabled ? "禁用" : "启用", systemImage: task.isEnabled ? "pause.fill" : "play.fill")
@@ -244,8 +249,13 @@ struct DreamExportHubView: View {
                         
                         Button(role: .destructive, action: {
                             Task {
-                                try? await DreamExportHubService.shared!.deleteExportTask(task)
-                                await loadExportTasks()
+                                do {
+                                    let service = try DreamExportHubService.requireShared()
+                                    try? await service.deleteExportTask(task)
+                                    await loadExportTasks()
+                                } catch {
+                                    print("删除失败：\(error)")
+                                }
                             }
                         }) {
                             Label("删除", systemImage: "trash")
@@ -288,8 +298,9 @@ struct DreamExportHubView: View {
         errorMessage = nil
         
         do {
-            async let tasks = DreamExportHubService.shared!.getAllExportTasks()
-            async let stats = DreamExportHubService.shared!.getExportStats()
+            let service = try DreamExportHubService.requireShared()
+            async let tasks = service.getAllExportTasks()
+            async let stats = service.getExportStats()
             
             exportTasks = try await tasks
             exportStats = try await stats

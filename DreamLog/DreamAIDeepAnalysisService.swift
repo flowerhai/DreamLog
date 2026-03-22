@@ -584,7 +584,7 @@ class DreamAIDeepAnalysisService: ObservableObject {
             return "梦境的潜内容需要更多符号信息来解读。"
         }
         
-        let mainSymbol = symbols.first!.name
+        let mainSymbol = symbols.first?.name ?? "未知符号"
         return "这个梦境可能反映了你内心深处对\(mainSymbol)所代表意义的渴望或恐惧。建议反思近期生活中与此相关的经历。"
     }
     
@@ -645,7 +645,8 @@ class DreamAIDeepAnalysisService: ObservableObject {
         
         // 基于阴影建议
         if !result.deepAnalysis.shadowAnalysis.identifiedShadows.isEmpty {
-            suggestions.append("🌑 阴影工作：\(result.deepAnalysis.shadowAnalysis.identifiedShadows.first!.integrationAdvice)")
+            let shadowAdvice = result.deepAnalysis.shadowAnalysis.identifiedShadows.first?.integrationAdvice ?? "进行自我反思和接纳"
+            suggestions.append("🌑 阴影工作：\(shadowAdvice)")
         }
         
         // 基于情绪建议

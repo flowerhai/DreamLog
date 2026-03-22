@@ -209,7 +209,7 @@ struct DreamExportTemplateEditorView: View {
         defer { isLoading = false }
         
         do {
-            let service = DreamExportTemplateService.shared!
+            let service = try DreamExportTemplateService.requireShared()
             templates = try await service.getAllTemplates()
             presetTemplates = try await service.getPresetTemplates()
         } catch {
@@ -226,7 +226,8 @@ struct DreamExportTemplateEditorView: View {
     private func deleteTemplate(_ template: DreamExportTemplate) {
         Task {
             do {
-                try await DreamExportTemplateService.shared!.deleteTemplate(template)
+                let service = try DreamExportTemplateService.requireShared()
+                try await service.deleteTemplate(template)
                 await loadTemplates()
             } catch {
                 print("删除模板失败：\(error)")
@@ -351,7 +352,8 @@ struct TemplateRow: View {
     private func toggleFavorite() {
         Task {
             do {
-                try await DreamExportTemplateService.shared!.toggleFavorite(template)
+                let service = try DreamExportTemplateService.requireShared()
+                try await service.toggleFavorite(template)
             } catch {
                 print("切换收藏失败：\(error)")
             }
@@ -506,7 +508,8 @@ struct CreateTemplateView: View {
         
         Task {
             do {
-                try await DreamExportTemplateService.shared!.createTemplate(
+                let service = try DreamExportTemplateService.requireShared()
+                try await service.createTemplate(
                     name: name.trimmingCharacters(in: .whitespaces),
                     description: description.trimmingCharacters(in: .whitespaces),
                     content: content,
@@ -834,7 +837,8 @@ struct EditTemplateView: View {
             template.category = category
             
             do {
-                try await DreamExportTemplateService.shared!.updateTemplate(template)
+                let service = try DreamExportTemplateService.requireShared()
+                try await service.updateTemplate(template)
                 await MainActor.run {
                     onSave()
                     dismiss()
@@ -956,7 +960,8 @@ struct ShareTemplateView: View {
             isExporting = true
             
             do {
-                let exportData = try await DreamExportTemplateService.shared!.exportTemplate(template)
+                let service = try DreamExportTemplateService.requireShared()
+                let exportData = try await service.exportTemplate(template)
                 
                 // 创建临时文件
                 let tempDir = FileManager.default.temporaryDirectory
