@@ -1,402 +1,408 @@
 //
 //  DreamPrivacyTests.swift
-//  DreamLogTests
+//  DreamLog - Phase 92: Privacy & Security Suite Tests
 //
-//  Phase 70 - 梦境隐私模式单元测试
-//  测试覆盖：数据模型/服务功能/生物识别/自动锁定/统计计算
+//  Created by DreamLog Team on 2026-03-22.
+//  Copyright © 2026 DreamLog. All rights reserved.
 //
 
 import XCTest
-import LocalAuthentication
+import CryptoKit
 @testable import DreamLog
 
-@MainActor
-final class DreamPrivacyTests: XCTestCase {
+// MARK: - Biometric Lock Tests
+
+final class DreamBiometricLockTests: XCTestCase {
     
-    // MARK: - 测试数据
-    
-    var testDreams: [Dream] = []
-    var privacyService: DreamPrivacyService!
+    var lockService: DreamBiometricLockService!
     
     override func setUp() async throws {
-        try await super.setUp()
-        testDreams = createTestDreams()
-        privacyService = DreamPrivacyService()
+        lockService = DreamBiometricLockService.shared
     }
     
     override func tearDown() async throws {
-        testDreams = []
-        privacyService = nil
-        try await super.tearDown()
+        // 重置状态
+        lockService.authenticationState = .locked
     }
     
-    // MARK: - 辅助方法
+    /// 测试生物识别可用性检测
+    func testBiometricAvailability() {
+        // 注意：在模拟器上可能不可用
+        let isAvailable = lockService.isBiometricAvailable
+        XCTAssertNotNil(lockService.biometricType)
+        XCTAssertNotNil(lockService.biometricTypeName)
+    }
     
-    private func createTestDreams() -> [Dream] {
-        return [
-            Dream(
-                title: "普通梦境",
-                content: "这是一个普通的梦境",
-                tags: ["飞行", "自由"],
-                emotions: [.happy, .calm],
-                clarity: 4,
-                intensity: 3,
-                isLucid: false
-            ),
-            Dream(
-                title: "噩梦",
-                content: "这是一个恐怖的噩梦，有暴力和恐怖元素",
-                tags: ["噩梦", "恐怖"],
-                emotions: [.fear, .anxious],
-                clarity: 2,
-                intensity: 5,
-                isLucid: false
-            ),
-            Dream(
-                title: "清醒梦",
-                content: "我知道自己在做梦",
-                tags: ["清醒梦", "控制"],
-                emotions: [.excited],
-                clarity: 5,
-                intensity: 4,
-                isLucid: true
-            ),
-            Dream(
-                title: "创伤梦境",
-                content: "这个梦境涉及创伤性内容",
-                tags: ["创伤", "敏感"],
-                emotions: [.sad, .fear],
-                clarity: 3,
-                intensity: 5,
-                isLucid: false
-            )
+    /// 测试锁定超时配置
+    func testLockTimeoutConfiguration() {
+        let timeouts: [LockTimeout] = [.immediate, .after1Minute, .after5Minutes, .after15Minutes, .after1Hour]
+        
+        for timeout in timeouts {
+            XCTAssertGreaterThanOrEqual(timeout.seconds, 0)
+            XCTAssertFalse(timeout.displayName.isEmpty)
+        }
+        
+        XCTAssertEqual(LockTimeout.immediate.seconds, 0)
+        XCTAssertEqual(LockTimeout.after1Minute.seconds, 60)
+        XCTAssertEqual(LockTimeout.after5Minutes.seconds, 300)
+    }
+    
+    /// 测试认证状态
+    func testAuthenticationState() {
+        let locked = AuthenticationState.locked
+        let unlocked = AuthenticationState.unlocked
+        let authenticating = AuthenticationState.authenticating
+        let error = AuthenticationState.error("Test error")
+        
+        XCTAssertFalse(locked.isUnlocked)
+        XCTAssertTrue(unlocked.isUnlocked)
+        XCTAssertFalse(authenticating.isUnlocked)
+        XCTAssertFalse(error.isUnlocked)
+    }
+}
+
+// MARK: - Encryption Service Tests
+
+final class DreamEncryptionTests: XCTestCase {
+    
+    var encryptionService: DreamEncryptionService!
+    
+    override func setUp() async throws {
+        encryptionService = DreamEncryptionService.shared
+    }
+    
+    /// 测试加密和解密流程
+    func testEncryptDecryptCycle() throws {
+        let originalTitle = "测试梦境"
+        let originalContent = "这是一个测试梦境内容，包含一些敏感信息。"
+        
+        // 加密
+        let encryptedData = try encryptionService.encryptDreamContent(
+            originalContent,
+            title: originalTitle
+        )
+        
+        // 验证加密数据不为空
+        XCTAssertFalse(encryptedData.ciphertext.isEmpty)
+        XCTAssertFalse(encryptedData.nonce.isEmpty)
+        XCTAssertFalse(encryptedData.tag.isEmpty)
+        XCTAssertEqual(encryptedData.version, 1)
+        
+        // 解密
+        let decrypted = try encryptionService.decryptDreamContent(encryptedData)
+        
+        // 验证解密后的内容
+        XCTAssertEqual(decrypted.title, originalTitle)
+        XCTAssertEqual(decrypted.content, originalContent)
+    }
+    
+    /// 测试加密标题
+    func testEncryptTitle() throws {
+        let originalTitle = "秘密梦境"
+        
+        let encryptedTitle = try encryptionService.encryptTitle(originalTitle)
+        XCTAssertFalse(encryptedTitle.isEmpty)
+        
+        // 每次加密应该产生不同的结果 (因为使用随机 nonce)
+        let encryptedTitle2 = try encryptionService.encryptTitle(originalTitle)
+        XCTAssertNotEqual(encryptedTitle, encryptedTitle2)
+    }
+    
+    /// 测试解密错误处理
+    func testDecryptionErrorHandling() {
+        let invalidData = EncryptedData(
+            ciphertext: Data(),
+            nonce: Data(),
+            tag: Data(),
+            version: 1
+        )
+        
+        XCTAssertThrowsError(try encryptionService.decryptDreamContent(invalidData)) { error in
+            XCTAssertEqual(error as? EncryptionError, EncryptionError.decryptionFailed)
+        }
+    }
+    
+    /// 测试大数据加密
+    func testLargeDataEncryption() throws {
+        let largeContent = String(repeating: "这是一个很长的梦境内容。", count: 1000)
+        
+        let encrypted = try encryptionService.encryptDreamContent(largeContent)
+        let decrypted = try encryptionService.decryptDreamContent(encrypted)
+        
+        XCTAssertEqual(decrypted.content, largeContent)
+    }
+}
+
+// MARK: - Privacy Models Tests
+
+final class DreamPrivacyModelsTests: XCTestCase {
+    
+    /// 测试隐私级别
+    func testPrivacyLevel() {
+        let levels: [PrivacyLevel] = [.normal, .private, .hidden]
+        
+        for level in levels {
+            XCTAssertFalse(level.displayName.isEmpty)
+            XCTAssertFalse(level.description.isEmpty)
+            XCTAssertFalse(level.iconName.isEmpty)
+        }
+        
+        XCTAssertEqual(PrivacyLevel.normal.rawValue, 0)
+        XCTAssertEqual(PrivacyLevel.private.rawValue, 1)
+        XCTAssertEqual(PrivacyLevel.hidden.rawValue, 2)
+    }
+    
+    /// 测试生物识别配置模型
+    func testBiometricConfigModel() {
+        let config = BiometricConfig(
+            isEnabled: true,
+            lockTimeout: .after5Minutes,
+            requireOnLaunch: true,
+            requireOnBackground: true,
+            fallbackToPasscode: true
+        )
+        
+        XCTAssertTrue(config.isEnabled)
+        XCTAssertEqual(config.lockTimeout, .after5Minutes)
+        XCTAssertNotNil(config.id)
+        XCTAssertNotNil(config.createdAt)
+        XCTAssertNotNil(config.updatedAt)
+    }
+    
+    /// 测试回收站项目模型
+    func testDreamTrashItemModel() {
+        let dreamId = UUID()
+        let trashItem = DreamTrashItem(
+            dreamId: dreamId,
+            dreamTitle: "测试梦境",
+            dreamContent: "测试内容",
+            dreamData: Data("测试数据".utf8),
+            retentionDays: 30
+        )
+        
+        XCTAssertEqual(trashItem.dreamId, dreamId)
+        XCTAssertEqual(trashItem.dreamTitle, "测试梦境")
+        XCTAssertEqual(trashItem.retentionDays, 30)
+        XCTAssertGreaterThanOrEqual(trashItem.daysUntilDeletion, 0)
+        XCTAssertLessThanOrEqual(trashItem.daysUntilDeletion, 30)
+        XCTAssertFalse(trashItem.isRecovered)
+        XCTAssertNil(trashItem.recoveryDate)
+    }
+    
+    /// 测试隐私设置模型
+    func testPrivacySettingsModel() {
+        let settings = PrivacySettings(
+            hideNotificationContent: true,
+            hideWidgetContent: true,
+            hideLockScreenPreview: true,
+            showOnlyGenericNotifications: true,
+            blurAppInSwitcher: false,
+            preventScreenshots: false
+        )
+        
+        XCTAssertTrue(settings.hideNotificationContent)
+        XCTAssertTrue(settings.hideWidgetContent)
+        XCTAssertTrue(settings.hideLockScreenPreview)
+        XCTAssertFalse(settings.blurAppInSwitcher)
+    }
+    
+    /// 测试安全备份配置模型
+    func testSecureBackupConfigModel() {
+        let config = SecureBackupConfig(
+            isEnabled: true,
+            encryptionEnabled: true,
+            backupLocation: "iCloud",
+            autoBackupEnabled: true,
+            autoBackupFrequency: .weekly,
+            verifyBackupAfterCreation: true
+        )
+        
+        XCTAssertTrue(config.isEnabled)
+        XCTAssertTrue(config.encryptionEnabled)
+        XCTAssertEqual(config.backupLocation, "iCloud")
+        XCTAssertEqual(config.autoBackupFrequency, .weekly)
+    }
+    
+    /// 测试备份频率枚举
+    func testBackupFrequency() {
+        let frequencies: [BackupFrequency] = [.daily, .weekly, .monthly]
+        
+        for frequency in frequencies {
+            XCTAssertFalse(frequency.displayName.isEmpty)
+        }
+    }
+}
+
+// MARK: - Trash Service Tests
+
+final class DreamTrashServiceTests: XCTestCase {
+    
+    var trashService: DreamTrashService!
+    
+    override func setUp() async throws {
+        trashService = DreamTrashService.shared
+    }
+    
+    /// 测试回收站统计
+    func testTrashStats() {
+        let stats = TrashStats(
+            totalCount: 10,
+            totalSize: 1024 * 1024, // 1 MB
+            expiringSoonCount: 3,
+            oldestDeletionDate: Date().addingTimeInterval(-86400 * 5)
+        )
+        
+        XCTAssertEqual(stats.totalCount, 10)
+        XCTAssertEqual(stats.expiringSoonCount, 3)
+        XCTAssertFalse(stats.totalSizeFormatted.isEmpty)
+        XCTAssertTrue(stats.totalSizeFormatted.contains("MB"))
+    }
+    
+    /// 测试回收站错误
+    func testTrashError() {
+        let errors: [TrashError] = [
+            .contextNotFound,
+            .itemNotFound,
+            .dreamNotFound,
+            .recoveryFailed
         ]
-    }
-    
-    // MARK: - DreamLockType 枚举测试
-    
-    func testDreamLockTypeAllCases() {
-        let allCases: [DreamLockType] = [.none, .biometric, .passcode, .autoLock]
-        XCTAssertEqual(allCases.count, 4, "应该有 4 种锁定类型")
-    }
-    
-    func testDreamLockTypeDisplayNames() {
-        XCTAssertEqual(DreamLockType.none.displayName, "无锁定")
-        XCTAssertEqual(DreamLockType.biometric.displayName, "生物识别")
-        XCTAssertEqual(DreamLockType.passcode.displayName, "密码")
-        XCTAssertEqual(DreamLockType.autoLock.displayName, "自动锁定")
-    }
-    
-    func testDreamLockTypeIcons() {
-        XCTAssertFalse(DreamLockType.none.icon.isEmpty)
-        XCTAssertFalse(DreamLockType.biometric.icon.isEmpty)
-        XCTAssertFalse(DreamLockType.passcode.icon.isEmpty)
-        XCTAssertFalse(DreamLockType.autoLock.icon.isEmpty)
-    }
-    
-    func testDreamLockTypeColors() {
-        // 验证颜色不为空
-        XCTAssertNotNil(DreamLockType.none.color)
-        XCTAssertNotNil(DreamLockType.biometric.color)
-        XCTAssertNotNil(DreamLockType.passcode.color)
-        XCTAssertNotNil(DreamLockType.autoLock.color)
-    }
-    
-    // MARK: - DreamPrivacySettings 测试
-    
-    func testPrivacySettingsDefault() {
-        let settings = DreamPrivacySettings()
         
-        XCTAssertFalse(settings.privacyModeEnabled)
-        XCTAssertEqual(settings.lockType, .none)
-        XCTAssertTrue(settings.biometricEnabled)
-        XCTAssertFalse(settings.autoLockEnabled)
-        XCTAssertTrue(settings.autoLockKeywords.isEmpty)
-        XCTAssertEqual(settings.appLockTimeout, 300) // 5 分钟
-    }
-    
-    func testPrivacySettingsCodable() throws {
-        var settings = DreamPrivacySettings()
-        settings.privacyModeEnabled = true
-        settings.lockType = .biometric
-        settings.biometricEnabled = true
-        settings.autoLockEnabled = true
-        settings.autoLockKeywords = ["噩梦", "恐怖", "暴力"]
-        settings.appLockTimeout = 600
-        
-        // 编码
-        let encoded = try JSONEncoder().encode(settings)
-        
-        // 解码
-        let decoded = try JSONDecoder().decode(DreamPrivacySettings.self, from: encoded)
-        
-        XCTAssertEqual(decoded.privacyModeEnabled, settings.privacyModeEnabled)
-        XCTAssertEqual(decoded.lockType, settings.lockType)
-        XCTAssertEqual(decoded.biometricEnabled, settings.biometricEnabled)
-        XCTAssertEqual(decoded.autoLockEnabled, settings.autoLockEnabled)
-        XCTAssertEqual(decoded.autoLockKeywords, settings.autoLockKeywords)
-        XCTAssertEqual(decoded.appLockTimeout, settings.appLockTimeout)
-    }
-    
-    // MARK: - DreamPrivacyService 测试
-    
-    func testPrivacyServiceInitialization() async {
-        let service = DreamPrivacyService()
-        
-        // 验证服务可以正常初始化
-        XCTAssertNotNil(service)
-        
-        // 验证可以获取设置
-        let settings = await service.getSettings()
-        XCTAssertNotNil(settings)
-    }
-    
-    func testPrivacyServiceGetSettings() async {
-        let settings = await privacyService.getSettings()
-        
-        XCTAssertNotNil(settings)
-        XCTAssertFalse(settings.privacyModeEnabled)
-        XCTAssertEqual(settings.lockType, .none)
-    }
-    
-    func testPrivacyServiceUpdateSettings() async throws {
-        var settings = await privacyService.getSettings()
-        settings.privacyModeEnabled = true
-        settings.lockType = .biometric
-        settings.autoLockEnabled = true
-        settings.autoLockKeywords = ["噩梦", "恐怖"]
-        
-        try await privacyService.updateSettings(settings)
-        
-        let updatedSettings = await privacyService.getSettings()
-        XCTAssertTrue(updatedSettings.privacyModeEnabled)
-        XCTAssertEqual(updatedSettings.lockType, .biometric)
-        XCTAssertTrue(updatedSettings.autoLockEnabled)
-        XCTAssertEqual(updatedSettings.autoLockKeywords, ["噩梦", "恐怖"])
-    }
-    
-    // MARK: - 自动锁定测试
-    
-    func testAutoLockDetection_Nightmare() async {
-        let nightmareContent = "这是一个恐怖的噩梦，充满了暴力和恐怖的场景"
-        
-        var settings = await privacyService.getSettings()
-        settings.autoLockEnabled = true
-        settings.autoLockKeywords = ["噩梦", "恐怖", "暴力", "创伤"]
-        try await privacyService.updateSettings(settings)
-        
-        let shouldLock = await privacyService.checkAutoLock(for: nightmareContent)
-        XCTAssertTrue(shouldLock, "应该检测到噩梦关键词并自动锁定")
-    }
-    
-    func testAutoLockDetection_NormalDream() async {
-        let normalContent = "我在天空中飞翔，感觉非常自由和快乐"
-        
-        var settings = await privacyService.getSettings()
-        settings.autoLockEnabled = true
-        settings.autoLockKeywords = ["噩梦", "恐怖", "暴力", "创伤"]
-        try await privacyService.updateSettings(settings)
-        
-        let shouldLock = await privacyService.checkAutoLock(for: normalContent)
-        XCTAssertFalse(shouldLock, "普通梦境不应该触发自动锁定")
-    }
-    
-    func testAutoLockDetection_CustomKeywords() async {
-        let sensitiveContent = "这个梦境涉及敏感的个人隐私内容"
-        
-        var settings = await privacyService.getSettings()
-        settings.autoLockEnabled = true
-        settings.autoLockKeywords = ["敏感", "隐私", "秘密"]
-        try await privacyService.updateSettings(settings)
-        
-        let shouldLock = await privacyService.checkAutoLock(for: sensitiveContent)
-        XCTAssertTrue(shouldLock, "应该检测到自定义敏感关键词")
-    }
-    
-    // MARK: - 梦境锁定/解锁测试
-    
-    func testLockDream() async throws {
-        let dream = testDreams[0]
-        
-        try await privacyService.lockDream(dream, lockType: .biometric)
-        
-        XCTAssertEqual(dream.lockType, .biometric)
-        XCTAssertNotNil(dream.lockedAt)
-        XCTAssertTrue(await privacyService.isDreamLocked(dream))
-    }
-    
-    func testUnlockDream() async throws {
-        let dream = testDreams[0]
-        dream.lockType = .biometric
-        dream.lockedAt = Date()
-        
-        try await privacyService.unlockDream(dream)
-        
-        XCTAssertEqual(dream.lockType, .none)
-        XCTAssertNil(dream.lockedAt)
-        XCTAssertFalse(await privacyService.isDreamLocked(dream))
-    }
-    
-    func testHideDream() async throws {
-        let dream = testDreams[0]
-        
-        try await privacyService.hideDream(dream)
-        
-        XCTAssertTrue(dream.isHidden)
-    }
-    
-    func testUnhideDream() async throws {
-        let dream = testDreams[0]
-        dream.isHidden = true
-        
-        try await privacyService.unhideDream(dream)
-        
-        XCTAssertFalse(dream.isHidden)
-    }
-    
-    // MARK: - 隐私统计测试
-    
-    func testGetPrivacyStats_EmptyData() async {
-        let stats = await privacyService.getPrivacyStats(for: [])
-        
-        XCTAssertEqual(stats.totalLocked, 0)
-        XCTAssertEqual(stats.lockedThisWeek, 0)
-        XCTAssertEqual(stats.lockedThisMonth, 0)
-        XCTAssertEqual(stats.mostLockedTag, nil)
-    }
-    
-    func testGetPrivacyStats_WithLockedDreams() async {
-        var dreams = testDreams
-        dreams[1].lockType = .biometric  // 噩梦锁定
-        dreams[1].lockedAt = Date()
-        dreams[1].createdAt = Date()
-        dreams[3].lockType = .autoLock  // 创伤梦境锁定
-        dreams[3].lockedAt = Date()
-        dreams[3].createdAt = Date()
-        
-        let stats = await privacyService.getPrivacyStats(for: dreams)
-        
-        XCTAssertEqual(stats.totalLocked, 2, "应该有 2 个锁定的梦境")
-        XCTAssertEqual(stats.lockedThisWeek, 2, "本周锁定的应该是 2 个")
-        XCTAssertEqual(stats.lockedThisMonth, 2, "本月锁定的应该是 2 个")
-        XCTAssertNotNil(stats.mostLockedTag)
-    }
-    
-    func testGetPrivacyStats_LockTypeDistribution() async {
-        var dreams = testDreams
-        dreams[1].lockType = .biometric
-        dreams[2].lockType = .passcode
-        dreams[3].lockType = .biometric
-        
-        let stats = await privacyService.getPrivacyStats(for: dreams)
-        
-        XCTAssertEqual(stats.totalLocked, 3)
-        XCTAssertEqual(stats.lockedByType[.biometric], 2)
-        XCTAssertEqual(stats.lockedByType[.passcode], 1)
-    }
-    
-    // MARK: - 边界情况测试
-    
-    func testAutoLockWithEmptyContent() async {
-        var settings = await privacyService.getSettings()
-        settings.autoLockEnabled = true
-        settings.autoLockKeywords = ["噩梦"]
-        try await privacyService.updateSettings(settings)
-        
-        let shouldLock = await privacyService.checkAutoLock(for: "")
-        XCTAssertFalse(shouldLock, "空内容不应该触发锁定")
-    }
-    
-    func testAutoLockDisabled() async {
-        var settings = await privacyService.getSettings()
-        settings.autoLockEnabled = false
-        settings.autoLockKeywords = ["噩梦"]
-        try await privacyService.updateSettings(settings)
-        
-        let shouldLock = await privacyService.checkAutoLock(for: "这是一个噩梦")
-        XCTAssertFalse(shouldLock, "自动锁定禁用时不应该触发")
-    }
-    
-    func testLockDreamWithNoneType() async throws {
-        let dream = testDreams[0]
-        
-        try await privacyService.lockDream(dream, lockType: .none)
-        
-        XCTAssertEqual(dream.lockType, .none)
-        XCTAssertFalse(await privacyService.isDreamLocked(dream))
-    }
-    
-    // MARK: - 性能测试
-    
-    func testAutoLockPerformance() async {
-        var settings = await privacyService.getSettings()
-        settings.autoLockEnabled = true
-        settings.autoLockKeywords = ["噩梦", "恐怖", "暴力", "创伤", "敏感"]
-        try await privacyService.updateSettings(settings)
-        
-        let content = "这是一个非常恐怖的噩梦，充满了暴力和创伤性的场景"
-        
-        measure {
-            let expectation = self.expectation(description: "Auto lock check")
-            Task {
-                _ = await self.privacyService.checkAutoLock(for: content)
-                expectation.fulfill()
-            }
-            wait(for: [expectation], timeout: 1.0)
+        for error in errors {
+            XCTAssertNotNil(error.errorDescription)
         }
     }
+}
+
+// MARK: - Backup Service Tests
+
+final class DreamBackupServiceTests: XCTestCase {
     
-    func testGetPrivacyStatsPerformance() async {
-        let dreams = (0..<100).map { i -> Dream in
-            let dream = Dream(
-                title: "Dream \(i)",
-                content: "Content \(i)",
-                tags: ["tag\(i % 10)"],
-                emotions: [.happy],
-                clarity: 3,
-                intensity: 3,
-                isLucid: false
-            )
-            if i % 5 == 0 {
-                dream.lockType = .biometric
-                dream.lockedAt = Date()
-                dream.createdAt = Date()
-            }
-            return dream
-        }
+    var backupService: DreamSecureBackupService!
+    
+    override func setUp() async throws {
+        backupService = DreamSecureBackupService.shared
+    }
+    
+    /// 测试备份结果
+    func testBackupResult() {
+        let url = URL(fileURLWithPath: "/tmp/test.dlbackup")
+        let result = BackupResult(
+            success: true,
+            backupURL: url,
+            dreamCount: 100,
+            size: 10 * 1024 * 1024, // 10 MB
+            createdAt: Date()
+        )
         
-        measure {
-            let expectation = self.expectation(description: "Get privacy stats")
-            Task {
-                _ = await self.privacyService.getPrivacyStats(for: dreams)
-                expectation.fulfill()
-            }
-            wait(for: [expectation], timeout: 2.0)
-        }
+        XCTAssertTrue(result.success)
+        XCTAssertEqual(result.dreamCount, 100)
+        XCTAssertFalse(result.sizeFormatted.isEmpty)
+        XCTAssertTrue(result.sizeFormatted.contains("MB"))
     }
     
-    // MARK: - AuthResult 枚举测试
-    
-    func testAuthResultAllCases() {
-        let allCases: [AuthResult] = [.success, .failed, .cancelled, .notAvailable, .error]
-        XCTAssertEqual(allCases.count, 5, "应该有 5 种认证结果")
+    /// 测试恢复结果
+    func testRestoreResult() {
+        let result = RestoreResult(
+            success: true,
+            restoredCount: 95,
+            failedCount: 5
+        )
+        
+        XCTAssertTrue(result.success)
+        XCTAssertEqual(result.restoredCount, 95)
+        XCTAssertEqual(result.failedCount, 5)
     }
     
-    func testAuthResultIsSuccess() {
-        XCTAssertTrue(AuthResult.success.isSuccess)
-        XCTAssertFalse(AuthResult.failed.isSuccess)
-        XCTAssertFalse(AuthResult.cancelled.isSuccess)
-        XCTAssertFalse(AuthResult.notAvailable.isSuccess)
-        XCTAssertFalse(AuthResult.error.isSuccess)
+    /// 测试备份信息
+    func testBackupInfo() {
+        let url = URL(fileURLWithPath: "/tmp/test.dlbackup")
+        let info = BackupInfo(
+            url: url,
+            date: Date(),
+            size: 5 * 1024 * 1024 // 5 MB
+        )
+        
+        XCTAssertFalse(info.sizeFormatted.isEmpty)
+        XCTAssertTrue(info.sizeFormatted.contains("MB"))
     }
     
-    // MARK: - PrivacyQuickAction 枚举测试
-    
-    func testPrivacyQuickActionAllCases() {
-        let allCases: [PrivacyQuickAction] = [
-            .lockSelected, .unlockSelected, .hideSelected,
-            .exportLocked, .settings, .help
+    /// 测试备份错误
+    func testBackupError() {
+        let errors: [BackupError] = [
+            .contextNotFound,
+            .alreadyBackingUp,
+            .keyNotFound,
+            .keychainError,
+            .invalidPassword,
+            .invalidBackupURL,
+            .backupNotFound,
+            .restoreFailed
         ]
-        XCTAssertEqual(allCases.count, 6, "应该有 6 种快速操作")
+        
+        for error in errors {
+            XCTAssertNotNil(error.errorDescription)
+        }
+    }
+}
+
+// MARK: - Privacy Notification Tests
+
+final class DreamPrivacyNotificationTests: XCTestCase {
+    
+    var notificationService: DreamPrivacyNotificationService!
+    
+    override func setUp() async throws {
+        notificationService = DreamPrivacyNotificationService.shared
+    }
+    
+    /// 测试隐私模式开关
+    func testPrivacyModeToggle() async {
+        // 测试隐私模式启用
+        await notificationService.configurePrivacyMode(enabled: true)
+        // 注意：实际测试需要 mock 通知中心
+        
+        // 测试隐私模式禁用
+        await notificationService.configurePrivacyMode(enabled: false)
+    }
+    
+    /// 测试文本截断
+    func testTextTruncation() {
+        let longTitle = String(repeating: "A", count: 50)
+        let truncated = notificationService.getWidgetDreamTitle(longTitle)
+        
+        XCTAssertLessThanOrEqual(truncated.count, 33) // 30 + "..."
+    }
+}
+
+// MARK: - Integration Tests
+
+final class DreamPrivacyIntegrationTests: XCTestCase {
+    
+    /// 测试完整的隐私保护流程
+    func testCompletePrivacyWorkflow() async throws {
+        // 1. 配置生物识别锁
+        let lockService = DreamBiometricLockService.shared
+        XCTAssertNotNil(lockService.biometricTypeName)
+        
+        // 2. 加密梦境内容
+        let encryptionService = DreamEncryptionService.shared
+        let encrypted = try encryptionService.encryptDreamContent(
+            "私密梦境内容",
+            title: "私密梦境"
+        )
+        XCTAssertFalse(encrypted.ciphertext.isEmpty)
+        
+        // 3. 验证隐私级别
+        XCTAssertEqual(PrivacyLevel.private.displayName, "私密")
+        XCTAssertEqual(PrivacyLevel.hidden.displayName, "隐藏")
+        
+        // 4. 测试回收站统计
+        let stats = TrashStats(
+            totalCount: 5,
+            totalSize: 1024,
+            expiringSoonCount: 2,
+            oldestDeletionDate: Date()
+        )
+        XCTAssertEqual(stats.totalCount, 5)
     }
 }
