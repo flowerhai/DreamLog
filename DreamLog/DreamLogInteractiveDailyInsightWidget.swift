@@ -56,7 +56,7 @@ struct DailyInsightProvider: TimelineProvider {
             )
             
             // 每小时刷新
-            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
         }
@@ -365,57 +365,6 @@ struct StatBadge: View {
             Text(label)
                 .font(.caption2)
                 .opacity(0.7)
-        }
-    }
-}
-
-// MARK: - 流式布局
-
-struct FlowLayout: Layout {
-    var spacing: CGFloat = 8
-    
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? .infinity
-        var height: CGFloat = 0
-        var currentWidth: CGFloat = 0
-        var currentHeight: CGFloat = 0
-        
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            
-            if currentWidth + size.width + spacing > width && currentWidth > 0 {
-                height += currentHeight + spacing
-                currentWidth = 0
-                currentHeight = 0
-            }
-            
-            currentWidth += size.width + spacing
-            currentHeight = max(currentHeight, size.height)
-        }
-        
-        height += currentHeight
-        
-        return CGSize(width: width, height: height)
-    }
-    
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        var currentX: CGFloat = bounds.minX
-        var currentY: CGFloat = bounds.minY
-        var currentHeight: CGFloat = 0
-        
-        for subview in subviews {
-            let size = subview.sizeThatFits(.unspecified)
-            
-            if currentX + size.width > bounds.maxX && currentX > bounds.minX {
-                currentX = bounds.minX
-                currentY += currentHeight + spacing
-                currentHeight = 0
-            }
-            
-            subview.place(at: CGPoint(x: currentX, y: currentY), proposal: .unspecified)
-            
-            currentX += size.width + spacing
-            currentHeight = max(currentHeight, size.height)
         }
     }
 }

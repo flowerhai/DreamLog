@@ -22,7 +22,9 @@ actor DreamQRShareService {
         self.fileManager = FileManager.default
         
         // Create QR codes directory
-        let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first!
+        guard let documentsPath = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            throw QRError.documentsDirectoryNotFound
+        }
         self.qrDirectory = documentsPath.appendingPathComponent("QRShares", isDirectory: true)
         
         try? fileManager.createDirectory(at: qrDirectory, withIntermediateDirectories: true)
@@ -521,7 +523,8 @@ actor DreamQRShareService {
     /// 生成分享码
     private func generateShareCode() -> String {
         let characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" // Exclude confusing chars
-        return String((0..<8).map { _ in characters.randomElement()! })
+        let charArray = Array(characters)
+        return String((0..<8).map { _ in charArray.randomElement() ?? "A" })
     }
 }
 
@@ -549,6 +552,7 @@ enum QRError: LocalizedError {
     case shareExpired
     case shareInactive
     case invalidURL
+    case documentsDirectoryNotFound
     
     var errorDescription: String? {
         switch self {
@@ -557,6 +561,7 @@ enum QRError: LocalizedError {
         case .shareExpired: return "分享已过期"
         case .shareInactive: return "分享已停用"
         case .invalidURL: return "无效的 URL"
+        case .documentsDirectoryNotFound: return "文档目录不存在"
         }
     }
 }

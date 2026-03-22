@@ -337,7 +337,8 @@ struct MoodBoardShareCard: Codable {
     
     private func generateShareCode() -> String {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-        return String((0..<8).map { _ in chars.randomElement()! })
+        let charArray = Array(chars)
+        return String((0..<8).map { _ in charArray.randomElement() ?? "A" })
     }
 }
 

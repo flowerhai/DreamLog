@@ -52,7 +52,7 @@ struct StatsProvider: TimelineProvider {
             )
             
             // 30 分钟后刷新
-            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date())!
+            let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
         }

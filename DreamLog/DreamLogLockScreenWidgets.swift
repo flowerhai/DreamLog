@@ -42,7 +42,7 @@ struct LockScreenCircularProvider: TimelineProvider {
                 todayRecorded: streak.weeklyProgress > 0
             )
             
-            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
         }
@@ -127,7 +127,7 @@ struct LockScreenRectangularProvider: TimelineProvider {
                 streakDays: streak.currentStreak
             )
             
-            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
         }
@@ -210,7 +210,7 @@ struct LockScreenCompactProvider: TimelineProvider {
             
             let entry = LockScreenCompactEntry(totalCount: stats.totalCount)
             
-            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 6, to: Date())!
+            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 6, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
         }

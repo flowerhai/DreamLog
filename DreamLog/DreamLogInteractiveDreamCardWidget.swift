@@ -50,7 +50,7 @@ struct DreamCardProvider: TimelineProvider {
             )
             
             // 每小时刷新
-            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date())!
+            let nextUpdate = Calendar.current.date(byAdding: .hour, value: 1, to: Date()) ?? Date()
             let timeline = Timeline(entries: [entry], policy: .after(nextUpdate))
             completion(timeline)
         }

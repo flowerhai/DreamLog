@@ -586,26 +586,6 @@ struct ActionButtons: View {
     }
 }
 
-struct EmptyStateView: View {
-    var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "qrcode.viewfinder")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
-            Text("暂无 QR 分享")
-                .font(.title2)
-                .fontWeight(.semibold)
-            
-            Text("创建一个 QR 分享，\n让朋友扫描查看你的梦境")
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-    }
-}
-
 // MARK: - Color Extension
 
 extension Color {
