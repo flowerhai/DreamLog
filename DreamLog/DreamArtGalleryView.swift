@@ -16,6 +16,7 @@ struct DreamArtGalleryView: View {
     @State private var searchText = ""
     @State private var selectedArt: DreamArt?
     @State private var showingDetail = false
+    @State private var errorMessage: String?
     
     var body: some View {
         NavigationView {
@@ -40,6 +41,16 @@ struct DreamArtGalleryView: View {
                     aiArtService.deleteArt(art)
                     selectedArt = nil
                 })
+            }
+            .alert("生成失败", isPresented: .constant(errorMessage != nil)) {
+                Button("确定", role: .cancel) {
+                    errorMessage = nil
+                }
+                Button("升级高级版") {
+                    // TODO: 打开付费墙
+                }
+            } message: {
+                Text(errorMessage ?? "")
             }
         }
     }
@@ -553,9 +564,17 @@ struct GenerateArtSheet: View {
                                     aspectRatio: selectedAspectRatio
                                 )
                             } else {
-                                await aiArtService.generateArt(for: dream, style: selectedStyle)
+                                do {
+                                    try await aiArtService.generateArt(for: dream, style: selectedStyle)
+                                } catch let error as AIArtError {
+                                    errorMessage = error.errorDescription ?? "生成失败"
+                                } catch {
+                                    errorMessage = error.localizedDescription
+                                }
                             }
-                            dismiss()
+                            if errorMessage == nil {
+                                dismiss()
+                            }
                         }
                     }
                     .disabled(aiArtService.isGenerating || (isBatchMode && selectedStyles.isEmpty))

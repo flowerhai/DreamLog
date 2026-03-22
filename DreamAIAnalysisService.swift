@@ -3,6 +3,7 @@
 //  DreamLog
 //
 //  Phase 66: AI 梦境解析增强 🧠✨
+//  Phase 87: 订阅系统集成 💎✨
 //  核心服务层 - AI 梦境解析引擎
 //
 //  Created: 2026-03-18
@@ -12,6 +13,36 @@
 import Foundation
 import SwiftData
 import NaturalLanguage
+
+// MARK: - AI 分析错误
+
+enum AIAnalysisError: LocalizedError {
+    case dailyLimitReached
+    case premiumFeatureRequired
+    case analysisFailed
+    
+    var errorDescription: String? {
+        switch self {
+        case .dailyLimitReached:
+            return "已达到今日 AI 解析次数限制"
+        case .premiumFeatureRequired:
+            return "此功能需要高级版订阅"
+        case .analysisFailed:
+            return "AI 解析失败，请重试"
+        }
+    }
+    
+    var recoverySuggestion: String? {
+        switch self {
+        case .dailyLimitReached:
+            return "升级至高级版可获得无限 AI 解析，或明日继续使用"
+        case .premiumFeatureRequired:
+            return "升级至高级版即可解锁此功能"
+        case .analysisFailed:
+            return "请检查网络连接后重试"
+        }
+    }
+}
 
 // MARK: - AI 分析服务
 
@@ -52,6 +83,9 @@ public actor DreamAIAnalysisService {
         dream: DreamEntry,
         configuration: AIAnalysisConfiguration? = nil
     ) async throws -> DreamAnalysis {
+        // 检查订阅状态和使用限制
+        try await checkUsageLimit()
+        
         let config = configuration ?? self.configuration
         
         // 1. 提取关键词和符号
@@ -166,6 +200,25 @@ public actor DreamAIAnalysisService {
         
         context.delete(analysis)
         try context.save()
+    }
+    
+    // MARK: - 订阅检查
+    
+    /// 检查使用限制
+    private func checkUsageLimit() async throws {
+        // Premium 用户无限制
+        if SubscriptionManager.shared.isPremium {
+            return
+        }
+        
+        // 检查免费版每日限制
+        let usageTracker = DreamUsageTracker.shared
+        guard usageTracker.canUseAIAnalysis() else {
+            throw AIAnalysisError.dailyLimitReached
+        }
+        
+        // 记录使用
+        usageTracker.recordAIAnalysisUsage()
     }
     
     // MARK: - 符号提取

@@ -177,6 +177,36 @@ struct DreamArt: Identifiable, Codable, Equatable {
     }
 }
 
+// MARK: - AI 绘画错误
+
+enum AIArtError: LocalizedError {
+    case monthlyLimitReached
+    case premiumFeatureRequired
+    case generationFailed
+    
+    var errorDescription: String? {
+        switch self {
+        case .monthlyLimitReached:
+            return "已达到本月 AI 绘画次数限制"
+        case .premiumFeatureRequired:
+            return "此功能需要高级版订阅"
+        case .generationFailed:
+            return "AI 绘画生成失败，请重试"
+        }
+    }
+    
+    var recoverySuggestion: String? {
+        switch self {
+        case .monthlyLimitReached:
+            return "升级至高级版可获得无限 AI 绘画，或下月继续使用"
+        case .premiumFeatureRequired:
+            return "升级至高级版即可解锁此功能"
+        case .generationFailed:
+            return "请检查网络连接后重试"
+        }
+    }
+}
+
 // MARK: - AI 绘画服务
 
 @MainActor
@@ -199,6 +229,25 @@ class AIArtService: ObservableObject {
     
     private init() {
         loadDreamArts()
+    }
+    
+    // MARK: - 订阅检查
+    
+    /// 检查 AI 绘画使用限制
+    private func checkAIArtUsageLimit() throws {
+        // Premium 用户无限制
+        if SubscriptionManager.shared.isPremium {
+            return
+        }
+        
+        // 检查免费版每月限制
+        let usageTracker = DreamUsageTracker.shared
+        guard usageTracker.canUseAIArt() else {
+            throw AIArtError.monthlyLimitReached
+        }
+        
+        // 记录使用
+        usageTracker.recordAIArtUsage()
     }
     
     // MARK: - 生成提示词
@@ -370,7 +419,10 @@ class AIArtService: ObservableObject {
     // MARK: - 生成图像
     
     /// 为梦境生成 AI 图像
-    func generateArt(for dream: Dream, style: DreamArt.ArtStyle, aspectRatio: DreamArt.AspectRatio = .square) async {
+    func generateArt(for dream: Dream, style: DreamArt.ArtStyle, aspectRatio: DreamArt.AspectRatio = .square) async throws {
+        // 检查订阅状态和使用限制
+        try checkAIArtUsageLimit()
+        
         isGenerating = true
         generationProgress = 0.0
         errorMessage = nil
@@ -445,6 +497,9 @@ class AIArtService: ObservableObject {
     
     /// 生成单个艺术作品（内部方法）
     private func generateSingleArt(for dream: Dream, style: DreamArt.ArtStyle, aspectRatio: DreamArt.AspectRatio) async throws {
+        // 检查订阅状态和使用限制（批量生成时每个都检查）
+        try checkAIArtUsageLimit()
+        
         let prompt = generatePrompt(from: dream, style: style, aspectRatio: aspectRatio)
         let negativePrompt = generateNegativePrompt(for: style)
         
