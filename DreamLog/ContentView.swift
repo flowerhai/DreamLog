@@ -3,6 +3,7 @@
 //  DreamLog
 //
 //  Phase 43 - 导航重构：5 个主标签
+//  Phase 87 Session 2 - 集成引导流程
 //
 
 import SwiftUI
@@ -12,8 +13,22 @@ struct ContentView: View {
     @ObservedObject private var challengeService = DreamChallengeService.shared
     @ObservedObject private var favoriteManager = FavoriteManager.shared
     @AppStorage("selectedMainTab") private var selectedTab = 0
+    @AppStorage("onboardingCompleted") private var onboardingCompleted: Bool = false
+    @StateObject private var onboardingManager = OnboardingManager()
     
     var body: some View {
+        Group {
+            if !onboardingCompleted {
+                // 显示引导流程
+                OnboardingView(manager: onboardingManager)
+            } else {
+                // 显示主应用
+                mainTabView
+            }
+        }
+    }
+    
+    var mainTabView: some View {
         TabView(selection: $selectedTab) {
             // 📖 梦境
             DreamsNavigationView()
@@ -81,6 +96,85 @@ struct ContentView: View {
             )
         )
         .accessibilityElement(children: .contain)
+    }
+}
+
+// MARK: - 空状态视图 (Empty States)
+
+struct EmptyDreamsView: View {
+    var body: some View {
+        VStack(spacing: 24) {
+            Spacer()
+            
+            Image(systemName: "moon.stars.fill")
+                .font(.system(size: 80))
+                .foregroundColor(Color(hex: "9B7EBD").opacity(0.5))
+            
+            VStack(spacing: 12) {
+                Text("还没有梦境记录")
+                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white)
+                
+                Text("开始记录你的第一个梦境吧\n每一次记录都是对自己的探索")
+                    .font(.system(size: 16, design: .rounded))
+                    .foregroundColor(.white.opacity(0.6))
+                    .multilineTextAlignment(.center)
+            }
+            
+            Button(action: {}) {
+                HStack {
+                    Image(systemName: "plus.circle.fill")
+                    Text("记录梦境")
+                }
+                .font(.system(.body, design: .rounded, weight: .semibold))
+                .foregroundColor(.white)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [Color(hex: "9B7EBD"), Color(hex: "7B68A8")],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(30)
+            }
+            
+            Spacer()
+        }
+        .padding(.horizontal, 32)
+    }
+}
+
+// MARK: - 加载状态视图 (Loading States)
+
+struct DreamsListViewShimmer: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(0..<5, id: \.self) { _ in
+                HStack(spacing: 12) {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: 44, height: 44)
+                    
+                    VStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.white.opacity(0.15))
+                            .frame(height: 16)
+                        
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Color.white.opacity(0.1))
+                            .frame(height: 12)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(Color.white.opacity(0.03))
+                .cornerRadius(12)
+            }
+        }
+        .padding(.vertical, 8)
     }
 }
 
