@@ -641,7 +641,7 @@ struct SuggestionDetailView: View {
                 .font(.headline)
                 .foregroundColor(.secondary)
             
-            FlowLayout(spacing: 8) {
+            SmartSuggestionsFlowLayout(spacing: 8) {
                 ForEach(suggestion.basedOnPatterns, id: \.self) { pattern in
                     Text(pattern)
                         .font(.caption)
@@ -735,7 +735,7 @@ struct SuggestionDetailView: View {
 
 // MARK: - 流式布局
 
-struct FlowLayout: Layout {
+struct SmartSuggestionsFlowLayout: Layout {
     var spacing: CGFloat = 8
     
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {

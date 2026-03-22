@@ -127,9 +127,10 @@ struct PermissionRequestView: View {
         
         // 请求健康数据权限
         let healthStore = HKHealthStore()
-        let sleepTypes: Set<HKObjectType> = [
-            HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
-        ]
+        guard let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) else {
+            return
+        }
+        let sleepTypes: Set<HKObjectType> = [sleepType]
         
         healthStore.requestAuthorization(toShare: nil, read: sleepTypes) { granted, error in
             DispatchQueue.main.async {
@@ -259,11 +260,10 @@ class PermissionManager: ObservableObject {
         }
         
         // 检查健康权限
-        if HKHealthStore.isHealthDataAvailable() {
+        if HKHealthStore.isHealthDataAvailable(),
+           let sleepType = HKObjectType.categoryType(forIdentifier: .sleepAnalysis) {
             let healthStore = HKHealthStore()
-            let sleepTypes: Set<HKObjectType> = [
-                HKObjectType.categoryType(forIdentifier: .sleepAnalysis)!
-            ]
+            let sleepTypes: Set<HKObjectType> = [sleepType]
             
             healthStore.getRequestStatusForAuthorization(toShare: [], read: sleepTypes) { status, error in
                 DispatchQueue.main.async {

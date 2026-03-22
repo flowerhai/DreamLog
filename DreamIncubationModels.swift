@@ -215,7 +215,7 @@ struct IncubationTemplate: Identifiable, Codable {
     
     static let templates: [IncubationTemplate] = [
         IncubationTemplate(
-            id: UUID(uuidString: "A1B2C3D4-E5F6-7890-ABCD-EF1234567890")!,
+            id: UUID(uuidString: "A1B2C3D4-E5F6-7890-ABCD-EF1234567890") ?? UUID(),
             type: .problemSolving,
             name: "问题解答孵育",
             description: "带着具体问题入睡，寻求梦境的智慧和启示",
@@ -241,7 +241,7 @@ struct IncubationTemplate: Identifiable, Codable {
             ]
         ),
         IncubationTemplate(
-            id: UUID(uuidString: "B2C3D4E5-F6A7-8901-BCDE-F12345678901")!,
+            id: UUID(uuidString: "B2C3D4E5-F6A7-8901-BCDE-F12345678901") ?? UUID(),
             type: .creative,
             name: "创意灵感孵育",
             description: "激发创意潜能，获取艺术、写作或项目的灵感",
@@ -267,7 +267,7 @@ struct IncubationTemplate: Identifiable, Codable {
             ]
         ),
         IncubationTemplate(
-            id: UUID(uuidString: "C3D4E5F6-A7B8-9012-CDEF-123456789012")!,
+            id: UUID(uuidString: "C3D4E5F6-A7B8-9012-CDEF-123456789012") ?? UUID(),
             type: .healing,
             name: "情感疗愈孵育",
             description: "处理情感创伤，获得内心平静和疗愈",
@@ -293,7 +293,7 @@ struct IncubationTemplate: Identifiable, Codable {
             ]
         ),
         IncubationTemplate(
-            id: UUID(uuidString: "D4E5F6A7-B8C9-0123-DEF0-234567890123")!,
+            id: UUID(uuidString: "D4E5F6A7-B8C9-0123-DEF0-234567890123") ?? UUID(),
             type: .skill,
             name: "技能练习孵育",
             description: "在梦中练习技能，提升现实表现",
@@ -319,7 +319,7 @@ struct IncubationTemplate: Identifiable, Codable {
             ]
         ),
         IncubationTemplate(
-            id: UUID(uuidString: "E5F6A7B8-C9D0-1234-EF01-345678901234")!,
+            id: UUID(uuidString: "E5F6A7B8-C9D0-1234-EF01-345678901234") ?? UUID(),
             type: .exploration,
             name: "主题探索孵育",
             description: "探索特定主题、地点或概念",
@@ -345,7 +345,7 @@ struct IncubationTemplate: Identifiable, Codable {
             ]
         ),
         IncubationTemplate(
-            id: UUID(uuidString: "F6A7B8C9-D0E1-2345-F012-456789012345")!,
+            id: UUID(uuidString: "F6A7B8C9-D0E1-2345-F012-456789012345") ?? UUID(),
             type: .lucid,
             name: "清醒梦诱导孵育",
             description: "诱导清醒梦境，增强梦中意识",

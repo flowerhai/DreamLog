@@ -183,8 +183,12 @@ struct DreamiCloudSyncView: View {
             
             // MARK: - Help Section
             Section {
-                Link("iCloud 同步帮助", destination: URL(string: "https://support.apple.com/zh-cn/HT204260")!)
-                Link("隐私政策", destination: URL(string: "https://www.apple.com/legal/privacy/")!)
+                if let helpURL = URL(string: "https://support.apple.com/zh-cn/HT204260") {
+                    Link("iCloud 同步帮助", destination: helpURL)
+                }
+                if let privacyURL = URL(string: "https://www.apple.com/legal/privacy/") {
+                    Link("隐私政策", destination: privacyURL)
+                }
             } header: {
                 Text("帮助与支持")
             }
