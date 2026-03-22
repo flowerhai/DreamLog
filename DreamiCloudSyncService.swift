@@ -294,8 +294,57 @@ final class DreamiCloudSyncService: ObservableObject {
     
     /// 同步收藏集
     private func syncCollections() async throws -> SyncResult {
-        // TODO: 实现收藏集同步
-        return SyncResult(uploads: 0, downloads: 0, conflicts: 0, errors: 0)
+        var result = SyncResult(uploads: 0, downloads: 0, conflicts: 0, errors: 0)
+        
+        // 获取本地收藏集
+        let localCollections = try modelContext.fetch(FetchDescriptor<DreamCollection>())
+        
+        // 上传本地收藏集
+        for collection in localCollections {
+            guard let id = collection.id else { continue }
+            
+            // 检查是否已同步
+            let metadata = try modelContext.fetch(FetchDescriptor<SyncMetadata>(
+                predicate: #Predicate { $0.localIdentifier == id.uuidString && $0.recordType == CloudKitRecordType.collection.rawValue }
+            )).first
+            
+            if metadata == nil {
+                // 创建 CKRecord 并上传
+                let record = CKRecord(recordType: CloudKitRecordType.collection.rawValue, recordID: CKRecord.ID(recordName: id.uuidString))
+                record["name"] = collection.name as CKRecordValue
+                record["color"] = collection.color as CKRecordValue
+                record["icon"] = collection.icon as CKRecordValue
+                record["createdAt"] = collection.createdAt as CKRecordValue
+                record["updatedAt"] = Date() as CKRecordValue
+                
+                do {
+                    try await database.save(record)
+                    result.uploads += 1
+                    try updateSyncMetadata(for: collection, cloudKitRecordName: record.recordID.recordName, recordType: .collection)
+                } catch {
+                    result.errors += 1
+                    print("⚠️ 上传收藏集失败：\(error)")
+                }
+            }
+        }
+        
+        // 下载远程收藏集
+        let query = CKQuery(recordType: CloudKitRecordType.collection.rawValue, predicate: NSPredicate(value: true))
+        let remoteCollections = try await database.perform(query, inZoneWith: nil)
+        
+        for record in remoteCollections {
+            // 检查是否已存在
+            let exists = try modelContext.fetch(FetchDescriptor<SyncMetadata>(
+                predicate: #Predicate { $0.cloudKitRecordName == record.recordID.recordName }
+            )).first != nil
+            
+            if !exists {
+                try createCollection(from: record)
+                result.downloads += 1
+            }
+        }
+        
+        return result
     }
     
     // MARK: - Helper Methods
@@ -328,10 +377,10 @@ final class DreamiCloudSyncService: ObservableObject {
         return fileURL
     }
     
-    private func updateSyncMetadata(for dream: DreamEntity, cloudKitRecordName: String) throws {
+    private func updateSyncMetadata(for dream: DreamEntity, cloudKitRecordName: String, recordType: CloudKitRecordType = .dream) throws {
         let metadata = SyncMetadata(
             recordID: dream.id?.uuidString ?? UUID().uuidString,
-            recordType: CloudKitRecordType.dream.rawValue,
+            recordType: recordType.rawValue,
             localIdentifier: dream.id?.uuidString ?? UUID().uuidString,
             cloudKitRecordName: cloudKitRecordName
         )
@@ -340,18 +389,175 @@ final class DreamiCloudSyncService: ObservableObject {
     }
     
     private func createDream(from record: CKRecord) throws {
-        // TODO: 从 CKRecord 创建 DreamEntity
+        let dream = DreamEntity()
+        dream.id = UUID(uuidString: record.recordID.recordName)
+        dream.title = record["title"] as? String ?? ""
+        dream.content = record["content"] as? String ?? ""
+        dream.createdAt = record["createdAt"] as? Date ?? Date()
+        dream.updatedAt = record["updatedAt"] as? Date ?? Date()
+        dream.mood = record["mood"] as? String ?? ""
+        dream.tags = record["tags"] as? String ?? ""
+        dream.isLucid = record["isLucid"] as? Bool ?? false
+        dream.clarity = record["clarity"] as? Int ?? 0
+        dream.emotionIntensity = record["emotionIntensity"] as? Int ?? 0
+        
+        // 解析 JSON 字段
+        if let symbolsData = record["symbols"] as? Data {
+            dream.symbols = try? JSONDecoder().decode([String].self, from: symbolsData)
+        }
+        if let insightsData = record["insights"] as? Data {
+            dream.insights = try? JSONDecoder().decode([String].self, from: insightsData)
+        }
+        
+        modelContext.insert(dream)
+        try modelContext.save()
+        
+        // 创建同步元数据
+        let metadata = SyncMetadata(
+            recordID: dream.id?.uuidString ?? UUID().uuidString,
+            recordType: CloudKitRecordType.dream.rawValue,
+            localIdentifier: dream.id?.uuidString ?? UUID().uuidString,
+            cloudKitRecordName: record.recordID.recordName
+        )
+        modelContext.insert(metadata)
+        try modelContext.save()
+    }
+    
+    private func createCollection(from record: CKRecord) throws {
+        let collection = DreamCollection()
+        collection.id = UUID(uuidString: record.recordID.recordName)
+        collection.name = record["name"] as? String ?? ""
+        collection.color = record["color"] as? String ?? "#007AFF"
+        collection.icon = record["icon"] as? String ?? "folder.fill"
+        collection.createdAt = record["createdAt"] as? Date ?? Date()
+        
+        modelContext.insert(collection)
+        try modelContext.save()
+        
+        // 创建同步元数据
+        let metadata = SyncMetadata(
+            recordID: collection.id?.uuidString ?? UUID().uuidString,
+            recordType: CloudKitRecordType.collection.rawValue,
+            localIdentifier: collection.id?.uuidString ?? UUID().uuidString,
+            cloudKitRecordName: record.recordID.recordName
+        )
+        modelContext.insert(metadata)
+        try modelContext.save()
     }
     
     private func handleConflict(for record: CKRecord, localMetadata: SyncMetadata) throws {
-        // TODO: 实现冲突处理
+        // 获取本地梦境
+        guard let dreamId = UUID(uuidString: localMetadata.localIdentifier),
+              let dream = try modelContext.fetch(FetchDescriptor<DreamEntity>(
+                predicate: #Predicate { $0.id == dreamId }
+              )).first else {
+            return
+        }
+        
+        // 获取配置中的冲突解决策略
+        let config = try getSyncConfig()
+        
+        switch config.conflictResolution {
+        case .keepLocal:
+            // 保留本地版本，更新远程
+            let updatedRecord = CKRecord(recordType: CloudKitRecordType.dream.rawValue, recordID: record.recordID)
+            updatedRecord["title"] = dream.title as CKRecordValue
+            updatedRecord["content"] = dream.content as CKRecordValue
+            updatedRecord["updatedAt"] = Date() as CKRecordValue
+            Task {
+                try? await database.save(updatedRecord)
+            }
+            
+        case .keepRemote:
+            // 保留远程版本，更新本地
+            try createDream(from: record)
+            
+        case .keepNewest:
+            // 保留最新版本
+            let remoteDate = record["updatedAt"] as? Date ?? Date()
+            if remoteDate > dream.updatedAt {
+                try createDream(from: record)
+            } else {
+                let updatedRecord = CKRecord(recordType: CloudKitRecordType.dream.rawValue, recordID: record.recordID)
+                updatedRecord["updatedAt"] = Date() as CKRecordValue
+                Task {
+                    try? await database.save(updatedRecord)
+                }
+            }
+            
+        case .manual:
+            // 标记为需要手动解决
+            syncConflicts.append(SyncConflict(
+                localRecord: dream,
+                remoteRecord: record,
+                conflictType: .content
+            ))
+        }
     }
     
     // MARK: - Conflict Resolution
     
     /// 解决冲突
     func resolveConflict(_ conflict: SyncConflict, choice: ConflictChoice) async {
-        // TODO: 实现冲突解决
+        switch choice {
+        case .keepLocal:
+            // 保留本地版本
+            if let dream = conflict.localRecord as? DreamEntity {
+                let record = CKRecord(recordType: CloudKitRecordType.dream.rawValue, recordID: conflict.remoteRecord.recordID)
+                record["title"] = dream.title as CKRecordValue
+                record["content"] = dream.content as CKRecordValue
+                record["updatedAt"] = Date() as CKRecordValue
+                
+                do {
+                    try await database.save(record)
+                    // 移除冲突
+                    syncConflicts.removeAll { $0.id == conflict.id }
+                } catch {
+                    errorMessage = "解决冲突失败：\(error.localizedDescription)"
+                }
+            }
+            
+        case .keepRemote:
+            // 保留远程版本
+            if let record = conflict.remoteRecord as? CKRecord {
+                do {
+                    try createDream(from: record)
+                    // 移除冲突
+                    syncConflicts.removeAll { $0.id == conflict.id }
+                } catch {
+                    errorMessage = "应用远程版本失败：\(error.localizedDescription)"
+                }
+            }
+            
+        case .merge:
+            // 合并两个版本 (简单合并，保留双方内容)
+            if let localDream = conflict.localRecord as? DreamEntity,
+               let remoteRecord = conflict.remoteRecord as? CKRecord {
+                let mergedContent = """
+                === 本地版本 ===
+                \(localDream.content)
+                
+                === 远程版本 ===
+                \(remoteRecord["content"] as? String ?? "")
+                """
+                
+                let record = CKRecord(recordType: CloudKitRecordType.dream.rawValue, recordID: remoteRecord.recordID)
+                record["title"] = localDream.title as CKRecordValue
+                record["content"] = mergedContent as CKRecordValue
+                record["updatedAt"] = Date() as CKRecordValue
+                
+                do {
+                    try await database.save(record)
+                    localDream.content = mergedContent
+                    localDream.updatedAt = Date()
+                    try modelContext.save()
+                    // 移除冲突
+                    syncConflicts.removeAll { $0.id == conflict.id }
+                } catch {
+                    errorMessage = "合并失败：\(error.localizedDescription)"
+                }
+            }
+        }
     }
     
     // MARK: - Manual Sync Control
@@ -369,6 +575,28 @@ final class DreamiCloudSyncService: ObservableObject {
         syncStatus = .idle
         syncMessage = "等待同步"
         startScheduledSync()
+    }
+    
+    /// 重置同步状态
+    func resetSyncState() {
+        // 清除所有同步元数据
+        do {
+            let metadatas = try modelContext.fetch(FetchDescriptor<SyncMetadata>())
+            for metadata in metadatas {
+                modelContext.delete(metadata)
+            }
+            
+            // 重置同步统计
+            syncStats = SyncStats()
+            
+            // 保存上下文
+            try modelContext.save()
+            
+            print("✅ iCloud 同步已重置")
+        } catch {
+            errorMessage = "重置同步失败：\(error.localizedDescription)"
+            print("⚠️ 重置同步失败：\(error)")
+        }
     }
     
     /// 启动定时同步

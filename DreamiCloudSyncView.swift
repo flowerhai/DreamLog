@@ -168,7 +168,11 @@ struct DreamiCloudSyncView: View {
                 // MARK: - Advanced Section
                 Section("高级选项") {
                     NavigationLink("查看冲突记录") {
-                        ConflictListView(conflicts: syncService.conflicts)
+                        ConflictListView(conflicts: syncService.conflicts) { conflict, choice in
+                            Task {
+                                await syncService.resolveConflict(conflict, choice: choice)
+                            }
+                        }
                     }
                     
                     NavigationLink("同步日志") {
@@ -206,6 +210,14 @@ struct DreamiCloudSyncView: View {
         .onAppear {
             syncService.checkAuthentication()
         }
+        .confirmationDialog("重置同步", isPresented: $showingResetConfirmation, titleVisibility: .visible) {
+            Button("重置", role: .destructive) {
+                performReset()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("此操作将清除所有同步元数据并重新开始同步。不会删除本地或云端数据。")
+        }
     }
     
     // MARK: - Methods
@@ -225,8 +237,14 @@ struct DreamiCloudSyncView: View {
         }
     }
     
+    @State private var showingResetConfirmation = false
+    
     private func resetSync() {
-        // TODO: 实现重置逻辑
+        showingResetConfirmation = true
+    }
+    
+    private func performReset() {
+        service.resetSyncState()
     }
 }
 
@@ -250,6 +268,7 @@ struct StatRow: View {
 
 struct ConflictListView: View {
     let conflicts: [SyncConflict]
+    let onResolve: (SyncConflict, ConflictChoice) -> Void
     
     var body: some View {
         List {
@@ -261,7 +280,9 @@ struct ConflictListView: View {
                 )
             } else {
                 ForEach(conflicts) { conflict in
-                    ConflictRow(conflict: conflict)
+                    ConflictRow(conflict: conflict, onResolve: { choice in
+                        onResolve(conflict, choice)
+                    })
                 }
             }
         }
@@ -271,6 +292,7 @@ struct ConflictListView: View {
 
 struct ConflictRow: View {
     let conflict: SyncConflict
+    let onResolve: (ConflictChoice) -> Void
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -287,14 +309,19 @@ struct ConflictRow: View {
             
             HStack {
                 Button("使用本地") {
-                    // TODO: 解决冲突
+                    onResolve(.keepLocal)
+                }
+                .buttonStyle(.bordered)
+                
+                Button("合并") {
+                    onResolve(.merge)
                 }
                 .buttonStyle(.bordered)
                 
                 Spacer()
                 
                 Button("使用云端") {
-                    // TODO: 解决冲突
+                    onResolve(.keepRemote)
                 }
                 .buttonStyle(.bordered)
             }
