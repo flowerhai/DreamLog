@@ -313,7 +313,7 @@ class DreamArtCardViewModel: ObservableObject {
     @Published var generatedImagePath: String?
     @Published var errorMessage: String?
     
-    private let service = DreamArtCardService.shared
+    private let service = DreamArtCardService.shared! // Initialized in DreamLogApp
     
     func autoMatchStyle(for dream: Dream) async {
         let matchedStyle = await service.matchStyle(for: dream)

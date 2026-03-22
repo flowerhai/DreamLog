@@ -15,7 +15,13 @@ actor DreamExportTemplateService {
     
     // MARK: - 单例
     
-    static let shared = DreamExportTemplateService()
+    static var shared: DreamExportTemplateService?
+    
+    static func initialize(modelContainer: ModelContainer) -> DreamExportTemplateService {
+        let instance = DreamExportTemplateService(modelContainer: modelContainer)
+        self.shared = instance
+        return instance
+    }
     
     // MARK: - 模板管理
     

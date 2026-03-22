@@ -15,7 +15,13 @@ actor DreamExportHubService {
     
     // MARK: - 单例
     
-    static let shared = DreamExportHubService()
+    static var shared: DreamExportHubService?
+    
+    static func initialize(modelContainer: ModelContainer) -> DreamExportHubService {
+        let instance = DreamExportHubService(modelContainer: modelContainer)
+        self.shared = instance
+        return instance
+    }
     
     // MARK: - 导出任务管理
     
@@ -420,9 +426,9 @@ actor DreamExportHubService {
         for dream in dreams {
             // 如果指定了模板，使用模板渲染
             if let templateName = options.template {
-                let template = try? await DreamExportTemplateService.shared.findTemplate(byName: templateName)
+                let template = try? await DreamExportTemplateService.shared!.findTemplate(byName: templateName)
                 if let template = template {
-                    content += await DreamExportTemplateService.shared.renderTemplate(template, dream: dream)
+                    content += await DreamExportTemplateService.shared!.renderTemplate(template, dream: dream)
                     content += "\n\n---\n\n"
                     continue
                 }

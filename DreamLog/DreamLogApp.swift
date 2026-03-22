@@ -98,6 +98,12 @@ struct DreamLogApp: App {
         
         // 初始化共享模型容器
         SharedModelContainer.initialize(modelContainer)
+        
+        // 初始化 @ModelActor 服务
+        _ = AdvancedAnalyticsService.initialize(modelContainer: modelContainer)
+        _ = DreamArtCardService.initialize(modelContainer: modelContainer)
+        _ = DreamExportHubService.initialize(modelContainer: modelContainer)
+        _ = DreamExportTemplateService.initialize(modelContainer: modelContainer)
     }
     
     @ObservedObject private var dreamStore = DreamStore.shared

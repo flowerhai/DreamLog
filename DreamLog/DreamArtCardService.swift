@@ -16,7 +16,13 @@ actor DreamArtCardService {
     
     // MARK: - 单例
     
-    static let shared = DreamArtCardService()
+    static var shared: DreamArtCardService?
+    
+    static func initialize(modelContainer: ModelContainer) -> DreamArtCardService {
+        let instance = DreamArtCardService(modelContainer: modelContainer)
+        self.shared = instance
+        return instance
+    }
     
     // MARK: - 属性
     

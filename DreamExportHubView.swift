@@ -233,7 +233,7 @@ struct DreamExportHubView: View {
                         
                         Button(action: {
                             Task {
-                                try? await DreamExportHubService.shared.toggleExportTask(task, enabled: !task.isEnabled)
+                                try? await DreamExportHubService.shared!.toggleExportTask(task, enabled: !task.isEnabled)
                                 await loadExportTasks()
                             }
                         }) {
@@ -244,7 +244,7 @@ struct DreamExportHubView: View {
                         
                         Button(role: .destructive, action: {
                             Task {
-                                try? await DreamExportHubService.shared.deleteExportTask(task)
+                                try? await DreamExportHubService.shared!.deleteExportTask(task)
                                 await loadExportTasks()
                             }
                         }) {
@@ -288,8 +288,8 @@ struct DreamExportHubView: View {
         errorMessage = nil
         
         do {
-            async let tasks = DreamExportHubService.shared.getAllExportTasks()
-            async let stats = DreamExportHubService.shared.getExportStats()
+            async let tasks = DreamExportHubService.shared!.getAllExportTasks()
+            async let stats = DreamExportHubService.shared!.getExportStats()
             
             exportTasks = try await tasks
             exportStats = try await stats
@@ -308,7 +308,7 @@ struct DreamExportHubView: View {
     
     private func quickExport(platform: ExportPlatform, format: ExportFormat) async {
         do {
-            let task = try await DreamExportHubService.shared.createExportTask(
+            let task = try await DreamExportHubService.shared!.createExportTask(
                 name: "快速导出 - \(platform.displayName)",
                 platform: platform,
                 format: format,
@@ -316,7 +316,7 @@ struct DreamExportHubView: View {
                 options: .default
             )
             
-            _ = try await DreamExportHubService.shared.executeExportTask(task)
+            _ = try await DreamExportHubService.shared!.executeExportTask(task)
             
             await loadExportTasks()
         } catch {
@@ -326,7 +326,7 @@ struct DreamExportHubView: View {
     
     private func executeTask(_ task: ExportTask) async {
         do {
-            _ = try await DreamExportHubService.shared.executeExportTask(task)
+            _ = try await DreamExportHubService.shared!.executeExportTask(task)
             await loadExportTasks()
         } catch {
             errorMessage = "执行失败：\(error.localizedDescription)"
@@ -656,7 +656,7 @@ struct NewExportTaskView: View {
                     includeImages: includeImages
                 )
                 
-                let preview = try await DreamExportHubService.shared.generateExportPreview(
+                let preview = try await DreamExportHubService.shared!.generateExportPreview(
                     dreamIds: [],
                     exportAll: exportAll,
                     dateRange: nil,
@@ -689,7 +689,7 @@ struct NewExportTaskView: View {
         )
         
         do {
-            _ = try await DreamExportHubService.shared.createExportTask(
+            _ = try await DreamExportHubService.shared!.createExportTask(
                 name: name,
                 platform: selectedPlatform,
                 format: selectedFormat,

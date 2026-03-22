@@ -15,7 +15,13 @@ actor AdvancedAnalyticsService {
     
     // MARK: - 单例
     
-    static let shared = AdvancedAnalyticsService()
+    static var shared: AdvancedAnalyticsService?
+    
+    static func initialize(modelContainer: ModelContainer) -> AdvancedAnalyticsService {
+        let instance = AdvancedAnalyticsService(modelContainer: modelContainer)
+        self.shared = instance
+        return instance
+    }
     
     // MARK: - 数据结构
     
