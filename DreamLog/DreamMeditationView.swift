@@ -13,13 +13,16 @@ import SwiftData
 
 struct DreamMeditationView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var service: DreamMeditationService?
     @State private var selectedCategory: MeditationCategory?
     @State private var showingPlayer = false
     @State private var selectedTemplate: MeditationTemplate?
     @State private var stats: MeditationStats = .empty
     @State private var preferences: MeditationPreference?
     @State private var recommendationSeed = 0
+    
+    private var service: DreamMeditationService {
+        DreamMeditationService(modelContext: modelContext)
+    }
     
     @Query(sort: \MeditationTemplate.usageCount, order: .reverse)
     private var popularTemplates: [MeditationTemplate]
@@ -62,7 +65,6 @@ struct DreamMeditationView: View {
                 }
             }
             .task {
-                service = DreamMeditationService(modelContext: modelContext)
                 await loadStats()
                 await loadPreferences()
             }
@@ -269,19 +271,14 @@ struct DreamMeditationView: View {
     // MARK: - Helper Methods
     
     private func loadStats() async {
-        if let service = service {
-            stats = service.getMeditationStats()
-        }
+        stats = service.getMeditationStats()
     }
     
     private func loadPreferences() async {
-        if let service = service {
-            preferences = service.getPreference()
-        }
+        preferences = service.getPreference()
     }
     
     private func getRecommendedTemplates() -> [MeditationTemplate] {
-        guard let service = service else { return [] }
         
         let hour = Calendar.current.component(.hour, from: Date())
         let timeOfDay: String

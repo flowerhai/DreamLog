@@ -13,7 +13,7 @@ import AVFoundation
 
 struct DreamMeditationPlayerView: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var service: DreamMeditationService?
+    @Environment(\.modelContext) private var modelContext
     @State private var isPlaying = false
     @State private var currentTime: TimeInterval = 0
     @State private var showSettings = false
@@ -24,6 +24,10 @@ struct DreamMeditationPlayerView: View {
     @State private var session: MeditationSession?
     
     let template: MeditationTemplate
+    
+    private var service: DreamMeditationService {
+        DreamMeditationService(modelContext: modelContext)
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -62,13 +66,12 @@ struct DreamMeditationPlayerView: View {
             )
         )
         .task {
-            service = DreamMeditationService(modelContext: modelContext)
             setupCallbacks()
             await startSession()
         }
         .onDisappear {
             Task {
-                await service?.stopSession(completed: currentTime >= template.duration * 0.8)
+                await service.stopSession(completed: currentTime >= template.duration * 0.8)
             }
         }
         .sheet(isPresented: $showSettings) {

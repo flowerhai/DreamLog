@@ -17,11 +17,14 @@ final class DreamHealthIntegrationService {
     
     // MARK: - 单例
     
-    static let shared = DreamHealthIntegrationService(modelContainer: Self.createModelContainer())
+    static var shared: DreamHealthIntegrationService?
     
-    private static func createModelContainer() -> ModelContainer {
-        // 实际使用时会从 App 注入
-        fatalError("请使用依赖注入的 modelContainer")
+    /// 初始化共享实例 (由 App 入口调用)
+    static func initialize(modelContainer: ModelContainer) -> DreamHealthIntegrationService {
+        if shared == nil {
+            shared = DreamHealthIntegrationService(modelContext: ModelContext(modelContainer))
+        }
+        return shared!
     }
     
     // MARK: - 初始化

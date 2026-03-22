@@ -41,9 +41,26 @@ class DreamSymbolEntity {
         self.name = name
         self.nameEn = nameEn
         self.category = category
-        self.meanings = try! JSONEncoder().encode(meanings).base64EncodedString()
-        self.culturalVariations = try! JSONEncoder().encode(culturalVariations).base64EncodedString()
-        self.relatedSymbols = try! JSONEncoder().encode(relatedSymbols).base64EncodedString()
+        
+        // Safe JSON encoding with fallback to empty arrays
+        do {
+            self.meanings = try JSONEncoder().encode(meanings).base64EncodedString()
+        } catch {
+            self.meanings = Data().base64EncodedString()
+        }
+        
+        do {
+            self.culturalVariations = try JSONEncoder().encode(culturalVariations).base64EncodedString()
+        } catch {
+            self.culturalVariations = Data().base64EncodedString()
+        }
+        
+        do {
+            self.relatedSymbols = try JSONEncoder().encode(relatedSymbols).base64EncodedString()
+        } catch {
+            self.relatedSymbols = Data().base64EncodedString()
+        }
+        
         self.frequency = frequency
         self.isPersonal = isPersonal
         self.createdAt = Date()

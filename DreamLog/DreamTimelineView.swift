@@ -12,7 +12,6 @@ import Charts
 
 struct DreamTimelineView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var service: DreamTimelineService?
     @State private var timelineEntries: [TimelineEntry] = []
     @State private var statistics: TimelineStatistics?
     @State private var correlations: [DreamLifeCorrelation] = []
@@ -22,6 +21,10 @@ struct DreamTimelineView: View {
     @State private var errorMessage = ""
     @State private var showingCreateEvent = false
     @State private var selectedEntry: TimelineEntry?
+    
+    private var service: DreamTimelineService {
+        DreamTimelineService(modelContext: modelContext)
+    }
     
     var body: some View {
         NavigationStack {
@@ -58,7 +61,7 @@ struct DreamTimelineView: View {
                 }
             }
             .onAppear {
-                initializeService()
+                refresh()
             }
             .sheet(isPresented: $showingCreateEvent) {
                 CreateLifeEventView {
@@ -294,18 +297,12 @@ struct DreamTimelineView: View {
     
     // MARK: - Actions
     
-    private func initializeService() {
-        service = DreamTimelineService(modelContext: modelContext)
-        refresh()
-    }
-    
     private func refresh() {
         isLoading = true
         
         Task {
             do {
-                guard let service = service,
-                      let dateRange = config.dateRange.dateRange else {
+                guard let dateRange = config.dateRange.dateRange else {
                     throw TimelineError.invalidDateRange
                 }
                 

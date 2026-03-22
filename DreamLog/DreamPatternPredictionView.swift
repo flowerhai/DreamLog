@@ -13,13 +13,16 @@ import SwiftData
 
 struct DreamPatternPredictionView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var predictionService: DreamPatternPredictionService?
     @State private var response: PredictionResponse?
     @State private var isLoading = false
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var selectedTimeRange: PredictionTimeRange = .next7days
     @State private var selectedPredictionTypes: Set<PredictionType> = [.theme, .emotion, .clarity, .lucid]
+    
+    private var predictionService: DreamPatternPredictionService {
+        DreamPatternPredictionService(modelContext: modelContext)
+    }
     
     var body: some View {
         NavigationView {
@@ -41,9 +44,6 @@ struct DreamPatternPredictionView: View {
                     .disabled(isLoading)
                 }
             }
-        }
-        .task {
-            predictionService = DreamPatternPredictionService(modelContext: modelContext)
         }
     }
     
@@ -337,8 +337,6 @@ struct DreamPatternPredictionView: View {
     // MARK: - Action
     
     private func generatePrediction() {
-        guard let service = predictionService else { return }
-        
         isLoading = true
         showError = false
         

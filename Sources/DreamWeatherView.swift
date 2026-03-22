@@ -12,12 +12,15 @@ import Charts
 
 struct DreamWeatherView: View {
     @Environment(\.modelContext) private var modelContext
-    @State private var service: DreamWeatherService?
     @State private var statistics: DreamWeatherStatistics?
     @State private var isLoading = false
     @State private var selectedDateRange: DateRange = .last30Days
     @State private var showError = false
     @State private var errorMessage = ""
+    
+    private var service: DreamWeatherService {
+        DreamWeatherService(modelContext: modelContext)
+    }
     
     enum DateRange: String, CaseIterable {
         case last7Days = "最近 7 天"
@@ -79,7 +82,7 @@ struct DreamWeatherView: View {
                 }
             }
             .onAppear {
-                initializeService()
+                refresh()
             }
             .alert("错误", isPresented: $showError) {
                 Button("确定", role: .cancel) { }
@@ -313,15 +316,10 @@ struct DreamWeatherView: View {
     
     // MARK: - Actions
     
-    private func initializeService() {
-        service = DreamWeatherService(modelContext: modelContext)
-    }
-    
     private func refresh() {
         isLoading = true
         Task {
             do {
-                guard let service = service else { return }
                 
                 let dateRange: ClosedRange<Date>
                 if let range = selectedDateRange.dateRange {
