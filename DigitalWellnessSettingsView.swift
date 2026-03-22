@@ -6,10 +6,16 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct DigitalWellnessSettingsView: View {
     @StateObject private var service = DreamScreenTimeService.shared
     @Environment(\.dismiss) var dismiss
+    
+    @State private var showingExportConfirmation = false
+    @State private var showingClearConfirmation = false
+    @State private var exportSuccess = false
+    @State private var exportError: String?
     
     var body: some View {
         NavigationView {
@@ -110,6 +116,34 @@ struct DigitalWellnessSettingsView: View {
             .onChange(of: service.settings) { _, _ in
                 service.saveSettings()
             }
+            .alert("导出成功", isPresented: $exportSuccess) {
+                Button("好的", role: .cancel) {}
+            } message: {
+                Text("屏幕时间数据已成功导出")
+            }
+            .alert("导出失败", isPresented: .constant(exportError != nil)) {
+                Button("好的", role: .cancel) {
+                    exportError = nil
+                }
+            } message: {
+                Text(exportError ?? "未知错误")
+            }
+            .confirmationDialog("导出数据", isPresented: $showingExportConfirmation) {
+                Button("导出为 JSON") {
+                    performExport()
+                }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("将导出所有屏幕时间数据、设置和成就为 JSON 文件")
+            }
+            .confirmationDialog("清除数据", isPresented: $showingClearConfirmation, titleVisibility: .visible) {
+                Button("清除所有数据", role: .destructive) {
+                    performClear()
+                }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("此操作将删除所有屏幕时间记录和成就，但保留设置。此操作不可恢复！")
+            }
         }
     }
     
@@ -122,11 +156,95 @@ struct DigitalWellnessSettingsView: View {
     }
     
     private func exportData() {
-        // TODO: 实现数据导出
+        showingExportConfirmation = true
     }
     
     private func clearData() {
-        // TODO: 实现数据清除
+        showingClearConfirmation = true
+    }
+    
+    private func performExport() {
+        guard let exportData = service.exportData() else {
+            exportError = service.errorMessage ?? "导出失败"
+            return
+        }
+        
+        // 创建临时文件
+        let tempDir = FileManager.default.temporaryDirectory
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd-HHmmss"
+        let filename = "screen_time_export_\(dateFormatter.string(from: Date())).json"
+        let fileURL = tempDir.appendingPathComponent(filename)
+        
+        do {
+            try exportData.write(to: fileURL)
+            
+            // 使用 UIActivityViewController 分享文件
+            let activityVC = UIActivityViewController(
+                activityItems: [fileURL],
+                applicationActivities: nil
+            )
+            
+            // 获取窗口场景
+            if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+               let rootViewController = windowScene.windows.first?.rootViewController {
+                // 适配 iPad
+                if let popoverController = activityVC.popoverPresentationController {
+                    popoverController.sourceView = rootViewController.view
+                    popoverController.sourceRect = CGRect(x: rootViewController.view.bounds.midX, y: rootViewController.view.bounds.midY, width: 0, height: 0)
+                    popoverController.permittedArrowDirections = []
+                }
+                rootViewController.present(activityVC, animated: true)
+            }
+            
+            exportSuccess = true
+        } catch {
+            exportError = "保存文件失败：\(error.localizedDescription)"
+        }
+    }
+    
+    private func performClear() {
+        service.clearAllData(keepSettings: true)
+    }
+}
+
+extension DigitalWellnessSettingsView {
+    private var exportConfirmationAlert: some View {
+        ConfirmationDialog("导出数据", isPresented: $showingExportConfirmation) {
+            Button("导出为 JSON") {
+                performExport()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("将导出所有屏幕时间数据、设置和成就为 JSON 文件")
+        }
+    }
+    
+    private var clearConfirmationAlert: some View {
+        ConfirmationDialog("清除数据", isPresented: $showingClearConfirmation, titleVisibility: .visible) {
+            Button("清除所有数据", role: .destructive) {
+                performClear()
+            }
+            Button("取消", role: .cancel) {}
+        } message: {
+            Text("此操作将删除所有屏幕时间记录和成就，但保留设置。此操作不可恢复！")
+        }
+    }
+    
+    private var exportSuccessAlert: some View {
+        Alert(
+            title: Text("导出成功"),
+            message: Text("屏幕时间数据已成功导出"),
+            dismissButton: .default(Text("好的"))
+        )
+    }
+    
+    private var exportErrorAlert: some View {
+        Alert(
+            title: Text("导出失败"),
+            message: Text(exportError ?? "未知错误"),
+            dismissButton: .default(Text("好的"))
+        )
     }
 }
 

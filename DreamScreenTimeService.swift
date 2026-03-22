@@ -616,6 +616,81 @@ class DreamScreenTimeService: ObservableObject {
             dreamQualityScore: 0 // 简化处理
         )
     }
+    
+    // MARK: - Data Export
+    
+    /// 导出屏幕时间数据为 JSON
+    func exportData() -> Data? {
+        let sessions = getAllSessions()
+        let exportData = ScreenTimeExportData(
+            exportDate: Date(),
+            settings: settings,
+            sessions: sessions,
+            achievements: achievements,
+            stats: generateExportStats()
+        )
+        
+        do {
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+            return try encoder.encode(exportData)
+        } catch {
+            errorMessage = "导出数据失败：\(error.localizedDescription)"
+            return nil
+        }
+    }
+    
+    /// 生成导出统计
+    private func generateExportStats() -> ScreenTimeExportStats {
+        let allSessions = getAllSessions()
+        let totalSessions = allSessions.count
+        let totalDuration = allSessions.reduce(0) { $0 + $1.duration }
+        let beforeBedSessions = allSessions.filter { $0.isBeforeBed }
+        let beforeBedDuration = beforeBedSessions.reduce(0) { $0 + $1.duration }
+        
+        let categoryBreakdown = Dictionary(grouping: allSessions) { $0.category }
+            .mapValues { sessions in
+                sessions.reduce(0) { $0 + $1.duration }
+            }
+        
+        return ScreenTimeExportStats(
+            totalSessions: totalSessions,
+            totalDurationMinutes: Int(totalDuration / 60),
+            beforeBedSessions: beforeBedSessions.count,
+            beforeBedDurationMinutes: Int(beforeBedDuration / 60),
+            categoryBreakdown: categoryBreakdown,
+            trackingStartDate: settings.trackingStartDate,
+            trackingDays: Calendar.current.dateComponents([.day], from: settings.trackingStartDate ?? Date(), to: Date()).day ?? 0
+        )
+    }
+    
+    // MARK: - Data Clear
+    
+    /// 清除所有屏幕时间数据
+    func clearAllData(keepSettings: Bool = true) {
+        userDefaults.removeObject(forKey: sessionsKey)
+        userDefaults.removeObject(forKey: achievementsKey)
+        
+        if !keepSettings {
+            userDefaults.removeObject(forKey: settingsKey)
+        }
+        
+        // 重置发布状态
+        currentSession = nil
+        todayStats = nil
+        weeklyReport = nil
+        correlation = nil
+        achievements = []
+        quickStats = nil
+        
+        // 重新加载设置
+        if keepSettings {
+            loadSettings()
+        }
+        
+        print("✅ 屏幕时间数据已清除")
+    }
 }
 
 // MARK: - Calendar Extension

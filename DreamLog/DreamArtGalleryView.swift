@@ -17,6 +17,7 @@ struct DreamArtGalleryView: View {
     @State private var selectedArt: DreamArt?
     @State private var showingDetail = false
     @State private var errorMessage: String?
+    @State private var showingPaywall = false
     
     var body: some View {
         NavigationView {
@@ -42,12 +43,15 @@ struct DreamArtGalleryView: View {
                     selectedArt = nil
                 })
             }
+            .sheet(isPresented: $showingPaywall) {
+                PaywallView()
+            }
             .alert("生成失败", isPresented: .constant(errorMessage != nil)) {
                 Button("确定", role: .cancel) {
                     errorMessage = nil
                 }
                 Button("升级高级版") {
-                    // TODO: 打开付费墙
+                    showingPaywall = true
                 }
             } message: {
                 Text(errorMessage ?? "")

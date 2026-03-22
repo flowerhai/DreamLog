@@ -318,3 +318,25 @@ struct ScreenTimeQuickStats: Codable {
     var streakDays: Int // 连续达标天数
     var dreamQualityScore: Double
 }
+
+// MARK: - 数据导出
+
+/// 屏幕时间导出数据
+struct ScreenTimeExportData: Codable {
+    var exportDate: Date
+    var settings: DigitalWellnessSettings
+    var sessions: [ScreenTimeSession]
+    var achievements: [ScreenTimeAchievement]
+    var stats: ScreenTimeExportStats
+}
+
+/// 屏幕时间导出统计
+struct ScreenTimeExportStats: Codable {
+    var totalSessions: Int
+    var totalDurationMinutes: Int
+    var beforeBedSessions: Int
+    var beforeBedDurationMinutes: Int
+    var categoryBreakdown: [ScreenTimeCategory: TimeInterval]
+    var trackingStartDate: Date?
+    var trackingDays: Int
+}
