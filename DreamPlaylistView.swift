@@ -192,7 +192,7 @@ struct PlaylistRowView: View {
 
 // MARK: - Create Playlist View
 
-struct CreatePlaylistView: View {
+struct CreateDreamPlaylistView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var title = ""
     @State private var description = ""
@@ -359,7 +359,7 @@ struct PresetPlaylistView: View {
 
 // MARK: - Playlist Detail View
 
-struct PlaylistDetailView: View {
+struct DreamPlaylistDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     

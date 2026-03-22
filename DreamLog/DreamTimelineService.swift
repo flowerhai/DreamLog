@@ -2,306 +2,454 @@
 //  DreamTimelineService.swift
 //  DreamLog
 //
-//  梦境时间轴服务 - 可视化梦境在时间轴上的分布
-//  Phase 6 - 个性化体验
+//  Phase 86: Dream Timeline & Life Events Service
+//  Managing timeline data and correlations
 //
 
 import Foundation
-import SwiftUI
+import SwiftData
 
-/// 时间轴数据点
-struct TimelineDataPoint: Identifiable {
-    let id = UUID()
-    let date: Date
-    let dreamCount: Int
-    let avgClarity: Double
-    let avgIntensity: Double
-    let dominantEmotion: Emotion?
-    let lucidDreamCount: Int
-    let tags: [String]
-}
-
-/// 时间轴分组级别
-enum TimelineGranularity: String, CaseIterable {
-    case day = "天"
-    case week = "周"
-    case month = "月"
-    case year = "年"
+@ModelActor
+actor DreamTimelineService {
+    private let modelContext: ModelContext
     
-    var icon: String {
-        switch self {
-        case .day: return "calendar"
-        case .week: return "calendar.badge.week"
-        case .month: return "calendar.badge.month"
-        case .year: return "calendar.badge.year"
-        }
-    }
-}
-
-/// 时间轴过滤选项
-struct TimelineFilter {
-    var startDate: Date?
-    var endDate: Date?
-    var selectedTags: Set<String> = []
-    var selectedEmotions: Set<Emotion> = []
-    var lucidOnly: Bool = false
-    var minClarity: Int = 1
-    var granularity: TimelineGranularity = .week
-    
-    var isActive: Bool {
-        startDate != nil || endDate != nil || !selectedTags.isEmpty || 
-        !selectedEmotions.isEmpty || lucidOnly || minClarity > 1
-    }
-}
-
-/// 梦境时间轴服务
-class DreamTimelineService {
-    static let shared = DreamTimelineService()
-    
-    private init() {}
-    
-    // MARK: - 生成时间轴数据
-    
-    /// 生成时间轴数据点
-    /// - Parameters:
-    ///   - dreams: 梦境列表
-    ///   - filter: 过滤选项
-    /// - Returns: 时间轴数据点数组
-    func generateTimelineData(
-        dreams: [Dream],
-        filter: TimelineFilter = TimelineFilter()
-    ) -> [TimelineDataPoint] {
-        // 应用过滤
-        let filteredDreams = applyFilter(dreams: dreams, filter: filter)
-        
-        guard !filteredDreams.isEmpty else { return [] }
-        
-        // 确定时间范围
-        let dates = filteredDreams.map { $0.date }
-        guard let minDate = dates.min(), let maxDate = dates.max() else {
-            return []
-        }
-        
-        // 根据分组级别生成时间区间
-        let dateRanges = generateDateRanges(
-            from: minDate,
-            to: maxDate,
-            granularity: filter.granularity
-        )
-        
-        // 为每个区间生成数据点
-        return dateRanges.map { range in
-            let dreamsInRange = filteredDreams.filter { range.contains($0.date) }
-            return createDataPoint(dreams: dreamsInRange, date: range.lowerBound)
-        }
+    init(modelContext: ModelContext) {
+        self.modelContext = modelContext
     }
     
-    // MARK: - 过滤梦境
+    // MARK: - Life Event Management
     
-    /// 应用过滤条件
-    private func applyFilter(dreams: [Dream], filter: TimelineFilter) -> [Dream] {
-        return dreams.filter { dream in
-            // 日期范围过滤
-            if let startDate = filter.startDate, dream.date < startDate {
-                return false
-            }
-            if let endDate = filter.endDate, dream.date > endDate {
-                return false
-            }
-            
-            // 标签过滤
-            if !filter.selectedTags.isEmpty {
-                let hasMatchingTag = filter.selectedTags.contains { tag in
-                    dream.tags.contains { $0.localizedCaseInsensitiveContains(tag) }
-                }
-                if !hasMatchingTag { return false }
-            }
-            
-            // 情绪过滤
-            if !filter.selectedEmotions.isEmpty {
-                let hasMatchingEmotion = dream.emotions.contains { filter.selectedEmotions.contains($0) }
-                if !hasMatchingEmotion { return false }
-            }
-            
-            // 清醒梦过滤
-            if filter.lucidOnly && !dream.isLucid {
-                return false
-            }
-            
-            // 清晰度过滤
-            if dream.clarity < filter.minClarity {
-                return false
-            }
-            
-            return true
-        }
-    }
-    
-    // MARK: - 生成日期区间
-    
-    /// 生成日期区间
-    private func generateDateRanges(
-        from startDate: Date,
-        to endDate: Date,
-        granularity: TimelineGranularity
-    ) -> [(lowerBound: Date, upperBound: Date)] {
-        var ranges: [(Date, Date)] = []
-        var currentDate = startDate
-        let calendar = Calendar.current
-        
-        while currentDate <= endDate {
-            let range: (Date, Date)
-            
-            switch granularity {
-            case .day:
-                let start = calendar.startOfDay(for: currentDate)
-                let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
-                range = (start, end)
-                currentDate = end
-                
-            case .week:
-                let start = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: currentDate)) ?? currentDate
-                let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start
-                range = (start, end)
-                currentDate = end
-                
-            case .month:
-                let start = calendar.date(from: calendar.dateComponents([.year, .month], from: currentDate)) ?? currentDate
-                let end = calendar.date(byAdding: .month, value: 1, to: start) ?? start
-                range = (start, end)
-                currentDate = end
-                
-            case .year:
-                let start = calendar.date(from: calendar.dateComponents([.year], from: currentDate)) ?? currentDate
-                let end = calendar.date(byAdding: .year, value: 1, to: start) ?? start
-                range = (start, end)
-                currentDate = end
-            }
-            
-            ranges.append(range)
-        }
-        
-        return ranges
-    }
-    
-    // MARK: - 创建数据点
-    
-    /// 创建时间轴数据点
-    private func createDataPoint(dreams: [Dream], date: Date) -> TimelineDataPoint {
-        let calendar = Calendar.current
-        
-        // 计算平均清晰度
-        let avgClarity = dreams.isEmpty ? 0 : Double(dreams.map { $0.clarity }.reduce(0, +)) / Double(dreams.count)
-        
-        // 计算平均强度
-        let avgIntensity = dreams.isEmpty ? 0 : Double(dreams.map { $0.intensity }.reduce(0, +)) / Double(dreams.count)
-        
-        // 统计清醒梦数量
-        let lucidCount = dreams.filter { $0.isLucid }.count
-        
-        // 找出主导情绪
-        let emotionCounts: [Emotion: Int] = {
-            var counts: [Emotion: Int] = [:]
-            for dream in dreams {
-                for emotion in dream.emotions {
-                    counts[emotion, default: 0] += 1
-                }
-            }
-            return counts
-        }()
-        
-        let dominantEmotion = emotionCounts.max(by: { $0.value < $1.value })?.key
-        
-        // 收集所有标签
-        let allTags = Set(dreams.flatMap { $0.tags })
-        
-        return TimelineDataPoint(
+    /// Create a new life event
+    func createLifeEvent(
+        title: String,
+        description: String? = nil,
+        date: Date,
+        endDate: Date? = nil,
+        category: LifeEventCategory,
+        impactLevel: ImpactLevel = .medium,
+        emotions: [Emotion] = [],
+        tags: [String] = [],
+        relatedDreamIds: [UUID] = []
+    ) async throws -> LifeEvent {
+        let event = LifeEvent(
+            title: title,
+            description: description,
             date: date,
-            dreamCount: dreams.count,
-            avgClarity: avgClarity,
-            avgIntensity: avgIntensity,
-            dominantEmotion: dominantEmotion,
-            lucidDreamCount: lucidCount,
-            tags: Array(allTags).prefix(5).map { String($0) }
+            endDate: endDate,
+            category: category,
+            impactLevel: impactLevel,
+            emotions: emotions,
+            tags: tags,
+            relatedDreamIds: relatedDreamIds
+        )
+        modelContext.insert(event)
+        try modelContext.save()
+        return event
+    }
+    
+    /// Update existing life event
+    func updateLifeEvent(_ event: LifeEvent) async throws {
+        event.updatedAt = Date()
+        try modelContext.save()
+    }
+    
+    /// Delete life event
+    func deleteLifeEvent(_ event: LifeEvent) async throws {
+        modelContext.delete(event)
+        try modelContext.save()
+    }
+    
+    /// Get life event by ID
+    func getLifeEvent(id: UUID) async throws -> LifeEvent? {
+        let descriptor = FetchDescriptor<LifeEvent>(
+            predicate: #Predicate<LifeEvent> { $0.id == id }
+        )
+        let results = try modelContext.fetch(descriptor)
+        return results.first
+    }
+    
+    /// Get life events for date range
+    func getLifeEvents(dateRange: ClosedRange<Date>) async throws -> [LifeEvent] {
+        let descriptor = FetchDescriptor<LifeEvent>(
+            predicate: #Predicate<LifeEvent> {
+                $0.date >= dateRange.lowerBound && $0.date <= dateRange.upperBound
+            },
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        return try modelContext.fetch(descriptor)
+    }
+    
+    /// Get life events by category
+    func getLifeEvents(category: LifeEventCategory, dateRange: ClosedRange<Date>) async throws -> [LifeEvent] {
+        let descriptor = FetchDescriptor<LifeEvent>(
+            predicate: #Predicate<LifeEvent> {
+                $0.category == category.rawValue &&
+                $0.date >= dateRange.lowerBound &&
+                $0.date <= dateRange.upperBound
+            },
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        return try modelContext.fetch(descriptor)
+    }
+    
+    /// Get life events by impact level
+    func getLifeEvents(impactLevel: ImpactLevel, dateRange: ClosedRange<Date>) async throws -> [LifeEvent] {
+        let descriptor = FetchDescriptor<LifeEvent>(
+            predicate: #Predicate<LifeEvent> {
+                $0.impactLevel == impactLevel.rawValue &&
+                $0.date >= dateRange.lowerBound &&
+                $0.date <= dateRange.upperBound
+            },
+            sortBy: [SortDescriptor(\.date, order: .reverse)]
+        )
+        return try modelContext.fetch(descriptor)
+    }
+    
+    // MARK: - Timeline Generation
+    
+    /// Generate unified timeline entries
+    func generateTimeline(config: TimelineConfig) async throws -> [TimelineEntry] {
+        var entries: [TimelineEntry] = []
+        
+        guard let dateRange = config.dateRange.dateRange else {
+            return entries
+        }
+        
+        // Add dreams
+        if config.showDreams {
+            let dreams = try getDreams(dateRange: dateRange)
+            for dream in dreams {
+                let entry = TimelineEntry(
+                    id: dream.id,
+                    date: dream.date,
+                    type: .dream,
+                    title: dream.title.isEmpty ? "无标题梦境" : dream.title,
+                    subtitle: formatDreamSubtitle(dream),
+                    description: dream.content,
+                    category: nil,
+                    impactLevel: nil,
+                    emotions: dream.emotions,
+                    tags: dream.tags,
+                    clarity: dream.clarity,
+                    isLucid: dream.isLucid
+                )
+                entries.append(entry)
+            }
+        }
+        
+        // Add life events
+        if config.showLifeEvents {
+            let events = try getLifeEvents(dateRange: dateRange)
+            for event in events where config.selectedCategories.contains(event.category) &&
+                                         event.impactLevel.rawValue >= config.minImpactLevel.rawValue {
+                let entry = TimelineEntry(
+                    id: event.id,
+                    date: event.date,
+                    type: .lifeEvent,
+                    title: event.title,
+                    subtitle: event.category.displayName,
+                    description: event.description,
+                    category: event.category.rawValue,
+                    impactLevel: event.impactLevel,
+                    emotions: event.emotions,
+                    tags: event.tags,
+                    clarity: nil,
+                    isLucid: nil
+                )
+                entries.append(entry)
+            }
+        }
+        
+        // Sort by date
+        return entries.sorted { $0.date < $1.date }
+    }
+    
+    // MARK: - Correlation Analysis
+    
+    /// Analyze correlations between life events and dreams
+    func analyzeCorrelations(dateRange: ClosedRange<Date>) async throws -> [DreamLifeCorrelation] {
+        let events = try getLifeEvents(dateRange: dateRange)
+        var correlations: [DreamLifeCorrelation] = []
+        
+        for event in events {
+            // Find dreams within 7 days before and after the event
+            let calendar = Calendar.current
+            guard let startDate = calendar.date(byAdding: .day, value: -7, to: event.date),
+                  let endDate = calendar.date(byAdding: .day, value: 7, to: event.date) else {
+                continue
+            }
+            
+            let relatedDreams = try getDreams(dateRange: startDate...endDate)
+            
+            guard !relatedDreams.isEmpty else { continue }
+            
+            let correlation = analyzeCorrelation(event: event, dreams: relatedDreams)
+            correlations.append(correlation)
+        }
+        
+        return correlations.sorted { $0.correlationScore > $1.correlationScore }
+    }
+    
+    /// Get timeline statistics
+    func getStatistics(dateRange: ClosedRange<Date>) async throws -> TimelineStatistics {
+        let dreams = try getDreams(dateRange: dateRange)
+        let events = try getLifeEvents(dateRange: dateRange)
+        
+        // Category distribution
+        var categoryDist: [LifeEventCategory: Int] = [:]
+        for event in events {
+            categoryDist[event.category, default: 0] += 1
+        }
+        
+        // Impact distribution
+        var impactDist: [ImpactLevel: Int] = [:]
+        for event in events {
+            impactDist[event.impactLevel, default: 0] += 1
+        }
+        
+        // Calculate dreams/events per month
+        let months = max(1, Calendar.current.dateComponents([.month], from: dateRange.lowerBound, to: dateRange.upperBound).month ?? 1)
+        let dreamsPerMonth = Double(dreams.count) / Double(months)
+        let eventsPerMonth = Double(events.count) / Double(months)
+        
+        // Get correlations
+        let correlations = try analyzeCorrelations(dateRange: dateRange)
+        
+        // Find milestone events (transformative or high impact)
+        let milestones = events.filter { $0.impactLevel == .transformative || $0.impactLevel == .high }
+        
+        // Calculate trend
+        let trend = calculateDreamFrequencyTrend(dreams: dreams, dateRange: dateRange)
+        
+        // Average correlation score
+        let avgCorrelation = correlations.isEmpty ? 0 : correlations.reduce(0) { $0 + $1.correlationScore } / Double(correlations.count)
+        
+        return TimelineStatistics(
+            totalDreams: dreams.count,
+            totalLifeEvents: events.count,
+            dateRange: dateRange,
+            dreamsPerMonth: dreamsPerMonth,
+            eventsPerMonth: eventsPerMonth,
+            categoryDistribution: categoryDist,
+            impactDistribution: impactDist,
+            topCorrelations: Array(correlations.prefix(10)),
+            milestoneEvents: milestones,
+            dreamFrequencyTrend: trend,
+            averageCorrelationScore: avgCorrelation
         )
     }
     
-    // MARK: - 统计信息
-    
-    /// 获取时间轴统计信息
-    func getTimelineStats(dreams: [Dream], filter: TimelineFilter = TimelineFilter()) -> TimelineStats {
-        let filteredDreams = applyFilter(dreams: dreams, filter: filter)
-        
-        guard !filteredDreams.isEmpty else {
-            return TimelineStats(
-                totalDreams: 0,
-                totalLucidDreams: 0,
-                avgClarity: 0,
-                avgIntensity: 0,
-                mostCommonTag: nil,
-                mostCommonEmotion: nil,
-                dateRange: nil
-            )
+    /// Link life event to dreams
+    func linkEventToDreams(eventId: UUID, dreamIds: [UUID]) async throws {
+        guard let event = try getLifeEvent(id: eventId) else {
+            throw TimelineError.eventNotFound
         }
         
-        let totalDreams = filteredDreams.count
-        let totalLucidDreams = filteredDreams.filter { $0.isLucid }.count
+        event.relatedDreamIds = dreamIds
+        try modelContext.save()
+    }
+    
+    /// Get milestones achieved
+    func getAchievedMilestones() async throws -> [TimelineMilestone] {
+        var milestones: [TimelineMilestone] = []
         
-        let avgClarity = Double(filteredDreams.map { $0.clarity }.reduce(0, +)) / Double(totalDreams)
-        let avgIntensity = Double(filteredDreams.map { $0.intensity }.reduce(0, +)) / Double(totalDreams)
+        // Get all dreams and events
+        let allDreams = try getDreams(dateRange: Date.distantPast...Date())
+        let allEvents = try getLifeEvents(dateRange: Date.distantPast...Date())
         
-        // 最常见标签
-        let tagCounts: [String: Int] = {
-            var counts: [String: Int] = [:]
-            for dream in filteredDreams {
-                for tag in dream.tags {
-                    counts[tag, default: 0] += 1
-                }
-            }
-            return counts
-        }()
-        let mostCommonTag = tagCounts.max(by: { $0.value < $1.value })?.key
+        // Dream count milestones
+        let dreamCounts = [10, 50, 100, 500, 1000]
+        for count in dreamCounts where allDreams.count >= count {
+            milestones.append(TimelineMilestone(
+                id: UUID(),
+                title: "梦境记录者",
+                description: "记录了 \(count) 个梦境",
+                icon: "🌙",
+                achievedDate: allDreams[count - 1].date,
+                requirement: .dreamCount(count),
+                reward: nil
+            ))
+        }
         
-        // 最常见情绪
-        let emotionCounts: [Emotion: Int] = {
-            var counts: [Emotion: Int] = [:]
-            for dream in filteredDreams {
-                for emotion in dream.emotions {
-                    counts[emotion, default: 0] += 1
-                }
-            }
-            return counts
-        }()
-        let mostCommonEmotion = emotionCounts.max(by: { $0.value < $1.value })?.key
+        // Life event milestones
+        let eventCounts = [5, 10, 25, 50]
+        for count in eventCounts where allEvents.count >= count {
+            milestones.append(TimelineMilestone(
+                id: UUID(),
+                title: "生活记录者",
+                description: "标记了 \(count) 个生活事件",
+                icon: "📍",
+                achievedDate: allEvents[count - 1].date,
+                requirement: .lifeEventsCount(count),
+                reward: nil
+            ))
+        }
         
-        // 日期范围
-        let dates = filteredDreams.map { $0.date }
-        let dateRange = (min: dates.min(), max: dates.max())
+        // Correlation milestone
+        let correlations = try analyzeCorrelations(dateRange: Date.distantPast...Date())
+        if !correlations.isEmpty {
+            milestones.append(TimelineMilestone(
+                id: UUID(),
+                title: "洞察发现者",
+                description: "发现了梦境与生活的关联",
+                icon: "💡",
+                achievedDate: Date(),
+                requirement: .correlationDiscovered,
+                reward: nil
+            ))
+        }
         
-        return TimelineStats(
-            totalDreams: totalDreams,
-            totalLucidDreams: totalLucidDreams,
-            avgClarity: avgClarity,
-            avgIntensity: avgIntensity,
-            mostCommonTag: mostCommonTag,
-            mostCommonEmotion: mostCommonEmotion,
-            dateRange: dateRange
+        return milestones
+    }
+    
+    // MARK: - Private Helpers
+    
+    private func getDreams(dateRange: ClosedRange<Date>) async throws -> [Dream] {
+        let descriptor = FetchDescriptor<Dream>(
+            predicate: #Predicate<Dream> {
+                $0.date >= dateRange.lowerBound && $0.date <= dateRange.upperBound
+            },
+            sortBy: [SortDescriptor(\.date)]
         )
+        return try modelContext.fetch(descriptor)
+    }
+    
+    private func formatDreamSubtitle(_ dream: Dream) -> String {
+        var parts: [String] = []
+        
+        if dream.isLucid {
+            parts.append("清醒梦")
+        }
+        
+        let clarityText = ["", "非常模糊", "模糊", "一般", "清晰", "非常清晰"]
+        if dream.clarity > 0 && dream.clarity <= 5 {
+            parts.append(clarityText[dream.clarity])
+        }
+        
+        if !dream.emotions.isEmpty {
+            let emotionIcons = dream.emotions.prefix(3).map { $0.icon }.joined()
+            parts.append(emotionIcons)
+        }
+        
+        return parts.joined(separator: " · ")
+    }
+    
+    private func analyzeCorrelation(event: LifeEvent, dreams: [Dream]) -> DreamLifeCorrelation {
+        let dreamCount = dreams.count
+        let lucidCount = dreams.filter { $0.isLucid }.count
+        let lucidRate = Double(lucidCount) / Double(dreamCount)
+        let avgClarity = Double(dreams.reduce(0) { $0 + $1.clarity }) / Double(dreamCount)
+        
+        // Calculate emotion distribution
+        var emotionCounts: [String: Int] = [:]
+        for dream in dreams {
+            for emotion in dream.emotions {
+                emotionCounts[emotion.rawValue, default: 0] += 1
+            }
+        }
+        
+        // Determine pattern type and score
+        var score: Double = 0
+        var patternType: DreamLifeCorrelation.PatternType = .none
+        var insights: [String] = []
+        var recommendations: [String] = []
+        
+        // Check for patterns
+        if dreamCount >= 5 {
+            score += 0.3
+            insights.append("事件前后记录了\(dreamCount)个梦境，数据充足")
+        }
+        
+        if lucidRate > 0.3 {
+            score += 0.25
+            patternType = .lucidIncrease
+            insights.append("清醒梦比例较高 (\(String(format: "%.0f%%", lucidRate * 100)))")
+            recommendations.append("这个时期适合进行清醒梦练习")
+        }
+        
+        if avgClarity > 4.0 {
+            score += 0.2
+            if patternType == .none { patternType = .clarityChange }
+            insights.append("梦境清晰度较高 (平均\(String(format: "%.1f", avgClarity))/5)")
+        }
+        
+        // Check dominant emotions
+        if let topEmotion = emotionCounts.max(by: { $0.value < $1.value }) {
+            if topEmotion.value >= Int(Double(dreamCount) * 0.5) {
+                score += 0.15
+                if patternType == .none { patternType = .emotionalShift }
+                insights.append("主导情绪：\(topEmotion.key)")
+            }
+        }
+        
+        // Event impact factor
+        switch event.impactLevel {
+        case .transformative:
+            score += 0.3
+            insights.append("这是一个变革性事件，可能对梦境产生深远影响")
+        case .high:
+            score += 0.2
+            insights.append("这是一个重大事件，与梦境关联性强")
+        case .medium:
+            score += 0.1
+        case .low:
+            break
+        }
+        
+        // Cap score at 1.0
+        score = min(score, 1.0)
+        
+        if recommendations.isEmpty {
+            recommendations.append("继续记录梦境和生活事件，以发现更多关联")
+        }
+        
+        return DreamLifeCorrelation(
+            lifeEvent: event,
+            relatedDreams: dreams,
+            correlationScore: score,
+            patternType: patternType,
+            insights: insights,
+            recommendations: recommendations
+        )
+    }
+    
+    private func calculateDreamFrequencyTrend(dreams: [Dream], dateRange: ClosedRange<Date>) -> TimelineStatistics.TrendDirection {
+        guard dreams.count >= 4 else { return .stable }
+        
+        let calendar = Calendar.current
+        
+        // Split into two halves
+        let midPoint = calendar.date(byAdding: .day, value: Int(calendar.dateComponents([.day], from: dateRange.lowerBound, to: dateRange.upperBound).day ?? 0) / 2, to: dateRange.lowerBound) ?? dateRange.lowerBound
+        
+        let firstHalf = dreams.filter { $0.date < midPoint }.count
+        let secondHalf = dreams.filter { $0.date >= midPoint }.count
+        
+        let change = Double(secondHalf - firstHalf) / Double(max(firstHalf, 1))
+        
+        if change > 0.3 {
+            return .increasing
+        } else if change < -0.3 {
+            return .decreasing
+        } else if abs(change) < 0.1 {
+            return .stable
+        } else {
+            return .fluctuating
+        }
     }
 }
 
-/// 时间轴统计信息
-struct TimelineStats {
-    let totalDreams: Int
-    let totalLucidDreams: Int
-    let avgClarity: Double
-    let avgIntensity: Double
-    let mostCommonTag: String?
-    let mostCommonEmotion: Emotion?
-    let dateRange: (min: Date?, max: Date?)
+// MARK: - Errors
+
+enum TimelineError: LocalizedError {
+    case eventNotFound
+    case invalidDateRange
+    case correlationAnalysisFailed
     
-    var lucidDreamPercentage: Double {
-        guard totalDreams > 0 else { return 0 }
-        return Double(totalLucidDreams) / Double(totalDreams) * 100
+    var errorDescription: String? {
+        switch self {
+        case .eventNotFound: return "未找到该生活事件"
+        case .invalidDateRange: return "无效的日期范围"
+        case .correlationAnalysisFailed: return "关联分析失败"
+        }
     }
 }

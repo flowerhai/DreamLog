@@ -449,7 +449,7 @@ struct TemplateCard: View {
 
 // MARK: - Template Picker View
 
-struct TemplatePickerView: View {
+struct ArtShareTemplatePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \ArtShareTemplate.name) private var templates: [ArtShareTemplate]
     @Binding var selectedTemplate: ArtShareTemplate?
@@ -557,7 +557,7 @@ struct DreamArtSharePickerView: View {
 
 // MARK: - Share History View
 
-struct ShareHistoryView: View {
+struct ArtShareHistoryView: View {
     @Environment(\.dismiss) private var dismiss
     @Query(sort: \ArtShareHistory.createdAt, order: .reverse) private var history: [ArtShareHistory]
     @Environment(\.modelContext) private var modelContext

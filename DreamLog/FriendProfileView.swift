@@ -279,7 +279,7 @@ struct DreamPreviewCard: View {
 }
 
 // MARK: - 圈子详情视图
-struct CircleDetailView: View {
+struct DreamCircleDetailView: View {
     let circle: DreamCircle
     @ObservedObject var friendService: FriendService
     @Environment(\.dismiss) private var dismiss

@@ -2,256 +2,338 @@
 //  DreamTimelineView.swift
 //  DreamLog
 //
-//  梦境时间轴视图 - 可视化梦境在时间轴上的分布
-//  Phase 6 - 个性化体验
+//  Phase 86: Dream Timeline & Life Events UI
+//  Visual timeline interface
 //
 
 import SwiftUI
+import SwiftData
+import Charts
 
 struct DreamTimelineView: View {
-    @EnvironmentObject var dreamStore: DreamStore
-    @State private var filter = TimelineFilter()
-    @State private var showingFilterSheet = false
-    @State private var selectedGranularity: TimelineGranularity = .week
-    @State private var timelineData: [TimelineDataPoint] = []
-    @State private var stats: TimelineStats?
-    @State private var selectedDataPoint: TimelineDataPoint?
-    @State private var showingDreamsSheet = false
-    @State private var dreamsForSelectedPoint: [Dream] = []
+    @Environment(\.modelContext) private var modelContext
+    @State private var service: DreamTimelineService?
+    @State private var timelineEntries: [TimelineEntry] = []
+    @State private var statistics: TimelineStatistics?
+    @State private var correlations: [DreamLifeCorrelation] = []
+    @State private var isLoading = false
+    @State private var config = TimelineConfig.default
+    @State private var showError = false
+    @State private var errorMessage = ""
+    @State private var showingCreateEvent = false
+    @State private var selectedEntry: TimelineEntry?
     
     var body: some View {
-        NavigationView {
-            ZStack {
-                // 背景
-                LinearGradient(
-                    colors: [Color(hex: "1A1A2E"), Color(hex: "16213E"), Color(hex: "0F3460")],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        // 统计卡片
-                        statsSection
-                        
-                        // 分组选择器
-                        granularitySelector
-                        
-                        // 时间轴可视化
-                        timelineSection
-                        
-                        // 梦境密度热力图
-                        densityHeatmapSection
-                    }
-                    .padding()
+        NavigationStack {
+            Group {
+                if isLoading {
+                    loadingView
+                } else if timelineEntries.isEmpty {
+                    emptyStateView
+                } else {
+                    contentView
                 }
             }
-            .navigationTitle("📅 梦境时间轴")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle("梦境时间线")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("配置") {
+                        showingConfig = true
+                    }
+                    .sheet(isPresented: $showingConfig) {
+                        configSheet
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: { showingCreateEvent = true }) {
+                        Image(systemName: "plus")
+                    }
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: refresh) {
+                        Image(systemName: "arrow.clockwise")
+                    }
+                }
+            }
+            .onAppear {
+                initializeService()
+            }
+            .sheet(isPresented: $showingCreateEvent) {
+                CreateLifeEventView {
+                    refresh()
+                }
+            }
+            .alert("错误", isPresented: $showError) {
+                Button("确定", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+    
+    // MARK: - Views
+    
+    @ViewBuilder
+    private var loadingView: some View {
+        VStack(spacing: 20) {
+            ProgressView()
+                .scaleEffect(1.5)
+            Text("生成时间线中...")
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    @ViewBuilder
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            Image(systemName: "timeline.selection")
+                .font(.system(size: 60))
+                .foregroundColor(.secondary)
+            Text("暂无时间线数据")
+                .font(.title2)
+                .fontWeight(.semibold)
+            Text("记录梦境或标记生活事件，构建您的梦境时间线")
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+            HStack(spacing: 16) {
+                Button("记录梦境") {
+                    // Navigate to record
+                }
+                .buttonStyle(.borderedProminent)
+                
+                Button("标记事件") {
+                    showingCreateEvent = true
+                }
+                .buttonStyle(.bordered)
+            }
+        }
+        .padding()
+    }
+    
+    private var contentView: some View {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Statistics Overview
+                if let stats = statistics {
+                    statisticsOverview(stats)
+                }
+                
+                // Timeline
+                timelineView
+                
+                // Correlations
+                if !correlations.isEmpty {
+                    correlationsSection
+                }
+            }
+            .padding()
+        }
+        .background(Color(.systemGroupedBackground))
+    }
+    
+    @ViewBuilder
+    private func statisticsOverview(_ stats: TimelineStatistics) -> some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 12) {
+                TimelineStatCard(
+                    title: "梦境",
+                    value: "\(stats.totalDreams)",
+                    icon: "moon",
+                    color: .purple
+                )
+                
+                TimelineStatCard(
+                    title: "生活事件",
+                    value: "\(stats.totalLifeEvents)",
+                    icon: "star",
+                    color: .orange
+                )
+                
+                TimelineStatCard(
+                    title: "关联发现",
+                    value: "\(stats.topCorrelations.count)",
+                    icon: "link",
+                    color: .blue
+                )
+            }
+            
+            HStack(spacing: 12) {
+                TimelineStatCard(
+                    title: "每月梦境",
+                    value: String(format: "%.1f", stats.dreamsPerMonth),
+                    icon: "chart.bar",
+                    color: .green
+                )
+                
+                TimelineStatCard(
+                    title: "趋势",
+                    value: stats.dreamFrequencyTrend.displayName,
+                    icon: stats.dreamFrequencyTrend.icon,
+                    color: .pink
+                )
+                
+                TimelineStatCard(
+                    title: "平均关联",
+                    value: String(format: "%.0f%%", stats.averageCorrelationScore * 100),
+                    icon: "sparkles",
+                    color: .indigo
+                )
+            }
+        }
+    }
+    
+    private var timelineView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text("时间线")
+                .font(.headline)
+                .padding(.bottom, 12)
+            
+            VStack(alignment: .center, spacing: 0) {
+                // Timeline line
+                Rectangle()
+                    .fill(Color.purple.opacity(0.3))
+                    .frame(width: 2)
+                
+                ForEach(Array(timelineEntries.enumerated()), id: \.element.id) { index, entry in
+                    TimelineEntryRow(entry: entry, isSelected: selectedEntry == entry)
+                        .onTapGesture {
+                            selectedEntry = entry
+                        }
+                    
+                    if index < timelineEntries.count - 1 {
+                        Rectangle()
+                            .fill(Color.purple.opacity(0.3))
+                            .frame(width: 2, height: 40)
+                    }
+                }
+                
+                Rectangle()
+                    .fill(Color.purple.opacity(0.3))
+                    .frame(width: 2)
+            }
+            .padding(.vertical, 20)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    private var correlationsSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("发现的关联")
+                .font(.headline)
+            
+            ForEach(Array(correlations.prefix(5).enumerated()), id: \.element.lifeEvent.id) { index, correlation in
+                CorrelationCard(correlation: correlation)
+            }
+        }
+    }
+    
+    private var configSheet: some View {
+        NavigationStack {
+            Form {
+                Section("显示选项") {
+                    Toggle("显示梦境", isOn: $config.showDreams)
+                    Toggle("显示生活事件", isOn: $config.showLifeEvents)
+                }
+                
+                Section("时间范围") {
+                    Picker("范围", selection: $config.dateRange) {
+                        ForEach(TimelineConfig.DateRange.allCases, id: \.self) { range in
+                            Text(range.rawValue).tag(range)
+                        }
+                    }
+                }
+                
+                Section("分组方式") {
+                    Picker("分组", selection: $config.groupByTime) {
+                        ForEach(TimelineConfig.TimeGrouping.allCases, id: \.self) { grouping in
+                            Text(grouping.rawValue).tag(grouping)
+                        }
+                    }
+                }
+                
+                Section("事件类别") {
+                    ForEach(LifeEventCategory.allCases, id: \.self) { category in
+                        HStack {
+                            Text("\(category.icon) \(category.displayName)")
+                            Spacer()
+                            Toggle("", isOn: Binding(
+                                get: { config.selectedCategories.contains(category) },
+                                set: { isSelected in
+                                    if isSelected {
+                                        config.selectedCategories.insert(category)
+                                    } else {
+                                        config.selectedCategories.remove(category)
+                                    }
+                                }
+                            ))
+                        }
+                    }
+                }
+                
+                Section("最低影响等级") {
+                    Picker("等级", selection: $config.minImpactLevel) {
+                        ForEach(ImpactLevel.allCases, id: \.self) { level in
+                            Text(level.displayName).tag(level)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("时间线配置")
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: { showingFilterSheet.toggle() }) {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
-                            .foregroundColor(filter.isActive ? .yellow : .white)
-                    }
-                }
-            }
-            .sheet(isPresented: $showingFilterSheet) {
-                TimelineFilterSheet(filter: $filter)
-            }
-            .sheet(isPresented: $showingDreamsSheet) {
-                if let point = selectedDataPoint {
-                    DreamsForPointSheet(dreams: dreamsForSelectedPoint, dataPoint: point)
-                        .environmentObject(dreamStore)
-                }
-            }
-            .task {
-                await loadData()
-            }
-            .onChange(of: selectedGranularity) { _ in
-                filter.granularity = selectedGranularity
-                Task { await loadData() }
-            }
-            .onChange(of: filter) { _ in
-                Task { await loadData() }
-            }
-        }
-    }
-    
-    // MARK: - 加载数据
-    
-    @MainActor
-    private func loadData() async {
-        let service = DreamTimelineService.shared
-        timelineData = service.generateTimelineData(dreams: dreamStore.dreams, filter: filter)
-        stats = service.getTimelineStats(dreams: dreamStore.dreams, filter: filter)
-    }
-    
-    // MARK: - 统计卡片
-    
-    private var statsSection: some View {
-        Group {
-            if let stats = stats {
-                VStack(spacing: 12) {
-                    HStack(spacing: 16) {
-                        TimelineStatCard(
-                            icon: "moon.fill",
-                            value: "\(stats.totalDreams)",
-                            label: "梦境总数",
-                            color: .purple
-                        )
-                        
-                        TimelineStatCard(
-                            icon: "star.fill",
-                            value: "\(stats.totalLucidDreams)",
-                            label: "清醒梦",
-                            color: .yellow
-                        )
-                    }
-                    
-                    HStack(spacing: 16) {
-                        TimelineStatCard(
-                            icon: "eye.fill",
-                            value: String(format: "%.1f", stats.avgClarity),
-                            label: "平均清晰度",
-                            color: .blue
-                        )
-                        
-                        TimelineStatCard(
-                            icon: "bolt.fill",
-                            value: String(format: "%.1f", stats.avgIntensity),
-                            label: "平均强度",
-                            color: .orange
-                        )
-                    }
-                }
-            } else {
-                EmptyStateView(
-                    icon: "timeline.selection",
-                    title: "暂无梦境数据",
-                    subtitle: "开始记录梦境后，时间轴将在这里展示"
-                )
-            }
-        }
-    }
-    
-    // MARK: - 分组选择器
-    
-    private var granularitySelector: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("时间分组")
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(TimelineGranularity.allCases, id: \.self) { granularity in
-                        GranularityButton(
-                            granularity: granularity,
-                            isSelected: selectedGranularity == granularity
-                        ) {
-                            selectedGranularity = granularity
-                        }
+                    Button("完成") {
+                        showingConfig = false
+                        refresh()
                     }
                 }
             }
         }
     }
     
-    // MARK: - 时间轴部分
+    // MARK: - Actions
     
-    private var timelineSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("时间轴")
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            if timelineData.isEmpty {
-                EmptyStateView(
-                    icon: "calendar.badge.exclamationmark",
-                    title: "没有符合条件的梦境",
-                    subtitle: "尝试调整过滤条件"
-                )
-            } else {
-                // 横向滚动的时间轴
-                ScrollView(.horizontal, showsIndicators: true) {
-                    HStack(alignment: .top, spacing: 40) {
-                        ForEach(timelineData) { point in
-                            TimelineDataPointView(
-                                dataPoint: point,
-                                granularity: filter.granularity
-                            )
-                            .onTapGesture {
-                                selectedDataPoint = point
-                                dreamsForSelectedPoint = getDreamsForPoint(point)
-                                showingDreamsSheet.toggle()
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                }
-            }
-        }
+    private func initializeService() {
+        service = DreamTimelineService(modelContext: modelContext)
+        refresh()
     }
     
-    // MARK: - 密度热力图
-    
-    private var densityHeatmapSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("梦境密度")
-                .font(.headline)
-                .foregroundColor(.white)
-            
-            if timelineData.isEmpty {
-                EmptyStateView(
-                    icon: "chart.bar.fill",
-                    title: "暂无数据",
-                    subtitle: "记录更多梦境后查看密度分布"
-                )
-            } else {
-                DreamDensityHeatmap(dataPoints: timelineData)
-            }
-        }
-    }
-    
-    // MARK: - 辅助方法
-    
-    private func getDreamsForPoint(_ point: TimelineDataPoint) -> [Dream] {
-        let calendar = Calendar.current
-        let range: (start: Date, end: Date)
+    private func refresh() {
+        isLoading = true
         
-        switch filter.granularity {
-        case .day:
-            let start = calendar.startOfDay(for: point.date)
-            let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
-            range = (start, end)
-        case .week:
-            let start = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: point.date)) ?? point.date
-            let end = calendar.date(byAdding: .day, value: 7, to: start) ?? start
-            range = (start, end)
-        case .month:
-            let start = calendar.date(from: calendar.dateComponents([.year, .month], from: point.date)) ?? point.date
-            let end = calendar.date(byAdding: .month, value: 1, to: start) ?? start
-            range = (start, end)
-        case .year:
-            let start = calendar.date(from: calendar.dateComponents([.year], from: point.date)) ?? point.date
-            let end = calendar.date(byAdding: .year, value: 1, to: start) ?? start
-            range = (start, end)
+        Task {
+            do {
+                guard let service = service,
+                      let dateRange = config.dateRange.dateRange else {
+                    throw TimelineError.invalidDateRange
+                }
+                
+                async let entries = service.generateTimeline(config: config)
+                async let stats = service.getStatistics(dateRange: dateRange)
+                async let corrs = service.analyzeCorrelations(dateRange: dateRange)
+                
+                self.timelineEntries = try await entries
+                self.statistics = try await stats
+                self.correlations = try await corrs
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
+            
+            isLoading = false
         }
-        
-        return dreamStore.dreams.filter { dream in
-            dream.date >= range.start && dream.date < range.end
-        }.sorted { $0.date > $1.date }
     }
+    
+    @State private var showingConfig = false
 }
 
-// MARK: - 统计卡片组件
+// MARK: - Subviews
 
 struct TimelineStatCard: View {
-    let icon: String
+    let title: String
     let value: String
-    let label: String
+    let icon: String
     let color: Color
     
     var body: some View {
@@ -261,349 +343,273 @@ struct TimelineStatCard: View {
                 .foregroundColor(color)
             
             Text(value)
-                .font(.title)
+                .font(.title3)
                 .fontWeight(.bold)
-                .foregroundColor(.white)
             
-            Text(label)
+            Text(title)
                 .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
-        .padding()
-        .background(Color.white.opacity(0.1))
+        .padding(.vertical, 12)
+        .background(color.opacity(0.1))
         .cornerRadius(12)
     }
 }
 
-// MARK: - 分组按钮
-
-struct GranularityButton: View {
-    let granularity: TimelineGranularity
+struct TimelineEntryRow: View {
+    let entry: TimelineEntry
     let isSelected: Bool
-    let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        HStack(alignment: .top, spacing: 12) {
+            // Date
             VStack(spacing: 4) {
-                Image(systemName: granularity.icon)
-                    .font(.title3)
-                Text(granularity.rawValue)
+                Text(formatDate(entry.date))
                     .font(.caption)
+                    .foregroundColor(.secondary)
+                Text(formatTime(entry.date))
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
-            .foregroundColor(isSelected ? .white : .white.opacity(0.6))
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.purple : Color.white.opacity(0.1))
-            )
-        }
-    }
-}
-
-// MARK: - 时间轴数据点视图
-
-struct TimelineDataPointView: View {
-    let dataPoint: TimelineDataPoint
-    let granularity: TimelineGranularity
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            // 梦境数量圆圈
+            .frame(width: 60)
+            
+            // Timeline point
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: dreamCountColor,
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                    .frame(width: circleSize, height: circleSize)
+                    .fill(entry.type == .dream ? Color.purple : Color.orange)
+                    .frame(width: 16, height: 16)
                 
-                Text("\(dataPoint.dreamCount)")
-                    .font(.system(size: fontSize, weight: .bold))
-                    .foregroundColor(.white)
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 8, height: 8)
             }
             
-            // 日期标签
-            Text(dateLabel)
-                .font(.caption)
-                .foregroundColor(.white.opacity(0.7))
-                .lineLimit(1)
-            
-            // 清醒梦指示器
-            if dataPoint.lucidDreamCount > 0 {
-                HStack(spacing: 2) {
-                    Image(systemName: "star.fill")
-                        .font(.caption2)
-                    Text("\(dataPoint.lucidDreamCount)")
-                        .font(.caption2)
-                }
-                .foregroundColor(.yellow)
-            }
-        }
-    }
-    
-    private var circleSize: CGFloat {
-        let base: CGFloat = 50
-        let multiplier = min(CGFloat(dataPoint.dreamCount), 5)
-        return base + (multiplier * 8)
-    }
-    
-    private var fontSize: CGFloat {
-        dataPoint.dreamCount > 99 ? 12 : (dataPoint.dreamCount > 9 ? 16 : 20)
-    }
-    
-    private var dreamCountColor: [Color] {
-        switch dataPoint.dreamCount {
-        case 0: return [Color.gray, Color.gray]
-        case 1..<3: return [Color.blue, Color.purple]
-        case 3..<5: return [Color.purple, Color.pink]
-        case 5..<10: return [Color.pink, Color.red]
-        default: return [Color.red, Color.orange]
-        }
-    }
-    
-    private var dateLabel: String {
-        let formatter = DateFormatter()
-        switch granularity {
-        case .day:
-            formatter.dateFormat = "MM/dd"
-        case .week:
-            formatter.dateFormat = "MM/ww"
-        case .month:
-            formatter.dateFormat = "yyyy/MM"
-        case .year:
-            formatter.dateFormat = "yyyy"
-        }
-        return formatter.string(from: dataPoint.date)
-    }
-}
-
-// MARK: - 梦境密度热力图
-
-struct DreamDensityHeatmap: View {
-    let dataPoints: [TimelineDataPoint]
-    
-    var body: some View {
-        VStack(spacing: 4) {
-            // 颜色图例
-            HStack {
-                Text("低")
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.6))
-                
-                HStack(spacing: 2) {
-                    ForEach(0..<5) { i in
-                        Rectangle()
-                            .fill(heatColor(for: Double(i) / 4.0))
-                            .frame(width: 20, height: 8)
-                            .cornerRadius(2)
+            // Content
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text(entry.type.icon)
+                    Text(entry.title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    
+                    if let impactLevel = entry.impactLevel {
+                        Circle()
+                            .fill(Color(hex: impactLevel.color))
+                            .frame(width: 8, height: 8)
                     }
                 }
                 
-                Text("高")
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.6))
+                if let subtitle = entry.subtitle {
+                    Text(subtitle)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                if !entry.emotions.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(entry.emotions.prefix(3), id: \.self) { emotion in
+                            Text(emotion.icon)
+                                .font(.caption)
+                        }
+                    }
+                }
+                
+                if let description = entry.description, !description.isEmpty {
+                    Text(description)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
             }
             
-            // 热力条
-            HStack(spacing: 2) {
-                ForEach(dataPoints) { point in
-                    let normalizedDensity = min(Double(point.dreamCount) / 10.0, 1.0)
-                    Rectangle()
-                        .fill(heatColor(for: normalizedDensity))
-                        .frame(height: 30)
-                        .cornerRadius(2)
+            Spacer()
+        }
+        .padding()
+        .background(isSelected ? Color.purple.opacity(0.1) : Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: isSelected ? Color.purple.opacity(0.3) : Color.clear, radius: 4)
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MM/dd"
+        return formatter.string(from: date)
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        return formatter.string(from: date)
+    }
+}
+
+struct CorrelationCard: View {
+    let correlation: DreamLifeCorrelation
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text(correlation.lifeEvent.category.icon)
+                    .font(.title2)
+                
+                VStack(alignment: .leading) {
+                    Text(correlation.lifeEvent.title)
+                        .font(.subheadline)
+                        .fontWeight(.semibold)
+                    
+                    Text(correlation.patternType.displayName)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                VStack(alignment: .trailing) {
+                    Text(String(format: "%.0f%%", correlation.correlationScore * 100))
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.purple)
+                    
+                    Text("关联度")
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            if !correlation.insights.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(correlation.insights, id: \.self) { insight in
+                        HStack(spacing: 4) {
+                            Image(systemName: "lightbulb.fill")
+                                .font(.caption)
+                                .foregroundColor(.yellow)
+                            Text(insight)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
             }
         }
         .padding()
-        .background(Color.white.opacity(0.1))
+        .background(Color(.systemBackground))
         .cornerRadius(12)
-    }
-    
-    private func heatColor(for value: Double) -> Color {
-        if value < 0.2 { return Color.blue.opacity(0.6) }
-        if value < 0.4 { return Color.purple.opacity(0.7) }
-        if value < 0.6 { return Color.pink.opacity(0.8) }
-        if value < 0.8 { return Color.red.opacity(0.9) }
-        return Color.orange
+        .shadow(color: Color.black.opacity(0.05), radius: 4)
     }
 }
 
-// MARK: - 过滤表
+// MARK: - Create Life Event View
 
-struct TimelineFilterSheet: View {
-    @Binding var filter: TimelineFilter
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var dreamStore: DreamStore
+struct CreateLifeEventView: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
     
-    var allTags: [String] {
-        Set(dreamStore.dreams.flatMap { $0.tags }).sorted()
-    }
+    @State private var title = ""
+    @State private var description = ""
+    @State private var selectedDate = Date()
+    @State private var category: LifeEventCategory = .personal
+    @State private var impactLevel: ImpactLevel = .medium
+    @State private var selectedEmotions: Set<Emotion> = []
+    @State private var tagsText = ""
+    
+    let onSuccess: () -> Void
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
-                // 日期范围
-                Section(header: Text("日期范围")) {
-                    DatePicker("开始日期", selection: Binding(
-                        get: { filter.startDate ?? Date.distantPast },
-                        set: { filter.startDate = $0 == Date.distantPast ? nil : $0 }
-                    ), displayedComponents: .date)
-                    
-                    DatePicker("结束日期", selection: Binding(
-                        get: { filter.endDate ?? Date.distantFuture },
-                        set: { filter.endDate = $0 == Date.distantFuture ? nil : $0 }
-                    ), displayedComponents: .date)
+                Section("基本信息") {
+                    TextField("事件标题", text: $title)
+                    TextField("描述（可选）", text: $description, axis: .vertical)
                 }
                 
-                // 标签过滤
-                Section(header: Text("标签")) {
-                    ForEach(allTags, id: \.self) { tag in
-                        Button(action: {
-                            if filter.selectedTags.contains(tag) {
-                                filter.selectedTags.remove(tag)
-                            } else {
-                                filter.selectedTags.insert(tag)
-                            }
-                        }) {
-                            HStack {
-                                Text(tag)
-                                Spacer()
-                                if filter.selectedTags.contains(tag) {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.accentColor)
+                Section("时间与类别") {
+                    DatePicker("日期", selection: $selectedDate, displayedComponents: .date)
+                    
+                    Picker("类别", selection: $category) {
+                        ForEach(LifeEventCategory.allCases, id: \.self) { cat in
+                            Text("\(cat.icon) \(cat.displayName)").tag(cat)
+                        }
+                    }
+                    
+                    Picker("影响程度", selection: $impactLevel) {
+                        ForEach(ImpactLevel.allCases, id: \.self) { level in
+                            Text(level.displayName).tag(level)
+                        }
+                    }
+                }
+                
+                Section("情绪标签") {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 50))], spacing: 8) {
+                        ForEach(Emotion.allCases, id: \.self) { emotion in
+                            Button(action: {
+                                if selectedEmotions.contains(emotion) {
+                                    selectedEmotions.remove(emotion)
+                                } else {
+                                    selectedEmotions.insert(emotion)
                                 }
+                            }) {
+                                VStack(spacing: 4) {
+                                    Text(emotion.icon)
+                                        .font(.title2)
+                                    Text(emotion.displayName)
+                                        .font(.caption)
+                                }
+                                .padding(.vertical, 8)
+                                .frame(maxWidth: .infinity)
+                                .background(selectedEmotions.contains(emotion) ? Color.purple.opacity(0.2) : Color(.systemGray6))
+                                .cornerRadius(8)
                             }
                         }
                     }
                 }
                 
-                // 情绪过滤
-                Section(header: Text("情绪")) {
-                    ForEach(Emotion.allCases, id: \.self) { emotion in
-                        Button(action: {
-                            if filter.selectedEmotions.contains(emotion) {
-                                filter.selectedEmotions.remove(emotion)
-                            } else {
-                                filter.selectedEmotions.insert(emotion)
-                            }
-                        }) {
-                            HStack {
-                                Text(emotion.icon + " " + emotion.rawValue)
-                                Spacer()
-                                if filter.selectedEmotions.contains(emotion) {
-                                    Image(systemName: "checkmark")
-                                        .foregroundColor(.accentColor)
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                // 清醒梦过滤
-                Section(header: Text("特殊过滤")) {
-                    Toggle("仅显示清醒梦", isOn: $filter.lucidOnly)
-                    
-                    HStack {
-                        Text("最低清晰度")
-                        Spacer()
-                        Stepper("\(filter.minClarity)", value: $filter.minClarity, in: 1...5)
-                    }
-                }
-                
-                // 重置按钮
-                Section {
-                    Button(action: resetFilter) {
-                        Text("重置过滤条件")
-                            .frame(maxWidth: .infinity)
-                    }
+                Section("标签") {
+                    TextField("标签（用逗号分隔）", text: $tagsText)
                 }
             }
-            .navigationTitle("过滤选项")
-            .navigationBarTitleDisplayMode(.inline)
+            .navigationTitle("标记生活事件")
             .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("取消") {
+                        dismiss()
+                    }
+                }
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") { dismiss() }
+                    Button("保存") {
+                        saveEvent()
+                    }
+                    .disabled(title.isEmpty)
                 }
             }
         }
     }
     
-    private func resetFilter() {
-        filter = TimelineFilter()
+    private func saveEvent() {
+        let tags = tagsText.split(separator: ",").map { String($0.trimmingCharacters(in: .whitespaces)) }
+        let event = LifeEvent(
+            title: title,
+            description: description.isEmpty ? nil : description,
+            date: selectedDate,
+            category: category,
+            impactLevel: impactLevel,
+            emotions: Array(selectedEmotions),
+            tags: tags
+        )
+        
+        modelContext.insert(event)
+        
+        try? modelContext.save()
+        onSuccess()
+        dismiss()
     }
 }
 
-// MARK: - 梦境列表表
-
-struct DreamsForPointSheet: View {
-    let dreams: [Dream]
-    let dataPoint: TimelineDataPoint
-    @Environment(\.dismiss) var dismiss
-    @EnvironmentObject var dreamStore: DreamStore
-    @State private var selectedDream: Dream?
-    @State private var showingDetail = false
-    
-    var body: some View {
-        NavigationView {
-            List(dreams) { dream in
-                Button(action: {
-                    selectedDream = dream
-                    showingDetail = true
-                }) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(dream.title)
-                            .font(.headline)
-                        
-                        Text(dream.content.prefix(100))
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                        
-                        HStack {
-                            ForEach(dream.emotions.prefix(3), id: \.self) { emotion in
-                                Text(emotion.icon)
-                            }
-                            
-                            if dream.isLucid {
-                                Image(systemName: "star.fill")
-                                    .foregroundColor(.yellow)
-                            }
-                        }
-                    }
-                }
-            }
-            .navigationTitle("📅 \(dateRangeLabel)")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("完成") { dismiss() }
-                }
-            }
-            .sheet(isPresented: $showingDetail) {
-                if let dream = selectedDream {
-                    DreamDetailView(dream: dream)
-                        .environmentObject(dreamStore)
-                }
-            }
-        }
-    }
-    
-    private var dateRangeLabel: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MM/dd"
-        return formatter.string(from: dataPoint.date)
-    }
-}
-
-// MARK: - 预览
+// MARK: - Preview
 
 #Preview {
     DreamTimelineView()
-        .environmentObject(DreamStore.preview)
+        .modelContainer(for: [Dream.self, LifeEvent.self])
 }

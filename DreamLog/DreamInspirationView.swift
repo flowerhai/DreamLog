@@ -323,7 +323,7 @@ struct PromptCard: View {
 
 // MARK: - 提示详情
 
-struct PromptDetailView: View {
+struct CreativePromptDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     let prompt: CreativePrompt

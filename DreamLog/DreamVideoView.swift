@@ -760,7 +760,7 @@ struct TemplateCard: View {
 
 // MARK: - 模板详情视图
 
-struct TemplateDetailView: View {
+struct VideoTemplateDetailView: View {
     let template: VideoTemplate
     let isDownloaded: Bool
     let isFavorite: Bool

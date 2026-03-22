@@ -456,7 +456,7 @@ extension LockScreenPosition {
 
 // MARK: - Stats Tab
 
-struct StatsTabView: View {
+struct SystemIntegrationStatsTabView: View {
     @ObservedObject var service: DreamSystemIntegrationService
     @State private var stats: SystemIntegrationStats = SystemIntegrationStats()
     

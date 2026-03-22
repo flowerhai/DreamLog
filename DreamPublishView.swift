@@ -497,7 +497,7 @@ struct PlatformConfigDetailView: View {
 
 // MARK: - 统计标签页
 
-struct StatsTabView: View {
+struct PublishStatsTabView: View {
     @EnvironmentObject var publishService: DreamPublishService
     
     @State private var stats: PublishStats = .empty

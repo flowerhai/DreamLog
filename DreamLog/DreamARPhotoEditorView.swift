@@ -351,7 +351,7 @@ struct FilterButton: View {
 
 // MARK: - Filter Picker View
 
-struct FilterPickerView: View {
+struct ARPhotoFilterPickerView: View {
     @ObservedObject var photoMode: DreamARPhotoMode
     @Environment(\.dismiss) var dismiss
     let onSelect: () -> Void

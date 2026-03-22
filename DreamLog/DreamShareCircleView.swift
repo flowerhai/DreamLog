@@ -464,7 +464,7 @@ struct CircleSettingsSheet: View {
 
 // MARK: - 梦境详情视图
 
-struct SharedDreamDetailView: View {
+struct ShareCircleDreamDetailView: View {
     let sharedDream: SharedDream
     @ObservedObject private var service = DreamShareCircleService.shared
     @State private var newCommentText: String = ""
@@ -694,7 +694,7 @@ struct CommentRow: View {
 
 // MARK: - 分享圈详情视图
 
-struct CircleDetailView: View {
+struct ShareCircleDetailView: View {
     let circle: ShareCircle
     @ObservedObject private var service = DreamShareCircleService.shared
     @State private var selectedTab = 0

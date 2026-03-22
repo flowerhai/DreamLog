@@ -250,8 +250,8 @@ final class DreamSmartSuggestionsService {
     
     func loadConfig() {
         let descriptor = FetchDescriptor<SuggestionConfig>()
-        if let configs = try? modelContext.fetch(descriptor), !configs.isEmpty {
-            self.config = configs.first!
+        if let configs = try? modelContext.fetch(descriptor), let firstConfig = configs.first {
+            self.config = firstConfig
         }
     }
     

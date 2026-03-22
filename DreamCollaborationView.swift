@@ -268,7 +268,7 @@ struct SessionRowView: View {
 
 // MARK: - Create Session View
 
-struct CreateSessionView: View {
+struct CollaborationCreateSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var collaborationService: DreamCollaborationService
     @Environment(\.modelContext) private var modelContext
@@ -354,7 +354,7 @@ struct CreateSessionView: View {
 
 // MARK: - Join Session View
 
-struct JoinSessionView: View {
+struct CollaborationJoinSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var collaborationService: DreamCollaborationService
     

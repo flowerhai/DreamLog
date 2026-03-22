@@ -9,7 +9,7 @@
 import SwiftUI
 import SwiftData
 
-struct DreamInsightsDashboardView: View {
+struct DreamInsightDashboardView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \DreamInsight.createdAt, order: .reverse) private var insights: [DreamInsight]
     

@@ -19,8 +19,9 @@ actor SocialInteractionService {
     static var shared: SocialInteractionService?
     
     static func initialize(modelContainer: ModelContainer) -> SocialInteractionService {
-        self.shared = SocialInteractionService(modelContainer: modelContainer)
-        return self.shared!
+        let instance = SocialInteractionService(modelContainer: modelContainer)
+        self.shared = instance
+        return instance
     }
     
     // MARK: - 属性

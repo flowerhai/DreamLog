@@ -469,7 +469,7 @@ struct QRCodeShareView: View {
 }
 
 // MARK: - 分享历史视图
-struct ShareHistoryView: View {
+struct EnhancedShareHistoryView: View {
     @ObservedObject private var shareService = EnhancedShareService.shared
     @Environment(\.dismiss) var dismiss
     

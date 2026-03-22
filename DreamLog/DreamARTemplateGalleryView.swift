@@ -408,7 +408,7 @@ struct TemplateCard: View {
 
 // MARK: - Template Detail View
 
-struct TemplateDetailView: View {
+struct ARTemplateDetailView: View {
     let template: DreamARTemplate
     let templateService: DreamARTemplateService
     let onApply: (DreamARTemplate) -> Void

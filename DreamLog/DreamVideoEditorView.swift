@@ -628,7 +628,7 @@ struct TimePreview: View {
 
 // MARK: - 模板选择器
 
-struct TemplatePickerView: View {
+struct VideoTemplatePickerView: View {
     @Binding var selectedTemplate: VideoTemplate?
     let onApplyTemplate: (VideoTemplate) -> Void
     

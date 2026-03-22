@@ -516,7 +516,7 @@ class DreamVoiceCommandService: ObservableObject {
     private func cleanupOldHistory() {
         guard let modelContext = modelContext else { return }
         
-        let cutoffDate = Calendar.current.date(byAdding: .day, value: -config.maxHistoryDays, to: Date())!
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -config.maxHistoryDays, to: Date()) ?? Date()
         
         do {
             let descriptor = FetchDescriptor<VoiceCommandHistory>(
@@ -535,7 +535,7 @@ class DreamVoiceCommandService: ObservableObject {
     func getStats() -> VoiceCommandStats {
         let now = Date()
         let today = Calendar.current.startOfDay(for: now)
-        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now)!
+        let weekAgo = Calendar.current.date(byAdding: .day, value: -7, to: now) ?? now
         
         let totalCommands = commandHistory.count
         let successfulCommands = commandHistory.filter { $0.success }.count

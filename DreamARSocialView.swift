@@ -186,7 +186,7 @@ struct SessionRow: View {
 
 // MARK: - Create Session View
 
-struct CreateSessionView: View {
+struct ARSocialCreateSessionView: View {
     @ObservedObject var service: DreamARSocialService
     @Binding var selectedTemplate: ARSceneTemplate
     @Environment(\.dismiss) var dismiss
@@ -253,7 +253,7 @@ struct CreateSessionView: View {
 
 // MARK: - Join Session View
 
-struct JoinSessionView: View {
+struct ARSocialJoinSessionView: View {
     @ObservedObject var service: DreamARSocialService
     @Binding var inviteCode: String
     @Environment(\.dismiss) var dismiss

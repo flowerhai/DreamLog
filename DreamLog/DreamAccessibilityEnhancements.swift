@@ -331,7 +331,7 @@ struct PerformanceStatus {
 
 // MARK: - 无障碍设置视图
 
-struct AccessibilitySettingsView: View {
+struct AccessibilityEnhancedSettingsView: View {
     @ObservedObject private var service = DreamAccessibilityService.shared
     
     var body: some View {

@@ -486,7 +486,7 @@ struct ShareDreamView: View {
 
 // MARK: - 梦境详情界面
 
-struct SharedDreamDetailView: View {
+struct CommunityDreamDetailView: View {
     let dream: SharedDream
     @Environment(\.dismiss) private var dismiss
     @State private var commentText = ""

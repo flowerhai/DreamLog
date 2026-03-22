@@ -335,7 +335,7 @@ struct ToolbarButton: View {
 
 // MARK: - 模板选择器
 
-struct TemplatePickerView: View {
+struct ShareCardTemplatePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedTemplate: ShareCardTemplate
     @State private var selectedCategory: TemplateCategory = .nature
@@ -528,7 +528,7 @@ struct StickerButton: View {
 
 // MARK: - 滤镜选择器
 
-struct FilterPickerView: View {
+struct ShareCardFilterPickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var selectedFilters: [ImageFilter]
     

@@ -449,7 +449,7 @@ struct EmptyPlaylistsView: View {
 
 // MARK: - Create Playlist View
 
-struct CreatePlaylistView: View {
+struct CreateMusicPlaylistView: View {
     @ObservedObject var playlistService: DreamMusicPlaylistService
     @Environment(\.dismiss) var dismiss
     @State private var name = ""
@@ -511,7 +511,7 @@ struct CreatePlaylistView: View {
 
 // MARK: - Playlist Detail View
 
-struct PlaylistDetailView: View {
+struct MusicPlaylistDetailView: View {
     let playlist: DreamMusicPlaylist
     @ObservedObject var playlistService: DreamMusicPlaylistService
     @Environment(\.dismiss) var dismiss
@@ -660,7 +660,7 @@ struct MusicListItem: View {
 
 // MARK: - Sleep Timer Selection View
 
-struct SleepTimerSelectionView: View {
+struct MusicSleepTimerSelectionView: View {
     @ObservedObject var playlistService: DreamMusicPlaylistService
     @Environment(\.dismiss) var dismiss
     

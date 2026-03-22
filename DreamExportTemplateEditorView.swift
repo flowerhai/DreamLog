@@ -573,7 +573,7 @@ struct VariablePickerView: View {
 
 // MARK: - 模板详情视图
 
-struct TemplateDetailView: View {
+struct ExportTemplateDetailView: View {
     @Environment(\.dismiss) private var dismiss
     
     let template: DreamExportTemplate

@@ -371,7 +371,7 @@ struct SoundscapeCard: View {
 
 // MARK: - Sleep Timer Selection View
 
-struct SleepTimerSelectionView: View {
+struct SleepSoundsTimerSelectionView: View {
     let onTimerSelected: (SleepTimerConfig) -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var selectedDuration: TimeInterval = 1800

@@ -415,7 +415,7 @@ struct PromptCard: View {
 
 // MARK: - Prompt Detail View
 
-struct PromptDetailView: View {
+struct WritingPromptDetailView: View {
     @Environment(\.dismiss) private var dismiss
     let prompt: WritingPrompt
     var service: DreamWritingPromptsService?
