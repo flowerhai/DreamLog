@@ -932,13 +932,3 @@ struct DramaticFilterModifier: ViewModifier {
             .overlay(enabled ? Color(hex: "330033").opacity(0.15) : Color.clear)
     }
 }
-
-// MARK: - Dream 模型 (简化版用于预览)
-
-struct Dream {
-    var title: String
-    var content: String
-    var tags: [String]
-    var images: [Data]?
-    var createdAt: Date
-}

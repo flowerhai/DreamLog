@@ -286,9 +286,9 @@ final class DreamiCloudSyncService: ObservableObject {
         if metadata.isEmpty {
             // 新记录，创建本地梦境
             try createDream(from: record)
-        } else {
+        } else if let firstMetadata = metadata.first {
             // 已存在，检查冲突
-            try handleConflict(for: record, localMetadata: metadata.first!)
+            try handleConflict(for: record, localMetadata: firstMetadata)
         }
     }
     

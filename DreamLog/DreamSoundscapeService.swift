@@ -576,8 +576,10 @@ final class DreamSoundscapeService: ObservableObject {
         var presets: [SoundscapePreset] = []
         
         // 基于情绪推荐
-        let emotionPresets = SoundscapePreset.recommendedForMood(dream.emotion.rawValue)
-        presets.append(contentsOf: emotionPresets)
+        if let primaryEmotion = dream.emotions.first {
+            let emotionPresets = SoundscapePreset.recommendedForMood(primaryEmotion.rawValue)
+            presets.append(contentsOf: emotionPresets)
+        }
         
         // 基于场景推荐
         if dream.content.contains("雨") || dream.content.contains("水") || dream.content.contains("海") {
@@ -669,21 +671,6 @@ enum SleepTimerAction: String, Codable, CaseIterable {
 }
 
 // MARK: - 梦境模型扩展
-
-/// 梦境模型 (简化版，用于服务依赖)
-struct Dream {
-    var id: UUID
-    var emotion: DreamEmotion
-    var content: String
-    var clarity: Int
-    
-    init(id: UUID = UUID(), emotion: DreamEmotion = .中性，content: String = "", clarity: Int = 3) {
-        self.id = id
-        self.emotion = emotion
-        self.content = content
-        self.clarity = clarity
-    }
-}
 
 /// 梦境情绪枚举
 enum DreamEmotion: String, Codable, CaseIterable {

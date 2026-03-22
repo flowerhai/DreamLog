@@ -216,7 +216,8 @@ final class DreamShareLink {
     /// 生成 8 位短码
     private static func generateShortCode() -> String {
         let chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-        return String((0..<8).map { _ in chars.randomElement()! })
+        let charArray = Array(chars)
+        return String((0..<8).map { _ in charArray.randomElement() ?? "A" })
     }
     
     /// Universal Link URL

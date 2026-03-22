@@ -226,6 +226,9 @@ struct ScreenTimeGoal: Identifiable, Codable {
         self.isEnabled = isEnabled
         self.notifyWhenExceeded = notifyWhenExceeded
     }
+    
+    /// 默认目标（用于安全回退）
+    static let defaultGoal = ScreenTimeGoal(category: .socialMedia, dailyLimitMinutes: 60, beforeBedLimitMinutes: 30)
 }
 
 /// 数字健康设置

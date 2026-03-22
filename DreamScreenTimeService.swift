@@ -580,7 +580,7 @@ class DreamScreenTimeService: ObservableObject {
     }
     
     private func calculateWeeklyGoalProgress(dailyStats: [DailyScreenTimeStats]) -> ScreenTimeWeeklyGoal {
-        let goal = settings.goals.first { $0.isEnabled } ?? settings.goals.first!
+        let goal = settings.goals.first { $0.isEnabled } ?? settings.goals.first ?? ScreenTimeGoal.defaultGoal
         let totalMinutes = dailyStats.reduce(0) { $0 + ($1.categoryBreakdown[goal.category] ?? 0) / 60 }
         let beforeBedMinutes = dailyStats.reduce(0) { $0 + $1.beforeBedDuration } / 60
         
