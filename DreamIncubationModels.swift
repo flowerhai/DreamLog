@@ -1,430 +1,298 @@
 //
 //  DreamIncubationModels.swift
-//  DreamLog
+//  DreamLog - 梦境孵化数据模型
 //
-//  梦境孵育功能数据模型
-//  支持设置睡前意图，引导特定主题的梦境
+//  梦境孵化 (Dream Incubation) - 睡前设定意图来影响梦境内容
+//  这是一种古老的实践，现代研究显示它可以提高特定主题梦境的出现概率
 //
 
 import Foundation
 import SwiftData
 
-// MARK: - 孵育类型
+// MARK: - 梦境孵化类型
 
-/// 梦境孵育类型
-enum IncubationType: String, CaseIterable, Identifiable, Codable {
-    case problemSolving = "问题解答"
-    case creative = "创意启发"
-    case healing = "情感疗愈"
-    case skill = "技能练习"
-    case exploration = "主题探索"
-    case lucid = "清醒梦诱导"
-    
-    var id: String { rawValue }
+/// 孵化目标类型
+enum IncubationTargetType: String, Codable, CaseIterable {
+    case problemSolving = "问题解决"      // 寻求问题的解决方案
+    case creativity = "创意灵感"           // 获取创意和艺术灵感
+    case emotionalHealing = "情绪疗愈"     // 处理情绪创伤
+    case skillPractice = "技能练习"        // 练习某项技能 (如清醒梦)
+    case exploration = "探索体验"          // 探索特定场景或体验
+    case spiritual = "精神成长"            // 精神层面的探索
+    case memory = "记忆处理"               // 处理特定记忆
+    case general = "一般意图"              // 一般性意图设定
     
     var icon: String {
         switch self {
-        case .problemSolving: return "questionmark.circle.fill"
-        case .creative: return "lightbulb.fill"
-        case .healing: return "heart.fill"
-        case .skill: return "star.fill"
-        case .exploration: return "compass.fill"
-        case .lucid: return "eye.fill"
+        case .problemSolving: return "lightbulb.fill"
+        case .creativity: return "paintpalette.fill"
+        case .emotionalHealing: return "heart.fill"
+        case .skillPractice: return "target"
+        case .exploration: return "globe"
+        case .spiritual: return "star.fill"
+        case .memory: return "clock.fill"
+        case .general: return "sparkles"
         }
     }
     
     var color: String {
         switch self {
-        case .problemSolving: return "FF9500"
-        case .creative: return "FFD60A"
-        case .healing: return "FF375F"
-        case .skill: return "0A84FF"
-        case .exploration: return "30D158"
-        case .lucid: return "BF5AF2"
+        case .problemSolving: return "FFD700"  // 金色
+        case .creativity: return "FF6B6B"      // 珊瑚红
+        case .emotionalHealing: return "FFB3BA" // 粉色
+        case .skillPractice: return "4ECDC4"   // 青绿色
+        case .exploration: return "45B7D1"     // 天蓝色
+        case .spiritual: return "9B59B6"       // 紫色
+        case .memory: return "95A5A6"          // 灰色
+        case .general: return "3498DB"         // 蓝色
         }
     }
     
     var description: String {
         switch self {
-        case .problemSolving: return "带着问题入睡，寻求梦境启示"
-        case .creative: return "激发创意灵感，获取艺术启发"
-        case .healing: return "处理情感创伤，获得内心平静"
-        case .skill: return "在梦中练习技能，提升表现"
-        case .exploration: return "探索特定主题，扩展认知"
-        case .lucid: return "诱导清醒梦境，增强意识"
-        }
-    }
-    
-    var suggestedAffirmations: [String] {
-        switch self {
-        case .problemSolving:
-            return [
-                "今晚我会在梦中找到答案",
-                "我的潜意识知道解决方案",
-                "梦境会给我清晰的指引"
-            ]
-        case .creative:
-            return [
-                "今晚我会获得创意灵感",
-                "我的梦境充满创意和想象",
-                "我会梦到美妙的创意"
-            ]
-        case .healing:
-            return [
-                "今晚我会获得内心的平静",
-                "我的梦境会帮助我疗愈",
-                "我在梦中感到安全和被爱"
-            ]
-        case .skill:
-            return [
-                "今晚我会在梦中练习技能",
-                "我的梦境会帮助我提升",
-                "我在梦中表现得很好"
-            ]
-        case .exploration:
-            return [
-                "今晚我会探索新的领域",
-                "我的梦境会带我到有趣的地方",
-                "我会梦到有意义的场景"
-            ]
-        case .lucid:
-            return [
-                "今晚会做清醒梦",
-                "我会意识到自己在做梦",
-                "我在梦中保持清醒意识"
-            ]
+        case .problemSolving: return "在梦中寻求现实问题的解决方案"
+        case .creativity: return "激发创意灵感，获取艺术或写作灵感"
+        case .emotionalHealing: return "处理情绪创伤，获得内心平静"
+        case .skillPractice: return "在梦中练习清醒梦或其他技能"
+        case .exploration: return "探索特定的场景、地点或体验"
+        case .spiritual: return "精神层面的探索和成长"
+        case .memory: return "处理和整合特定记忆"
+        case .general: return "设定一般性的梦境意图"
         }
     }
 }
 
-// MARK: - 孵育强度
+// MARK: - 孵化强度等级
 
-/// 孵育强度等级
-enum IncubationIntensity: String, CaseIterable, Identifiable, Codable {
-    case light = "轻度"
-    case moderate = "中度"
-    case strong = "强度"
+/// 孵化意图的强度等级
+enum IncubationIntensity: Int, Codable, CaseIterable {
+    case light = 1      // 轻度 - 简单的想法
+    case moderate = 2   // 中度 - 明确的意图
+    case strong = 3     // 强烈 - 深度专注
+    case intense = 4    // 极致 - 完全沉浸
     
-    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .light: return "轻度"
+        case .moderate: return "中度"
+        case .strong: return "强烈"
+        case .intense: return "极致"
+        }
+    }
     
     var description: String {
         switch self {
-        case .light: return "轻松暗示，自然引导"
-        case .moderate: return "明确意图，专注聚焦"
-        case .strong: return "强烈暗示，深度沉浸"
+        case .light: return "睡前简单思考一下主题"
+        case .moderate: return "花 5-10 分钟专注思考意图"
+        case .strong: return "进行 15-20 分钟的深度冥想"
+        case .intense: return "完整的孵化仪式，包括冥想和可视化"
         }
     }
     
     var recommendedDuration: Int {
         switch self {
-        case .light: return 5 // 分钟
+        case .light: return 2       // 分钟
         case .moderate: return 10
-        case .strong: return 15
+        case .strong: return 20
+        case .intense: return 30
         }
     }
 }
 
-// MARK: - 孵育会话模型
+// MARK: - 梦境孵化记录
 
-/// 梦境孵育会话
+/// 梦境孵化记录模型
 @Model
-final class DreamIncubationSession {
-    var id: UUID
-    var type: String // IncubationType.rawValue
-    var title: String
-    var description: String
-    var intention: String // 用户的意图陈述
-    var affirmations: [String] // 使用的肯定语
-    var intensity: String // IncubationIntensity.rawValue
-    var duration: Int // 分钟
-    var scheduledDate: Date
-    var completedDate: Date?
-    var status: String // pending, active, completed, cancelled
-    var relatedDreamIds: [UUID] // 关联的梦境 ID
-    var successRating: Int? // 1-5 评分
-    var notes: String? // 用户备注
+final class DreamIncubation {
+    @Attribute(.unique) var id: UUID
     var createdAt: Date
-    var updatedAt: Date
+    var targetDate: Date           // 目标日期 (通常是今晚)
+    var targetType: IncubationTargetType
+    var title: String              // 孵化标题
+    var description: String        // 详细描述
+    var intention: String          // 具体意图陈述
+    var intensity: IncubationIntensity
+    var completed: Bool            // 是否完成睡前仪式
+    var completedAt: Date?         // 完成时间
+    var relatedDreamIds: [UUID]    // 相关的梦境 ID
+    var successRating: Int?        // 成功评级 (1-5)
+    var notes: String              // 备注和观察
+    var tags: [String]             // 标签
+    var meditationMinutes: Int     // 冥想时长 (分钟)
+    var visualizationUsed: Bool    // 是否使用可视化
+    var affirmations: [String]     // 肯定语列表
+    var success: Bool?             // 是否成功 (基于相关梦境)
     
     init(
         id: UUID = UUID(),
-        type: IncubationType,
+        targetDate: Date = Date(),
+        targetType: IncubationTargetType,
         title: String,
         description: String = "",
         intention: String,
-        affirmations: [String] = [],
         intensity: IncubationIntensity = .moderate,
-        duration: Int = 10,
-        scheduledDate: Date = Date(),
-        completedDate: Date? = nil,
-        status: String = "pending",
-        relatedDreamIds: [UUID] = [],
-        successRating: Int? = nil,
-        notes: String? = nil,
-        createdAt: Date = Date(),
-        updatedAt: Date = Date()
+        completed: Bool = false,
+        notes: String = "",
+        tags: [String] = [],
+        meditationMinutes: Int = 0,
+        visualizationUsed: Bool = false,
+        affirmations: [String] = []
     ) {
         self.id = id
-        self.type = type.rawValue
+        self.createdAt = Date()
+        self.targetDate = targetDate
+        self.targetType = targetType
         self.title = title
         self.description = description
         self.intention = intention
-        self.affirmations = affirmations
-        self.intensity = intensity.rawValue
-        self.duration = duration
-        self.scheduledDate = scheduledDate
-        self.completedDate = completedDate
-        self.status = status
-        self.relatedDreamIds = relatedDreamIds
-        self.successRating = successRating
+        self.intensity = intensity
+        self.completed = completed
         self.notes = notes
-        self.createdAt = createdAt
-        self.updatedAt = updatedAt
-    }
-    
-    var incubationType: IncubationType {
-        IncubationType(rawValue: type) ?? .creative
-    }
-    
-    var incubationIntensity: IncubationIntensity {
-        IncubationIntensity(rawValue: intensity) ?? .moderate
-    }
-    
-    var isCompleted: Bool {
-        status == "completed"
-    }
-    
-    var isActive: Bool {
-        status == "active"
+        self.tags = tags
+        self.meditationMinutes = meditationMinutes
+        self.visualizationUsed = visualizationUsed
+        self.affirmations = affirmations
+        self.relatedDreamIds = []
     }
 }
 
-// MARK: - 孵育模板
+// MARK: - 孵化模板
 
-/// 梦境孵育模板
+/// 预设的孵化模板
 struct IncubationTemplate: Identifiable, Codable {
     let id: UUID
-    let type: IncubationType
     let name: String
-    let description: String
+    let targetType: IncubationTargetType
     let defaultIntention: String
     let suggestedAffirmations: [String]
     let recommendedIntensity: IncubationIntensity
-    let preSleepRitual: [String] // 睡前仪式步骤
-    let morningReflection: [String] // 晨间反思问题
+    let guidance: String
     
     static let templates: [IncubationTemplate] = [
         IncubationTemplate(
-            id: UUID(uuidString: "A1B2C3D4-E5F6-7890-ABCD-EF1234567890") ?? UUID(),
-            type: .problemSolving,
-            name: "问题解答孵育",
-            description: "带着具体问题入睡，寻求梦境的智慧和启示",
-            defaultIntention: "我会在梦中找到这个问题的答案",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000001")!,
+            name: "问题解决",
+            targetType: .problemSolving,
+            defaultIntention: "今晚我将在梦中探索 [问题] 的解决方案",
             suggestedAffirmations: [
-                "我的潜意识知道答案",
-                "梦境会给我清晰的指引",
-                "我信任内在的智慧"
+                "我的潜意识拥有答案",
+                "我会在梦中获得清晰的洞察",
+                "我信任我的内在智慧"
             ],
             recommendedIntensity: .moderate,
-            preSleepRitual: [
-                "写下你的问题，越具体越好",
-                "深呼吸 5 次，放松身心",
-                "默念意图 3 遍",
-                "想象问题已经解决的场景",
-                "带着信任入睡"
-            ],
-            morningReflection: [
-                "你记得梦到什么？",
-                "梦中有任何线索或象征吗？",
-                "醒来时的第一感觉是什么？",
-                "有什么新的想法或洞察？"
-            ]
+            guidance: "睡前花 10 分钟思考你的问题，想象在梦中获得答案的场景。"
         ),
         IncubationTemplate(
-            id: UUID(uuidString: "B2C3D4E5-F6A7-8901-BCDE-F12345678901") ?? UUID(),
-            type: .creative,
-            name: "创意灵感孵育",
-            description: "激发创意潜能，获取艺术、写作或项目的灵感",
-            defaultIntention: "我会在梦中获得创意灵感",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000002")!,
+            name: "创意灵感",
+            targetType: .creativity,
+            defaultIntention: "今晚我将在梦中获得关于 [创作项目] 的灵感",
             suggestedAffirmations: [
-                "我的创意源源不断",
-                "梦境充满创意和想象",
-                "我是有创造力的人"
-            ],
-            recommendedIntensity: .light,
-            preSleepRitual: [
-                "回顾你正在创作的項目",
-                "想象创意 flowing 的感觉",
-                "感谢你的创造力",
-                "默念意图 3 遍",
-                "放松入睡"
-            ],
-            morningReflection: [
-                "梦中有何创意元素？",
-                "有什么新的想法或视角？",
-                "颜色、形状、声音有什么特别？",
-                "如何将梦中灵感应用到现实？"
-            ]
-        ),
-        IncubationTemplate(
-            id: UUID(uuidString: "C3D4E5F6-A7B8-9012-CDEF-123456789012") ?? UUID(),
-            type: .healing,
-            name: "情感疗愈孵育",
-            description: "处理情感创伤，获得内心平静和疗愈",
-            defaultIntention: "我会在梦中获得疗愈和平静",
-            suggestedAffirmations: [
-                "我值得被爱和疗愈",
-                "我的梦境是安全的空间",
-                "我正在释放和疗愈"
-            ],
-            recommendedIntensity: .light,
-            preSleepRitual: [
-                "找一个舒适的姿势",
-                "深呼吸，感受身体",
-                "想象被温暖的光包围",
-                "对自己说温柔的话",
-                "带着爱入睡"
-            ],
-            morningReflection: [
-                "醒来时感觉如何？",
-                "梦中有何疗愈元素？",
-                "有什么情绪被释放？",
-                "今天如何照顾自己？"
-            ]
-        ),
-        IncubationTemplate(
-            id: UUID(uuidString: "D4E5F6A7-B8C9-0123-DEF0-234567890123") ?? UUID(),
-            type: .skill,
-            name: "技能练习孵育",
-            description: "在梦中练习技能，提升现实表现",
-            defaultIntention: "我会在梦中练习并提升这项技能",
-            suggestedAffirmations: [
-                "我在梦中表现得很好",
-                "我的技能在不断提升",
-                "梦境是我的练习场"
-            ],
-            recommendedIntensity: .strong,
-            preSleepRitual: [
-                "回顾技能的要点",
-                "想象完美执行的感觉",
-                "感受成功的喜悦",
-                "默念意图 5 遍",
-                "自信入睡"
-            ],
-            morningReflection: [
-                "梦中练习了什么？",
-                "感觉如何？",
-                "有什么新的领悟？",
-                "今天如何在现实中练习？"
-            ]
-        ),
-        IncubationTemplate(
-            id: UUID(uuidString: "E5F6A7B8-C9D0-1234-EF01-345678901234") ?? UUID(),
-            type: .exploration,
-            name: "主题探索孵育",
-            description: "探索特定主题、地点或概念",
-            defaultIntention: "我会在梦中探索这个主题",
-            suggestedAffirmations: [
-                "我的梦境充满探索的乐趣",
-                "我会梦到有趣的地方",
-                "我的意识在扩展"
+                "创意能量在我体内流动",
+                "我的梦境充满创意的启示",
+                "我醒来时会记住这些灵感"
             ],
             recommendedIntensity: .moderate,
-            preSleepRitual: [
-                "了解你想探索的主题",
-                "想象那个场景的样子",
-                "保持开放和好奇",
-                "默念意图 3 遍",
-                "期待入睡"
-            ],
-            morningReflection: [
-                "你探索了什么？",
-                "有什么新发现？",
-                "感觉如何？",
-                "想继续探索什么？"
-            ]
+            guidance: "想象你的创作项目已经完成，感受那种成就感。"
         ),
         IncubationTemplate(
-            id: UUID(uuidString: "F6A7B8C9-D0E1-2345-F012-456789012345") ?? UUID(),
-            type: .lucid,
-            name: "清醒梦诱导孵育",
-            description: "诱导清醒梦境，增强梦中意识",
-            defaultIntention: "今晚我会做清醒梦",
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000003")!,
+            name: "清醒梦诱导",
+            targetType: .skillPractice,
+            defaultIntention: "今晚我会意识到自己在做梦",
             suggestedAffirmations: [
-                "我会意识到自己在做梦",
-                "我在梦中保持清醒",
-                "清醒梦对我来说很自然"
+                "我会记得我做梦了",
+                "我会认出梦境的迹象",
+                "我会保持清醒的意识"
             ],
             recommendedIntensity: .strong,
-            preSleepRitual: [
-                "回顾现实检查技巧",
-                "想象意识到自己在做梦的场景",
-                "感受清醒梦的兴奋",
-                "默念意图 5 遍",
-                "保持觉知入睡"
+            guidance: "进行现实检查，回顾过去的梦境，设定清晰的意图。"
+        ),
+        IncubationTemplate(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000004")!,
+            name: "情绪疗愈",
+            targetType: .emotionalHealing,
+            defaultIntention: "今晚我将在梦中处理 [情绪/情况]，获得平静",
+            suggestedAffirmations: [
+                "我释放所有的恐惧和担忧",
+                "我的内心充满平静和爱",
+                "我在梦中得到疗愈"
             ],
-            morningReflection: [
-                "有做清醒梦吗？",
-                "何时意识到在做梦？",
-                "在梦中做了什么？",
-                "下次如何做得更好？"
-            ]
+            recommendedIntensity: .strong,
+            guidance: "创建一个安全的心理空间，允许情绪自然流动。"
+        ),
+        IncubationTemplate(
+            id: UUID(uuidString: "00000000-0000-0000-0000-000000000005")!,
+            name: "飞行体验",
+            targetType: .exploration,
+            defaultIntention: "今晚我会在梦中飞翔，体验自由的感觉",
+            suggestedAffirmations: [
+                "我可以在梦中自由飞翔",
+                "飞翔的感觉自然而轻松",
+                "我享受飞行的每一刻"
+            ],
+            recommendedIntensity: .light,
+            guidance: "想象自己轻盈地飘浮在空中，感受风的触感。"
         )
     ]
 }
 
-// MARK: - 孵育统计
+// MARK: - 孵化统计
 
-/// 梦境孵育统计数据
-struct IncubationStats {
-    let totalSessions: Int
-    let completedSessions: Int
-    let pendingSessions: Int
-    let averageSuccessRating: Double
-    let sessionsByType: [String: Int]
-    let successRate: Double // 评分>=4 的比例
-    let streakDays: Int // 连续孵育天数
+/// 梦境孵化统计数据
+struct IncubationStats: Codable {
+    var totalIncubations: Int           // 总孵化次数
+    var completedIncubations: Int       // 完成的孵化次数
+    var successRate: Double             // 成功率
+    var averageSuccessRating: Double    // 平均成功评级
+    var mostSuccessfulType: IncubationTargetType?  // 最成功的类型
+    var totalMeditationMinutes: Int     // 总冥想时长
+    var currentStreak: Int              // 当前连续天数
+    var longestStreak: Int              // 最长连续天数
+    var incubationsByType: [IncubationTargetType: Int]  // 按类型统计
+    var successByType: [IncubationTargetType: Double]   // 按类型成功率
     
-    init(
-        totalSessions: Int = 0,
-        completedSessions: Int = 0,
-        pendingSessions: Int = 0,
-        averageSuccessRating: Double = 0,
-        sessionsByType: [String: Int] = [:],
-        successRate: Double = 0,
-        streakDays: Int = 0
-    ) {
-        self.totalSessions = totalSessions
-        self.completedSessions = completedSessions
-        self.pendingSessions = pendingSessions
-        self.averageSuccessRating = averageSuccessRating
-        self.sessionsByType = sessionsByType
-        self.successRate = successRate
-        self.streakDays = streakDays
+    init() {
+        self.totalIncubations = 0
+        self.completedIncubations = 0
+        self.successRate = 0.0
+        self.averageSuccessRating = 0.0
+        self.mostSuccessfulType = nil
+        self.totalMeditationMinutes = 0
+        self.currentStreak = 0
+        self.longestStreak = 0
+        self.incubationsByType = [:]
+        self.successByType = [:]
     }
 }
 
-// MARK: - 孵育提醒配置
+// MARK: - 孵化提醒配置
 
-/// 孵育提醒配置
+/// 孵化提醒配置
 struct IncubationReminder: Codable, Identifiable {
     var id: UUID
     var isEnabled: Bool
-    var reminderTime: Date // 每天提醒时间
-    var preSleepMinutes: Int // 睡前多少分钟提醒
-    var message: String
+    var reminderTime: DateComponents      // 提醒时间
+    var preSleepMinutes: Int              // 睡前多少分钟提醒
+    var soundEnabled: Bool                // 声音提醒
+    var vibrationEnabled: Bool            // 震动提醒
+    var customMessage: String?            // 自定义消息
     
     init(
         id: UUID = UUID(),
-        isEnabled: Bool = false,
-        reminderTime: Date = Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date()) ?? Date(),
+        isEnabled: Bool = true,
+        reminderTime: DateComponents = DateComponents(hour: 21, minute: 30),
         preSleepMinutes: Int = 30,
-        message: String = "睡前孵育时间到了"
+        soundEnabled: Bool = true,
+        vibrationEnabled: Bool = true,
+        customMessage: String? = nil
     ) {
         self.id = id
         self.isEnabled = isEnabled
         self.reminderTime = reminderTime
         self.preSleepMinutes = preSleepMinutes
-        self.message = message
+        self.soundEnabled = soundEnabled
+        self.vibrationEnabled = vibrationEnabled
+        self.customMessage = customMessage
     }
 }

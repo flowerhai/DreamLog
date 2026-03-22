@@ -16,6 +16,7 @@ struct SettingsView: View {
     @AppStorage("icloudSync") private var icloudSync = false
     @AppStorage("autoAnalysis") private var autoAnalysis = true
     @AppStorage("darkMode") private var darkMode = true
+    @State private var accentColor: Color = .accentColor
     
     @ObservedObject private var reminderService = SmartReminderService.shared
     
@@ -52,8 +53,8 @@ struct SettingsView: View {
                     HStack {
                         Text("主题色")
                         Spacer()
-                        ColorPicker("", selection: .constant(.accentColor))
-                            .onChange(of: .accentColor) { _ in
+                        ColorPicker("", selection: $accentColor)
+                            .onChange(of: accentColor) { _ in
                                 hapticService.trigger(.selection)
                             }
                     }
