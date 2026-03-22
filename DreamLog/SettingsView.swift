@@ -302,6 +302,31 @@ struct SettingsView: View {
                             .foregroundColor(.secondary)
                     }
                     
+                    // iCloud 高级同步设置 ✨ NEW (Phase 88)
+                    NavigationLink(destination: DreamiCloudSyncView()) {
+                        Label("⚙️ iCloud 同步高级设置", systemImage: "gearshape.2.fill")
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("管理同步频率、冲突解决策略、查看同步统计")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("• 支持自动/每小时/每天/每周同步")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("• 4 种冲突解决策略可选")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                        Text("• 实时同步状态与历史记录")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 4)
+                    
                     Divider()
                     
                     // 导出功能
