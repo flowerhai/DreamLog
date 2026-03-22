@@ -150,16 +150,19 @@ class DreamLearningService {
         // Get or create enrollment
         var enrollment = await getEnrollment(for: course.id)
         if enrollment == nil {
-            enrollment = DreamLearningEnrollment(userId: userId)
-            enrollment?.course = course
-            context.insert(enrollment!)
+            let newEnrollment = DreamLearningEnrollment(userId: userId)
+            newEnrollment.course = course
+            context.insert(newEnrollment)
+            enrollment = newEnrollment
         }
         
-        completion.enrollment = enrollment
-        context.insert(completion)
-        
-        // Update enrollment progress
-        updateEnrollmentProgress(enrollment!)
+        if let enrollment = enrollment {
+            completion.enrollment = enrollment
+            context.insert(completion)
+            
+            // Update enrollment progress
+            updateEnrollmentProgress(enrollment)
+        }
         
         // Update user profile
         await updateUserProfile(xpEarned: xpEarned, lessonCompleted: true)

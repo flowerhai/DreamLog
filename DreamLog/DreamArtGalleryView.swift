@@ -342,14 +342,14 @@ struct ArtDetailView: View {
                     // 信息卡片
                     VStack(alignment: .leading, spacing: 16) {
                         // 风格
-                        InfoRow(
+                        GalleryInfoRow(
                             icon: "paintbrush",
                             title: "艺术风格",
                             value: art.style.rawValue
                         )
                         
                         // 创作时间
-                        InfoRow(
+                        GalleryInfoRow(
                             icon: "calendar",
                             title: "创作时间",
                             value: formatFullDate(art.createdAt)
@@ -404,7 +404,7 @@ struct ArtDetailView: View {
     }
 }
 
-struct InfoRow: View {
+struct GalleryInfoRow: View {
     let icon: String
     let title: String
     let value: String

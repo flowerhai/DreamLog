@@ -219,9 +219,8 @@ actor DreamAudioExportService {
     /// 删除导出任务
     func deleteTask(_ task: AudioExportTask) async throws {
         // 删除关联的音频文件
-        if let url = task.outputURL {
-            let fileURL = URL(string: url)
-            try? FileManager.default.removeItem(at: fileURL!)
+        if let url = task.outputURL, let fileURL = URL(string: url) {
+            try? FileManager.default.removeItem(at: fileURL)
         }
         
         modelContext.delete(task)

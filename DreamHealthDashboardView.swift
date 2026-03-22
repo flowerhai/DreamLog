@@ -39,7 +39,9 @@ struct DreamHealthDashboardView: View {
     
     init() {
         // 在实际应用中，service 会通过 environment 注入
-        _healthService = State(initialValue: DreamHealthIntegrationService(modelContext: ModelContext(ModelContainer(for: SleepSession.self)!)))
+        let container = try? ModelContainer(for: SleepSession.self)
+        let modelContext = container.map { ModelContext($0) } ?? ModelContext(ModelContainer())
+        _healthService = State(initialValue: DreamHealthIntegrationService(modelContext: modelContext))
     }
     
     var body: some View {

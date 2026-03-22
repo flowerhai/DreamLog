@@ -67,10 +67,10 @@ struct DreamLocationSettingsView: View {
             // 使用说明
             Section(header: Text("使用说明")) {
                 VStack(alignment: .leading, spacing: 8) {
-                    InfoRow(icon: "location.fill", text: "记录梦境时会自动保存当前位置")
-                    InfoRow(icon: "map.fill", text: "在地图视图查看梦境分布")
-                    InfoRow(icon: "shield.fill", text: "位置数据仅存储在本地，不会上传")
-                    InfoRow(icon: "gearshape.fill", text: "可随时在设置中关闭位置追踪")
+                    LocationInfoRow(icon: "location.fill", text: "记录梦境时会自动保存当前位置")
+                    LocationInfoRow(icon: "map.fill", text: "在地图视图查看梦境分布")
+                    LocationInfoRow(icon: "shield.fill", text: "位置数据仅存储在本地，不会上传")
+                    LocationInfoRow(icon: "gearshape.fill", text: "可随时在设置中关闭位置追踪")
                 }
             }
             
@@ -132,7 +132,7 @@ struct DreamLocationSettingsView: View {
     }
 }
 
-struct InfoRow: View {
+struct LocationInfoRow: View {
     let icon: String
     let text: String
     

@@ -220,15 +220,19 @@ struct PaywallView: View {
                 Text("继续即表示您同意")
                     .font(.caption2)
                     .foregroundColor(.white.opacity(0.5))
-                Link("服务条款", destination: URL(string: "https://dreamlog.app/terms")!)
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.8))
+                if let termsURL = URL(string: "https://dreamlog.app/terms") {
+                    Link("服务条款", destination: termsURL)
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.8))
+                }
                 Text("和")
                     .font(.caption2)
                     .foregroundColor(.white.opacity(0.5))
-                Link("隐私政策", destination: URL(string: "https://dreamlog.app/privacy")!)
-                    .font(.caption2)
-                    .foregroundColor(.white.opacity(0.8))
+                if let privacyURL = URL(string: "https://dreamlog.app/privacy") {
+                    Link("隐私政策", destination: privacyURL)
+                        .font(.caption2)
+                        .foregroundColor(.white.opacity(0.8))
+                }
             }
             
             // Manage subscription (for existing subscribers)

@@ -243,7 +243,7 @@ struct SoundscapePreset: Codable, Identifiable, Equatable {
         ],
         recommendedMoods: ["平静", "焦虑"],
         description: "深沉的低频噪音，最适合睡眠"
-    }
+    )
     
     // MARK: - 冥想类预设
     

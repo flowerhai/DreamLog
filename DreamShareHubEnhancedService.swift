@@ -132,12 +132,15 @@ actor DreamShareHubEnhancedService {
         var stats = try modelContext.fetch(descriptor).first
         
         if stats == nil {
-            stats = DreamShareStatistics(date: today)
-            modelContext.insert(stats!)
+            let newStats = DreamShareStatistics(date: today)
+            modelContext.insert(newStats)
+            stats = newStats
         }
         
-        stats?.addShare(platform: platform)
-        stats?.addShare(contentType: contentType.rawValue)
+        if let stats = stats {
+            stats.addShare(platform: platform)
+            stats.addShare(contentType: contentType.rawValue)
+        }
         
         try modelContext.save()
     }

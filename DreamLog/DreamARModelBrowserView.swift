@@ -416,10 +416,10 @@ struct ElementDetailView: View {
             Text("基本信息")
                 .font(.headline)
             
-            InfoRow(label: "模型 ID", value: String(element.id.prefix(8)))
-            InfoRow(label: "类别", value: element.category.displayName)
-            InfoRow(label: "尺寸", value: "\(element.scale.x, specifier: "%.1f")m")
-            InfoRow(label: "状态", value: downloadStatusText)
+            ARModelInfoRow(label: "模型 ID", value: String(element.id.prefix(8)))
+            ARModelInfoRow(label: "类别", value: element.category.displayName)
+            ARModelInfoRow(label: "尺寸", value: "\(element.scale.x, specifier: "%.1f")m")
+            ARModelInfoRow(label: "状态", value: downloadStatusText)
         }
         .padding()
         .background(Color.gray.opacity(0.05))
@@ -464,10 +464,10 @@ struct ElementDetailView: View {
             Text("元素信息")
                 .font(.headline)
             
-            InfoRow(label: "类别", value: element.category.displayName)
-            InfoRow(label: "类型", value: element.elementType.displayName)
-            InfoRow(label: "大小", value: String(format: "%.1f", Float(element.scale)))
-            InfoRow(label: "动画", value: element.animation?.displayName ?? "无")
+            ARModelInfoRow(label: "类别", value: element.category.displayName)
+            ARModelInfoRow(label: "类型", value: element.elementType.displayName)
+            ARModelInfoRow(label: "大小", value: String(format: "%.1f", Float(element.scale)))
+            ARModelInfoRow(label: "动画", value: element.animation?.displayName ?? "无")
         }
         .padding()
         .background(Color.gray.opacity(0.05))
@@ -539,7 +539,7 @@ struct ElementDetailView: View {
 
 // MARK: - Info Row
 
-struct InfoRow: View {
+struct ARModelInfoRow: View {
     let label: String
     let value: String
     

@@ -358,12 +358,12 @@ struct CreativePromptDetailView: View {
                     
                     // 信息卡片
                     VStack(alignment: .leading, spacing: 12) {
-                        InfoRow(icon: "clock", label: "预计时间", value: "\(prompt.estimatedTime) 分钟")
-                        InfoRow(icon: "star", label: "难度", value: String(repeating: "★", count: prompt.difficulty) + String(repeating: "☆", count: 5 - prompt.difficulty))
-                        InfoRow(icon: "calendar", label: "创建时间", value: prompt.createdAt.formatted())
+                        InspirationInfoRow(icon: "clock", label: "预计时间", value: "\(prompt.estimatedTime) 分钟")
+                        InspirationInfoRow(icon: "star", label: "难度", value: String(repeating: "★", count: prompt.difficulty) + String(repeating: "☆", count: 5 - prompt.difficulty))
+                        InspirationInfoRow(icon: "calendar", label: "创建时间", value: prompt.createdAt.formatted())
                         
                         if let completedDate = prompt.completedDate {
-                            InfoRow(icon: "checkmark.circle", label: "完成时间", value: completedDate.formatted())
+                            InspirationInfoRow(icon: "checkmark.circle", label: "完成时间", value: completedDate.formatted())
                         }
                     }
                     .padding()
@@ -418,7 +418,7 @@ struct CreativePromptDetailView: View {
     }
 }
 
-struct InfoRow: View {
+struct InspirationInfoRow: View {
     let icon: String
     let label: String
     let value: String

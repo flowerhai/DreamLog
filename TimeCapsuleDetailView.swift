@@ -132,16 +132,16 @@ struct TimeCapsuleDetailView: View {
             Text("胶囊信息")
                 .font(.headline)
             
-            InfoRow(label: "类型", value: capsule.typedCapsuleType.displayName)
-            InfoRow(label: "创建时间", value: formatDate(capsule.createdAt))
-            InfoRow(label: "解锁时间", value: formatDate(capsule.unlockDate))
+            TimeCapsuleInfoRow(label: "类型", value: capsule.typedCapsuleType.displayName)
+            TimeCapsuleInfoRow(label: "创建时间", value: formatDate(capsule.createdAt))
+            TimeCapsuleInfoRow(label: "解锁时间", value: formatDate(capsule.unlockDate))
             
             if let unlockedAt = capsule.unlockedAt {
-                InfoRow(label: "解锁时间", value: formatDate(unlockedAt))
+                TimeCapsuleInfoRow(label: "解锁时间", value: formatDate(unlockedAt))
             }
             
-            InfoRow(label: "梦境数量", value: "\(capsule.dreamCount) 个")
-            InfoRow(label: "查看次数", value: "\(capsule.viewCount) 次")
+            TimeCapsuleInfoRow(label: "梦境数量", value: "\(capsule.dreamCount) 个")
+            TimeCapsuleInfoRow(label: "查看次数", value: "\(capsule.viewCount) 次")
             
             if !capsule.message.isEmpty {
                 Divider()
@@ -374,7 +374,7 @@ struct TimeCapsuleDetailView: View {
 
 // MARK: - 子组件
 
-struct InfoRow: View {
+struct TimeCapsuleInfoRow: View {
     let label: String
     let value: String
     
