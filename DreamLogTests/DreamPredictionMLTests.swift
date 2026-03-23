@@ -8,6 +8,7 @@
 
 import XCTest
 @testable import DreamLog
+import SwiftData
 
 // MARK: - ML 预测服务测试
 

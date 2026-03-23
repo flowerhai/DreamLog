@@ -8,6 +8,7 @@
 
 import Foundation
 import Combine
+import SwiftData
 
 // MARK: - 屏幕时间服务
 

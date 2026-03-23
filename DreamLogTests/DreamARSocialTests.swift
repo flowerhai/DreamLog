@@ -9,6 +9,7 @@
 import XCTest
 import Foundation
 import SwiftUI
+import SwiftData
 @testable import DreamLog
 
 // MARK: - AR 会话模型测试

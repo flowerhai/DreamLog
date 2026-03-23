@@ -9,18 +9,19 @@
 import Foundation
 import SwiftUI
 import UIKit
+import SwiftData
 
 // MARK: - 分享卡片服务
 
 @MainActor
-final class DreamShareCardService {
+final class DreamShareCardService: ObservableObject {
     static let shared = DreamShareCardService()
     
     private let modelContext: ModelContext
     private var shareHistory: [ShareRecord] = []
     
     init(modelContext: ModelContext? = nil) {
-        self.modelContext = modelContext ?? (SharedModelContainer.shared.container.viewContext)
+        self.modelContext = modelContext ?? (SharedModelContainer.main?.mainContext ?? ModelContext(try! ModelContainer(for: DreamShareCard.self)))
     }
     
     // MARK: - 卡片创建与管理

@@ -315,10 +315,11 @@ struct CreateCardView: View {
     
     private func loadDreams() {
         // 加载梦境列表
+        guard let modelContext = SharedModelContainer.main?.mainContext else { return }
         let descriptor = FetchDescriptor<Dream>(
             sortBy: [SortDescriptor(\.date, order: .reverse)]
         )
-        dreams = try? SharedModelContainer.shared.container.viewContext.fetch(descriptor) ?? []
+        dreams = try? modelContext.fetch(descriptor) ?? []
     }
     
     private func generateCard() {

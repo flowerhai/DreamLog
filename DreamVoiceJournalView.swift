@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import SwiftData
 
 // MARK: - 主界面
 

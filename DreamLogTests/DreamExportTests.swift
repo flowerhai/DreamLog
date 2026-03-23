@@ -8,6 +8,7 @@
 
 import XCTest
 @testable import DreamLog
+import SwiftData
 
 @MainActor
 final class DreamExportTests: XCTestCase {
