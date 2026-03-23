@@ -21,6 +21,10 @@ struct DreamSemanticSearchView: View {
     @State private var searchFilters: SearchFilters = SearchFilters()
     @State private var selectedTab: SearchTab = .search
     @State private var errorMessage: String?
+    @State private var selectedDream: Dream?
+    @State private var searchHistory: [DreamSearchHistory] = []
+    @State private var savedSearches: [DreamSavedSearch] = []
+    @State private var sortOption: String = "相关性"
     
     @Query(sort: \Dream.date, order: .reverse) private var dreams: [Dream]
     
@@ -164,8 +168,11 @@ struct DreamSemanticSearchView: View {
                 ForEach(searchResults, id: \.id) { result in
                     SearchResultCard(result: result, dreams: dreams)
                         .onTapGesture {
-                            // TODO: 导航到梦境详情
+                            selectedDream = dreams.first { $0.persistentModelID == result.dreamID }
                         }
+                }
+                .navigationDestination(item: $selectedDream) { dream in
+                    DreamDetailView(dream: dream)
                 }
             }
             .padding()
@@ -183,7 +190,8 @@ struct DreamSemanticSearchView: View {
             Menu {
                 ForEach(["相关性", "日期", "清晰度"], id: \.self) { option in
                     Button(option) {
-                        // TODO: 实现排序
+                        sortOption = option
+                        sortResults(by: option)
                     }
                 }
             } label: {
@@ -195,6 +203,19 @@ struct DreamSemanticSearchView: View {
             }
         }
         .padding(.horizontal)
+    }
+    
+    private func sortResults(by option: String) {
+        switch option {
+        case "相关性":
+            searchResults.sort { $0.relevanceScore > $1.relevanceScore }
+        case "日期":
+            searchResults.sort { $0.date > $1.date }
+        case "清晰度":
+            searchResults.sort { $0.clarityRating > $1.clarityRating }
+        default:
+            break
+        }
     }
     
     private var emptyResultsView: some View {
@@ -261,17 +282,57 @@ struct DreamSemanticSearchView: View {
                 Button("清除全部") {
                     Task {
                         try? await DreamSemanticSearchService().clearSearchHistory()
+                        await loadSearchHistory()
                     }
                 }
                 .foregroundColor(.red)
             }
             .padding()
             
-            // TODO: 加载和显示历史
-            Text("搜索历史将显示在这里")
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if searchHistory.isEmpty {
+                Text("暂无搜索历史")
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(searchHistory) { history in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(history.query)
+                                .font(.body)
+                            Text("\(history.resultCount) 个结果")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Text(history.timestamp, style: .relative)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Button {
+                            searchText = history.query
+                            selectedTab = .search
+                            Task {
+                                await performSearch()
+                            }
+                        } label: {
+                            Image(systemName: "arrow.uturn.backward")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .listStyle(.inset)
+            }
         }
+        .task {
+            await loadSearchHistory()
+        }
+    }
+    
+    private func loadSearchHistory() async {
+        let service = DreamSemanticSearchService()
+        searchHistory = await service.getSearchHistory(limit: 50)
     }
     
     // MARK: - Saved Tab
@@ -285,18 +346,78 @@ struct DreamSemanticSearchView: View {
                 Spacer()
                 
                 Button {
-                    // TODO: 添加新保存的搜索
+                    Task {
+                        await saveCurrentSearch()
+                    }
                 } label: {
                     Image(systemName: "plus")
                 }
+                .disabled(searchText.isEmpty)
             }
             .padding()
             
-            // TODO: 加载和显示保存的搜索
-            Text("保存的搜索将显示在这里")
-                .foregroundColor(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if savedSearches.isEmpty {
+                Text("暂无保存的搜索")
+                    .foregroundColor(.secondary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(savedSearches) { saved in
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text(saved.name)
+                                .font(.body)
+                                .fontWeight(.medium)
+                            Text(saved.query)
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        Spacer()
+                        
+                        Button {
+                            searchText = saved.query
+                            searchFilters = saved.filters
+                            selectedTab = .search
+                            Task {
+                                await performSearch()
+                            }
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                        }
+                        .buttonStyle(.borderless)
+                        
+                        Button {
+                            Task {
+                                try? await DreamSemanticSearchService().deleteSavedSearch(saved)
+                                await loadSavedSearches()
+                            }
+                        } label: {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .listStyle(.inset)
+            }
         }
+        .task {
+            await loadSavedSearches()
+        }
+    }
+    
+    private func loadSavedSearches() async {
+        let service = DreamSemanticSearchService()
+        savedSearches = await service.getSavedSearches()
+    }
+    
+    private func saveCurrentSearch() async {
+        guard !searchText.isEmpty else { return }
+        
+        let service = DreamSemanticSearchService()
+        let name = searchText.prefix(20).description
+        try? await service.saveSearch(name: name, query: searchText, filters: searchFilters)
+        await loadSavedSearches()
     }
     
     // MARK: - Statistics Tab

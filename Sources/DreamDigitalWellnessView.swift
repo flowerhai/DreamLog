@@ -19,6 +19,7 @@ struct DreamDigitalWellnessView: View {
     @State private var isLoading = false
     @State private var selectedPeriod = 7
     @State private var showingConfig = false
+    @State private var showingEnableGuide = false
     
     private let periods = [7, 14, 30]
     
@@ -487,11 +488,26 @@ struct EmptyStateView: View {
                 .multilineTextAlignment(.center)
             
             Button("开始追踪") {
-                // TODO: 引导用户启用屏幕时间追踪
+                showingEnableGuide = true
             }
             .buttonStyle(.borderedProminent)
+            .alert("启用屏幕时间追踪", isPresented: $showingEnableGuide) {
+                Button("打开设置", role: .cancel) {
+                    openScreenTimeSettings()
+                }
+                Button("稍后再说", role: .destructive) {
+                }
+            } message: {
+                Text("要在 DreamLog 中追踪屏幕使用时间，您需要在 iOS 设置中启用屏幕时间 API 访问权限。\n\n1. 打开 iOS 设置\n2. 找到"屏幕使用时间"\n3. 启用"App 限制"和"内容限制"\n4. 返回 DreamLog 开始记录数据")
+            }
         }
         .padding(.vertical, 40)
+    }
+    
+    private func openScreenTimeSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
 }
 
