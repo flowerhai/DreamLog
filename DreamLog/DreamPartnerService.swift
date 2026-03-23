@@ -16,12 +16,14 @@ class DreamPartnerService {
     static let shared = DreamPartnerService()
     
     private let modelContext: ModelContext
+    private var activityService: DreamPartnerActivityService
     private var currentUserId: String {
         UserDefaults.standard.string(forKey: "dreamLogUserId") ?? UUID().uuidString
     }
     
     init(modelContext: ModelContext? = nil) {
         self.modelContext = modelContext ?? (try? ModelContext(ModelConfiguration(for: DreamPartner.self)))!
+        self.activityService = DreamPartnerActivityService(modelContext: modelContext)
     }
     
     // MARK: - 邀请管理
@@ -146,6 +148,12 @@ class DreamPartnerService {
         partner.connectedAt = Date()
         try modelContext.save()
         
+        // 记录连接活动
+        await activityService.logConnection(
+            partnerId: partner.partnerUserId,
+            partnerName: partner.partnerName
+        )
+        
         await sendNotification(
             title: "伴侣请求已接受",
             body: "你现在可以与 \(partner.partnerName) 共享梦境"
@@ -185,7 +193,7 @@ class DreamPartnerService {
     // MARK: - 梦境共享
     
     /// 分享梦境给伴侣
-    func shareDream(_ dreamId: String, with partner: DreamPartner) async throws {
+    func shareDream(_ dreamId: String, dreamTitle: String = "", with partner: DreamPartner) async throws {
         let share = DreamPartnerShare(
             dreamId: dreamId,
             partnerId: partner.id
@@ -195,6 +203,14 @@ class DreamPartnerService {
         partner.shares.append(share)
         partner.shareCount += 1
         try modelContext.save()
+        
+        // 记录活动
+        await activityService.logDreamShare(
+            dreamId: dreamId,
+            dreamTitle: dreamTitle,
+            partnerId: partner.partnerUserId,
+            partnerName: partner.partnerName
+        )
         
         if partner.myPermission == .viewAndComment || partner.myPermission == .fullAccess {
             await sendNotification(
@@ -218,15 +234,34 @@ class DreamPartnerService {
     }
     
     /// 标记为已查看
-    func markAsViewed(_ share: DreamPartnerShare) async throws {
+    func markAsViewed(_ share: DreamPartnerShare, dreamTitle: String = "") async throws {
         share.viewedAt = Date()
         try modelContext.save()
+        
+        // 记录查看活动 (仅第一次查看)
+        if share.viewedAt != nil {
+            await activityService.logDreamView(
+                dreamId: share.dreamId,
+                dreamTitle: dreamTitle,
+                partnerId: share.partnerId,
+                partnerName: partnerNameForShare(share)
+            )
+        }
     }
     
     /// 添加评论
-    func addComment(_ share: DreamPartnerShare, comment: String) async throws {
+    func addComment(_ share: DreamPartnerShare, comment: String, dreamTitle: String = "") async throws {
         share.comment = comment
         try modelContext.save()
+        
+        // 记录活动
+        await activityService.logComment(
+            dreamId: share.dreamId,
+            dreamTitle: dreamTitle,
+            partnerId: share.partnerId,
+            partnerName: partnerNameForShare(share),
+            comment: comment
+        )
         
         // 通知对方
         await sendNotification(
@@ -237,9 +272,17 @@ class DreamPartnerService {
     }
     
     /// 添加反应
-    func addReaction(_ share: DreamPartnerShare, reaction: String) async throws {
+    func addReaction(_ share: DreamPartnerShare, reaction: String, dreamTitle: String = "") async throws {
         share.reaction = reaction
         try modelContext.save()
+        
+        // 记录活动
+        await activityService.logReaction(
+            dreamId: share.dreamId,
+            partnerId: share.partnerId,
+            partnerName: partnerNameForShare(share),
+            reaction: reaction
+        )
     }
     
     /// 隐藏分享
