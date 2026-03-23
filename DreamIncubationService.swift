@@ -263,11 +263,17 @@ final class DreamIncubationService: ObservableObject {
         // 当前连续天数
         var currentStreak = 1
         let today = Calendar.current.startOfDay(for: Date())
-        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today)!
+        guard let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: today) else {
+            stats.currentStreak = 0
+            stats.longestStreak = 0
+            return
+        }
         
         if completedDates[0] == today || completedDates[0] == yesterday {
             for i in 1..<completedDates.count {
-                let expectedDate = Calendar.current.date(byAdding: .day, value: -i, to: completedDates[0])!
+                guard let expectedDate = Calendar.current.date(byAdding: .day, value: -i, to: completedDates[0]) else {
+                    break
+                }
                 if completedDates[i] == expectedDate {
                     currentStreak += 1
                 } else {
@@ -285,7 +291,9 @@ final class DreamIncubationService: ObservableObject {
         var tempStreak = 1
         
         for i in 1..<completedDates.count {
-            let expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: completedDates[i-1])!
+            guard let expectedDate = Calendar.current.date(byAdding: .day, value: -1, to: completedDates[i-1]) else {
+                break
+            }
             if completedDates[i] == expectedDate {
                 tempStreak += 1
                 longestStreak = max(longestStreak, tempStreak)

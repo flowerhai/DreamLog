@@ -318,8 +318,13 @@ struct DreamExportHubView: View {
     }
     
     private func quickExport(platform: ExportPlatform, format: ExportFormat) async {
+        guard let service = DreamExportHubService.shared else {
+            errorMessage = "服务未初始化"
+            return
+        }
+        
         do {
-            let task = try await DreamExportHubService.shared!.createExportTask(
+            let task = try await service.createExportTask(
                 name: "快速导出 - \(platform.displayName)",
                 platform: platform,
                 format: format,
@@ -327,7 +332,7 @@ struct DreamExportHubView: View {
                 options: .default
             )
             
-            _ = try await DreamExportHubService.shared!.executeExportTask(task)
+            _ = try await service.executeExportTask(task)
             
             await loadExportTasks()
         } catch {
@@ -336,8 +341,13 @@ struct DreamExportHubView: View {
     }
     
     private func executeTask(_ task: ExportTask) async {
+        guard let service = DreamExportHubService.shared else {
+            errorMessage = "服务未初始化"
+            return
+        }
+        
         do {
-            _ = try await DreamExportHubService.shared!.executeExportTask(task)
+            _ = try await service.executeExportTask(task)
             await loadExportTasks()
         } catch {
             errorMessage = "执行失败：\(error.localizedDescription)"
@@ -657,6 +667,12 @@ struct NewExportTaskView: View {
     
     private func generatePreview() {
         Task {
+            guard let service = DreamExportHubService.shared else {
+                errorMessage = "服务未初始化"
+                isGeneratingPreview = false
+                return
+            }
+            
             isGeneratingPreview = true
             
             do {
@@ -667,7 +683,7 @@ struct NewExportTaskView: View {
                     includeImages: includeImages
                 )
                 
-                let preview = try await DreamExportHubService.shared!.generateExportPreview(
+                let preview = try await service.generateExportPreview(
                     dreamIds: [],
                     exportAll: exportAll,
                     dateRange: nil,
@@ -692,6 +708,11 @@ struct NewExportTaskView: View {
     }
     
     private func createTask() async {
+        guard let service = DreamExportHubService.shared else {
+            errorMessage = "服务未初始化"
+            return
+        }
+        
         let options = ExportOptions(
             includeEmotions: includeEmotions,
             includeTags: includeTags,
@@ -700,7 +721,7 @@ struct NewExportTaskView: View {
         )
         
         do {
-            _ = try await DreamExportHubService.shared!.createExportTask(
+            _ = try await service.createExportTask(
                 name: name,
                 platform: selectedPlatform,
                 format: selectedFormat,

@@ -24,7 +24,7 @@ final class DreamHealthIntegrationService {
         if shared == nil {
             shared = DreamHealthIntegrationService(modelContext: ModelContext(modelContainer))
         }
-        return shared!
+        return shared ?? DreamHealthIntegrationService(modelContext: ModelContext(modelContainer))
     }
     
     // MARK: - 初始化

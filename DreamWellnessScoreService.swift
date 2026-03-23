@@ -162,7 +162,9 @@ actor DreamWellnessScoreService {
         // - 连续记录天数
         
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -7, to: endDate)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -7, to: endDate) else {
+            return 0.0
+        }
         
         // 获取最近 7 天的梦境
         let descriptor = FetchDescriptor<Dream>(
@@ -212,7 +214,9 @@ actor DreamWellnessScoreService {
         // - 负面情绪趋势
         
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -14, to: endDate)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -14, to: endDate) else {
+            return 0.0
+        }
         
         // 获取最近 14 天的梦境
         let descriptor = FetchDescriptor<Dream>(
@@ -267,7 +271,9 @@ actor DreamWellnessScoreService {
         // - 模式重复度 (过高可能表示压力)
         
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate) else {
+            return 0.0
+        }
         
         // 获取最近 30 天的梦境
         let descriptor = FetchDescriptor<Dream>(
@@ -331,7 +337,9 @@ actor DreamWellnessScoreService {
     
     private func calculateScoreTrend(currentScore: Double, date: Date) async -> ScoreTrend {
         // 获取前 7 天的评分
-        let startDate = Calendar.current.date(byAdding: .day, value: -7, to: date)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -7, to: date) else {
+            return .stable
+        }
         let period = DateInterval(start: startDate, end: date)
         
         guard let historicalScores = try? getScores(for: period),

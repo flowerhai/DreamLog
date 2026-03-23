@@ -58,7 +58,9 @@ actor DreamPredictionEngine {
     private func predictDreamThemes(days: Int) async throws -> DreamPrediction? {
         // 分析历史梦境主题模式
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate) else {
+            return nil
+        }
         
         let descriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
@@ -97,13 +99,17 @@ actor DreamPredictionEngine {
             "尝试在睡前思考相关话题"
         ]
         
+        guard let validUntil = Calendar.current.date(byAdding: .day, value: days, to: endDate) else {
+            return nil
+        }
+        
         return DreamPrediction(
             predictionType: .dreamTheme,
             predictedContent: predictedContent,
             confidence: probability,
             basis: basis,
             recommendations: recommendations,
-            validUntil: Calendar.current.date(byAdding: .day, value: days, to: endDate)!
+            validUntil: validUntil
         )
     }
     
@@ -111,7 +117,9 @@ actor DreamPredictionEngine {
     
     private func predictEmotionalTrend(days: Int) async throws -> DreamPrediction? {
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -14, to: endDate)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -14, to: endDate) else {
+            return nil
+        }
         
         let descriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
@@ -173,13 +181,17 @@ actor DreamPredictionEngine {
             recommendations.append("记录让你感到积极的活动")
         }
         
+        guard let validUntil = Calendar.current.date(byAdding: .day, value: days, to: endDate) else {
+            return nil
+        }
+        
         return DreamPrediction(
             predictionType: .emotionalTrend,
             predictedContent: predictedContent,
             confidence: confidence,
             basis: basis,
             recommendations: recommendations,
-            validUntil: Calendar.current.date(byAdding: .day, value: days, to: endDate)!
+            validUntil: validUntil
         )
     }
     
@@ -187,7 +199,9 @@ actor DreamPredictionEngine {
     
     private func predictLucidDreamProbability() async throws -> DreamPrediction? {
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate) else {
+            return nil
+        }
         
         let descriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in
@@ -255,7 +269,9 @@ actor DreamPredictionEngine {
     
     private func predictOptimalRecordTime() async throws -> DreamPrediction? {
         let endDate = Date()
-        let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate)!
+        guard let startDate = Calendar.current.date(byAdding: .day, value: -30, to: endDate) else {
+            return nil
+        }
         
         let descriptor = FetchDescriptor<Dream>(
             predicate: #Predicate { dream in

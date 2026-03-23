@@ -313,14 +313,25 @@ class DreamArtCardViewModel: ObservableObject {
     @Published var generatedImagePath: String?
     @Published var errorMessage: String?
     
-    private let service = DreamArtCardService.shared! // Initialized in DreamLogApp
+    private var service: DreamArtCardService? {
+        DreamArtCardService.shared
+    }
     
     func autoMatchStyle(for dream: Dream) async {
+        guard let service = service else {
+            errorMessage = "服务未初始化"
+            return
+        }
         let matchedStyle = await service.matchStyle(for: dream)
         selectedStyle = matchedStyle
     }
     
     func generateCard(dream: Dream) async {
+        guard let service = service else {
+            errorMessage = "服务未初始化"
+            return
+        }
+        
         isGenerating = true
         errorMessage = nil
         
