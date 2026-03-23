@@ -317,7 +317,8 @@ struct DreamTimeCapsulePickerView: View {
     }
 }
 
-struct DreamSelectionRow: View {
+/// 时间胶囊梦境选择行
+struct TimeCapsuleDreamSelectionRow: View {
     let dream: Dream
     let isSelected: Bool
     let onToggle: () -> Void

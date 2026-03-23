@@ -21,7 +21,18 @@ final class DreamShareCardService: ObservableObject {
     private var shareHistory: [ShareRecord] = []
     
     init(modelContext: ModelContext? = nil) {
-        self.modelContext = modelContext ?? (SharedModelContainer.main?.mainContext ?? ModelContext(try! ModelContainer(for: DreamShareCard.self)))
+        if let context = modelContext {
+            self.modelContext = context
+        } else if let sharedContext = SharedModelContainer.main?.mainContext {
+            self.modelContext = sharedContext
+        } else {
+            do {
+                let container = try ModelContainer(for: DreamShareCard.self)
+                self.modelContext = ModelContext(container)
+            } catch {
+                fatalError("Failed to create model container for DreamShareCard: \(error)")
+            }
+        }
     }
     
     // MARK: - 卡片创建与管理

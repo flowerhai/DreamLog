@@ -237,7 +237,7 @@ struct TrendPrediction: Codable {
 }
 
 struct EmotionTrend: Codable {
-    let trend: DreamTrend
+    let trend: AIDreamTrend
     let confidence: Double
     let description: String
     let topEmotions: [Emotion]
@@ -251,7 +251,7 @@ struct ThemeTrend: Codable {
 }
 
 struct ClarityTrend: Codable {
-    let trend: DreamTrend
+    let trend: AIDreamTrend
     let averageClarity: Double
     let change: Double
     let confidence: Double
@@ -259,14 +259,15 @@ struct ClarityTrend: Codable {
 }
 
 struct LucidFrequencyTrend: Codable {
-    let trend: DreamTrend
+    let trend: AIDreamTrend
     let currentRatio: Double
     let projectedRatio: Double
     let confidence: Double
     let description: String
 }
 
-enum DreamTrend: String, Codable {
+/// AI 分析趋势 - 用于外部 AI 服务的梦境趋势分析
+enum AIDreamTrend: String, Codable {
     case positive = "positive"
     case negative = "negative"
     case stable = "stable"

@@ -20,7 +20,13 @@ struct DreamIncubationView: View {
     @State private var selectedIncubation: DreamIncubation?
     
     init() {
-        _service = StateObject(wrappedValue: DreamIncubationService(modelContext: ModelContext(try! ModelContainer(for: DreamIncubation.self))))
+        let container: ModelContainer
+        do {
+            container = try ModelContainer(for: DreamIncubation.self)
+        } catch {
+            fatalError("Failed to create model container for DreamIncubation: \(error)")
+        }
+        _service = StateObject(wrappedValue: DreamIncubationService(modelContext: ModelContext(container)))
     }
     
     var body: some View {

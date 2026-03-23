@@ -14,7 +14,14 @@ actor DreamAICoachService {
     
     // MARK: - 单例
     
-    static let shared = DreamAICoachService(modelContainer: try! ModelContainer(for: DreamAICoachPlan.self, DreamAICoachHabit.self, DreamAICoachIntervention.self))
+    static let shared: DreamAICoachService = {
+        do {
+            let container = try ModelContainer(for: DreamAICoachPlan.self, DreamAICoachHabit.self, DreamAICoachIntervention.self)
+            return DreamAICoachService(modelContainer: container)
+        } catch {
+            fatalError("Failed to create model container for DreamAICoach: \(error)")
+        }
+    }()
     
     // MARK: - 属性
     

@@ -22,7 +22,7 @@ class DreamAssistantService: ObservableObject {
     @Published var isSpeaking: Bool = false
     @Published var isListening: Bool = false
     @Published var voiceModeEnabled: Bool = false
-    @Published var predictionInsights: [DreamPrediction] = []
+    @Published var predictionInsights: [AssistantPrediction] = []
     
     // MARK: - Properties
     
@@ -610,11 +610,11 @@ class DreamAssistantService: ObservableObject {
             return
         }
         
-        var insights: [DreamPrediction] = []
+        var insights: [AssistantPrediction] = []
         
         // 情绪趋势预测
         if let emotionTrend = analyzeEmotionTrend() {
-            insights.append(DreamPrediction(
+            insights.append(AssistantPrediction(
                 type: .emotionTrend,
                 title: "情绪趋势",
                 content: emotionTrend.description,
@@ -625,7 +625,7 @@ class DreamAssistantService: ObservableObject {
         
         // 主题趋势预测
         if let themeTrend = analyzeThemeTrend() {
-            insights.append(DreamPrediction(
+            insights.append(AssistantPrediction(
                 type: .themeTrend,
                 title: "主题趋势",
                 content: themeTrend.description,
@@ -636,7 +636,7 @@ class DreamAssistantService: ObservableObject {
         
         // 清晰度预测
         if let clarityPrediction = predictClarity() {
-            insights.append(DreamPrediction(
+            insights.append(AssistantPrediction(
                 type: .clarity,
                 title: "清晰度预测",
                 content: clarityPrediction.description,
@@ -647,7 +647,7 @@ class DreamAssistantService: ObservableObject {
         
         // 清醒梦预测
         if let lucidPrediction = predictLucidDreams() {
-            insights.append(DreamPrediction(
+            insights.append(AssistantPrediction(
                 type: .lucidDream,
                 title: "清醒梦机会",
                 content: lucidPrediction.description,
@@ -660,7 +660,7 @@ class DreamAssistantService: ObservableObject {
     }
     
     /// 分析情绪趋势
-    private func analyzeEmotionTrend() -> DreamPredictionInfo? {
+    private func analyzeEmotionTrend() -> AssistantPredictionInfo? {
         let dreams = dreamStore.dreams.sorted { $0.date < $1.date }
         guard dreams.count >= 10 else { return nil }
         
@@ -688,11 +688,11 @@ class DreamAssistantService: ObservableObject {
             confidence = 0.65
         }
         
-        return DreamPredictionInfo(description: trend, confidence: confidence)
+        return AssistantPredictionInfo(description: trend, confidence: confidence)
     }
     
     /// 分析主题趋势
-    private func analyzeThemeTrend() -> DreamPredictionInfo? {
+    private func analyzeThemeTrend() -> AssistantPredictionInfo? {
         let dreams = dreamStore.dreams.sorted { $0.date < $1.date }
         guard dreams.count >= 10 else { return nil }
         
@@ -706,7 +706,7 @@ class DreamAssistantService: ObservableObject {
         
         if !newTags.isEmpty {
             let trend = "最近出现了新的梦境主题：\(newTags.prefix(3).joined(separator: "、"))，这可能反映新的生活体验。"
-            return DreamPredictionInfo(description: trend, confidence: 0.72)
+            return AssistantPredictionInfo(description: trend, confidence: 0.72)
         }
         
         return nil
@@ -734,11 +734,11 @@ class DreamAssistantService: ObservableObject {
             confidence = 0.60
         }
         
-        return DreamPredictionInfo(description: trend, confidence: confidence)
+        return AssistantPredictionInfo(description: trend, confidence: confidence)
     }
     
     /// 预测清醒梦机会
-    private func predictLucidDreams() -> DreamPredictionInfo? {
+    private func predictLucidDreams() -> AssistantPredictionInfo? {
         let dreams = dreamStore.dreams
         guard dreams.count >= 5 else { return nil }
         
@@ -759,7 +759,7 @@ class DreamAssistantService: ObservableObject {
             confidence = 0.70
         }
         
-        return DreamPredictionInfo(description: trend, confidence: confidence)
+        return AssistantPredictionInfo(description: trend, confidence: confidence)
     }
     
     // MARK: - Enhanced Pattern Analysis
@@ -816,25 +816,25 @@ class DreamAssistantService: ObservableObject {
 
 // MARK: - Prediction Models
 
-/// 梦境预测类型
-enum DreamPredictionType {
+/// AI 助手预测类型（简化版，用于即时预测）
+enum AssistantPredictionType {
     case emotionTrend
     case themeTrend
     case clarity
     case lucidDream
 }
 
-/// 梦境预测信息
-struct DreamPrediction {
-    let type: DreamPredictionType
+/// AI 助手预测信息
+struct AssistantPrediction {
+    let type: AssistantPredictionType
     let title: String
     let content: String
     let confidence: Double
     let icon: String
 }
 
-/// 预测信息详情
-struct DreamPredictionInfo {
+/// AI 助手预测信息详情
+struct AssistantPredictionInfo {
     let description: String
     let confidence: Double
 }
