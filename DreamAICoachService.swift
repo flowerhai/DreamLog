@@ -531,6 +531,50 @@ actor DreamAICoachService {
         )
     }
     
+    // MARK: - 辅助方法
+    
+    /// 计算连续中断天数
+    private func calculateConsecutiveMissedDays(for plan: DreamAICoachPlan) async -> Int {
+        guard !plan.habits.isEmpty else { return 0 }
+        
+        let calendar = Calendar.current
+        let today = Date()
+        var consecutiveDays = 0
+        
+        // 从今天往前检查每一天
+        for dayOffset in 0..<30 { // 最多检查 30 天
+            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: today) else {
+                break
+            }
+            
+            // 检查这一天是否有任何习惯完成
+            let anyHabitCompleted = plan.habits.contains { habit in
+                habit.completionHistory.contains { completion in
+                    calendar.isDate(completion.date, inSameDayAs: date)
+                }
+            }
+            
+            if anyHabitCompleted {
+                // 如果这一天有完成，中断计数重置（但已经过去的中断天数已记录）
+                if dayOffset > 0 {
+                    break
+                }
+            } else {
+                // 今天没完成，增加中断计数
+                if dayOffset == 0 {
+                    // 检查今天是否已经结束（如果是当天，可能还有机会完成）
+                    let hour = calendar.component(.hour, from: today)
+                    if hour < 21 { // 晚上 9 点前不算中断
+                        break
+                    }
+                }
+                consecutiveDays += 1
+            }
+        }
+        
+        return consecutiveDays
+    }
+    
     // MARK: - AI 智能建议
     
     /// 生成个性化建议
@@ -561,7 +605,38 @@ actor DreamAICoachService {
             }
             
             // 检查连续中断
-            // TODO: 实现连续中断检测
+            let consecutiveMissedDays = await calculateConsecutiveMissedDays(for: plan)
+            if consecutiveMissedDays >= 3 {
+                let priority: InterventionPriority = consecutiveMissedDays >= 7 ? .urgent : (consecutiveMissedDays >= 5 ? .high : .medium)
+                let title: String
+                let message: String
+                let action: String
+                
+                if consecutiveMissedDays >= 7 {
+                    title = "⚠️ 习惯中断警告"
+                    message = "你已经连续\(consecutiveMissedDays)天没有完成计划了。长期中断会影响效果，重新开始吧！"
+                    action = "从今天的一个小习惯开始"
+                } else if consecutiveMissedDays >= 5 {
+                    title = "💡 重新开始吧"
+                    message = "注意到你已经休息了\(consecutiveMissedDays)天。没关系，现在重新开始也不晚！"
+                    action = "完成今天的习惯打卡"
+                } else {
+                    title = "🌟 别忘了你的目标"
+                    message = "连续\(consecutiveMissedDays)天没有记录啦～继续加油哦！"
+                    action = "花 2 分钟完成今日习惯"
+                }
+                
+                let intervention = try await createIntervention(
+                    planId: plan.id,
+                    type: .habitInterruption,
+                    title: title,
+                    message: message,
+                    triggerReason: "consecutive_missed_days_\(consecutiveMissedDays)",
+                    priority: priority,
+                    suggestedAction: action
+                )
+                suggestions.append(intervention)
+            }
         }
         
         return suggestions
