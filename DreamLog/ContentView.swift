@@ -3,7 +3,7 @@
 //  DreamLog
 //
 //  Phase 43 - 导航重构：5 个主标签
-//  Phase 87 Session 2 - 集成引导流程
+//  Phase 98 - 移除重复引导逻辑（引导已在 RootView 处理）
 //
 
 import SwiftUI
@@ -13,19 +13,9 @@ struct ContentView: View {
     @ObservedObject private var challengeService = DreamChallengeService.shared
     @ObservedObject private var favoriteManager = FavoriteManager.shared
     @AppStorage("selectedMainTab") private var selectedTab = 0
-    @AppStorage("onboardingCompleted") private var onboardingCompleted: Bool = false
-    @StateObject private var onboardingManager = OnboardingManager()
     
     var body: some View {
-        Group {
-            if !onboardingCompleted {
-                // 显示引导流程
-                OnboardingView(manager: onboardingManager)
-            } else {
-                // 显示主应用
-                mainTabView
-            }
-        }
+        mainTabView
     }
     
     var mainTabView: some View {
